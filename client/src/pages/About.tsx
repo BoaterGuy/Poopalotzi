@@ -121,7 +121,7 @@ export default function About() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Team</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Meet the passionate people behind Poopalazi
+              Meet the passionate people behind Poopalotzi
             </p>
           </div>
           

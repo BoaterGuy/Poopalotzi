@@ -43,7 +43,7 @@ export default function Features() {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-4">Key Features</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Discover why boat owners trust Poopalazi for their maintenance needs
+            Discover why boat owners trust Poopalotzi for their maintenance needs
           </p>
         </div>
         

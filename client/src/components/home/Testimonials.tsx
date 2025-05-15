@@ -5,7 +5,7 @@ export default function Testimonials() {
   const testimonials = [
     {
       rating: 5,
-      quote: "Poopalazi has transformed how I maintain my boat. The scheduling is effortless, and I love getting notifications when service is complete. Highly recommend!",
+      quote: "Poopalotzi has transformed how I maintain my boat. The scheduling is effortless, and I love getting notifications when service is complete. Highly recommend!",
       name: "Michael Johnson",
       title: "Sailboat Owner"
     },
@@ -17,7 +17,7 @@ export default function Testimonials() {
     },
     {
       rating: 5,
-      quote: "As a marina manager, I've seen the difference Poopalazi makes. Our boaters love the convenience, and our environment stays cleaner. It's a win-win solution.",
+      quote: "As a marina manager, I've seen the difference Poopalotzi makes. Our boaters love the convenience, and our environment stays cleaner. It's a win-win solution.",
       name: "David Rodriguez",
       title: "Marina Manager"
     }
