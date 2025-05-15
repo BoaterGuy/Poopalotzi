@@ -42,11 +42,6 @@ export default function HeroSection() {
               </Link>
             </div>
             
-            <div className="mt-8 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#FF6B6B] italic">
-                Let us take care of your business!
-              </h2>
-            </div>
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
             <img 
@@ -58,6 +53,12 @@ export default function HeroSection() {
               <p className="text-lg text-[#0B1F3A] font-semibold">Serving the Port Clinton and Sandusky area</p>
             </div>
           </div>
+        </div>
+        
+        <div className="mt-10 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#FF6B6B] italic">
+            Let us take care of your business!
+          </h2>
         </div>
       </div>
       <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
