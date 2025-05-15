@@ -203,6 +203,63 @@ export class MemStorage implements IStorage {
       name: "Bay Front",
       isActive: true
     });
+
+    // Initialize admin user
+    const adminPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    this.usersData.set(this.currentUserId, {
+      id: this.currentUserId,
+      email: "admin@poopalazi.com",
+      firstName: "Admin",
+      lastName: "User",
+      phone: null,
+      passwordHash: adminPasswordHash,
+      role: "admin",
+      oauthProvider: null,
+      oauthId: null,
+      createdAt: new Date(),
+      serviceLevelId: null,
+      emailVerified: true
+    });
+    this.currentUserId++;
+
+    // Initialize employee user
+    const employeePasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    this.usersData.set(this.currentUserId, {
+      id: this.currentUserId,
+      email: "employee@poopalazi.com",
+      firstName: "Employee",
+      lastName: "User",
+      phone: null,
+      passwordHash: employeePasswordHash,
+      role: "employee",
+      oauthProvider: null,
+      oauthId: null,
+      createdAt: new Date(),
+      serviceLevelId: null,
+      emailVerified: true
+    });
+    this.currentUserId++;
+
+    // Initialize member user
+    const memberPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    this.usersData.set(this.currentUserId, {
+      id: this.currentUserId,
+      email: "member@poopalazi.com",
+      firstName: "Member",
+      lastName: "User",
+      phone: null,
+      passwordHash: memberPasswordHash,
+      role: "member",
+      oauthProvider: null,
+      oauthId: null,
+      createdAt: new Date(),
+      serviceLevelId: null,
+      emailVerified: true
+    });
+    
+    // Create boat owner for member
+    this.createBoatOwner({ userId: this.currentUserId });
+    this.currentUserId++;
   }
 
   // User operations

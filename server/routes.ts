@@ -160,6 +160,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(safeUser);
   });
 
+  // Debug route to check if admin user is available
+  app.get("/api/debug/users", async (req, res) => {
+    try {
+      const adminUser = await storage.getUserByEmail("admin@poopalazi.com");
+      const employeeUser = await storage.getUserByEmail("employee@poopalazi.com");
+      const memberUser = await storage.getUserByEmail("member@poopalazi.com");
+
+      res.json({
+        adminExists: !!adminUser,
+        employeeExists: !!employeeUser,
+        memberExists: !!memberUser,
+        message: "Use admin@poopalazi.com / admin123 to login as admin",
+        version: "1.0.0"
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Error checking users", error: err.message });
+    }
+  });
+
   // Service Levels routes
   app.get("/api/service-levels", async (req, res, next) => {
     try {
