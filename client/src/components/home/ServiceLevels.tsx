@@ -65,18 +65,18 @@ export default function ServiceLevels() {
                 <Card 
                   key={plan.id}
                   className={`bg-[#F4EBD0] rounded-lg shadow-md overflow-hidden ${
-                    isPopular ? "transform scale-105 border-2 border-[#38B2AC]" : "transition-transform hover:scale-105 duration-300"
+                    isPopular ? "transform scale-105 border-2 border-[#0B1F3A]" : "transition-transform hover:scale-105 duration-300"
                   }`}
                 >
                   {isPopular && (
-                    <div className="bg-[#38B2AC] text-white text-center py-2">
+                    <div className="bg-[#0B1F3A] text-white text-center py-2">
                       <span className="font-semibold">Most Popular</span>
                     </div>
                   )}
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
                     <p className="text-gray-600 mb-4">{plan.description}</p>
-                    <div className="text-3xl font-bold text-[#38B2AC] mb-4">
+                    <div className="text-3xl font-bold text-[#0B1F3A] mb-4">
                       {getFormattedPrice(plan.price, plan.type)}
                     </div>
                     <ul className="space-y-3 mb-6">
@@ -90,16 +90,16 @@ export default function ServiceLevels() {
                       ].map((item, i) => (
                         <li key={i} className="flex items-start">
                           {item.included ? (
-                            <Check className="text-[#38B2AC] h-5 w-5 mt-1 mr-2" />
+                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
                           ) : (
                             <X className="text-gray-400 h-5 w-5 mt-1 mr-2" />
                           )}
-                          <span className={item.included ? "" : "text-gray-400"}>{item.feature}</span>
+                          <span className={item.included ? "text-black" : "text-gray-400"}>{item.feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Button 
-                      className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#38B2AC]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
+                      className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#0B1F3A]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
                       onClick={handleChoosePlan}
                     >
                       Choose Plan

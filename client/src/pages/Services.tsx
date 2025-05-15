@@ -77,7 +77,7 @@ export default function Services() {
               <div className="grid gap-8 md:grid-cols-3">
                 {serviceLevels?.map((plan) => (
                   <Card key={plan.id} className="overflow-hidden">
-                    <div className={`p-6 ${plan.name === 'Standard' ? 'bg-[#38B2AC] text-white' : 'bg-[#F4EBD0]'}`}>
+                    <div className={`p-6 ${plan.name === 'Standard' ? 'bg-[#0B1F3A] text-white' : 'bg-[#F4EBD0]'}`}>
                       <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
                       <p className="text-sm opacity-90 mb-4">{plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage'}</p>
                       <div className="text-3xl font-bold">
@@ -87,32 +87,32 @@ export default function Services() {
                     <CardContent className="p-6">
                       <div className="space-y-4 mb-6">
                         <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#38B2AC] mt-0.5 mr-2" />
-                          <span>
+                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
+                          <span className="text-black">
                             {plan.type === 'one-time' ? 'Single service pump-out' : 
                              plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
                              'Unlimited pump-outs during season (May-Oct)'}
                           </span>
                         </div>
                         <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#38B2AC] mt-0.5 mr-2" />
-                          <span>
+                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
+                          <span className="text-black">
                             {plan.headCount === 1 ? 'Single head vessels only' : 
                              `Multi-head vessels (up to ${plan.headCount})`}
                           </span>
                         </div>
                         <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#38B2AC] mt-0.5 mr-2" />
-                          <span>Email notifications</span>
+                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
+                          <span className="text-black">Email notifications</span>
                         </div>
                         <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#38B2AC] mt-0.5 mr-2" />
-                          <span>Service history & documentation</span>
+                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
+                          <span className="text-black">Service history & documentation</span>
                         </div>
                         {plan.type !== 'one-time' && (
                           <div className="flex items-start">
-                            <CheckCircle className="h-5 w-5 text-[#38B2AC] mt-0.5 mr-2" />
-                            <span>Priority scheduling</span>
+                            <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
+                            <span className="text-black">Priority scheduling</span>
                           </div>
                         )}
                       </div>
