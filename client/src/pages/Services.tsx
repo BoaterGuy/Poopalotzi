@@ -91,14 +91,9 @@ export default function Services() {
                       )}
                       <CardContent className="p-6 flex flex-col h-full">
                         <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
-                        <p className="text-gray-600 mb-2 min-h-[50px]">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
-                        <div className="h-[65px] flex items-center justify-center mb-4">
-                          <div className="text-center">
-                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price)}</span>
-                            <span className="text-lg text-gray-600">/{plan.type === 'one-time' ? 'service' : plan.type === 'monthly' ? 'month' : 'season'}</span>
-                          </div>
-                        </div>
-                        <ul className="space-y-3 min-h-[180px]">
+                        <p className="text-gray-600 mb-6">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
+                        
+                        <ul className="space-y-3 flex-grow">
                           <li className="flex items-start">
                             <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
                             <span className="text-black">
@@ -136,7 +131,13 @@ export default function Services() {
                             )}
                           </li>
                         </ul>
+                        
                         <div className="mt-auto">
+                          <div className="text-center mb-4">
+                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price)}</span>
+                            <span className="text-lg text-gray-600">/{plan.type === 'one-time' ? 'service' : plan.type === 'monthly' ? 'month' : 'season'}</span>
+                          </div>
+                          
                           {isLoggedIn ? (
                             <Link href="/member/request-service">
                               <Button 
