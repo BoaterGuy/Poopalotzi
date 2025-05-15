@@ -42,12 +42,15 @@ export default function HeroSection() {
               </Link>
             </div>
           </div>
-          <div className="md:w-1/2">
+          <div className="md:w-1/2 flex flex-col items-center">
             <img 
-              src="https://images.unsplash.com/photo-1540946485063-a40da27545f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
-              alt="Boat at marina dock" 
-              className="rounded-lg shadow-xl w-full h-auto"
+              src="/src/assets/poopalotzi-logo.jpg" 
+              alt="Poopalotzi Logo" 
+              className="rounded-lg shadow-xl w-2/3 h-auto mb-4"
             />
+            <div className="bg-white rounded-lg shadow-md p-4 text-center">
+              <p className="text-lg text-[#0B1F3A] font-semibold">Serving the Port Clinton and Sandusky area</p>
+            </div>
           </div>
         </div>
       </div>

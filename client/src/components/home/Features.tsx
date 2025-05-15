@@ -51,7 +51,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <Card key={index} className="bg-[#F4EBD0] rounded-lg h-full">
               <CardContent className="p-6">
-                <div className="text-[#38B2AC] mb-4">
+                <div className="text-[#0B1F3A] mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{feature.title}</h3>

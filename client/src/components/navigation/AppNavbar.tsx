@@ -78,7 +78,7 @@ export default function AppNavbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10 bg-[#38B2AC]">
+                    <Avatar className="h-10 w-10 bg-[#0B1F3A]">
                       <AvatarFallback>{getInitials(user.firstName)}</AvatarFallback>
                     </Avatar>
                   </Button>
