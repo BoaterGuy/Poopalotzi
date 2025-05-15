@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { Ship, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthModal } from "../auth/AuthModal";
+import logoImage from "@/assets/poopalotzi-logo.jpg";
 
 export default function AppNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,11 +50,10 @@ export default function AppNavbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <Ship className="h-6 w-6 text-[#38B2AC]" />
             <Link href="/">
-              <span className="font-montserrat font-bold text-xl cursor-pointer">
-                Poopalotzi
-              </span>
+              <div className="flex items-center">
+                <img src={logoImage} alt="Poopalotzi Logo" className="h-12 w-auto" />
+              </div>
             </Link>
           </div>
 
