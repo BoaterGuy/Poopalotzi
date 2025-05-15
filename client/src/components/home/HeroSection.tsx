@@ -36,7 +36,7 @@ export default function HeroSection() {
               )}
               
               <Link href="/services">
-                <Button className="bg-[#38B2AC] hover:bg-opacity-90 text-white px-6 py-3 h-auto rounded-md font-semibold transition duration-150 text-center">
+                <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white px-6 py-3 h-auto rounded-md font-semibold transition duration-150 text-center">
                   Learn More
                 </Button>
               </Link>

@@ -29,7 +29,7 @@ export default function CTASection() {
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button className="bg-[#38B2AC] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-lg w-full sm:w-auto">
+                  <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-lg w-full sm:w-auto">
                     Contact Support
                   </Button>
                 </Link>
@@ -43,7 +43,7 @@ export default function CTASection() {
                   Sign Up Now
                 </Button>
                 <Link href="/contact">
-                  <Button className="bg-[#38B2AC] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-lg w-full sm:w-auto">
+                  <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-lg w-full sm:w-auto">
                     Contact Sales
                   </Button>
                 </Link>
