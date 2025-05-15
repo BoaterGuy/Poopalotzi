@@ -139,7 +139,7 @@ export default function Services() {
                           </div>
                           
                           {isLoggedIn ? (
-                            <Link href="/member/request-service">
+                            <Link to="/member/request-service">
                               <Button 
                                 className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#0B1F3A]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
                               >
@@ -167,7 +167,7 @@ export default function Services() {
               <p className="text-gray-600 mb-6">
                 For marinas, yacht clubs, or special needs, contact us for a tailored plan that fits your requirements.
               </p>
-              <Link href="/contact">
+              <Link to="/contact">
                 <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white">
                   Contact Sales
                 </Button>
