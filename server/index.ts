@@ -80,8 +80,8 @@ app.use((req, res, next) => {
         monthlyQuota: 2,
         onDemandQuota: 1,
         seasonStart: "05-01",
-        seasonEnd: "09-30",
-        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Sept)",
+        seasonEnd: "10-31",
+        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Oct 31)",
         isActive: true,
       }),
       
@@ -111,8 +111,8 @@ app.use((req, res, next) => {
         monthlyQuota: 2,
         onDemandQuota: 1,
         seasonStart: "05-01",
-        seasonEnd: "09-30",
-        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Sept)",
+        seasonEnd: "10-31",
+        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Oct 31)",
         isActive: true,
       }),
     ]);
