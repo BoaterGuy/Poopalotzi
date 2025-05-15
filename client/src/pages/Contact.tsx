@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock } from "react-icons/fa";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,6 +32,12 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch marinas from the API
+  const { data: marinas, isLoading: isLoadingMarinas } = useQuery({
+    queryKey: ['/api/marinas'],
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -249,26 +257,29 @@ export default function Contact() {
               Currently serving marinas in the Port Clinton and Sandusky area:
             </p>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Port Clinton Yacht Club</h3>
+            {isLoadingMarinas ? (
+              <div className="flex justify-center mb-8">
+                <Loader2 className="h-8 w-8 animate-spin text-[#0B1F3A]" />
               </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Sandusky Yacht Club</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Safe Harbor Marina</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Battery Park Marina</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Cedar Point Marina</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Lakefront Marina</h3>
-              </div>
-            </div>
+            ) : (
+              <>
+                {marinas && marinas.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {marinas.map((marina: any) => (
+                      <div key={marina.id} className="bg-white p-4 rounded shadow-sm">
+                        <h3 className="font-bold text-[#0B1F3A]">{marina.name}</h3>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white p-6 rounded shadow-md">
+                    <p className="text-gray-700">
+                      We're expanding our services to new marinas. Contact us for details!
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
             
             <p className="mt-8 text-gray-700">
               Don't see your marina? Contact us to discuss expanding our service to your location!
