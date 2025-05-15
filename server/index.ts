@@ -57,7 +57,7 @@ app.use((req, res, next) => {
       // Single-head boats
       memStorage.createServiceLevel({
         name: "Single Service (Single-Head)",
-        price: 6000, // $60.00 in cents
+        price: 60, // $60.00 in dollars
         type: "one-time",
         headCount: 1,
         description: "One-time pump-out service for single-head boats",
@@ -65,7 +65,7 @@ app.use((req, res, next) => {
       }),
       memStorage.createServiceLevel({
         name: "Monthly Plan (Single-Head)",
-        price: 10000, // $100.00 in cents
+        price: 100, // $100.00 in dollars
         type: "monthly",
         headCount: 1,
         monthlyQuota: 2,
@@ -74,7 +74,7 @@ app.use((req, res, next) => {
       }),
       memStorage.createServiceLevel({
         name: "Seasonal Service (Single-Head)",
-        price: 47500, // $475.00 in cents
+        price: 475, // $475.00 in dollars
         type: "seasonal",
         headCount: 1,
         monthlyQuota: 2,
@@ -88,7 +88,7 @@ app.use((req, res, next) => {
       // Multi-head boats
       memStorage.createServiceLevel({
         name: "Single Service (Multi-Head)",
-        price: 7500, // $75.00 in cents
+        price: 75, // $75.00 in dollars
         type: "one-time",
         headCount: 2,
         description: "One-time pump-out service for multi-head boats",
@@ -96,7 +96,7 @@ app.use((req, res, next) => {
       }),
       memStorage.createServiceLevel({
         name: "Monthly Plan (Multi-Head)",
-        price: 14000, // $140.00 in cents
+        price: 140, // $140.00 in dollars
         type: "monthly",
         headCount: 2,
         monthlyQuota: 2,
@@ -105,7 +105,7 @@ app.use((req, res, next) => {
       }),
       memStorage.createServiceLevel({
         name: "Seasonal Service (Multi-Head)",
-        price: 67500, // $675.00 in cents
+        price: 675, // $675.00 in dollars
         type: "seasonal",
         headCount: 2,
         monthlyQuota: 2,
@@ -173,7 +173,170 @@ app.use((req, res, next) => {
     );
     
     // Create boat owner record for member
-    await memStorage.createBoatOwner({ userId: memberUser.id });
+    const boatOwner = await memStorage.createBoatOwner({ userId: memberUser.id });
+    
+    // Create boats for scheduling test data
+    const boat1 = await memStorage.createBoat({
+      ownerId: boatOwner.id,
+      name: "Summer Dream",
+      year: 2018,
+      make: "Sea Ray",
+      model: "Sundancer 320",
+      color: "White/Blue",
+      dockingDirection: "bow_in",
+      tieUpSide: "starboard",
+      pumpPortLocations: ["port", "stern"],
+      notes: "Access code for dock is #1234"
+    });
+
+    const boat2 = await memStorage.createBoat({
+      ownerId: boatOwner.id,
+      name: "Wave Runner",
+      year: 2020,
+      make: "Boston Whaler",
+      model: "Conquest 285",
+      color: "White/Navy",
+      dockingDirection: "stern_in",
+      tieUpSide: "port",
+      pumpPortLocations: ["starboard"],
+      notes: "Call 15 mins before arrival"
+    });
+
+    // Create another member and boat
+    const memberUser2 = await memStorage.createUser(
+      {
+        email: "john@boatowner.com",
+        firstName: "John",
+        lastName: "Smith",
+        role: "member",
+        password: "admin123",
+      },
+      hashedPassword
+    );
+    const boatOwner2 = await memStorage.createBoatOwner({ userId: memberUser2.id });
+    
+    const boat3 = await memStorage.createBoat({
+      ownerId: boatOwner2.id,
+      name: "Sea Spirit",
+      year: 2019,
+      make: "Beneteau",
+      model: "Oceanis 41.1",
+      color: "Navy/White",
+      dockingDirection: "side_to",
+      tieUpSide: "both",
+      pumpPortLocations: ["mid_ship"],
+      notes: "Sailboat with keel, be careful when approaching"
+    });
+
+    // Create slip assignments
+    await memStorage.createSlipAssignment({
+      boatId: boat1.id,
+      marinaId: 1, // Bayside Marina
+      dock: 3,
+      slip: 12
+    });
+
+    await memStorage.createSlipAssignment({
+      boatId: boat2.id,
+      marinaId: 2, // Harbor Point Yacht Club
+      dock: 5,
+      slip: 7
+    });
+
+    await memStorage.createSlipAssignment({
+      boatId: boat3.id,
+      marinaId: 3, // Sunset Cove Marina
+      dock: 2,
+      slip: 4
+    });
+
+    // Create pump-out requests with different dates and statuses
+    // Current week
+    const currentDate = new Date();
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday of current week
+    
+    // Format dates as ISO strings (YYYY-MM-DD)
+    const formatDateForRequest = (date: Date): string => {
+      return date.toISOString().split('T')[0];
+    };
+
+    // Create a completed request for this week
+    const request1 = await memStorage.createPumpOutRequest({
+      boatId: boat1.id,
+      weekStartDate: formatDateForRequest(weekStart),
+      status: "Completed",
+      ownerNotes: "Please service early in the week",
+      paymentStatus: "Paid"
+    });
+
+    // Create a scheduled request for this week
+    const request2 = await memStorage.createPumpOutRequest({
+      boatId: boat2.id,
+      weekStartDate: formatDateForRequest(weekStart),
+      status: "Scheduled",
+      ownerNotes: "Thursday morning preferred",
+      paymentStatus: "Paid"
+    });
+
+    // Next week
+    const nextWeekStart = new Date(weekStart);
+    nextWeekStart.setDate(weekStart.getDate() + 7);
+    
+    const request3 = await memStorage.createPumpOutRequest({
+      boatId: boat1.id,
+      weekStartDate: formatDateForRequest(nextWeekStart),
+      status: "Requested",
+      ownerNotes: "Any day is fine",
+      paymentStatus: "Pending"
+    });
+
+    const request4 = await memStorage.createPumpOutRequest({
+      boatId: boat3.id,
+      weekStartDate: formatDateForRequest(nextWeekStart),
+      status: "Requested",
+      ownerNotes: "Tuesday afternoon preferred",
+      paymentStatus: "Paid"
+    });
+
+    // Following week
+    const twoWeeksLaterStart = new Date(nextWeekStart);
+    twoWeeksLaterStart.setDate(nextWeekStart.getDate() + 7);
+    
+    const request5 = await memStorage.createPumpOutRequest({
+      boatId: boat2.id,
+      weekStartDate: formatDateForRequest(twoWeeksLaterStart),
+      status: "Waitlisted",
+      ownerNotes: "Flexible timing",
+      paymentStatus: "Pending"
+    });
+
+    // Create employee assignments
+    await memStorage.createEmployeeAssignment({
+      employeeId: employeeUser.id,
+      requestId: request1.id
+    });
+
+    await memStorage.createEmployeeAssignment({
+      employeeId: employeeUser.id,
+      requestId: request2.id
+    });
+
+    // Create pump-out logs for completed request
+    await memStorage.createPumpOutLog({
+      requestId: request1.id,
+      prevStatus: "Requested",
+      newStatus: "Scheduled"
+    });
+
+    await memStorage.createPumpOutLog({
+      requestId: request1.id,
+      prevStatus: "Scheduled",
+      newStatus: "Completed",
+      beforeUrl: "https://example.com/before-image.jpg",
+      duringUrl: "https://example.com/during-image.jpg",
+      afterUrl: "https://example.com/after-image.jpg"
+    });
     
     log("Sample data initialized in memory storage");
   } catch (seedError) {
