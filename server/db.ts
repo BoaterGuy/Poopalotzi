@@ -8,27 +8,89 @@ const { Pool } = pg;
 // Initialize PostgreSQL connection with explicit parameters
 let pool;
 
-try {
-  // First try with connection string
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
+// Check and log available environment variables for connection
+console.log('Database connection information available:');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Available' : 'Not available');
+console.log('PGHOST:', process.env.PGHOST ? 'Available' : 'Not available');
+console.log('PGPORT:', process.env.PGPORT ? 'Available' : 'Not available');
+console.log('PGUSER:', process.env.PGUSER ? 'Available' : 'Not available');
+console.log('PGDATABASE:', process.env.PGDATABASE ? 'Available' : 'Not available');
+console.log('PGPASSWORD:', process.env.PGPASSWORD ? 'Available (value hidden)' : 'Not available');
+
+// Try multiple pool configurations until one works
+const createSuccessfulPool = () => {
+  const configs = [
+    // Try with connection string and no SASL
+    {
+      name: "URL-based with no SASL",
+      config: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false
+        },
+        password_encryption: 'md5' // Disable SASL/SCRAM
+      }
+    },
+    // Try with direct parameters and no SASL
+    {
+      name: "Direct parameters with no SASL",
+      config: {
+        host: process.env.PGHOST,
+        port: Number(process.env.PGPORT),
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+        ssl: {
+          rejectUnauthorized: false
+        },
+        password_encryption: 'md5' // Disable SASL/SCRAM
+      }
+    },
+    // Try with URL but without SSL
+    {
+      name: "URL-based without SSL",
+      config: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: false
+      }
+    },
+    // Basic fallback
+    {
+      name: "Basic URL",
+      config: {
+        connectionString: process.env.DATABASE_URL
+      }
     }
-  });
-} catch (error) {
-  console.error("Error creating pool with connection string:", error);
+  ];
+
+  for (const { name, config } of configs) {
+    try {
+      console.log(`Trying database connection with: ${name}`);
+      const testPool = new Pool(config);
+      console.log(`Successfully created pool with: ${name}`);
+      
+      // Add error handler
+      testPool.on('error', (err) => {
+        console.error(`Database pool error (${name}):`, err.message);
+      });
+      
+      return testPool;
+    } catch (err) {
+      console.error(`Failed to create pool with ${name}:`, err.message);
+    }
+  }
   
-  // Fallback to individual parameters
+  // If all attempts fail, throw
+  throw new Error("All database connection attempts failed");
+};
+
+try {
+  pool = createSuccessfulPool();
+} catch (error) {
+  console.error("Error creating all database pool configurations:", error);
+  // Create minimal pool as absolute last resort
   pool = new Pool({
-    host: process.env.PGHOST,
-    port: Number(process.env.PGPORT),
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-    ssl: {
-      rejectUnauthorized: false
-    }
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres'
   });
 }
 
@@ -38,16 +100,46 @@ export const db = drizzle(pool, { schema });
 // Database setup function
 export async function setupDatabase() {
   try {
-    // Check if database is initialized
-    const result = await db.execute(sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
-      );
-    `);
+    console.log("Testing database connection...");
     
-    const tablesExist = result[0]?.exists;
+    // Log formatted database URL (redacting password)
+    if (process.env.DATABASE_URL) {
+      try {
+        const url = new URL(process.env.DATABASE_URL);
+        url.password = "REDACTED";
+        console.log("Using database URL format:", url.toString());
+      } catch (err) {
+        console.error("Error parsing DATABASE_URL:", err.message);
+      }
+    }
+    
+    // First test connection
+    try {
+      await pool.query('SELECT 1');
+      console.log("Database connection successful");
+    } catch (connectionErr) {
+      console.error("Database connection test failed:", connectionErr);
+      console.log("Falling back to memory storage");
+      return false;
+    }
+    
+    // Check if database is initialized
+    console.log("Checking if tables exist...");
+    try {
+      const result = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'users'
+        );
+      `);
+      
+      console.log("Database query result:", result);
+      const tablesExist = result[0]?.exists;
+    } catch (schemaErr) {
+      console.error("Error checking schema:", schemaErr);
+      return false;
+    }
     
     if (!tablesExist) {
       console.log('Database tables do not exist. Run migrations...');

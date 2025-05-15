@@ -55,34 +55,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
 
-  // Import setupAuth from auth.ts
-
-  app.post("/api/auth/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info.message });
-      
-      req.logIn(user, (err) => {
-        if (err) return next(err);
-        
-        // Remove sensitive data
-        const { passwordHash, ...safeUser } = user;
-        return res.json(safeUser);
-      });
-    })(req, res, next);
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.logout(() => {
-      res.status(200).json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", isAuthenticated, (req: AuthRequest, res) => {
-    const { passwordHash, ...safeUser } = req.user;
-    res.json(safeUser);
-  });
-
   // Debug route to check if admin user is available
   app.get("/api/debug/users", async (req, res) => {
     try {
