@@ -522,26 +522,33 @@ export default function RequestManagement() {
                                   View Details
                                 </DropdownMenuItem>
                                 
-                                {request.status !== "Completed" && request.status !== "Canceled" && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-                                    {request.status !== "Scheduled" && (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Scheduled")}>
-                                        Mark as Scheduled
-                                      </DropdownMenuItem>
-                                    )}
-                                    {request.status !== "Completed" && (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Completed")}>
-                                        Mark as Completed
-                                      </DropdownMenuItem>
-                                    )}
-                                    {request.status !== "Canceled" && (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Canceled")}>
-                                        Mark as Canceled
-                                      </DropdownMenuItem>
-                                    )}
-                                  </>
+                                {/* Admin can change to any status */}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                {request.status !== "Requested" && (
+                                  <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Requested")}>
+                                    Mark as Requested
+                                  </DropdownMenuItem>
+                                )}
+                                {request.status !== "Scheduled" && (
+                                  <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Scheduled")}>
+                                    Mark as Scheduled
+                                  </DropdownMenuItem>
+                                )}
+                                {request.status !== "Completed" && (
+                                  <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Completed")}>
+                                    Mark as Completed
+                                  </DropdownMenuItem>
+                                )}
+                                {request.status !== "Canceled" && (
+                                  <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Canceled")}>
+                                    Mark as Canceled
+                                  </DropdownMenuItem>
+                                )}
+                                {request.status !== "Waitlisted" && (
+                                  <DropdownMenuItem onClick={() => handleUpdateStatus(request.id, "Waitlisted")}>
+                                    Mark as Waitlisted
+                                  </DropdownMenuItem>
                                 )}
                                 
                                 <DropdownMenuSeparator />
