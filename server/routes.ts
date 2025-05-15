@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import session from "express-session";
 import passport from "passport";
@@ -637,6 +638,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const arpu = await storage.calculateAverageRevenuePerUser();
       res.json({ arpu });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Service Level Management Routes
+  
+  // Get all service levels
+  app.get("/api/service-levels", async (req, res, next) => {
+    try {
+      const serviceLevels = await storage.getAllServiceLevels();
+      res.status(200).json(serviceLevels);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Get a single service level by ID
+  app.get("/api/service-levels/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid service level ID" });
+      }
+      
+      const serviceLevel = await storage.getServiceLevel(id);
+      if (!serviceLevel) {
+        return res.status(404).json({ message: "Service level not found" });
+      }
+      
+      res.status(200).json(serviceLevel);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Create a new service level (admin only)
+  app.post("/api/service-levels", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const result = insertServiceLevelSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid service level data",
+          errors: result.error.format() 
+        });
+      }
+      
+      const newServiceLevel = await storage.createServiceLevel(result.data);
+      res.status(201).json(newServiceLevel);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Update a service level (admin only)
+  app.put("/api/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid service level ID" });
+      }
+      
+      const existingServiceLevel = await storage.getServiceLevel(id);
+      if (!existingServiceLevel) {
+        return res.status(404).json({ message: "Service level not found" });
+      }
+      
+      // Partial update validation
+      const serviceLevelSchema = insertServiceLevelSchema.partial();
+      const result = serviceLevelSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid service level data", 
+          errors: result.error.format() 
+        });
+      }
+      
+      const updatedServiceLevel = await storage.updateServiceLevel(id, result.data);
+      res.status(200).json(updatedServiceLevel);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Get user's current subscription
+  app.get("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (!user.serviceLevelId) {
+        return res.status(404).json({ message: "No subscription found" });
+      }
+      
+      const serviceLevel = await storage.getServiceLevel(user.serviceLevelId);
+      if (!serviceLevel) {
+        return res.status(404).json({ message: "Subscription service level not found" });
+      }
+      
+      res.status(200).json({
+        userId: user.id,
+        serviceLevelId: user.serviceLevelId,
+        serviceLevel
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Update user subscription
+  app.post("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { serviceLevelId } = req.body;
+      if (!serviceLevelId) {
+        return res.status(400).json({ message: "Service level ID is required" });
+      }
+      
+      const id = parseInt(serviceLevelId);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid service level ID" });
+      }
+      
+      // Check if service level exists and is active
+      const serviceLevel = await storage.getServiceLevel(id);
+      if (!serviceLevel) {
+        return res.status(404).json({ message: "Service level not found" });
+      }
+      
+      if (serviceLevel.isActive === false) {
+        return res.status(400).json({ message: "Service level is not active" });
+      }
+      
+      // Update user's service level
+      const updatedUser = await storage.updateUser(req.user.id, { serviceLevelId: id });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.status(200).json({
+        message: "Subscription updated successfully",
+        userId: updatedUser.id,
+        serviceLevelId: updatedUser.serviceLevelId
+      });
     } catch (err) {
       next(err);
     }

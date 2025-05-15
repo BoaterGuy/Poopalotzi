@@ -18,6 +18,7 @@ import MemberProfile from "@/pages/member/Profile";
 import MemberBoatManagement from "@/pages/member/BoatManagement";
 import MemberRequestService from "@/pages/member/RequestService";
 import MemberServiceHistory from "@/pages/member/ServiceHistory";
+import MemberServiceSubscription from "@/pages/member/ServiceSubscription";
 
 // Employee Pages
 import EmployeeSchedule from "@/pages/employee/Schedule";
@@ -29,6 +30,7 @@ import AdminCustomerManagement from "@/pages/admin/CustomerManagement";
 import AdminMarinaManagement from "@/pages/admin/MarinaManagement";
 import AdminRequestManagement from "@/pages/admin/RequestManagement";
 import AdminCalendar from "@/pages/admin/Calendar";
+import AdminServiceLevelManagement from "@/pages/admin/ServiceLevelManagement";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
@@ -107,6 +109,9 @@ function App() {
                 <Route path="/member/service-history">
                   <MemberRoute component={MemberServiceHistory} path="/member/service-history" />
                 </Route>
+                <Route path="/member/subscription">
+                  <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
+                </Route>
                 
                 {/* Employee Routes */}
                 <Route path="/employee/schedule">
@@ -131,6 +136,9 @@ function App() {
                 </Route>
                 <Route path="/admin/calendar">
                   <AdminRoute component={AdminCalendar} path="/admin/calendar" />
+                </Route>
+                <Route path="/admin/service-levels">
+                  <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
                 </Route>
                 
                 {/* 404 Route */}
