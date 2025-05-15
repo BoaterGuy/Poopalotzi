@@ -6,14 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, includeCents = false): string {
-  // Amount is stored in cents, convert to dollars for display
-  const dollars = amount / 100;
+  // Amount is already in dollars
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: includeCents ? 2 : 0,
     maximumFractionDigits: includeCents ? 2 : 0,
-  }).format(dollars);
+  }).format(amount);
 }
 
 export function formatDate(date: Date | string): string {
