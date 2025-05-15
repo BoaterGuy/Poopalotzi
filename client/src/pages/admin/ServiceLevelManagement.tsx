@@ -408,7 +408,7 @@ export default function ServiceLevelManagement() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      serviceLevels.map((level) => (
+                      serviceLevels.map((level: ServiceLevel) => (
                         <TableRow key={level.id} className={!level.isActive ? "opacity-60" : ""}>
                           <TableCell className="font-medium">{level.name}</TableCell>
                           <TableCell>
