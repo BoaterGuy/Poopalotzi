@@ -90,7 +90,7 @@ export default function MemberDashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard - Poopalazi</title>
+        <title>Dashboard - Poopalotzi</title>
         <meta name="description" content="Manage your boat pump-out services and view upcoming appointments." />
       </Helmet>
 
