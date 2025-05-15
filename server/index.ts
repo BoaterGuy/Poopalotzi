@@ -68,8 +68,8 @@ app.use((req, res, next) => {
         price: 10000, // $100.00 in cents
         type: "monthly",
         headCount: 1,
-        monthlyQuota: 4,
-        description: "Monthly plan with up to 4 pump-outs for single-head boats",
+        monthlyQuota: 2,
+        description: "Monthly plan with up to 2 pump-outs for single-head boats",
         isActive: true,
       }),
       memStorage.createServiceLevel({
@@ -77,9 +77,11 @@ app.use((req, res, next) => {
         price: 47500, // $475.00 in cents
         type: "seasonal",
         headCount: 1,
+        monthlyQuota: 2,
+        onDemandQuota: 1,
         seasonStart: "05-01",
         seasonEnd: "09-30",
-        description: "Season-long service for single-head boats",
+        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Sept)",
         isActive: true,
       }),
       
@@ -97,8 +99,8 @@ app.use((req, res, next) => {
         price: 14000, // $140.00 in cents
         type: "monthly",
         headCount: 2,
-        monthlyQuota: 4,
-        description: "Monthly plan with up to 4 pump-outs for multi-head boats",
+        monthlyQuota: 2,
+        description: "Monthly plan with up to 2 pump-outs for multi-head boats",
         isActive: true,
       }),
       memStorage.createServiceLevel({
@@ -106,9 +108,11 @@ app.use((req, res, next) => {
         price: 67500, // $675.00 in cents
         type: "seasonal",
         headCount: 2,
+        monthlyQuota: 2,
+        onDemandQuota: 1,
         seasonStart: "05-01",
         seasonEnd: "09-30",
-        description: "Season-long service for multi-head boats",
+        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Sept)",
         isActive: true,
       }),
     ]);
