@@ -103,7 +103,7 @@ export default function RequestService() {
               <p className="text-gray-600 mb-6">
                 You need to register a boat before you can request pump-out services.
               </p>
-              <Link href="/member/boats">
+              <Link to="/member/boats">
                 <Button className="bg-[#38B2AC]">Add Your Boat</Button>
               </Link>
             </CardContent>
@@ -129,7 +129,7 @@ export default function RequestService() {
               <p className="text-gray-600 mb-6">
                 You need to select a service plan before you can request pump-out services.
               </p>
-              <Link href="/services">
+              <Link to="/member/subscription">
                 <Button className="bg-[#38B2AC]">Choose a Plan</Button>
               </Link>
             </CardContent>

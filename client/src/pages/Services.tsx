@@ -139,7 +139,7 @@ export default function Services() {
                           </div>
                           
                           {isLoggedIn ? (
-                            <Link to="/member/request-service">
+                            <Link to="/member/subscription">
                               <Button 
                                 className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#0B1F3A]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
                               >
