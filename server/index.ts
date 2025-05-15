@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { setupDatabase } from "./db";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
+import { createSupabaseClient, verifySchema } from "./supabase-db";
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
@@ -43,15 +44,42 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize the database
-  const dbInitialized = await setupDatabase();
-  if (dbInitialized) {
-    // Switch to database storage
-    storage = new DatabaseStorage();
-    log("Using database storage");
-  } else {
-    log("Failed to initialize database, using in-memory storage");
-    // Continue with memory storage
+  let dbInitialized = false;
+  
+  // First try with Neon/Supabase direct connector
+  try {
+    log("Trying to connect with Neon Serverless client...");
+    const supabaseClient = await createSupabaseClient();
+    
+    if (supabaseClient) {
+      log("Successfully connected with Neon Serverless client");
+      const schemaExists = await verifySchema(supabaseClient);
+      
+      if (schemaExists) {
+        // In a complete implementation, we'd use the supabaseClient for database operations
+        // For now, let's still use the DatabaseStorage since it's already implemented
+        storage = new DatabaseStorage();
+        log("Using database storage with Supabase connection");
+        dbInitialized = true;
+      } else {
+        log("Schema doesn't exist in Supabase database");
+      }
+    }
+  } catch (err) {
+    log("Failed to connect with Neon Serverless client: " + (err as Error).message);
+  }
+  
+  // Fallback to regular pg client if Neon client failed
+  if (!dbInitialized) {
+    dbInitialized = await setupDatabase();
+    if (dbInitialized) {
+      // Switch to database storage
+      storage = new DatabaseStorage();
+      log("Using database storage with pg client");
+    } else {
+      log("Failed to initialize database, using in-memory storage");
+      // Continue with memory storage
+    }
   }
   
   const server = await registerRoutes(app);
