@@ -109,7 +109,7 @@ export default function MarinaManagement() {
   return (
     <>
       <Helmet>
-        <title>Marina Management | Poopalazi</title>
+        <title>Marina Management | Poopalotzi</title>
         <meta name="description" content="Manage marinas and their associated docks and slips" />
       </Helmet>
       

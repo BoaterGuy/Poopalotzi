@@ -159,7 +159,7 @@ export default function EmployeeSchedule() {
   return (
     <>
       <Helmet>
-        <title>My Schedule - Poopalazi</title>
+        <title>My Schedule - Poopalotzi</title>
         <meta name="description" content="Employee schedule for pump-out services" />
       </Helmet>
 

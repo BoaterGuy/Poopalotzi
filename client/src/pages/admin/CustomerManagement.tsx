@@ -104,7 +104,7 @@ export default function CustomerManagement() {
   return (
     <>
       <Helmet>
-        <title>Customer Management | Poopalazi</title>
+        <title>Customer Management | Poopalotzi</title>
         <meta name="description" content="Manage boat owners and their service subscriptions" />
       </Helmet>
       

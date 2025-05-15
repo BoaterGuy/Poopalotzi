@@ -98,8 +98,8 @@ export default function AdminDashboard() {
   return (
     <>
       <Helmet>
-        <title>Admin Dashboard - Poopalazi</title>
-        <meta name="description" content="Admin analytics dashboard for Poopalazi" />
+        <title>Admin Dashboard - Poopalotzi</title>
+        <meta name="description" content="Admin analytics dashboard for Poopalotzi" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">

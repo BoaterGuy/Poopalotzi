@@ -209,7 +209,7 @@ export default function RequestManagement() {
   return (
     <>
       <Helmet>
-        <title>Request Management | Poopalazi</title>
+        <title>Request Management | Poopalotzi</title>
         <meta name="description" content="Manage pump-out service requests and their status" />
       </Helmet>
       

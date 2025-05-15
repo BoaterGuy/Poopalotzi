@@ -218,7 +218,7 @@ export default function AdminCalendar() {
   return (
     <>
       <Helmet>
-        <title>Schedule Calendar | Poopalazi</title>
+        <title>Schedule Calendar | Poopalotzi</title>
         <meta name="description" content="View and manage the scheduled pump-out services calendar" />
       </Helmet>
       
