@@ -428,7 +428,7 @@ export default function ServiceLevelManagement() {
   return (
     <>
       <Helmet>
-        <title>Service Levels | Poopalazi</title>
+        <title>Service Levels | Poopalotzi</title>
         <meta name="description" content="Manage pump-out service levels and pricing" />
       </Helmet>
       

@@ -232,7 +232,7 @@ export default function ServiceSubscription() {
   return (
     <>
       <Helmet>
-        <title>Service Subscription | Poopalazi</title>
+        <title>Service Subscription | Poopalotzi</title>
         <meta name="description" content="Choose a pump-out service subscription plan" />
       </Helmet>
       
