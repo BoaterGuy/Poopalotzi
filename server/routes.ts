@@ -655,6 +655,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete (deactivate) a service level (admin only)
+  app.delete("/api/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid service level ID" });
+      }
+      
+      const existingServiceLevel = await storage.getServiceLevel(id);
+      if (!existingServiceLevel) {
+        return res.status(404).json({ message: "Service level not found" });
+      }
+      
+      // Instead of actually deleting, we'll mark it as inactive
+      const updatedServiceLevel = await storage.updateServiceLevel(id, { isActive: false });
+      res.status(200).json(updatedServiceLevel);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
   // Get user's current subscription
   app.get("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {

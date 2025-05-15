@@ -77,8 +77,8 @@ export default function ServiceLevelManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddingLevel, setIsAddingLevel] = useState(false);
-  const [editingLevel, setEditingLevel] = useState<any | null>(null);
-  const [deletingLevel, setDeletingLevel] = useState<any | null>(null);
+  const [editingLevel, setEditingLevel] = useState<ServiceLevel | null>(null);
+  const [deletingLevel, setDeletingLevel] = useState<ServiceLevel | null>(null);
 
   // Fetch service levels
   const { data: serviceLevels = [], isLoading } = useQuery({
@@ -326,7 +326,7 @@ export default function ServiceLevelManagement() {
 
   const handleDeleteServiceLevel = async (id: number) => {
     try {
-      await apiRequest('PUT', `/api/service-levels/${id}`, { isActive: false });
+      await apiRequest('DELETE', `/api/service-levels/${id}`);
       
       toast({
         title: "Service Level Deactivated",
