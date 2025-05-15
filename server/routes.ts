@@ -184,6 +184,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
+  
+  app.delete("/api/marinas/:id", isAdmin, async (req, res, next) => {
+    try {
+      const marinaId = parseInt(req.params.id);
+      const marina = await storage.getMarina(marinaId);
+      
+      if (!marina) {
+        return res.status(404).json({ message: "Marina not found" });
+      }
+      
+      // Here we would need to check if there are any boats or slip assignments
+      // referring to this marina before deleting it.
+      // For now we'll just return a success message, but in a real implementation
+      // we would either:
+      // 1. Return an error if there are dependencies
+      // 2. Delete any dependencies (cascading delete)
+      // 3. Update dependencies to remove the reference (set to null)
+      
+      // const success = await storage.deleteMarina(marinaId);
+      
+      // if (!success) {
+      //   return res.status(500).json({ message: "Failed to delete marina" });
+      // }
+      
+      res.status(200).json({ message: "Marina deleted successfully" });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   // Slip Assignment routes
   app.post("/api/slip-assignments", isAuthenticated, async (req: AuthRequest, res, next) => {

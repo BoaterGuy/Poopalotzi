@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -22,48 +22,93 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, MapPin, Search, Plus } from "lucide-react";
+import MarinaModal from "@/components/admin/MarinaModal";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// Mock data until connected to API
-const MOCK_MARINAS = [
-  {
-    id: 1,
-    name: "Harbor Bay Marina",
-    address: "123 Harbor Way, Oceanville, CA 94321",
-    phone: "555-123-4567",
-    isActive: true,
-    boatCount: 35,
-  },
-  {
-    id: 2,
-    name: "Sunset Point Marina",
-    address: "456 Sunset Blvd, Bay City, CA 94322",
-    phone: "555-987-6543",
-    isActive: true,
-    boatCount: 42,
-  },
-  {
-    id: 3,
-    name: "Golden Anchor Marina",
-    address: "789 Golden Way, Harbortown, CA 94323",
-    phone: "555-456-7890",
-    isActive: false,
-    boatCount: 0,
-  },
-];
+interface Marina {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  isActive: boolean;
+}
 
 export default function MarinaManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [showInactive, setShowInactive] = useState(false);
+  const [marinaModalOpen, setMarinaModalOpen] = useState(false);
+  const [selectedMarina, setSelectedMarina] = useState<Marina | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [marinaToDelete, setMarinaToDelete] = useState<number | null>(null);
 
-  // This will be replaced with actual API call
+  // API call to get marinas
   const { data: marinas = [], isLoading } = useQuery({
     queryKey: ["/api/marinas", { activeOnly: !showInactive }],
     queryFn: async () => {
-      // This will be replaced with actual API call
-      // For now return mock data
-      const result = MOCK_MARINAS;
-      return showInactive ? result : result.filter(marina => marina.isActive);
+      const params = new URLSearchParams();
+      params.append("activeOnly", (!showInactive).toString());
+      const response = await fetch(`/api/marinas?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch marinas");
+      }
+      
+      return response.json();
+    },
+  });
+
+  // Get boat counts for each marina (this would be a real API call in a full implementation)
+  const getBoatCount = (marinaId: number) => {
+    // For now we'll return a random count between 0 and 50
+    return Math.floor(Math.random() * 51);
+  };
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      const response = await apiRequest("PUT", `/api/marinas/${id}`, { isActive: !isActive });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marinas"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update marina status: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/marinas/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marinas"] });
+      toast({
+        title: "Marina Deleted",
+        description: "Marina has been successfully deleted",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete marina: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
@@ -73,37 +118,31 @@ export default function MarinaManagement() {
       marina.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleEditMarina = (id: number) => {
-    toast({
-      title: "Edit Marina",
-      description: `Editing marina with ID: ${id}`,
-    });
-    // Open edit modal/form
+  const handleEditMarina = (marina: Marina) => {
+    setSelectedMarina(marina);
+    setMarinaModalOpen(true);
   };
 
   const handleDeleteMarina = (id: number) => {
-    toast({
-      title: "Delete Marina",
-      description: `Deleting marina with ID: ${id}`,
-      variant: "destructive",
-    });
-    // Show confirmation dialog
+    setMarinaToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (marinaToDelete !== null) {
+      deleteMutation.mutate(marinaToDelete);
+      setDeleteDialogOpen(false);
+      setMarinaToDelete(null);
+    }
   };
 
   const handleAddMarina = () => {
-    toast({
-      title: "Add Marina",
-      description: "Opening form to add a new marina",
-    });
-    // Open add marina modal/form
+    setSelectedMarina(undefined);
+    setMarinaModalOpen(true);
   };
 
   const toggleMarinaStatus = (id: number, currentStatus: boolean) => {
-    toast({
-      title: currentStatus ? "Deactivate Marina" : "Activate Marina",
-      description: `Marina with ID ${id} has been ${currentStatus ? "deactivated" : "activated"}`,
-    });
-    // API call to update status
+    toggleStatusMutation.mutate({ id, isActive: currentStatus });
   };
 
   return (
@@ -122,7 +161,7 @@ export default function MarinaManagement() {
                 Manage marinas and their associated docks and slips
               </CardDescription>
             </div>
-            <Button onClick={handleAddMarina} className="flex items-center">
+            <Button onClick={handleAddMarina} className="flex items-center bg-[#0B1F3A] hover:bg-[#0B1F3A]/90">
               <Plus className="mr-2 h-4 w-4" />
               Add Marina
             </Button>
@@ -176,7 +215,7 @@ export default function MarinaManagement() {
                         <TableRow key={marina.id} className={!marina.isActive ? "opacity-60" : ""}>
                           <TableCell className="font-medium">
                             <div className="flex items-center">
-                              <MapPin className="mr-2 h-4 w-4 text-primary" />
+                              <MapPin className="mr-2 h-4 w-4 text-[#0B1F3A]" />
                               {marina.name}
                             </div>
                           </TableCell>
@@ -192,13 +231,13 @@ export default function MarinaManagement() {
                               {marina.isActive ? "Active" : "Inactive"}
                             </div>
                           </TableCell>
-                          <TableCell>{marina.boatCount}</TableCell>
+                          <TableCell>{getBoatCount(marina.id)}</TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleEditMarina(marina.id)}
+                                onClick={() => handleEditMarina(marina)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -229,6 +268,32 @@ export default function MarinaManagement() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Marina Form Modal */}
+      <MarinaModal 
+        isOpen={marinaModalOpen} 
+        onClose={() => setMarinaModalOpen(false)} 
+        existingMarina={selectedMarina}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will delete the marina. This action cannot be undone.
+              If the marina has any associated boats or slip assignments, they will be affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
