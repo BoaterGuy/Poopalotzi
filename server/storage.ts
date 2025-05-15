@@ -128,76 +128,7 @@ export class MemStorage implements IStorage {
     this.currentPumpOutLogId = 1;
     this.currentEmployeeAssignmentId = 1;
 
-    // Initialize with default service levels
-    this.createServiceLevel({
-      name: "Single Service (Single Head)",
-      price: 6000, // $60.00
-      description: "One-time pump out of a single head.",
-      headCount: 1,
-      type: "one-time",
-      monthlyQuota: null,
-      onDemandQuota: 1,
-      isActive: true
-    });
-
-    this.createServiceLevel({
-      name: "Monthly Plan (Single Head)",
-      price: 10000, // $100.00
-      description: "2 pump-outs/month, single head.",
-      headCount: 1,
-      type: "monthly",
-      monthlyQuota: 2,
-      onDemandQuota: null,
-      isActive: true
-    });
-
-    this.createServiceLevel({
-      name: "Seasonal Service (Single Head)",
-      price: 47500, // $475.00
-      description: "May 1–Oct 31: 2 pump-outs/month + 1 on-demand.",
-      headCount: 1,
-      type: "seasonal",
-      seasonStart: new Date("2023-05-01"),
-      seasonEnd: new Date("2023-10-31"),
-      monthlyQuota: 2,
-      onDemandQuota: 1,
-      isActive: true
-    });
-    
-    this.createServiceLevel({
-      name: "Single Service (Multi-Head)",
-      price: 7500, // $75.00
-      description: "One-time pump out of a multi-head boat.",
-      headCount: 2,
-      type: "one-time",
-      monthlyQuota: null,
-      onDemandQuota: 1,
-      isActive: true
-    });
-    
-    this.createServiceLevel({
-      name: "Monthly Plan (Multi-Head)",
-      price: 14000, // $140.00
-      description: "2 pump-outs/month, multi-head.",
-      headCount: 2,
-      type: "monthly",
-      monthlyQuota: 2,
-      onDemandQuota: null,
-      isActive: true
-    });
-    
-    this.createServiceLevel({
-      name: "Seasonal Service (Multi-Head)",
-      price: 67500, // $675.00
-      description: "May 1–Oct 31: 2 pump-outs/month + 1 on-demand, multi-head.",
-      headCount: 2,
-      type: "seasonal",
-      seasonStart: new Date("2023-05-01"),
-      seasonEnd: new Date("2023-10-31"),
-      monthlyQuota: 2,
-      onDemandQuota: 1,
-      isActive: true
-    });
+    // Service levels are now initialized in server/index.ts
 
     // Initialize with a few marinas
     this.createMarina({

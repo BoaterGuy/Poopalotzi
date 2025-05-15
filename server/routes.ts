@@ -559,16 +559,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Service Level Management Routes
   
-  // Get all service levels
-  app.get("/api/service-levels", async (req, res, next) => {
-    try {
-      const serviceLevels = await storage.getAllServiceLevels();
-      res.status(200).json(serviceLevels);
-    } catch (err) {
-      next(err);
-    }
-  });
-  
   // Get a single service level by ID
   app.get("/api/service-levels/:id", async (req, res, next) => {
     try {
