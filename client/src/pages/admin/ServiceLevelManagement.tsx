@@ -71,68 +71,7 @@ const serviceLevelFormSchema = insertServiceLevelSchema
 
 type ServiceLevelFormValues = z.infer<typeof serviceLevelFormSchema>;
 
-const INITIAL_SERVICE_LEVELS = [
-  {
-    id: 1,
-    name: "Single Service (Single Head)",
-    price: 60,
-    type: "one-time",
-    description: "One-time pump out of a single head.",
-    monthlyQuota: null,
-    onDemandQuota: 1,
-    isActive: true,
-  },
-  {
-    id: 2,
-    name: "Monthly Plan (Single Head)",
-    price: 100,
-    type: "monthly",
-    description: "2 pump-outs/month, single head.",
-    monthlyQuota: 2,
-    onDemandQuota: null,
-    isActive: true,
-  },
-  {
-    id: 3,
-    name: "Seasonal Service (Single Head)",
-    price: 475,
-    type: "seasonal",
-    description: "May 1–Oct 31: 2 pump-outs/month + 1 on-demand.",
-    monthlyQuota: 2,
-    onDemandQuota: 1,
-    isActive: true,
-  },
-  {
-    id: 4,
-    name: "Single Service (Multi-Head)",
-    price: 75,
-    type: "one-time",
-    description: "One-time pump out of a multi-head boat.",
-    monthlyQuota: null,
-    onDemandQuota: 1,
-    isActive: true,
-  },
-  {
-    id: 5,
-    name: "Monthly Plan (Multi-Head)",
-    price: 140,
-    type: "monthly",
-    description: "2 pump-outs/month, multi-head.",
-    monthlyQuota: 2,
-    onDemandQuota: null,
-    isActive: true,
-  },
-  {
-    id: 6,
-    name: "Seasonal Service (Multi-Head)",
-    price: 675,
-    type: "seasonal",
-    description: "May 1–Oct 31: 2 pump-outs/month + 1 on-demand, multi-head.",
-    monthlyQuota: 2,
-    onDemandQuota: 1,
-    isActive: true,
-  },
-];
+// Placeholder data is no longer needed as we're getting data from the API endpoint
 
 export default function ServiceLevelManagement() {
   const { toast } = useToast();
@@ -142,7 +81,7 @@ export default function ServiceLevelManagement() {
   const [deletingLevel, setDeletingLevel] = useState<any | null>(null);
 
   // Fetch service levels
-  const { data: serviceLevels = INITIAL_SERVICE_LEVELS, isLoading } = useQuery({
+  const { data: serviceLevels = [], isLoading } = useQuery({
     queryKey: ['/api/service-levels'],
     queryFn: async () => {
       try {
@@ -155,8 +94,7 @@ export default function ServiceLevelManagement() {
         return await response.json();
       } catch (error) {
         console.error('Error fetching service levels:', error);
-        // Return initial service levels as fallback
-        return INITIAL_SERVICE_LEVELS;
+        return [];
       }
     },
   });
