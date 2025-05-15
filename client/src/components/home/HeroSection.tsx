@@ -13,9 +13,6 @@ export default function HeroSection() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center md:space-x-12">
           <div className="md:w-1/2 mb-10 md:mb-0">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#FF6B6B] mb-3 italic">
-              Let us take care of your business!
-            </h2>
             <h1 className="text-4xl md:text-5xl font-bold text-[#0B1F3A] mb-4">
               Simplify Your Boat Maintenance
             </h1>
@@ -43,6 +40,12 @@ export default function HeroSection() {
                   Learn More
                 </Button>
               </Link>
+            </div>
+            
+            <div className="mt-8 text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#FF6B6B] italic">
+                Let us take care of your business!
+              </h2>
             </div>
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
