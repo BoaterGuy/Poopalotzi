@@ -114,6 +114,11 @@ export default function AppNavbar() {
                           Service History
                         </DropdownMenuItem>
                       </Link>
+                      <Link href="/member/subscription">
+                        <DropdownMenuItem className="cursor-pointer">
+                          Service Plans
+                        </DropdownMenuItem>
+                      </Link>
                       <Link href="/member/profile">
                         <DropdownMenuItem className="cursor-pointer">
                           Profile
@@ -165,6 +170,11 @@ export default function AppNavbar() {
                       <Link href="/admin/calendar">
                         <DropdownMenuItem className="cursor-pointer">
                           Calendar
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/admin/service-levels">
+                        <DropdownMenuItem className="cursor-pointer">
+                          Service Levels
                         </DropdownMenuItem>
                       </Link>
                     </>
@@ -229,6 +239,9 @@ export default function AppNavbar() {
                       <Link href="/member/service-history">
                         <a className="text-white hover:text-[#38B2AC] py-2" onClick={() => setMobileMenuOpen(false)}>Service History</a>
                       </Link>
+                      <Link href="/member/subscription">
+                        <a className="text-white hover:text-[#38B2AC] py-2" onClick={() => setMobileMenuOpen(false)}>Service Plans</a>
+                      </Link>
                       <Link href="/member/profile">
                         <a className="text-white hover:text-[#38B2AC] py-2" onClick={() => setMobileMenuOpen(false)}>Profile</a>
                       </Link>
@@ -265,6 +278,9 @@ export default function AppNavbar() {
                       </Link>
                       <Link href="/admin/calendar">
                         <a className="text-white hover:text-[#38B2AC] py-2" onClick={() => setMobileMenuOpen(false)}>Calendar</a>
+                      </Link>
+                      <Link href="/admin/service-levels">
+                        <a className="text-white hover:text-[#38B2AC] py-2" onClick={() => setMobileMenuOpen(false)}>Service Levels</a>
                       </Link>
                     </>
                   )}
