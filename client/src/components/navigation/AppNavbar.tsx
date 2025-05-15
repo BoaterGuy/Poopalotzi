@@ -50,7 +50,7 @@ export default function AppNavbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href="/">
+            <Link to="/">
               <div className="flex items-center">
                 <img src={logoImage} alt="Poopalotzi Logo" className="h-14 w-auto object-contain py-1" />
                 <span className="font-montserrat font-bold text-xl ml-2">Poopalotzi</span>
@@ -61,7 +61,7 @@ export default function AppNavbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6">
             {navLinks.map((link) => (
-              <Link href={link.href} key={link.name}>
+              <Link to={link.href} key={link.name}>
                 <a
                   className={`text-white hover:text-white hover:opacity-80 transition duration-150 font-opensans ${
                     location === link.href ? "font-semibold" : ""
@@ -95,32 +95,32 @@ export default function AppNavbar() {
                   {/* Member Links */}
                   {user.role === 'member' && (
                     <>
-                      <Link href="/member/dashboard">
+                      <Link to="/member/dashboard">
                         <DropdownMenuItem className="cursor-pointer">
                           Dashboard
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/member/boats">
+                      <Link to="/member/boats">
                         <DropdownMenuItem className="cursor-pointer">
                           My Boats
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/member/request-service">
+                      <Link to="/member/request-service">
                         <DropdownMenuItem className="cursor-pointer">
                           Request Pump-Out
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/member/service-history">
+                      <Link to="/member/service-history">
                         <DropdownMenuItem className="cursor-pointer">
                           Service History
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/member/subscription">
+                      <Link to="/member/subscription">
                         <DropdownMenuItem className="cursor-pointer">
                           Service Plans
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/member/profile">
+                      <Link to="/member/profile">
                         <DropdownMenuItem className="cursor-pointer">
                           Profile
                         </DropdownMenuItem>
@@ -131,12 +131,12 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link href="/employee/schedule">
+                      <Link to="/employee/schedule">
                         <DropdownMenuItem className="cursor-pointer">
                           My Schedule
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/employee/manual-entry">
+                      <Link to="/employee/manual-entry">
                         <DropdownMenuItem className="cursor-pointer">
                           Manual Entry
                         </DropdownMenuItem>
@@ -148,32 +148,32 @@ export default function AppNavbar() {
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
-                      <Link href="/admin/dashboard">
+                      <Link to="/admin/dashboard">
                         <DropdownMenuItem className="cursor-pointer">
                           Admin Dashboard
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/admin/customers">
+                      <Link to="/admin/customers">
                         <DropdownMenuItem className="cursor-pointer">
                           Customers
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/admin/marinas">
+                      <Link to="/admin/marinas">
                         <DropdownMenuItem className="cursor-pointer">
                           Marinas
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/admin/requests">
+                      <Link to="/admin/requests">
                         <DropdownMenuItem className="cursor-pointer">
                           Requests
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/admin/calendar">
+                      <Link to="/admin/calendar">
                         <DropdownMenuItem className="cursor-pointer">
                           Calendar
                         </DropdownMenuItem>
                       </Link>
-                      <Link href="/admin/service-levels">
+                      <Link to="/admin/service-levels">
                         <DropdownMenuItem className="cursor-pointer">
                           Service Levels
                         </DropdownMenuItem>
@@ -209,7 +209,7 @@ export default function AppNavbar() {
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-3">
               {navLinks.map((link) => (
-                <Link href={link.href} key={link.name}>
+                <Link to={link.href} key={link.name}>
                   <a
                     className={`text-white hover:text-white hover:opacity-80 py-2 transition duration-150 font-opensans ${
                       location === link.href ? "font-semibold" : ""
@@ -228,22 +228,22 @@ export default function AppNavbar() {
                   {/* Member Links */}
                   {user.role === 'member' && (
                     <>
-                      <Link href="/member/dashboard">
+                      <Link to="/member/dashboard">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
                       </Link>
-                      <Link href="/member/boats">
+                      <Link to="/member/boats">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>My Boats</a>
                       </Link>
-                      <Link href="/member/request-service">
+                      <Link to="/member/request-service">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Request Pump-Out</a>
                       </Link>
-                      <Link href="/member/service-history">
+                      <Link to="/member/service-history">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service History</a>
                       </Link>
-                      <Link href="/member/subscription">
+                      <Link to="/member/subscription">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service Plans</a>
                       </Link>
-                      <Link href="/member/profile">
+                      <Link to="/member/profile">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Profile</a>
                       </Link>
                     </>
@@ -252,10 +252,10 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link href="/employee/schedule">
+                      <Link to="/employee/schedule">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>My Schedule</a>
                       </Link>
-                      <Link href="/employee/manual-entry">
+                      <Link to="/employee/manual-entry">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Manual Entry</a>
                       </Link>
                     </>
@@ -265,22 +265,22 @@ export default function AppNavbar() {
                   {isAdmin && (
                     <>
                       <div className="py-2 border-t border-gray-700"></div>
-                      <Link href="/admin/dashboard">
+                      <Link to="/admin/dashboard">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</a>
                       </Link>
-                      <Link href="/admin/customers">
+                      <Link to="/admin/customers">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Customers</a>
                       </Link>
-                      <Link href="/admin/marinas">
+                      <Link to="/admin/marinas">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Marinas</a>
                       </Link>
-                      <Link href="/admin/requests">
+                      <Link to="/admin/requests">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Requests</a>
                       </Link>
-                      <Link href="/admin/calendar">
+                      <Link to="/admin/calendar">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Calendar</a>
                       </Link>
-                      <Link href="/admin/service-levels">
+                      <Link to="/admin/service-levels">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service Levels</a>
                       </Link>
                     </>
