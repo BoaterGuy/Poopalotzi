@@ -20,7 +20,7 @@ interface EmailParams {
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     // Use the from email from environment or default
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalazi.com';
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com';
     
     if (!process.env.SENDGRID_API_KEY) {
       console.log('Email simulation mode:');
@@ -54,7 +54,7 @@ export async function sendServiceStatusEmail(
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #0B1F3A; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0;">Poopalazi</h1>
+        <h1 style="color: white; margin: 0;">Poopalotzi</h1>
       </div>
       <div style="padding: 20px; border: 1px solid #eaeaea; border-top: none;">
         <p style="margin-top: 0;">Hello ${firstName},</p>
@@ -66,11 +66,11 @@ export async function sendServiceStatusEmail(
             View Service Details
           </a>
         </div>
-        <p>Thank you for using Poopalazi for your boat maintenance needs.</p>
-        <p>Best regards,<br>The Poopalazi Team</p>
+        <p>Thank you for using Poopalotzi for your boat maintenance needs.</p>
+        <p>Best regards,<br>The Poopalotzi Team</p>
       </div>
       <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
-        <p>© 2023 Poopalazi. All rights reserved.</p>
+        <p>© 2023 Poopalotzi. All rights reserved.</p>
         <p>123 Marina Way, Seaside, CA 94955</p>
       </div>
     </div>
