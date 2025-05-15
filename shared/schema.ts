@@ -82,6 +82,7 @@ export const serviceLevel = pgTable('service_level', {
   seasonEnd: date('season_end'),
   monthlyQuota: integer('monthly_quota'),
   onDemandQuota: integer('on_demand_quota'),
+  isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
