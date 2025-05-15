@@ -44,7 +44,7 @@ export default function HeroSection() {
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
             <img 
-              src="/src/assets/poopalotzi-logo.jpg" 
+              src="/src/assets/logo.png" 
               alt="Poopalotzi Logo" 
               className="rounded-lg shadow-xl w-2/3 h-auto mb-4"
             />
