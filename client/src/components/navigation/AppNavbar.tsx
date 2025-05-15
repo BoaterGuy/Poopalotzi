@@ -61,14 +61,14 @@ export default function AppNavbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6">
             {navLinks.map((link) => (
-              <Link to={link.href} key={link.name}>
-                <a
-                  className={`text-white hover:text-white hover:opacity-80 transition duration-150 font-opensans ${
-                    location === link.href ? "font-semibold" : ""
-                  }`}
-                >
-                  {link.name}
-                </a>
+              <Link 
+                to={link.href} 
+                key={link.name}
+                className={`text-white hover:text-white hover:opacity-80 transition duration-150 font-opensans ${
+                  location === link.href ? "font-semibold" : ""
+                }`}
+              >
+                {link.name}
               </Link>
             ))}
           </nav>
@@ -209,15 +209,15 @@ export default function AppNavbar() {
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-3">
               {navLinks.map((link) => (
-                <Link to={link.href} key={link.name}>
-                  <a
-                    className={`text-white hover:text-white hover:opacity-80 py-2 transition duration-150 font-opensans ${
-                      location === link.href ? "font-semibold" : ""
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </a>
+                <Link 
+                  to={link.href} 
+                  key={link.name}
+                  className={`text-white hover:text-white hover:opacity-80 py-2 transition duration-150 font-opensans ${
+                    location === link.href ? "font-semibold" : ""
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
                 </Link>
               ))}
               
@@ -228,23 +228,47 @@ export default function AppNavbar() {
                   {/* Member Links */}
                   {user.role === 'member' && (
                     <>
-                      <Link to="/member/dashboard">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+                      <Link 
+                        to="/member/dashboard"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Dashboard
                       </Link>
-                      <Link to="/member/boats">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>My Boats</a>
+                      <Link 
+                        to="/member/boats"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        My Boats
                       </Link>
-                      <Link to="/member/request-service">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Request Pump-Out</a>
+                      <Link 
+                        to="/member/request-service"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Request Pump-Out
                       </Link>
-                      <Link to="/member/service-history">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service History</a>
+                      <Link 
+                        to="/member/service-history"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Service History
                       </Link>
-                      <Link to="/member/subscription">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service Plans</a>
+                      <Link 
+                        to="/member/subscription"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Service Plans
                       </Link>
-                      <Link to="/member/profile">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Profile</a>
+                      <Link 
+                        to="/member/profile"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Profile
                       </Link>
                     </>
                   )}
@@ -252,11 +276,19 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link to="/employee/schedule">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>My Schedule</a>
+                      <Link 
+                        to="/employee/schedule"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        My Schedule
                       </Link>
-                      <Link to="/employee/manual-entry">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Manual Entry</a>
+                      <Link 
+                        to="/employee/manual-entry"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Manual Entry
                       </Link>
                     </>
                   )}
