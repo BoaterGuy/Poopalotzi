@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Ship, Anchor, Shield, Award, Users, Droplet } from "lucide-react";
+import ownersBoatImage from "@/assets/owners-boat.gif";
 
 export default function About() {
   const values = [
@@ -29,19 +30,14 @@ export default function About() {
 
   const teamMembers = [
     {
-      name: "Captain Michael Johnson",
-      role: "Founder & CEO",
-      bio: "With 20+ years of marine experience, Michael founded Poopalotzi to solve the challenges he experienced firsthand as a boat owner."
+      name: "Brian Griebel",
+      role: "Founder & Co-Owner",
+      bio: "Brian has been boating on Lake Erie since his high school years and recently completed America's Great Loop on the 'Take Five'. He brings his passion for boating to help fellow boat owners."
     },
     {
-      name: "Sarah Williams",
-      role: "Operations Director",
-      bio: "Sarah oversees our service teams, ensuring every pump-out is completed efficiently and to our exacting standards."
-    },
-    {
-      name: "Robert Chen",
-      role: "Technology Officer",
-      bio: "Robert leads our digital transformation, creating tools that make scheduling and managing services seamless."
+      name: "Pam Griebel",
+      role: "Founder & Co-Owner",
+      bio: "Pam shares a lifelong love for Lake Erie boating and co-piloted the 'Take Five' around America's Great Loop. She's committed to providing service that enhances everyone's boating experience."
     }
   ];
 
@@ -51,7 +47,7 @@ export default function About() {
         <title>About Us - Poopalotzi</title>
         <meta 
           name="description" 
-          content="Learn about Poopalotzi's mission to provide exceptional boat pump-out services while protecting our waterways and marine environment." 
+          content="Poopalotzi is a boat blackwater pump out service founded by Brian and Pam Griebel. We provide convenient, professional pump-out services to boaters in the Sandusky Boat Basin." 
         />
       </Helmet>
 
@@ -70,23 +66,26 @@ export default function About() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
-              <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Story</h2>
+              <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Ahoy!</h2>
               <p className="text-gray-700 mb-4">
-                Poopalotzi was born out of necessity and passion for the marine environment. As boat owners ourselves, we experienced firsthand the challenges of managing waste disposal while enjoying time on the water. 
+                Welcome to Poopalotzi, a boat blackwater pump out service brought to you by Brian and Pam Griebel. We have enjoyed boating on Lake Erie since our high school years, and recently completed America's Great Loop on our boat, the Take Five.
               </p>
               <p className="text-gray-700 mb-4">
-                Founded in 2023, we set out to create a service that would not only make boat maintenance easier for owners but also contribute to cleaner, healthier waterways. Our team combined decades of marine experience with modern technology to create a solution that's as convenient as it is environmentally responsible.
+                On our trip we observed boat to boat pump out service in the southern ports we visited. We envisioned providing boaters in the Sandusky Boat Basin a similar, convenient and worry free process to pump out boat heads so you can enjoy your boating experience time to the fullest extent. Poopalotzi will provide pump out services Monday through Friday so you can enjoy your boat for the weekend, or have it "at the ready" for a weekday trip to the islands and beyond.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Skip waiting at the fuel docks, and take pumping out off of your list of "must do's" before or after a fun weekend. No more "missing the opportunity" due to business hours that do not match your schedule. Let us take care of your business!
               </p>
               <p className="text-gray-700">
-                Today, we serve hundreds of boat owners across multiple marinas, providing reliable pump-out services that keep vessels compliant and comfortable. Our growing team remains committed to our founding vision: simplifying boat maintenance while protecting the waters we all love.
+                We provide one time, monthly, and seasonal service. Boaters do not need to be present at their boat. We will carefully and professionally pump out your boat. Call us to schedule your appointment or set up monthly services so you can enjoy your boat with family and friends.
               </p>
             </div>
             <div className="md:w-1/2">
               <div className="relative">
                 <div className="absolute -inset-4 bg-[#0B1F3A] rounded-lg transform rotate-3"></div>
                 <img 
-                  src="https://images.unsplash.com/photo-1566847438217-76e82d383f84?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
-                  alt="Marina with boats" 
+                  src={ownersBoatImage} 
+                  alt="Brian and Pam Griebel on their boat, the Take Five" 
                   className="rounded-lg relative shadow-lg"
                 />
               </div>
