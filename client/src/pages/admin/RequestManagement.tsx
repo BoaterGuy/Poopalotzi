@@ -24,6 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -35,75 +42,147 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Calendar, MoreHorizontal, Clock } from "lucide-react";
+import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin } from "lucide-react";
 import { format } from "date-fns";
 
 // Mock data until connected to API
+const MOCK_MARINAS = [
+  { id: 1, name: "Harbor Bay Marina" },
+  { id: 2, name: "Sunset Point Marina" },
+  { id: 3, name: "Golden Anchor Marina" },
+  { id: 4, name: "Cedar Point Marina" },
+  { id: 5, name: "Son Rise Marina" },
+  { id: 6, name: "Port Clinton Yacht Club" },
+  { id: 7, name: "Craft Marine" }
+];
+
+// Mock data for pump-out requests
 const MOCK_REQUESTS = [
   {
     id: 1,
     boatId: 101,
     boatName: "Sea Breeze",
     ownerName: "John Doe",
+    marinaId: 1,
     marinaName: "Harbor Bay Marina",
-    slip: "A-12",
+    dock: "A",
+    slip: "12",
     status: "Scheduled",
     weekStartDate: "2025-05-12",
     paymentStatus: "Paid",
     createdAt: "2025-05-08T10:30:00Z",
     notes: "Owner will be on site",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
   },
   {
     id: 2,
     boatId: 102,
     boatName: "Wave Runner",
     ownerName: "Jane Smith",
+    marinaId: 2,
     marinaName: "Sunset Point Marina",
-    slip: "B-24",
+    dock: "B",
+    slip: "24",
     status: "Completed",
     weekStartDate: "2025-05-05",
     paymentStatus: "Paid",
     createdAt: "2025-05-02T14:15:00Z",
     notes: "",
+    beforeImageUrl: "/src/assets/sample-before.jpg",
+    duringImageUrl: "/src/assets/sample-during.jpg",
+    afterImageUrl: "/src/assets/sample-after.jpg"
   },
   {
     id: 3,
     boatId: 103,
     boatName: "Blue Waters",
     ownerName: "Robert Johnson",
+    marinaId: 1,
     marinaName: "Harbor Bay Marina",
-    slip: "C-08",
+    dock: "C",
+    slip: "08",
     status: "Requested",
     weekStartDate: "2025-05-19",
     paymentStatus: "Pending",
     createdAt: "2025-05-11T09:45:00Z",
     notes: "Please call 30 minutes before arrival",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
   },
   {
     id: 4,
     boatId: 104,
     boatName: "Sea Wanderer",
     ownerName: "Emily Chen",
+    marinaId: 3,
     marinaName: "Golden Anchor Marina",
-    slip: "D-15",
+    dock: "D",
+    slip: "15",
     status: "Waitlisted",
     weekStartDate: "2025-05-12",
     paymentStatus: "Pending",
     createdAt: "2025-05-09T16:20:00Z",
     notes: "",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
   },
   {
     id: 5,
     boatId: 105,
     boatName: "Ocean Explorer",
     ownerName: "Michael Brown",
+    marinaId: 2,
     marinaName: "Sunset Point Marina",
-    slip: "E-03",
+    dock: "E",
+    slip: "03",
     status: "Canceled",
     weekStartDate: "2025-05-05",
     paymentStatus: "Refunded",
     createdAt: "2025-05-01T11:10:00Z",
     notes: "Customer requested cancellation",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
+  },
+  {
+    id: 6,
+    boatId: 106,
+    boatName: "Liberty",
+    ownerName: "Thomas Wilson",
+    marinaId: 4,
+    marinaName: "Cedar Point Marina",
+    dock: "F",
+    slip: "22",
+    status: "Scheduled",
+    weekStartDate: "2025-05-19",
+    paymentStatus: "Paid",
+    createdAt: "2025-05-12T08:30:00Z",
+    notes: "Gate code is 1234",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
+  },
+  {
+    id: 7,
+    boatId: 107,
+    boatName: "Water Dream",
+    ownerName: "Lisa Parker",
+    marinaId: 5,
+    marinaName: "Son Rise Marina",
+    dock: "G",
+    slip: "05",
+    status: "Requested",
+    weekStartDate: "2025-05-26",
+    paymentStatus: "Pending",
+    createdAt: "2025-05-15T13:10:00Z",
+    notes: "",
+    beforeImageUrl: null,
+    duringImageUrl: null,
+    afterImageUrl: null
   },
 ];
 
@@ -115,10 +194,22 @@ export default function RequestManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekFilter, setWeekFilter] = useState<string>("all");
+  const [marinaFilter, setMarinaFilter] = useState<string>("all");
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [currentImage, setCurrentImage] = useState<{ url: string | null, type: string }>({ url: null, type: "" });
 
-  // This will be replaced with actual API call
+  // This will be replaced with actual API call for marinas
+  const { data: marinas = [] } = useQuery({
+    queryKey: ["/api/marinas"],
+    queryFn: async () => {
+      // Will be replaced with actual API call
+      return MOCK_MARINAS;
+    },
+  });
+
+  // This will be replaced with actual API call for requests
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter }],
+    queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter }],
     queryFn: async () => {
       // This will be replaced with actual API call
       // For now return mock data
@@ -130,6 +221,10 @@ export default function RequestManagement() {
       
       if (weekFilter !== "all") {
         filteredRequests = filteredRequests.filter(r => r.weekStartDate === weekFilter);
+      }
+      
+      if (marinaFilter !== "all") {
+        filteredRequests = filteredRequests.filter(r => r.marinaId === Number(marinaFilter));
       }
       
       return filteredRequests;
@@ -144,7 +239,7 @@ export default function RequestManagement() {
       request.boatName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.marinaName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.slip.toLowerCase().includes(searchQuery.toLowerCase())
+      `${request.dock}-${request.slip}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusColor = (status: StatusType) => {
@@ -206,6 +301,19 @@ export default function RequestManagement() {
     // Will be replaced with actual UI for detailed view
   };
 
+  const handleViewImage = (url: string | null, type: string) => {
+    if (url) {
+      setCurrentImage({ url, type });
+      setImageDialogOpen(true);
+    } else {
+      toast({
+        title: "No Image Available",
+        description: `No ${type} image has been uploaded yet.`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -224,19 +332,45 @@ export default function RequestManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+              {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search by boat, owner or slip..."
+                  placeholder="Search by boat, slip..."
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto">
+                {/* Marina Filter */}
+                <Select
+                  value={marinaFilter}
+                  onValueChange={setMarinaFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Filter by marina">
+                      <div className="flex items-center">
+                        <Anchor className="mr-2 h-4 w-4" />
+                        {marinaFilter === "all" ? "All Marinas" : marinas.find(m => m.id.toString() === marinaFilter)?.name}
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Marinas</SelectItem>
+                    {marinas.map(marina => (
+                      <SelectItem key={marina.id} value={marina.id.toString()}>
+                        {marina.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Status Filter */}
                 <Select
                   value={statusFilter}
                   onValueChange={setStatusFilter}
@@ -254,12 +388,18 @@ export default function RequestManagement() {
                   </SelectContent>
                 </Select>
                 
+                {/* Week Filter */}
                 <Select
                   value={weekFilter}
                   onValueChange={setWeekFilter}
                 >
                   <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by week" />
+                    <SelectValue placeholder="Filter by week">
+                      <div className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {weekFilter === "all" ? "All Weeks" : formatWeekDate(weekFilter)}
+                      </div>
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Weeks</SelectItem>
@@ -280,42 +420,41 @@ export default function RequestManagement() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Boat</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Marina & Slip</TableHead>
+                      <TableHead>Boat Name</TableHead>
+                      <TableHead>
+                        <div className="flex items-center">
+                          <MapPin className="mr-2 h-4 w-4" />
+                          Dock/Slip
+                        </div>
+                      </TableHead>
                       <TableHead>
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-4 w-4" />
-                          Week
+                          Week Requested
                         </div>
                       </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
-                      <TableHead>
-                        <div className="flex items-center">
-                          <Clock className="mr-2 h-4 w-4" />
-                          Created
-                        </div>
-                      </TableHead>
+                      <TableHead className="text-center">Images</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRequests.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                           No requests found.
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredRequests.map((request) => (
                         <TableRow key={request.id}>
-                          <TableCell>#{request.id}</TableCell>
                           <TableCell className="font-medium">{request.boatName}</TableCell>
-                          <TableCell>{request.ownerName}</TableCell>
                           <TableCell>
-                            {request.marinaName}, Slip {request.slip}
+                            <div className="flex flex-col">
+                              <span className="font-medium">{request.marinaName}</span>
+                              <span>Dock {request.dock}, Slip {request.slip}</span>
+                            </div>
                           </TableCell>
                           <TableCell>{formatWeekDate(request.weekStartDate)}</TableCell>
                           <TableCell>
@@ -335,7 +474,38 @@ export default function RequestManagement() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {format(new Date(request.createdAt), "MMM d, yyyy")}
+                            <div className="flex justify-center space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewImage(request.beforeImageUrl, "Before")}
+                                className={!request.beforeImageUrl ? "opacity-50" : ""}
+                                title="Before image"
+                              >
+                                <Camera className="h-4 w-4 mr-1" />
+                                B
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewImage(request.duringImageUrl, "During")}
+                                className={!request.duringImageUrl ? "opacity-50" : ""}
+                                title="During image"
+                              >
+                                <Camera className="h-4 w-4 mr-1" />
+                                D
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewImage(request.afterImageUrl, "After")}
+                                className={!request.afterImageUrl ? "opacity-50" : ""}
+                                title="After image"
+                              >
+                                <Camera className="h-4 w-4 mr-1" />
+                                A
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -393,6 +563,27 @@ export default function RequestManagement() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Image Dialog */}
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{currentImage.type} Image</DialogTitle>
+            <DialogDescription>
+              Photo taken {currentImage.type.toLowerCase()} the pump-out service.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-4">
+            {currentImage.url && (
+              <img 
+                src={currentImage.url} 
+                alt={`${currentImage.type} pump-out service`} 
+                className="max-h-[60vh] object-contain rounded-md" 
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
