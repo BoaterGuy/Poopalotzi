@@ -2,9 +2,9 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import bcrypt from "bcryptjs";
 import { promisify } from "util";
-import { storage } from "./storage";
+import { storage } from "./index";
 import { User as SelectUser } from "@shared/schema";
 
 declare global {
@@ -13,30 +13,24 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
 export async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
 }
 
 export async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  return bcrypt.compare(supplied, stored);
 }
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "poopalazi-secret",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    cookie: { 
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   };
 
@@ -46,78 +40,101 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({
-      usernameField: 'email'
-    }, async (email, password, done) => {
-      try {
-        const user = await storage.getUserByEmail(email);
-        if (!user || !user.passwordHash || !(await comparePasswords(password, user.passwordHash))) {
-          return done(null, false, { message: 'Invalid email or password' });
-        } else {
+    new LocalStrategy(
+      { usernameField: "email" },
+      async (email, password, done) => {
+        try {
+          const user = await storage.getUserByEmail(email);
+          if (!user || !user.passwordHash) {
+            return done(null, false, { message: "Incorrect email or password" });
+          }
+
+          const isMatch = await comparePasswords(password, user.passwordHash);
+          if (!isMatch) {
+            return done(null, false, { message: "Incorrect email or password" });
+          }
+
           return done(null, user);
+        } catch (err) {
+          return done(err);
         }
-      } catch (error) {
-        return done(error);
       }
-    }),
+    )
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
       done(null, user);
-    } catch (error) {
-      done(error);
+    } catch (err) {
+      done(err);
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  // Auth routes
+  app.post("/api/auth/register", async (req, res, next) => {
     try {
+      // Check if user already exists
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
+        return res.status(400).send("Email already exists");
       }
 
-      const hashedPassword = await hashPassword(req.body.password);
+      const passwordHash = await hashPassword(req.body.password);
       
-      const user = await storage.createUser({
-        ...req.body,
-      }, hashedPassword);
+      // Create the user
+      const user = await storage.createUser(req.body, passwordHash);
+      
+      // If user role is member, create a boat owner record
+      if (user.role === "member") {
+        await storage.createBoatOwner({ userId: user.id });
+      }
 
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.status(201).json(user);
+        
+        // Remove sensitive data
+        const { passwordHash: _, ...safeUser } = user;
+        res.status(201).json(safeUser);
       });
-    } catch (error) {
-      next(error);
+    } catch (err) {
+      next(err);
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: Error, user: any, info: { message: string }) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.status(401).json({ message: info.message || "Invalid credentials" });
-      }
+  app.post("/api/auth/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+      if (!user) return res.status(401).json({ message: info.message });
+      
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.status(200).json(user);
+        
+        // Remove sensitive data
+        const { passwordHash: _, ...safeUser } = user;
+        res.json(safeUser);
       });
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/auth/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
-    res.json(req.user);
+  app.get("/api/auth/me", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Remove sensitive data
+    const { passwordHash: _, ...safeUser } = req.user as any;
+    res.json(safeUser);
   });
 }

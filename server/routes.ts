@@ -13,6 +13,7 @@ import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { format, addDays } from "date-fns";
+import { setupAuth } from "./auth";
 
 // Extended Request type with user information
 interface AuthRequest extends Request {
@@ -51,88 +52,10 @@ const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Session setup
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "poopalazi-secret",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { secure: process.env.NODE_ENV === "production", maxAge: 24 * 60 * 60 * 1000 }, // 24 hours
-    })
-  );
+  // Set up authentication (session, passport, etc)
+  setupAuth(app);
 
-  // Passport setup
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Configure passport local strategy
-  passport.use(
-    new LocalStrategy(
-      { usernameField: "email" },
-      async (email, password, done) => {
-        try {
-          const user = await storage.getUserByEmail(email);
-          if (!user) {
-            return done(null, false, { message: "Incorrect email or password" });
-          }
-
-          const isMatch = await bcrypt.compare(password, user.passwordHash || "");
-          if (!isMatch) {
-            return done(null, false, { message: "Incorrect email or password" });
-          }
-
-          return done(null, user);
-        } catch (err) {
-          return done(err);
-        }
-      }
-    )
-  );
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (err) {
-      done(err);
-    }
-  });
-
-  // Auth routes
-  app.post("/api/auth/register", async (req, res, next) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already in use" });
-      }
-
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(userData.password, salt);
-
-      // Create user
-      const user = await storage.createUser(userData, passwordHash);
-      
-      // If user role is member, create a boat owner record
-      if (user.role === "member") {
-        await storage.createBoatOwner({ userId: user.id });
-      }
-
-      // Remove sensitive data
-      const { passwordHash: _, ...safeUser } = user;
-      
-      res.status(201).json(safeUser);
-    } catch (err) {
-      next(err);
-    }
-  });
+  // Import setupAuth from auth.ts
 
   app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
