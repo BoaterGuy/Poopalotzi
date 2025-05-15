@@ -139,7 +139,7 @@ export default function BoatManagement() {
             </p>
           </div>
           <Button 
-            className="mt-4 md:mt-0 bg-[#38B2AC] hover:bg-opacity-90"
+            className="mt-4 md:mt-0 bg-[#0B1F3A] hover:bg-opacity-90"
             onClick={() => setIsAddingBoat(true)}
           >
             <Plus className="mr-2 h-4 w-4" /> Add Boat
