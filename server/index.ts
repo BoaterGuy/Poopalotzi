@@ -5,7 +5,7 @@ import { setupDatabase } from "./db";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
-import { hashPassword } from './auth';
+import bcrypt from "bcryptjs";
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
@@ -130,7 +130,7 @@ app.use((req, res, next) => {
     ]);
     
     // Hash the password before storing it (these are sample accounts)
-    const hashedPassword = await hashPassword("admin123");
+    const hashedPassword = await bcrypt.hash("admin123", 10);
     
     // Create sample admin user
     const adminUser = await memStorage.createUser(
