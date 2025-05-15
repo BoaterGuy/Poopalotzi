@@ -1,6 +1,5 @@
 import { Helmet } from "react-helmet";
 import HeroSection from "@/components/home/HeroSection";
-import ServiceLevels from "@/components/home/ServiceLevels";
 import HowItWorks from "@/components/home/HowItWorks";
 import Features from "@/components/home/Features";
 import Testimonials from "@/components/home/Testimonials";
@@ -18,7 +17,6 @@ export default function Home() {
       </Helmet>
       
       <HeroSection />
-      <ServiceLevels />
       <HowItWorks />
       <Features />
       <Testimonials />

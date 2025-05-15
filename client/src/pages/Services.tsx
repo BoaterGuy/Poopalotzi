@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
@@ -74,66 +74,87 @@ export default function Services() {
                 ))}
               </div>
             ) : (
-              <div className="grid gap-8 md:grid-cols-3">
-                {serviceLevels?.map((plan) => (
-                  <Card key={plan.id} className="overflow-hidden">
-                    <div className={`p-6 ${plan.name === 'Standard' ? 'bg-[#0B1F3A] text-white' : 'bg-[#F4EBD0]'}`}>
-                      <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
-                      <p className="text-sm opacity-90 mb-4">{plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage'}</p>
-                      <div className="text-3xl font-bold">
-                        {getFormattedPrice(plan.price, plan.type)}
-                      </div>
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="space-y-4 mb-6">
-                        <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
-                          <span className="text-black">
-                            {plan.type === 'one-time' ? 'Single service pump-out' : 
-                             plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
-                             'Unlimited pump-outs during season (May-Oct)'}
-                          </span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {serviceLevels?.map((plan) => {
+                  const isPopular = plan.name === "Standard";
+                  return (
+                    <Card 
+                      key={plan.id}
+                      className={`bg-[#F4EBD0] rounded-lg shadow-md overflow-hidden ${
+                        isPopular ? "transform scale-105 border-2 border-[#0B1F3A]" : "transition-transform hover:scale-105 duration-300"
+                      }`}
+                    >
+                      {isPopular && (
+                        <div className="bg-[#0B1F3A] text-white text-center py-2">
+                          <span className="font-semibold">Most Popular</span>
                         </div>
-                        <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
-                          <span className="text-black">
-                            {plan.headCount === 1 ? 'Single head vessels only' : 
-                             `Multi-head vessels (up to ${plan.headCount})`}
-                          </span>
-                        </div>
-                        <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
-                          <span className="text-black">Email notifications</span>
-                        </div>
-                        <div className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
-                          <span className="text-black">Service history & documentation</span>
-                        </div>
-                        {plan.type !== 'one-time' && (
-                          <div className="flex items-start">
-                            <CheckCircle className="h-5 w-5 text-[#0B1F3A] mt-0.5 mr-2" />
-                            <span className="text-black">Priority scheduling</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {isLoggedIn ? (
-                        <Link href="/member/request-service">
-                          <Button className="w-full bg-[#FF6B6B] hover:bg-opacity-90">
-                            Select Plan
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Button 
-                          className="w-full bg-[#FF6B6B] hover:bg-opacity-90"
-                          onClick={() => setAuthModalOpen(true)}
-                        >
-                          Get Started
-                        </Button>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
+                      <CardContent className="p-6 flex flex-col h-full">
+                        <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
+                        <p className="text-gray-600 mb-4">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
+                        <div className="text-3xl font-bold text-[#0B1F3A] mb-4 min-h-[40px]">
+                          {getFormattedPrice(plan.price, plan.type)}
+                        </div>
+                        <ul className="space-y-3 flex-grow">
+                          <li className="flex items-start">
+                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
+                            <span className="text-black">
+                              {plan.type === 'one-time' ? 'Single service pump-out' : 
+                               plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
+                               'Unlimited pump-outs (May-Oct)'}
+                            </span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
+                            <span className="text-black">
+                              {plan.headCount === 1 ? 'Single head vessels only' : 
+                               `Multi-head vessels (up to ${plan.headCount})`}
+                            </span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
+                            <span className="text-black">Email notifications</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
+                            <span className="text-black">Service history & documentation</span>
+                          </li>
+                          <li className="flex items-start">
+                            {plan.type !== 'one-time' ? (
+                              <>
+                                <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
+                                <span className="text-black">Priority scheduling</span>
+                              </>
+                            ) : (
+                              <>
+                                <X className="text-gray-400 h-5 w-5 mt-1 mr-2" />
+                                <span className="text-gray-400">Priority scheduling</span>
+                              </>
+                            )}
+                          </li>
+                        </ul>
+                        <div className="mt-6">
+                          {isLoggedIn ? (
+                            <Link href="/member/request-service">
+                              <Button 
+                                className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#0B1F3A]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
+                              >
+                                Select Plan
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button 
+                              className={`w-full ${isPopular ? "bg-[#FF6B6B]" : "bg-[#0B1F3A]"} hover:bg-opacity-90 text-white py-2 rounded-md font-semibold transition duration-150`}
+                              onClick={() => setAuthModalOpen(true)}
+                            >
+                              Get Started
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
             
