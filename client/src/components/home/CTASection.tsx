@@ -17,7 +17,7 @@ export default function CTASection() {
               Ready to Simplify Your Boating Experience?
             </h2>
             <p className="text-lg text-gray-600">
-              Join thousands of boat owners who trust Poopalazi for hassle-free pump-out services
+              Join thousands of boat owners who trust Poopalotzi for hassle-free pump-out services
             </p>
           </div>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
