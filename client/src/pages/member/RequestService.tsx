@@ -92,7 +92,7 @@ export default function RequestService() {
     return (
       <>
         <Helmet>
-          <title>Request Service - Poopalazi</title>
+          <title>Request Service - Poopalotzi</title>
         </Helmet>
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
@@ -118,7 +118,7 @@ export default function RequestService() {
     return (
       <>
         <Helmet>
-          <title>Request Service - Poopalazi</title>
+          <title>Request Service - Poopalotzi</title>
         </Helmet>
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
@@ -142,7 +142,7 @@ export default function RequestService() {
   return (
     <>
       <Helmet>
-        <title>Request Service - Poopalazi</title>
+        <title>Request Service - Poopalotzi</title>
         <meta name="description" content="Schedule your boat pump-out service" />
       </Helmet>
 

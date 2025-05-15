@@ -110,7 +110,7 @@ export default function ManualEntry() {
   return (
     <>
       <Helmet>
-        <title>Manual Service Entry - Poopalazi</title>
+        <title>Manual Service Entry - Poopalotzi</title>
         <meta name="description" content="Create manual service entries for completed pump-out services" />
       </Helmet>
 
