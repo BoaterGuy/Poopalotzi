@@ -16,6 +16,15 @@ export default function Services() {
   
   const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
+    refetchOnMount: true,
+    staleTime: 0,
+    queryFn: async () => {
+      const response = await fetch('/api/service-levels');
+      if (!response.ok) {
+        throw new Error('Failed to fetch service levels');
+      }
+      return response.json();
+    },
   });
 
   const getFormattedPrice = (price: number, type: string) => {
