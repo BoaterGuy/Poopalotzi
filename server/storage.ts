@@ -78,7 +78,11 @@ export interface IStorage {
 }
 
 // In-memory storage implementation
+import createMemoryStore from "memorystore";
+const MemoryStore = createMemoryStore(session);
+
 export class MemStorage implements IStorage {
+  sessionStore: session.Store;
   private usersData: Map<number, User>;
   private boatOwnersData: Map<number, BoatOwner>;
   private boatsData: Map<number, Boat>;
@@ -100,6 +104,10 @@ export class MemStorage implements IStorage {
   private currentEmployeeAssignmentId: number;
 
   constructor() {
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+    
     this.usersData = new Map();
     this.boatOwnersData = new Map();
     this.boatsData = new Map();
