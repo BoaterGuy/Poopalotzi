@@ -156,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Registration successful",
-        description: `Welcome to Poopalazi, ${newUser.firstName}!`,
+        description: `Welcome to Poopalotzi, ${newUser.firstName}!`,
       });
     } catch (error) {
       console.error('Registration error:', error);

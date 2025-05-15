@@ -38,8 +38,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "signin" }: AuthModalP
           </DialogTitle>
           <DialogDescription>
             {activeTab === "signin"
-              ? "Sign in to your Poopalazi account to manage your boat services."
-              : "Join Poopalazi to start managing your boat pump-out services."}
+              ? "Sign in to your Poopalotzi account to manage your boat services."
+              : "Join Poopalotzi to start managing your boat pump-out services."}
           </DialogDescription>
         </DialogHeader>
 

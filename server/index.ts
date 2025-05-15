@@ -135,7 +135,7 @@ app.use((req, res, next) => {
     // Create sample admin user
     const adminUser = await memStorage.createUser(
       {
-        email: "admin@poopalazi.com",
+        email: "admin@poopalotzi.com",
         firstName: "Admin",
         lastName: "User",
         role: "admin",
@@ -147,7 +147,7 @@ app.use((req, res, next) => {
     // Create sample employee user
     const employeeUser = await memStorage.createUser(
       {
-        email: "employee@poopalazi.com",
+        email: "employee@poopalotzi.com",
         firstName: "Employee",
         lastName: "User",
         role: "employee",
@@ -159,7 +159,7 @@ app.use((req, res, next) => {
     // Create sample member user
     const memberUser = await memStorage.createUser(
       {
-        email: "member@poopalazi.com",
+        email: "member@poopalotzi.com",
         firstName: "Member",
         lastName: "User",
         role: "member",
