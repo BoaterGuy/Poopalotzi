@@ -6,7 +6,7 @@ import { z } from "zod";
 export const userRoleEnum = pgEnum('user_role', ['member', 'employee', 'admin']);
 export const dockingDirectionEnum = pgEnum('docking_direction', ['bow_in', 'stern_in', 'side_to']);
 export const tieUpSideEnum = pgEnum('tie_up_side', ['port', 'starboard', 'both']);
-export const pumpPortLocationEnum = pgEnum('pump_port_location', ['stern', 'port_side', 'starboard_side', 'cabin_roof']);
+export const pumpPortLocationEnum = pgEnum('pump_port_location', ['port', 'starboard', 'bow', 'mid_ship', 'stern']);
 export const requestStatusEnum = pgEnum('request_status', ['Requested', 'Scheduled', 'Completed', 'Canceled', 'Waitlisted']);
 export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Failed', 'Refunded']);
 export const serviceTypeEnum = pgEnum('service_type', ['one-time', 'monthly', 'seasonal']);

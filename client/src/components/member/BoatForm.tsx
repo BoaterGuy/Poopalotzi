@@ -25,6 +25,16 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { insertBoatSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// Define pump port location options
+const pumpPortLocationOptions = [
+  { id: "port", label: "Port" },
+  { id: "starboard", label: "Starboard" },
+  { id: "bow", label: "Bow" },
+  { id: "mid_ship", label: "Mid-ship" },
+  { id: "stern", label: "Stern" },
+];
 
 // Create the form schema based on the boat schema from DB
 const boatFormSchema = insertBoatSchema
@@ -42,6 +52,7 @@ const boatFormSchema = insertBoatSchema
       message: "Length must be at least 1 foot.",
     }).nullable(),
     color: z.string().nullable(),
+    pumpPortLocations: z.array(z.string()).optional().nullable(),
   });
 
 type BoatFormValues = z.infer<typeof boatFormSchema>;
@@ -65,7 +76,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     color: boat?.color || null,
     dockingDirection: boat?.dockingDirection || "bow_in",
     tieUpSide: boat?.tieUpSide || "port",
-    pumpPortLocation: boat?.pumpPortLocation || "stern",
+    pumpPortLocations: boat?.pumpPortLocations || [],
     notes: boat?.notes || null,
   };
 
@@ -258,33 +269,58 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
-          {/* Pump Port Location */}
-          <FormField
-            control={form.control}
-            name="pumpPortLocation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pump Port Location</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select pump port location" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="stern">Stern</SelectItem>
-                    <SelectItem value="port_side">Port Side</SelectItem>
-                    <SelectItem value="starboard_side">Starboard Side</SelectItem>
-                    <SelectItem value="cabin_roof">Cabin Roof</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Where the waste pump-out port is located on your boat
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Pump Out Port(s) */}
+          <div className="col-span-1 md:col-span-2">
+            <FormField
+              control={form.control}
+              name="pumpPortLocations"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Pump Out Port(s) Location</FormLabel>
+                  <div className="space-y-2">
+                    {pumpPortLocationOptions.map((option) => (
+                      <FormField
+                        key={option.id}
+                        control={form.control}
+                        name="pumpPortLocations"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={option.id}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(option.id)}
+                                  onCheckedChange={(checked) => {
+                                    const currentValues = field.value || [];
+                                    return checked
+                                      ? field.onChange([...currentValues, option.id])
+                                      : field.onChange(
+                                          currentValues.filter(
+                                            (value) => value !== option.id
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {option.label}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <FormDescription>
+                    Where the waste pump-out port(s) are located on your boat. You can select multiple options.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         {/* Notes */}
@@ -310,7 +346,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         />
 
         <DialogFooter>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#38B2AC] hover:bg-opacity-90">
+          <Button type="submit" disabled={isSubmitting} className="bg-[#0B1F3A] hover:bg-opacity-90">
             {isSubmitting ? 'Saving...' : boat ? 'Update Boat' : 'Add Boat'}
           </Button>
         </DialogFooter>
