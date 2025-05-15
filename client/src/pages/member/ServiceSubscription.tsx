@@ -37,6 +37,8 @@ export default function ServiceSubscription() {
   // Fetch service levels
   const { data: serviceLevels = [], isLoading } = useQuery({
     queryKey: ['/api/service-levels'],
+    refetchOnMount: true,
+    staleTime: 0,
     queryFn: async () => {
       try {
         const response = await fetch('/api/service-levels', {
@@ -184,7 +186,7 @@ export default function ServiceSubscription() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-center mb-6">
-            ${(plan.price / 100).toFixed(2)}
+            ${plan.price.toFixed(2)}
             {plan.type !== 'one-time' && (
               <span className="text-sm font-normal text-muted-foreground">
                 {plan.type === 'monthly' ? '/mo' : '/season'}
