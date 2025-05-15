@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Poopalazi - Boat Pump-Out Management</title>
+        <title>Poopalotzi - Boat Pump-Out Management</title>
         <meta 
           name="description" 
           content="Schedule pump-outs, track services, and maintain your vessel with ease. The modern solution for boat owners." 

@@ -31,7 +31,7 @@ export default function About() {
     {
       name: "Captain Michael Johnson",
       role: "Founder & CEO",
-      bio: "With 20+ years of marine experience, Michael founded Poopalazi to solve the challenges he experienced firsthand as a boat owner."
+      bio: "With 20+ years of marine experience, Michael founded Poopalotzi to solve the challenges he experienced firsthand as a boat owner."
     },
     {
       name: "Sarah Williams",
@@ -48,17 +48,17 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About Us - Poopalazi</title>
+        <title>About Us - Poopalotzi</title>
         <meta 
           name="description" 
-          content="Learn about Poopalazi's mission to provide exceptional boat pump-out services while protecting our waterways and marine environment." 
+          content="Learn about Poopalotzi's mission to provide exceptional boat pump-out services while protecting our waterways and marine environment." 
         />
       </Helmet>
 
       <div className="bg-[#F4EBD0] py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#0B1F3A] mb-4">About Poopalazi</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-[#0B1F3A] mb-4">About Poopalotzi</h1>
             <p className="text-lg text-gray-700">
               We're on a mission to keep boats clean and waterways cleaner
             </p>

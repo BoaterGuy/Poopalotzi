@@ -60,10 +60,10 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact Us - Poopalazi</title>
+        <title>Contact Us - Poopalotzi</title>
         <meta 
           name="description" 
-          content="Get in touch with the Poopalazi team for questions about our boat pump-out services, partnership opportunities, or customer support." 
+          content="Get in touch with the Poopalotzi team for questions about our boat pump-out services, partnership opportunities, or customer support." 
         />
       </Helmet>
 
@@ -203,7 +203,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Email</h3>
-                      <p className="text-gray-700">info@poopalazi.com</p>
+                      <p className="text-gray-700">info@poopalotzi.com</p>
                     </div>
                   </div>
                   
