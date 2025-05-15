@@ -91,8 +91,8 @@ export default function Services() {
                       )}
                       <CardContent className="p-6 flex flex-col h-full">
                         <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
-                        <p className="text-gray-600 mb-2 min-h-[50px]">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
-                        <div className="text-3xl font-bold text-[#0B1F3A] mb-6 text-center h-[80px] flex items-end justify-center">
+                        <p className="text-gray-600 mb-6 min-h-[50px]">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
+                        <div className="text-3xl font-bold text-[#0B1F3A] mb-6 text-center">
                           {getFormattedPrice(plan.price, plan.type)}
                         </div>
                         <ul className="space-y-3 min-h-[180px]">
