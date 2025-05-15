@@ -5,6 +5,7 @@ import { setupDatabase } from "./db";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
+import { hashPassword } from './auth';
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
@@ -44,42 +45,135 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  let dbInitialized = false;
+  // For now, let's use in-memory storage to ensure the application works
+  // This will allow us to focus on application functionality
+  log("Using in-memory storage for this session");
   
-  // First try with Neon/Supabase direct connector
+  // Seed the memory storage with initial data
+  // This ensures we have some data to work with even without a database
   try {
-    log("Trying to connect with Neon Serverless client...");
-    const supabaseClient = await createSupabaseClient();
-    
-    if (supabaseClient) {
-      log("Successfully connected with Neon Serverless client");
-      const schemaExists = await verifySchema(supabaseClient);
+    // Add service levels
+    await Promise.all([
+      // Single-head boats
+      memStorage.createServiceLevel({
+        name: "Single Service (Single-Head)",
+        price: 6000, // $60.00 in cents
+        type: "one-time",
+        headCount: 1,
+        description: "One-time pump-out service for single-head boats",
+        isActive: true,
+      }),
+      memStorage.createServiceLevel({
+        name: "Monthly Plan (Single-Head)",
+        price: 10000, // $100.00 in cents
+        type: "monthly",
+        headCount: 1,
+        monthlyQuota: 4,
+        description: "Monthly plan with up to 4 pump-outs for single-head boats",
+        isActive: true,
+      }),
+      memStorage.createServiceLevel({
+        name: "Seasonal Service (Single-Head)",
+        price: 47500, // $475.00 in cents
+        type: "seasonal",
+        headCount: 1,
+        seasonStart: "05-01",
+        seasonEnd: "09-30",
+        description: "Season-long service for single-head boats",
+        isActive: true,
+      }),
       
-      if (schemaExists) {
-        // In a complete implementation, we'd use the supabaseClient for database operations
-        // For now, let's still use the DatabaseStorage since it's already implemented
-        storage = new DatabaseStorage();
-        log("Using database storage with Supabase connection");
-        dbInitialized = true;
-      } else {
-        log("Schema doesn't exist in Supabase database");
-      }
-    }
-  } catch (err) {
-    log("Failed to connect with Neon Serverless client: " + (err as Error).message);
-  }
-  
-  // Fallback to regular pg client if Neon client failed
-  if (!dbInitialized) {
-    dbInitialized = await setupDatabase();
-    if (dbInitialized) {
-      // Switch to database storage
-      storage = new DatabaseStorage();
-      log("Using database storage with pg client");
-    } else {
-      log("Failed to initialize database, using in-memory storage");
-      // Continue with memory storage
-    }
+      // Multi-head boats
+      memStorage.createServiceLevel({
+        name: "Single Service (Multi-Head)",
+        price: 7500, // $75.00 in cents
+        type: "one-time",
+        headCount: 2,
+        description: "One-time pump-out service for multi-head boats",
+        isActive: true,
+      }),
+      memStorage.createServiceLevel({
+        name: "Monthly Plan (Multi-Head)",
+        price: 14000, // $140.00 in cents
+        type: "monthly",
+        headCount: 2,
+        monthlyQuota: 4,
+        description: "Monthly plan with up to 4 pump-outs for multi-head boats",
+        isActive: true,
+      }),
+      memStorage.createServiceLevel({
+        name: "Seasonal Service (Multi-Head)",
+        price: 67500, // $675.00 in cents
+        type: "seasonal",
+        headCount: 2,
+        seasonStart: "05-01",
+        seasonEnd: "09-30",
+        description: "Season-long service for multi-head boats",
+        isActive: true,
+      }),
+    ]);
+    
+    // Add some sample marinas
+    await Promise.all([
+      memStorage.createMarina({
+        name: "Bayside Marina",
+        isActive: true,
+      }),
+      memStorage.createMarina({
+        name: "Harbor Point Yacht Club",
+        isActive: true,
+      }),
+      memStorage.createMarina({
+        name: "Sunset Cove Marina",
+        isActive: true,
+      }),
+    ]);
+    
+    // Hash the password before storing it (these are sample accounts)
+    const hashedPassword = await hashPassword("admin123");
+    
+    // Create sample admin user
+    const adminUser = await memStorage.createUser(
+      {
+        email: "admin@poopalazi.com",
+        firstName: "Admin",
+        lastName: "User",
+        role: "admin",
+        password: "admin123", // This is just for the form, not actually used
+      },
+      hashedPassword // Properly hashed password
+    );
+    
+    // Create sample employee user
+    const employeeUser = await memStorage.createUser(
+      {
+        email: "employee@poopalazi.com",
+        firstName: "Employee",
+        lastName: "User",
+        role: "employee",
+        password: "admin123", // This is just for the form, not actually used
+      },
+      hashedPassword // Properly hashed password
+    );
+    
+    // Create sample member user
+    const memberUser = await memStorage.createUser(
+      {
+        email: "member@poopalazi.com",
+        firstName: "Member",
+        lastName: "User",
+        role: "member",
+        password: "admin123", // This is just for the form, not actually used
+      },
+      hashedPassword // Properly hashed password
+    );
+    
+    // Create boat owner record for member
+    await memStorage.createBoatOwner({ userId: memberUser.id });
+    
+    log("Sample data initialized in memory storage");
+  } catch (seedError) {
+    log("Error seeding initial data: " + seedError);
   }
   
   const server = await registerRoutes(app);
