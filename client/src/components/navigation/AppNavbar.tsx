@@ -77,9 +77,9 @@ export default function AppNavbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10 bg-[#0B1F3A]">
-                      <AvatarFallback>{getInitials(user.firstName)}</AvatarFallback>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                    <Avatar className="h-10 w-10 bg-[#D2B48C] text-black hover:bg-[#C4A87A]">
+                      <AvatarFallback className="text-black font-semibold">{getInitials(user.firstName)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
