@@ -113,7 +113,7 @@ export default function MarinaManagement() {
   });
 
   const filteredMarinas = marinas.filter(
-    (marina) =>
+    (marina: Marina) =>
       marina.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       marina.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -211,7 +211,7 @@ export default function MarinaManagement() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredMarinas.map((marina) => (
+                      filteredMarinas.map((marina: Marina) => (
                         <TableRow key={marina.id} className={!marina.isActive ? "opacity-60" : ""}>
                           <TableCell className="font-medium">
                             <div className="flex items-center">

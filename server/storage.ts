@@ -36,6 +36,7 @@ export interface IStorage {
   getAllMarinas(activeOnly?: boolean): Promise<Marina[]>;
   createMarina(marina: InsertMarina): Promise<Marina>;
   updateMarina(id: number, marinaData: Partial<Marina>): Promise<Marina | undefined>;
+  deleteMarina(id: number): Promise<boolean>;
   
   // Slip Assignment operations
   getSlipAssignment(id: number): Promise<SlipAssignment | undefined>;
@@ -315,6 +316,11 @@ export class MemStorage implements IStorage {
     const updatedMarina = { ...existingMarina, ...marinaData };
     this.marinasData.set(id, updatedMarina);
     return updatedMarina;
+  }
+  
+  async deleteMarina(id: number): Promise<boolean> {
+    if (!this.marinasData.has(id)) return false;
+    return this.marinasData.delete(id);
   }
 
   // Slip Assignment operations
