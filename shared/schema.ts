@@ -56,6 +56,8 @@ export const boat = pgTable('boat', {
 export const marina = pgTable('marina', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
+  address: text('address'),
+  phone: text('phone'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
 });

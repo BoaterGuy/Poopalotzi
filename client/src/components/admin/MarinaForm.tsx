@@ -19,8 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const marinaSchema = z.object({
   name: z.string().min(2, { message: "Marina name must be at least 2 characters" }),
-  address: z.string().min(5, { message: "Please enter a valid address" }),
-  phone: z.string().min(5, { message: "Please enter a valid phone number" }),
+  address: z.string().optional(),
+  phone: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -31,8 +31,8 @@ interface MarinaFormProps {
   existingMarina?: {
     id: number;
     name: string;
-    address: string;
-    phone: string;
+    address?: string;
+    phone?: string;
     isActive: boolean;
   };
 }
@@ -132,7 +132,7 @@ export default function MarinaForm({ onClose, existingMarina }: MarinaFormProps)
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address</FormLabel>
+              <FormLabel>Address (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Enter marina address" {...field} />
               </FormControl>
@@ -146,7 +146,7 @@ export default function MarinaForm({ onClose, existingMarina }: MarinaFormProps)
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
+              <FormLabel>Phone Number (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Enter phone number" {...field} />
               </FormControl>
