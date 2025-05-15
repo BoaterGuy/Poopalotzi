@@ -183,12 +183,6 @@ export default function Services() {
             <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
             <div className="space-y-6 text-left">
               <div>
-                <h3 className="text-xl font-bold mb-2">What is a pump-out service?</h3>
-                <p className="text-gray-300">
-                  A pump-out service safely removes waste from your boat's holding tank, helping you maintain environmental compliance and a clean, odor-free vessel.
-                </p>
-              </div>
-              <div>
                 <h3 className="text-xl font-bold mb-2">How often should I get a pump-out?</h3>
                 <p className="text-gray-300">
                   This depends on your boat size, tank capacity, and usage. Most recreational boats need a pump-out every 1-2 weeks during active use.
