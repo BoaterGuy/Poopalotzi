@@ -1,0 +1,88 @@
+You are an expert full-stack developer. Create a Progressive Web App called **Poopalazi**—a boat pump-out management system for web only (mobile-friendly PWA). Use React (with Tailwind + shadcn/ui), Node.js + Express, and Replit Deploy + Replit Postgres. Follow these detailed requirements:
+
+1. PROJECT OVERVIEW  
+   - Name: Poopalazi  
+   - Platform: PWA (no native apps)  
+   - Purpose: Allow boat owners to sign up, manage boats/marina/slip, request weekly pump-outs, pay via Clover, and receive email notifications. Admins and employees schedule, track, complete services, manage waitlists, and view analytics.
+
+2. UI STYLE GUIDE  
+   - **Colors:**  
+     • Deep Navy #0B1F3A (header/nav)  
+     • Aqua Teal #38B2AC (buttons, links)  
+     • Soft Sand #F4EBD0 (cards, backgrounds)  
+     • Coral Accent #FF6B6B (CTAs)  
+   - **Typography:**  
+     • Headlines: Montserrat, bold  
+     • Body: Open Sans or Roboto  
+   - **Imagery & Icons:** subtle wave/rope motifs in headers; boat illustrations in onboarding  
+   - **Components:** use Tailwind + shadcn/ui (Card, Button, Form, etc.)
+
+3. AUTHENTICATION  
+   - Use Supabase Auth (email/password + OAuth: Google, Facebook, Apple)  
+   - Protect Member, Employee, Admin routes with role-based guards.
+
+4. DATA MODELS (Postgres tables)  
+   • **BoatOwner**: id, first_name, last_name, email, phone, oauth_provider, service_level_id  
+   • **Boat**: id, owner_id, name, year, make, model, color, photo_url, docking_direction (enum), tie_up_side (enum), pump_port_locations (set<enum>), notes  
+   • **Marina**: id, name, is_active (boolean)  
+   • **SlipAssignment**: id, boat_id, marina_id, dock (int), slip (int)  
+   • **ServiceLevel**: id, name, price, description, head_count (single/multi), type (one-time | monthly | seasonal), season_start (May 1), season_end (Oct 31), monthly_quota, on_demand_quota  
+   • **PumpOutRequest**: id, boat_id, week_start_date (date), status (enum: Requested, Scheduled, Completed, Canceled, Waitlisted), owner_notes, admin_notes, payment_status, created_at, updated_at  
+   • **PumpOutLog**: id, request_id, change_timestamp, prev_status, new_status, before_url, during_url, after_url  
+
+5. MEMBER FEATURES & FLOW  
+   - **Onboarding**: fill/edit Profile, Boat, Marina/Slip; upload boat photo  
+   - **Request Pump-Out**: select week (Mon–Fri within May 1–Oct 31); enforce max 1/week, 2/month; cap 90/weekly → auto-waitlist  
+   - **Payment**: embed Clover Checkout, mark paid before scheduling  
+   - **Dashboard**: view upcoming (with cancel action) and past services  
+   - **Email Notifications**: on every status change (Requested→Scheduled, Scheduled→Completed, Completed→Canceled, Waitlisted→Scheduled, Waitlisted→Completed)
+
+6. EMPLOYEE FEATURES & FLOW  
+   - **My Schedule**: list or calendar view of assigned requests  
+   - **Status Toggle**: mark Scheduled↔Completed → triggers owner email  
+   - **Manual Service Entry**: create a completed service record
+
+7. ADMIN FEATURES & FLOW  
+   - **Customer Management**: list Active/Inactive boat owners; edit service levels  
+   - **Marina Management**: CRUD marinas, toggle active  
+   - **Request Management**: search/filter by marina, boat owner, boat name, status; bulk schedule; change status  
+   - **Calendar View**: internal month/week grid of scheduled services  
+   - **Waitlist Logic**: auto-email next waitlisted when capacity frees  
+   - **Route Optimization**: user selects marina → sort that day’s Scheduled requests by Dock ↑ then Slip ↑  
+   - **Analytics Dashboard**:  
+     • Counts: active users by service level, week, month, marina  
+     • Totals: completed vs upcoming services  
+     • ARPU = total revenue / active users  
+     • Churn rate = lost customers / starting base per month  
+     • Heatmaps: pump-outs by weekday & hour  
+
+8. PAGES & NAVIGATION  
+   - **Public**: Home, Service Levels, Sign Up / Login, About Us  
+   - **Member** (after login): Profile, Boat & Marina, Request Pump-Out, History  
+   - **Employee**: My Schedule, Manual Entry  
+   - **Admin**: Customers, Marinas, Requests, Calendar, Dashboard  
+
+9. INTEGRATIONS & INFRASTRUCTURE  
+   - **Hosting:** Replit Deploy for frontend + API  
+   - **Database:** Replit Postgres (free tier)  
+   - **Auth:** Supabase Auth  
+   - **Payments:** Clover Checkout embed  
+   - **Email:** SendGrid SMTP (free tier up to 100 emails/day)  
+   - **Storage:** Replit file storage for photos & logs  
+   - **PWA:** service workers for offline caching & performance  
+
+10. DEVELOPMENT TASKS & MILESTONES  
+   1. Scaffold Replit project & install dependencies (React, Express, Tailwind, Supabase client, SendGrid SDK, Clover embed).  
+   2. Define Postgres schema, run migrations.  
+   3. Implement Auth & RBAC.  
+   4. Build Member flows: onboarding forms, request form with validation, history page, email triggers.  
+   5. Integrate Clover checkout.  
+   6. Build Employee views & status‐toggle endpoints.  
+   7. Build Admin portal: data tables, filters, calendar view, route optimizer, analytics charts (use recharts).  
+   8. Style components per UI guide.  
+   9. PWA manifest & service workers.  
+   10. Testing: unit, integration, end-to-end (Cypress or Playwright).  
+   11. Deploy to Replit, configure env vars (DATABASE_URL, SUPABASE_URL & KEY, SENDGRID_API_KEY, CLOVER_PUBLIC_KEY).  
+   12. Final QA & handoff.
+
+Deliver a fully functional PWA with all flows, role-based security, email notifications, payments, analytics, and responsive UI. Let me know when the initial scaffold is ready for review.
