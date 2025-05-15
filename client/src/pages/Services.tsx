@@ -29,7 +29,7 @@ export default function Services() {
   return (
     <>
       <Helmet>
-        <title>Our Services - Poopalazi</title>
+        <title>Our Services - Poopalotzi</title>
         <meta 
           name="description" 
           content="Explore our boat pump-out service plans. From single services to seasonal packages for all your boating needs." 

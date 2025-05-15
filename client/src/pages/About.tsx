@@ -72,7 +72,7 @@ export default function About() {
             <div className="md:w-1/2">
               <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Story</h2>
               <p className="text-gray-700 mb-4">
-                Poopalazi was born out of necessity and passion for the marine environment. As boat owners ourselves, we experienced firsthand the challenges of managing waste disposal while enjoying time on the water. 
+                Poopalotzi was born out of necessity and passion for the marine environment. As boat owners ourselves, we experienced firsthand the challenges of managing waste disposal while enjoying time on the water. 
               </p>
               <p className="text-gray-700 mb-4">
                 Founded in 2023, we set out to create a service that would not only make boat maintenance easier for owners but also contribute to cleaner, healthier waterways. Our team combined decades of marine experience with modern technology to create a solution that's as convenient as it is environmentally responsible.
@@ -100,7 +100,7 @@ export default function About() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Values</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              These core principles guide everything we do at Poopalazi
+              These core principles guide everything we do at Poopalotzi
             </p>
           </div>
           
