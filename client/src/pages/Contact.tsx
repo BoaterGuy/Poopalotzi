@@ -60,10 +60,10 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact Us - Poopalotzi</title>
+        <title>Contact Us - Poopalotzi LLC</title>
         <meta 
           name="description" 
-          content="Get in touch with the Poopalotzi team for questions about our boat pump-out services, partnership opportunities, or customer support." 
+          content="Get in touch with the Poopalotzi LLC team for questions about our boat pump-out services, partnership opportunities, or customer support in the Port Clinton and Sandusky area." 
         />
       </Helmet>
 
@@ -178,42 +178,42 @@ export default function Contact() {
               <div className="bg-[#F4EBD0] rounded-lg p-6 mb-8">
                 <div className="space-y-4">
                   <div className="flex items-start">
-                    <div className="bg-[#38B2AC] rounded-full p-3 text-white mr-4">
+                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
                       <FaMapMarkerAlt className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Our Office</h3>
-                      <p className="text-gray-700">123 Marina Way<br />Seaside, CA 94955</p>
+                      <p className="text-gray-700">711 W. Lakeshore Dr #402<br />Port Clinton, OH 43452-9311</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-[#38B2AC] rounded-full p-3 text-white mr-4">
+                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
                       <FaPhoneAlt className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Phone</h3>
-                      <p className="text-gray-700">(555) 123-4567</p>
+                      <p className="text-gray-700">(567) 262-6270</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-[#38B2AC] rounded-full p-3 text-white mr-4">
+                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
                       <FaEnvelope className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Email</h3>
-                      <p className="text-gray-700">info@poopalotzi.com</p>
+                      <p className="text-gray-700">poopalotzillc@gmail.com</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-[#38B2AC] rounded-full p-3 text-white mr-4">
+                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
                       <FaClock className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Hours</h3>
-                      <p className="text-gray-700">Monday - Friday: 8am - 5pm<br />Saturday: 9am - 1pm<br />Sunday: Closed</p>
+                      <p className="text-gray-700">Monday - Friday: 9am - 5pm<br />Saturday & Sunday: By Appointment</p>
                     </div>
                   </div>
                 </div>
@@ -246,33 +246,27 @@ export default function Contact() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Service Areas</h2>
             <p className="text-gray-700 mb-8">
-              Currently serving marinas in the following locations:
+              Currently serving marinas in the Port Clinton and Sandusky area:
             </p>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Seaside Harbor</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Port Clinton Yacht Club</h3>
               </div>
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Bayside Marina</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Sandusky Yacht Club</h3>
               </div>
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Newport Bay</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Safe Harbor Marina</h3>
               </div>
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Coastal Harbor</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Battery Park Marina</h3>
               </div>
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Oceanview Dock</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Cedar Point Marina</h3>
               </div>
               <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Sunset Marina</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Harbor Point</h3>
-              </div>
-              <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold text-[#0B1F3A]">Bay Front</h3>
+                <h3 className="font-bold text-[#0B1F3A]">Lakefront Marina</h3>
               </div>
             </div>
             

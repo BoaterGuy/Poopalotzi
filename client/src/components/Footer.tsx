@@ -14,10 +14,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-6">
               <img src={logo} alt="Poopalotzi Logo" className="h-10 w-auto" />
-              <span className="font-montserrat font-bold text-xl">Poopalotzi</span>
+              <span className="font-montserrat font-bold text-xl">Poopalotzi LLC</span>
             </div>
             <p className="text-gray-300 mb-4">
-              The modern solution for boat pump-out management. Serving marinas and boat owners since 2023.
+              The modern solution for boat pump-out management. Serving marinas and boat owners in the Port Clinton and Sandusky area.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-300 hover:text-white transition duration-150">
@@ -104,20 +104,20 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-2">
               <li className="flex items-start">
-                <FaMapMarkerAlt className="mt-1 mr-2 text-[#38B2AC]" />
-                <span className="text-gray-300">123 Marina Way, Seaside, CA 94955</span>
+                <FaMapMarkerAlt className="mt-1 mr-2 text-[#FF6B6B]" />
+                <span className="text-gray-300">711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311</span>
               </li>
               <li className="flex items-start">
-                <FaPhoneAlt className="mt-1 mr-2 text-[#38B2AC]" />
-                <span className="text-gray-300">(555) 123-4567</span>
+                <FaPhoneAlt className="mt-1 mr-2 text-[#FF6B6B]" />
+                <span className="text-gray-300">(567) 262-6270</span>
               </li>
               <li className="flex items-start">
-                <FaEnvelope className="mt-1 mr-2 text-[#38B2AC]" />
-                <span className="text-gray-300">info@poopalotzi.com</span>
+                <FaEnvelope className="mt-1 mr-2 text-[#FF6B6B]" />
+                <span className="text-gray-300">poopalotzillc@gmail.com</span>
               </li>
               <li className="flex items-start">
-                <FaClock className="mt-1 mr-2 text-[#38B2AC]" />
-                <span className="text-gray-300">Mon-Fri: 8am - 5pm</span>
+                <FaClock className="mt-1 mr-2 text-[#FF6B6B]" />
+                <span className="text-gray-300">Mon-Fri: 9am - 5pm</span>
               </li>
             </ul>
           </div>
