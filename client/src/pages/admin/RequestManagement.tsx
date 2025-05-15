@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -56,8 +56,36 @@ const MOCK_MARINAS = [
   { id: 7, name: "Craft Marine" }
 ];
 
+// Define types for the mock data structure
+type StatusType = "Requested" | "Scheduled" | "Completed" | "Canceled" | "Waitlisted";
+type PaymentStatusType = "Pending" | "Paid" | "Failed" | "Refunded";
+
+interface RequestType {
+  id: number;
+  boatId: number;
+  boatName: string;
+  ownerName: string;
+  marinaId: number;
+  marinaName: string;
+  dock: string;
+  slip: string;
+  status: StatusType;
+  weekStartDate: string;
+  paymentStatus: PaymentStatusType;
+  createdAt: string;
+  notes: string;
+  beforeImageUrl: string | null;
+  duringImageUrl: string | null;
+  afterImageUrl: string | null;
+}
+
+interface MarinaType {
+  id: number;
+  name: string;
+}
+
 // Mock data for pump-out requests
-const MOCK_REQUESTS = [
+const MOCK_REQUESTS: RequestType[] = [
   {
     id: 1,
     boatId: 101,
@@ -186,59 +214,83 @@ const MOCK_REQUESTS = [
   },
 ];
 
-type StatusType = "Requested" | "Scheduled" | "Completed" | "Canceled" | "Waitlisted";
-type PaymentStatusType = "Pending" | "Paid" | "Failed" | "Refunded";
+// Define types for the mock data structure
+interface RequestType {
+  id: number;
+  boatId: number;
+  boatName: string;
+  ownerName: string;
+  marinaId: number;
+  marinaName: string;
+  dock: string;
+  slip: string;
+  status: StatusType;
+  weekStartDate: string;
+  paymentStatus: PaymentStatusType;
+  createdAt: string;
+  notes: string;
+  beforeImageUrl: string | null;
+  duringImageUrl: string | null;
+  afterImageUrl: string | null;
+}
+
+interface MarinaType {
+  id: number;
+  name: string;
+}
 
 export default function RequestManagement() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekFilter, setWeekFilter] = useState<string>("all");
   const [marinaFilter, setMarinaFilter] = useState<string>("all");
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState<{ url: string | null, type: string }>({ url: null, type: "" });
+  
+  // State for request details dialog
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<RequestType | null>(null);
 
-  // This will be replaced with actual API call for marinas
-  const { data: marinas = [] } = useQuery({
-    queryKey: ["/api/marinas"],
-    queryFn: async () => {
-      // Will be replaced with actual API call
-      return MOCK_MARINAS;
-    },
-  });
+  // Use the mock marinas data directly
+  const marinas: MarinaType[] = MOCK_MARINAS;
 
   // State to track the requests (will be replaced with API later)
   const [requestsData, setRequestsData] = useState(MOCK_REQUESTS);
 
-  // This will be replaced with actual API call for requests
-  const { data: requests = [], isLoading } = useQuery({
+  // This is just a dummy query that we'll keep to maintain the loading state
+  const { isLoading } = useQuery({
     queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter }],
     queryFn: async () => {
-      // This will be replaced with actual API call
-      // For now use local state data
-      let filteredRequests = requestsData;
-      
-      if (statusFilter !== "all") {
-        filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
-      }
-      
-      if (weekFilter !== "all") {
-        filteredRequests = filteredRequests.filter(r => r.weekStartDate === weekFilter);
-      }
-      
-      if (marinaFilter !== "all") {
-        filteredRequests = filteredRequests.filter(r => r.marinaId === Number(marinaFilter));
-      }
-      
-      return filteredRequests;
+      // In production, this would fetch from the API
+      return [];
     },
+    enabled: false, // Don't actually run this query
   });
 
   // Get unique weeks for the filter
   const uniqueWeeks = Array.from(new Set(MOCK_REQUESTS.map(r => r.weekStartDate))).sort();
 
-  const filteredRequests = requests.filter(
+  // Apply filters directly to our state
+  let filteredRequests = requestsData;
+  
+  // Apply status filter
+  if (statusFilter !== "all") {
+    filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+  }
+  
+  // Apply week filter
+  if (weekFilter !== "all") {
+    filteredRequests = filteredRequests.filter(r => r.weekStartDate === weekFilter);
+  }
+  
+  // Apply marina filter
+  if (marinaFilter !== "all") {
+    filteredRequests = filteredRequests.filter(r => r.marinaId === Number(marinaFilter));
+  }
+  
+  // Apply search filter
+  filteredRequests = filteredRequests.filter(
     (request) =>
       request.boatName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,9 +341,6 @@ export default function RequestManagement() {
     
     setRequestsData(updatedRequests);
     
-    // Invalidate the query to refresh the UI
-    queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
-    
     // Show success message
     toast({
       title: "Status Updated",
@@ -315,11 +364,17 @@ export default function RequestManagement() {
   };
 
   const handleViewDetails = (id: number) => {
-    toast({
-      title: "View Details",
-      description: `Viewing details for request #${id}`,
-    });
-    // Will be replaced with actual UI for detailed view
+    const request = requestsData.find(req => req.id === id);
+    if (request) {
+      setSelectedRequest(request);
+      setDetailsDialogOpen(true);
+    } else {
+      toast({
+        title: "Request Not Found",
+        description: `Could not find request #${id}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewImage = (url: string | null, type: string) => {
@@ -610,6 +665,164 @@ export default function RequestManagement() {
               />
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Request Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Request Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about this service request
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left column */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Boat Information</h3>
+                    <div className="border rounded-lg p-4 mt-2 space-y-2">
+                      <p><span className="font-medium">Name:</span> {selectedRequest.boatName}</p>
+                      <p><span className="font-medium">Owner:</span> {selectedRequest.ownerName}</p>
+                      <p><span className="font-medium">ID:</span> #{selectedRequest.boatId}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold">Location</h3>
+                    <div className="border rounded-lg p-4 mt-2 space-y-2">
+                      <p><span className="font-medium">Marina:</span> {selectedRequest.marinaName}</p>
+                      <p><span className="font-medium">Dock:</span> {selectedRequest.dock}</p>
+                      <p><span className="font-medium">Slip:</span> {selectedRequest.slip}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right column */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Service Information</h3>
+                    <div className="border rounded-lg p-4 mt-2 space-y-2">
+                      <p><span className="font-medium">Status:</span> 
+                        <Badge
+                          variant="outline"
+                          className={`${getStatusColor(selectedRequest.status)} text-white ml-2`}
+                        >
+                          {selectedRequest.status}
+                        </Badge>
+                      </p>
+                      <p><span className="font-medium">Payment:</span> 
+                        <Badge
+                          variant="outline"
+                          className={`${getPaymentStatusColor(selectedRequest.paymentStatus)} text-white ml-2`}
+                        >
+                          {selectedRequest.paymentStatus}
+                        </Badge>
+                      </p>
+                      <p><span className="font-medium">Week Requested:</span> {formatWeekDate(selectedRequest.weekStartDate)}</p>
+                      <p><span className="font-medium">Created:</span> {format(new Date(selectedRequest.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold">Notes</h3>
+                    <div className="border rounded-lg p-4 mt-2">
+                      {selectedRequest.notes ? (
+                        <p>{selectedRequest.notes}</p>
+                      ) : (
+                        <p className="text-muted-foreground italic">No notes provided</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Images section */}
+              <div>
+                <h3 className="text-lg font-semibold">Service Images</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <div className="border rounded-lg p-4 flex flex-col items-center">
+                    <h4 className="font-medium mb-2">Before</h4>
+                    {selectedRequest.beforeImageUrl ? (
+                      <div className="relative h-40 w-full">
+                        <img 
+                          src={selectedRequest.beforeImageUrl} 
+                          alt="Before service" 
+                          className="h-full w-full object-cover rounded-md cursor-pointer"
+                          onClick={() => handleViewImage(selectedRequest.beforeImageUrl, "Before")}
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-40 w-full flex items-center justify-center bg-muted rounded-md">
+                        <p className="text-muted-foreground text-sm">No image</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 flex flex-col items-center">
+                    <h4 className="font-medium mb-2">During</h4>
+                    {selectedRequest.duringImageUrl ? (
+                      <div className="relative h-40 w-full">
+                        <img 
+                          src={selectedRequest.duringImageUrl} 
+                          alt="During service" 
+                          className="h-full w-full object-cover rounded-md cursor-pointer"
+                          onClick={() => handleViewImage(selectedRequest.duringImageUrl, "During")}
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-40 w-full flex items-center justify-center bg-muted rounded-md">
+                        <p className="text-muted-foreground text-sm">No image</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 flex flex-col items-center">
+                    <h4 className="font-medium mb-2">After</h4>
+                    {selectedRequest.afterImageUrl ? (
+                      <div className="relative h-40 w-full">
+                        <img 
+                          src={selectedRequest.afterImageUrl} 
+                          alt="After service" 
+                          className="h-full w-full object-cover rounded-md cursor-pointer"
+                          onClick={() => handleViewImage(selectedRequest.afterImageUrl, "After")}
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-40 w-full flex items-center justify-center bg-muted rounded-md">
+                        <p className="text-muted-foreground text-sm">No image</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDetailsDialogOpen(false)}
+                >
+                  Close
+                </Button>
+                
+                {selectedRequest.status !== "Completed" && selectedRequest.status !== "Canceled" && (
+                  <Button 
+                    onClick={() => {
+                      handleUpdateStatus(selectedRequest.id, "Completed");
+                      setDetailsDialogOpen(false);
+                    }}
+                  >
+                    Mark as Completed
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
