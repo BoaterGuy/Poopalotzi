@@ -49,10 +49,10 @@ export default function AppNavbar() {
     <header className="bg-[#0B1F3A] text-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <Link href="/">
               <div className="flex items-center">
-                <img src={logoImage} alt="Poopalotzi Logo" className="h-12 w-auto" />
+                <img src={logoImage} alt="Poopalotzi Logo" className="h-14 w-auto object-contain py-1" />
               </div>
             </Link>
           </div>
