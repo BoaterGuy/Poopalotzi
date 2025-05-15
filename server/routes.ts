@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import session from "express-session";
