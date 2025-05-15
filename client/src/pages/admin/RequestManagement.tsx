@@ -586,7 +586,10 @@ export default function RequestManagement() {
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  className="h-8 w-8 p-0 bg-[#D2B48C] text-black hover:bg-[#C4A87A] rounded-full"
+                                >
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
