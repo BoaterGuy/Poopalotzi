@@ -14,7 +14,6 @@ export default function ServiceLevels() {
 
   const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
-    queryFn: undefined,
   });
 
   const getFormattedPrice = (price: number, type: string) => {
