@@ -44,10 +44,10 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About Us - Poopalotzi</title>
+        <title>About Us - Poopalotzi LLC</title>
         <meta 
           name="description" 
-          content="Poopalotzi is a boat blackwater pump out service founded by Brian and Pam Griebel. We provide convenient, professional pump-out services to boaters in the Sandusky Boat Basin." 
+          content="Poopalotzi LLC is a boat blackwater pump out service founded by Brian and Pam Griebel. We provide convenient, professional pump-out services to boaters in the Port Clinton and Sandusky area." 
         />
       </Helmet>
 
@@ -154,15 +154,15 @@ export default function About() {
               <div className="space-y-4">
                 <p className="flex items-center text-gray-700">
                   <span className="w-8 mr-2 text-[#0B1F3A]">📱</span>
-                  (419) 271-1066
+                  (567) 262-6270
                 </p>
                 <p className="flex items-center text-gray-700">
                   <span className="w-8 mr-2 text-[#0B1F3A]">✉️</span>
-                  info@poopalotzi.com
+                  poopalotzillc@gmail.com
                 </p>
                 <p className="flex items-center text-gray-700">
                   <span className="w-8 mr-2 text-[#0B1F3A]">📍</span>
-                  Sandusky Boat Basin, Sandusky, OH 44870
+                  711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311
                 </p>
               </div>
               <div className="mt-8">
@@ -177,7 +177,7 @@ export default function About() {
               <ul className="space-y-4">
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>
-                  <span>Serving the Sandusky Boat Basin area</span>
+                  <span>Serving the Port Clinton and Sandusky area</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>
