@@ -100,7 +100,7 @@ export default function ServiceLevelManagement() {
   });
 
   // Form handling for add/edit service level
-  const ServiceLevelForm = ({ level, onSuccess }: { level?: any, onSuccess: () => void }) => {
+  const ServiceLevelForm = ({ level, onSuccess }: { level?: ServiceLevel, onSuccess: () => void }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const defaultValues: Partial<ServiceLevelFormValues> = {
@@ -110,7 +110,7 @@ export default function ServiceLevelManagement() {
       description: level?.description || "",
       monthlyQuota: level?.monthlyQuota || null,
       onDemandQuota: level?.onDemandQuota || null,
-      isActive: level?.isActive ?? true,
+      isActive: level?.isActive === false ? false : true, // Default to true if undefined/null
     };
     
     const form = useForm<ServiceLevelFormValues>({
@@ -299,7 +299,7 @@ export default function ServiceLevelManagement() {
                 <FormControl>
                   <input
                     type="checkbox"
-                    checked={field.value}
+                    checked={field.value === true}
                     onChange={(e) => field.onChange(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
@@ -345,7 +345,7 @@ export default function ServiceLevelManagement() {
     }
   };
 
-  const getTypeLabel = (type: string) => {
+  const getTypeLabel = (type: string): string => {
     switch (type) {
       case 'one-time': return 'One-time';
       case 'monthly': return 'Monthly';
@@ -354,7 +354,7 @@ export default function ServiceLevelManagement() {
     }
   };
 
-  const getServiceTypeColor = (type: string) => {
+  const getServiceTypeColor = (type: string): string => {
     switch (type) {
       case 'one-time': return 'bg-blue-500';
       case 'monthly': return 'bg-green-500';
