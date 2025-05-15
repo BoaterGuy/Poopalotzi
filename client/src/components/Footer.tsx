@@ -14,7 +14,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-6">
               <Ship className="h-6 w-6 text-[#38B2AC]" />
-              <span className="font-montserrat font-bold text-xl">Poopalazi</span>
+              <span className="font-montserrat font-bold text-xl">Poopalotzi</span>
             </div>
             <p className="text-gray-300 mb-4">
               The modern solution for boat pump-out management. Serving marinas and boat owners since 2023.
@@ -113,7 +113,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start">
                 <FaEnvelope className="mt-1 mr-2 text-[#38B2AC]" />
-                <span className="text-gray-300">info@poopalazi.com</span>
+                <span className="text-gray-300">info@poopalotzi.com</span>
               </li>
               <li className="flex items-start">
                 <FaClock className="mt-1 mr-2 text-[#38B2AC]" />
@@ -127,7 +127,7 @@ export default function Footer() {
         
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            &copy; {new Date().getFullYear()} Poopalazi. All rights reserved.
+            &copy; {new Date().getFullYear()} Poopalotzi. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-[#38B2AC] text-sm transition duration-150">Privacy Policy</a>

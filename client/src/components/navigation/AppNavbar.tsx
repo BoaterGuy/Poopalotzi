@@ -52,7 +52,7 @@ export default function AppNavbar() {
             <Ship className="h-6 w-6 text-[#38B2AC]" />
             <Link href="/">
               <span className="font-montserrat font-bold text-xl cursor-pointer">
-                Poopalazi
+                Poopalotzi
               </span>
             </Link>
           </div>
