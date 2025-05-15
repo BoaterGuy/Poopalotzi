@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -191,6 +191,7 @@ type PaymentStatusType = "Pending" | "Paid" | "Failed" | "Refunded";
 
 export default function RequestManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekFilter, setWeekFilter] = useState<string>("all");
@@ -207,13 +208,16 @@ export default function RequestManagement() {
     },
   });
 
+  // State to track the requests (will be replaced with API later)
+  const [requestsData, setRequestsData] = useState(MOCK_REQUESTS);
+
   // This will be replaced with actual API call for requests
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter }],
     queryFn: async () => {
       // This will be replaced with actual API call
-      // For now return mock data
-      let filteredRequests = MOCK_REQUESTS;
+      // For now use local state data
+      let filteredRequests = requestsData;
       
       if (statusFilter !== "all") {
         filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
@@ -278,11 +282,28 @@ export default function RequestManagement() {
   };
 
   const handleUpdateStatus = (id: number, newStatus: StatusType) => {
+    // Update the local state
+    const updatedRequests = requestsData.map(request => 
+      request.id === id ? { ...request, status: newStatus } : request
+    );
+    
+    setRequestsData(updatedRequests);
+    
+    // Invalidate the query to refresh the UI
+    queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
+    
+    // Show success message
     toast({
       title: "Status Updated",
       description: `Request #${id} status changed to ${newStatus}`,
     });
-    // Will be replaced with actual API call
+    
+    // In production this would make an API call
+    // Example: await fetch(`/api/pump-out-requests/${id}/status`, {
+    //   method: 'PATCH',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ status: newStatus })
+    // });
   };
 
   const handleAssignEmployee = (id: number) => {
