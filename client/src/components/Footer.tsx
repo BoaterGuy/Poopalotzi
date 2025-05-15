@@ -9,7 +9,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#0B1F3A] text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
           <div>
             <div className="flex items-center space-x-2 mb-6">
@@ -62,38 +62,6 @@ export default function Footer() {
               <li>
                 <Link href="/contact">
                   <a className="text-gray-300 hover:text-white transition duration-150">Contact</a>
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Services */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Our Services</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition duration-150">Pump-Out Services</a>
-                </Link>
-              </li>
-              <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition duration-150">Maintenance Plans</a>
-                </Link>
-              </li>
-              <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition duration-150">Marina Partnerships</a>
-                </Link>
-              </li>
-              <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition duration-150">Corporate Accounts</a>
-                </Link>
-              </li>
-              <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition duration-150">Seasonal Contracts</a>
                 </Link>
               </li>
             </ul>
