@@ -9,7 +9,10 @@ import { requestStatusEnum, paymentStatusEnum } from "@shared/schema";
 import { eq, and, gte, lte, sql, desc, asc } from "drizzle-orm";
 
 // Interface for storage operations
+import session from "express-session";
+
 export interface IStorage {
+  sessionStore: session.Store;
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;

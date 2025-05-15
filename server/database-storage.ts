@@ -14,9 +14,31 @@ import pg from 'pg';
 const { Pool } = pg;
 
 // Create a new pool instance for session store
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+let sessionPool;
+
+try {
+  // First try with connection string
+  sessionPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} catch (error) {
+  console.error("Error creating session pool with connection string:", error);
+  
+  // Fallback to individual parameters
+  sessionPool = new Pool({
+    host: process.env.PGHOST,
+    port: Number(process.env.PGPORT),
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
 
 // Generate a SESSION_SECRET if it doesn't exist
 if (!process.env.SESSION_SECRET) {
@@ -26,12 +48,13 @@ if (!process.env.SESSION_SECRET) {
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
+      pool: sessionPool, 
+      createTableIfMissing: true,
+      tableName: 'session'
     });
   }
 
@@ -325,14 +348,14 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(schema.employeeAssignment)
       .where(eq(schema.employeeAssignment.employeeId, employeeId))
-      .orderBy(desc(schema.employeeAssignment.assignedDate));
+      .orderBy(desc(schema.employeeAssignment.assignedAt));
   }
 
   async getEmployeeAssignmentsByRequestId(requestId: number): Promise<EmployeeAssignment[]> {
     return await db.select()
       .from(schema.employeeAssignment)
       .where(eq(schema.employeeAssignment.requestId, requestId))
-      .orderBy(desc(schema.employeeAssignment.assignedDate));
+      .orderBy(desc(schema.employeeAssignment.assignedAt));
   }
 
   async createEmployeeAssignment(assignmentData: InsertEmployeeAssignment): Promise<EmployeeAssignment> {

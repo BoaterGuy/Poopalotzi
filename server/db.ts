@@ -5,10 +5,32 @@ import { sql } from 'drizzle-orm';
 
 const { Pool } = pg;
 
-// Initialize PostgreSQL connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+// Initialize PostgreSQL connection with explicit parameters
+let pool;
+
+try {
+  // First try with connection string
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} catch (error) {
+  console.error("Error creating pool with connection string:", error);
+  
+  // Fallback to individual parameters
+  pool = new Pool({
+    host: process.env.PGHOST,
+    port: Number(process.env.PGPORT),
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
 
 // Initialize Drizzle with our schema
 export const db = drizzle(pool, { schema });
