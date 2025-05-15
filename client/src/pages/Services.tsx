@@ -91,11 +91,11 @@ export default function Services() {
                       )}
                       <CardContent className="p-6 flex flex-col h-full">
                         <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
-                        <p className="text-gray-600 mb-4">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
-                        <div className="text-3xl font-bold text-[#0B1F3A] mb-4 min-h-[40px]">
+                        <p className="text-gray-600 mb-4 h-[48px]">{plan.description || (plan.type === 'one-time' ? 'Pay per service' : plan.type === 'monthly' ? 'Monthly subscription' : 'Seasonal coverage')}</p>
+                        <div className="text-3xl font-bold text-[#0B1F3A] mb-4 flex justify-center">
                           {getFormattedPrice(plan.price, plan.type)}
                         </div>
-                        <ul className="space-y-3 flex-grow">
+                        <ul className="space-y-3 min-h-[180px]">
                           <li className="flex items-start">
                             <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
                             <span className="text-black">
@@ -133,7 +133,7 @@ export default function Services() {
                             )}
                           </li>
                         </ul>
-                        <div className="mt-6">
+                        <div className="mt-auto">
                           {isLoggedIn ? (
                             <Link href="/member/request-service">
                               <Button 
