@@ -126,7 +126,7 @@ export default function BoatManagement() {
   return (
     <>
       <Helmet>
-        <title>Boat Management - Poopalazi</title>
+        <title>Boat Management - Poopalotzi</title>
         <meta name="description" content="Manage your boat information and marina assignments." />
       </Helmet>
 

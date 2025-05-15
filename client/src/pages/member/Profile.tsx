@@ -174,7 +174,7 @@ export default function Profile() {
   return (
     <>
       <Helmet>
-        <title>Profile - Poopalazi</title>
+        <title>Profile - Poopalotzi</title>
         <meta name="description" content="Manage your account profile and preferences" />
       </Helmet>
 

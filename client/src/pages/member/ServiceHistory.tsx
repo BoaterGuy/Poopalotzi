@@ -227,7 +227,7 @@ export default function ServiceHistory() {
   return (
     <>
       <Helmet>
-        <title>Service History - Poopalazi</title>
+        <title>Service History - Poopalotzi</title>
         <meta name="description" content="View your boat pump-out service history" />
       </Helmet>
 
