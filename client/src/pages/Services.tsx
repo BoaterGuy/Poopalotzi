@@ -143,7 +143,7 @@ export default function Services() {
                 For marinas, yacht clubs, or special needs, contact us for a tailored plan that fits your requirements.
               </p>
               <Link href="/contact">
-                <Button className="bg-[#38B2AC] hover:bg-opacity-90">
+                <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white">
                   Contact Sales
                 </Button>
               </Link>
