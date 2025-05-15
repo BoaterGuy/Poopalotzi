@@ -48,7 +48,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { insertServiceLevelSchema } from "@shared/schema";
+import { insertServiceLevelSchema, ServiceLevel } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Pencil, Trash2, Plus, DollarSign } from "lucide-react";
 

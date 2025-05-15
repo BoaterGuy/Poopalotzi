@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
+import { ServiceLevel } from "@shared/schema";
 import {
   Card,
   CardContent,
@@ -76,11 +77,11 @@ export default function ServiceSubscription() {
     },
   });
   
-  const filterActiveLevels = (levels) => {
+  const filterActiveLevels = (levels: ServiceLevel[]) => {
     return levels.filter(level => level.isActive);
   };
   
-  const groupByType = (levels) => {
+  const groupByType = (levels: ServiceLevel[]) => {
     const oneTime = levels.filter(level => level.type === 'one-time');
     const monthly = levels.filter(level => level.type === 'monthly');
     const seasonal = levels.filter(level => level.type === 'seasonal');
@@ -91,7 +92,7 @@ export default function ServiceSubscription() {
   const activeServiceLevels = filterActiveLevels(serviceLevels);
   const { oneTime, monthly, seasonal } = groupByType(activeServiceLevels);
   
-  const handleSelectPlan = (plan) => {
+  const handleSelectPlan = (plan: ServiceLevel) => {
     setSelectedPlan(plan);
     setIsSubscribing(true);
   };
@@ -157,12 +158,12 @@ export default function ServiceSubscription() {
   
   const getCurrentServiceLevel = () => {
     if (!subscription || !subscription.serviceLevelId) return null;
-    return serviceLevels.find(level => level.id === subscription.serviceLevelId);
+    return serviceLevels.find((level: ServiceLevel) => level.id === subscription.serviceLevelId);
   };
   
   const currentServiceLevel = getCurrentServiceLevel();
   
-  const ServicePlanCard = ({ plan }) => {
+  const ServicePlanCard = ({ plan }: { plan: ServiceLevel }) => {
     const isCurrentPlan = currentServiceLevel?.id === plan.id;
     
     return (
@@ -191,13 +192,13 @@ export default function ServiceSubscription() {
             )}
           </div>
           <div className="space-y-2">
-            {(plan.monthlyQuota > 0) && (
+            {(plan.monthlyQuota && plan.monthlyQuota > 0) && (
               <div className="flex items-center">
                 <CalendarClock className="h-4 w-4 mr-2 text-primary" />
                 <span>{plan.monthlyQuota} scheduled services per month</span>
               </div>
             )}
-            {(plan.onDemandQuota > 0) && (
+            {(plan.onDemandQuota && plan.onDemandQuota > 0) && (
               <div className="flex items-center">
                 <Clock className="h-4 w-4 mr-2 text-primary" />
                 <span>{plan.onDemandQuota} on-demand service{plan.onDemandQuota > 1 ? 's' : ''}</span>
@@ -285,7 +286,7 @@ export default function ServiceSubscription() {
               <div>
                 <h2 className="text-xl font-semibold mb-4">One-Time Services</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {oneTime.map(plan => (
+                  {oneTime.map((plan: ServiceLevel) => (
                     <ServicePlanCard key={plan.id} plan={plan} />
                   ))}
                 </div>
@@ -296,7 +297,7 @@ export default function ServiceSubscription() {
               <div>
                 <h2 className="text-xl font-semibold mb-4">Monthly Plans</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {monthly.map(plan => (
+                  {monthly.map((plan: ServiceLevel) => (
                     <ServicePlanCard key={plan.id} plan={plan} />
                   ))}
                 </div>
@@ -307,7 +308,7 @@ export default function ServiceSubscription() {
               <div>
                 <h2 className="text-xl font-semibold mb-4">Seasonal Plans</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {seasonal.map(plan => (
+                  {seasonal.map((plan: ServiceLevel) => (
                     <ServicePlanCard key={plan.id} plan={plan} />
                   ))}
                 </div>
