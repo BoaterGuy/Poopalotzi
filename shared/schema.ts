@@ -10,6 +10,7 @@ export const pumpPortLocationEnum = pgEnum('pump_port_location', ['stern', 'port
 export const requestStatusEnum = pgEnum('request_status', ['Requested', 'Scheduled', 'Completed', 'Canceled', 'Waitlisted']);
 export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Failed', 'Refunded']);
 export const serviceTypeEnum = pgEnum('service_type', ['one-time', 'monthly', 'seasonal']);
+export const serviceLevelEnum = pgEnum('service_level', ['single-head', 'multi-head']);
 
 // Users
 export const users = pgTable('users', {
