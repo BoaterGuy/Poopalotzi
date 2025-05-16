@@ -210,7 +210,21 @@ export default function EmployeeSchedule() {
     // Sort requests by dock and slip
     Object.values(groups).forEach(group => {
       group.requests.sort((a, b) => {
-        // Sort by slip numbers instead of dock for simplicity
+        // Convert dock letters to numbers for proper comparison
+        const dockA = typeof a.slipAssignment.dock === 'string' 
+          ? a.slipAssignment.dock.toUpperCase().charCodeAt(0) 
+          : Number(a.slipAssignment.dock);
+          
+        const dockB = typeof b.slipAssignment.dock === 'string' 
+          ? b.slipAssignment.dock.toUpperCase().charCodeAt(0) 
+          : Number(b.slipAssignment.dock);
+        
+        // First sort by dock (ascending)
+        if (dockA !== dockB) {
+          return dockA - dockB;
+        }
+        
+        // Then sort by slip number (ascending)
         return a.slipAssignment.slip - b.slipAssignment.slip;
       });
     });
