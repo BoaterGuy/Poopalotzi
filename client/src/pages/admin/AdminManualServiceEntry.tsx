@@ -121,11 +121,24 @@ export default function AdminManualServiceEntry() {
         testMode: true
       };
       
-      // API call to create pump-out request
-      const response = await fetch("/api/pump-out-requests", {
+      // API call to create manual service entry
+      const response = await fetch("/api/admin/manual-service", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          boatName,
+          boatLength,
+          boatColor,
+          ownerName,
+          ownerEmail,
+          ownerPhone,
+          selectedMarina,
+          serviceDate,
+          selectedPorts,
+          serviceNotes,
+          isSingleHead,
+          paymentReceived
+        }),
         credentials: "include"
       });
       
