@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,8 +69,8 @@ export default function AdminManualEntry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPortLocations, setSelectedPortLocations] = useState<string[]>([]);
 
-  // Use useState to ensure marina data is available
-  const [marinas, setMarinas] = useState([
+  // Define static marina options (to avoid API issues)
+  const marinaOptions = [
     { id: 1, name: "Sunset Marina" },
     { id: 2, name: "Harbor Point" },
     { id: 3, name: "Bay Front" },
@@ -78,7 +78,7 @@ export default function AdminManualEntry() {
     { id: 5, name: "Son Rise Marina" },
     { id: 6, name: "Port Clinton Yacht Club" },
     { id: 7, name: "Craft Marine" }
-  ]);
+  ];
 
   // Port location options
   const portLocations = [
