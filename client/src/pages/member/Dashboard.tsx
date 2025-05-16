@@ -15,13 +15,70 @@ export default function MemberDashboard() {
 
   const { data: boats, isLoading: isLoadingBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/boats', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch boats');
+      }
+      return response.json();
+    },
   });
 
   const { data: serviceLevel, isLoading: isLoadingServiceLevel } = useQuery<ServiceLevel>({
     queryKey: ['/api/service-levels', user?.serviceLevelId],
-    queryFn: undefined,
-    enabled: !!user?.serviceLevelId,
+    queryFn: async () => {
+      // Try to get subscription from API first
+      try {
+        const subResponse = await fetch('/api/users/me/subscription', {
+          credentials: 'include'
+        });
+        
+        if (subResponse.ok) {
+          const subscription = await subResponse.json();
+          
+          // Now get the service level details
+          if (subscription?.serviceLevelId) {
+            const levelResponse = await fetch(`/api/service-levels/${subscription.serviceLevelId}`, {
+              credentials: 'include'
+            });
+            
+            if (levelResponse.ok) {
+              return levelResponse.json();
+            }
+          }
+        }
+        
+        // Fall back to user's serviceLevelId if API call fails
+        if (user?.serviceLevelId) {
+          const response = await fetch(`/api/service-levels/${user.serviceLevelId}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            return response.json();
+          }
+        }
+        
+        // If all fails, get all service levels and get the second one
+        // (which should be the monthly single-head)
+        const allLevelsResponse = await fetch('/api/service-levels', {
+          credentials: 'include'
+        });
+        if (allLevelsResponse.ok) {
+          const allLevels = await allLevelsResponse.json();
+          if (allLevels && allLevels.length > 1) {
+            return allLevels[1]; // Return the second service level as fallback
+          }
+        }
+        
+        throw new Error('Failed to fetch service level');
+      } catch (error) {
+        console.error("Error fetching service level:", error);
+        throw error;
+      }
+    },
+    enabled: true, // Always try to get service level
   });
 
   // Get the first boat's ID to fetch its requests
@@ -29,21 +86,78 @@ export default function MemberDashboard() {
 
   const { data: requests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
     queryKey: [`/api/pump-out-requests/boat/${primaryBoatId}`],
-    queryFn: undefined,
+    queryFn: async () => {
+      try {
+        if (!primaryBoatId) {
+          throw new Error('No boat ID available');
+        }
+        
+        const response = await fetch(`/api/pump-out-requests/boat/${primaryBoatId}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch requests');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching pump out requests:", error);
+        return [];
+      }
+    },
     enabled: !!primaryBoatId,
   });
 
   // Get slip assignment for the primary boat
   const { data: slipAssignment, isLoading: isLoadingSlip } = useQuery<SlipAssignment>({
     queryKey: [`/api/slip-assignments/boat/${primaryBoatId}`],
-    queryFn: undefined,
+    queryFn: async () => {
+      try {
+        if (!primaryBoatId) {
+          throw new Error('No boat ID available');
+        }
+        
+        const response = await fetch(`/api/slip-assignments/boat/${primaryBoatId}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch slip assignment');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching slip assignment:", error);
+        return null;
+      }
+    },
     enabled: !!primaryBoatId,
   });
 
   // Get marina details if we have a slip assignment
   const { data: marina, isLoading: isLoadingMarina } = useQuery<Marina>({
     queryKey: ['/api/marinas', slipAssignment?.marinaId],
-    queryFn: undefined,
+    queryFn: async () => {
+      try {
+        if (!slipAssignment?.marinaId) {
+          throw new Error('No marina ID available');
+        }
+        
+        const response = await fetch(`/api/marinas/${slipAssignment.marinaId}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch marina');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching marina:", error);
+        return null;
+      }
+    },
     enabled: !!slipAssignment?.marinaId,
   });
 
