@@ -106,6 +106,10 @@ function App() {
                 <Route path="/member/request-service">
                   <MemberRoute component={MemberRequestService} path="/member/request-service" />
                 </Route>
+                {/* Add support for /member/request as an alternative URL */}
+                <Route path="/member/request">
+                  <MemberRoute component={MemberRequestService} path="/member/request" />
+                </Route>
                 <Route path="/member/service-history">
                   <MemberRoute component={MemberServiceHistory} path="/member/service-history" />
                 </Route>
