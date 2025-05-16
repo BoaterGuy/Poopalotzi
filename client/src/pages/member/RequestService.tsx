@@ -55,9 +55,15 @@ export default function RequestService() {
     });
   }, []);
 
-  // Get the service level from various sources (API or local storage)
-  // First try to find it in service levels by ID, then by name
+  // Use the subscription hook to get the user's current service level
+  const { currentServiceLevel, isLoading: isLoadingSubscription } = useServiceSubscription();
+
+  // Get the service level from various sources (API, subscription hook, or local storage)
   const serviceLevel = useMemo(() => {
+    // First check if we have a service level from the subscription hook
+    if (currentServiceLevel) return currentServiceLevel;
+    
+    // Otherwise check service levels and local storage
     if (allServiceLevels && Array.isArray(allServiceLevels)) {
       // If we have a local subscription, use that first
       if (localSubscription && localSubscription.serviceLevelId) {
@@ -72,7 +78,7 @@ export default function RequestService() {
       );
     }
     return null;
-  }, [allServiceLevels, localSubscription]);
+  }, [allServiceLevels, localSubscription, currentServiceLevel]);
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 
