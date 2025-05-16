@@ -361,6 +361,36 @@ export default function MemberDashboard() {
                             serviceLevel.type === 'monthly' ? `Monthly (${serviceLevel.monthlyQuota} services)` :
                             'Seasonal (Unlimited)'}
                         </p>
+                        
+                        {/* Display remaining pump-out requests count for monthly plans */}
+                        {serviceLevel.type === 'monthly' && pumpOutRequests && serviceLevel.monthlyQuota && (
+                          <div className="flex items-center mt-1 text-sm">
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-normal">
+                              {(() => {
+                                // Find requests for the current month
+                                const now = new Date();
+                                const currentMonth = now.getMonth();
+                                const currentYear = now.getFullYear();
+                                
+                                // Filter requests that are in current month and not canceled
+                                const activeRequests = pumpOutRequests.filter(req => {
+                                  const requestDate = new Date(req.createdAt);
+                                  return (
+                                    requestDate.getMonth() === currentMonth &&
+                                    requestDate.getFullYear() === currentYear &&
+                                    req.status !== 'Canceled'
+                                  );
+                                });
+                                
+                                // Calculate remaining requests
+                                const used = activeRequests.length;
+                                const remaining = serviceLevel.monthlyQuota - used;
+                                
+                                return `${remaining} of ${serviceLevel.monthlyQuota} pump-outs remaining`;
+                              })()}
+                            </Badge>
+                          </div>
+                        )}
                         {serviceLevel.type === 'monthly' && (
                           <div className="space-y-1 mt-1">
                             <p className="text-xs text-gray-500">
