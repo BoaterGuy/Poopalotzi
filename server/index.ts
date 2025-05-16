@@ -7,11 +7,21 @@ import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
+import cors from "cors";
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
 
 const app = express();
+
+// Enable CORS with credentials
+app.use(cors({
+  origin: true, // Allow all origins in development, but can be restricted in production
+  credentials: true, // This is crucial for cookies with authentication
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
