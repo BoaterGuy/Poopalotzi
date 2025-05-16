@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useState } from 'react';
+import { format, startOfWeek, addDays } from 'date-fns';
 import { useToast } from './use-toast';
 
 export interface PumpOutRequest {
@@ -96,21 +97,18 @@ export function useEmployeeSchedule() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const queryClient = useQueryClient();
   
-  // Format the date for the API request
-  const formattedDate = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-  
   // Get service requests for a specific week
   const { data: weekRequests, isLoading, error } = useQuery({
-    queryKey: [`/api/pump-out-requests/week/${formattedDate}`],
+    queryKey: [`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`],
     queryFn: async () => {
-      // For now, return mock data for demonstration
+      // Return sample data for demonstration
       return [
         {
           id: 1,
           status: "Scheduled",
           boatId: 101,
-          requestedDate: format(selectedDate, 'yyyy-MM-dd'),
-          weekStartDate: formattedDate,
+          requestedDate: new Date().toISOString().split('T')[0],
+          weekStartDate: "2025-05-12",
           pumpOutPorts: ["port", "starboard"],
           boat: {
             id: 101,
@@ -133,8 +131,8 @@ export function useEmployeeSchedule() {
           id: 2,
           status: "Scheduled",
           boatId: 102,
-          requestedDate: format(addDays(selectedDate, 1), 'yyyy-MM-dd'),
-          weekStartDate: formattedDate,
+          requestedDate: new Date().toISOString().split('T')[0],
+          weekStartDate: "2025-05-12",
           pumpOutPorts: ["stern"],
           boat: {
             id: 102,
