@@ -95,10 +95,10 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         // For testing, we'll use a simplified approach with a hardcoded owner ID
         // In the real app, we would need to fetch the current user's boat owner ID
         
-        // Now create the boat with the fixed owner ID (using 1 for the sample data)
+        // Now create the boat with the fixed owner ID (using 2 for the sample data)
         await apiRequest("POST", "/api/boats", {
           ...data,
-          ownerId: 1
+          ownerId: 2
         });
       }
       
@@ -124,7 +124,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Boat Name */}
           <FormField
@@ -235,7 +235,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Docking Direction</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select docking direction" />
@@ -262,7 +262,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tie Up Side</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select tie up side" />

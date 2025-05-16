@@ -43,9 +43,8 @@ export default function BoatManagement() {
   const [deletingBoat, setDeletingBoat] = useState<Boat | null>(null);
   const [assigningMarina, setAssigningMarina] = useState<Boat | null>(null);
 
-  const { data: boats, isLoading: isLoadingBoats } = useQuery<Boat[]>({
+  const { data: boats, isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
-    queryFn: undefined,
   });
 
   const { data: marinas } = useQuery<Marina[]>({
@@ -279,7 +278,8 @@ export default function BoatManagement() {
           </DialogHeader>
           <BoatForm 
             onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
+              // Directly refetch the boats after adding a new one
+              refetchBoats();
               setIsAddingBoat(false);
               toast({
                 title: "Boat added",
