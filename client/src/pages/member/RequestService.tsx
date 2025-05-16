@@ -27,11 +27,18 @@ export default function RequestService() {
     queryFn: undefined,
   });
 
+  // Fetch user's subscription
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
+    queryKey: ['/api/users/me/subscription'],
+    queryFn: undefined,
+    refetchOnMount: true,
+  });
+  
   // Fetch user's service level
   const { data: serviceLevel, isLoading: isLoadingServiceLevel } = useQuery<ServiceLevel>({
-    queryKey: user?.serviceLevelId ? [`/api/service-levels/${user.serviceLevelId}`] : [],
+    queryKey: subscription && subscription.serviceLevelId ? [`/api/service-levels/${subscription.serviceLevelId}`] : [],
     queryFn: undefined,
-    enabled: !!user?.serviceLevelId,
+    enabled: !!subscription && !!subscription.serviceLevelId,
   });
 
   // Get pending payment requests
@@ -109,7 +116,7 @@ export default function RequestService() {
     setSelectedRequest(null);
   };
 
-  if (isLoadingBoats || isLoadingServiceLevel) {
+  if (isLoadingBoats || isLoadingServiceLevel || isLoadingSubscription) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
