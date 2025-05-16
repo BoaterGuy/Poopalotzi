@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -72,6 +72,7 @@ interface BoatFormProps {
 export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
   
   // Fetch existing slip assignment for this boat
   const { data: existingAssignment } = useQuery({
@@ -209,6 +210,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           "Your boat information has been updated successfully." : 
           "Your boat has been added successfully.",
       });
+      
+      // Invalidate any caches related to boats or slip assignments 
+      queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
+      if (boat?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${boat.id}`] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/slip-assignments'] });
+      // Also invalidate marinas query to make sure everything is fresh
+      queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
       
       onSuccess();
     } catch (error) {
