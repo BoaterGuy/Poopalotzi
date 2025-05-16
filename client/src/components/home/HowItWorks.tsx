@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function HowItWorks() {
   const steps = [
@@ -48,6 +49,25 @@ export default function HowItWorks() {
               </CardContent>
             </Card>
           ))}
+        </div>
+        
+        {/* Moved CTA buttons here for better mobile experience */}
+        <div className="mt-12 flex flex-col items-center justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              className="bg-[#FF6B6B] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-center w-full sm:w-auto"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Get Started
+            </Button>
+            
+            <Button 
+              className="bg-[#0B1F3A] hover:bg-opacity-90 text-white px-8 py-3 h-auto rounded-md font-semibold transition duration-150 text-center w-full sm:w-auto"
+              onClick={() => window.location.href = '/services'}
+            >
+              Learn More
+            </Button>
+          </div>
         </div>
       </div>
     </section>

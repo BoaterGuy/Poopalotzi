@@ -19,28 +19,7 @@ export default function HeroSection() {
             <p className="text-lg md:text-xl text-gray-700 mb-8">
               Schedule pump-outs, track services, and maintain your vessel with ease. The modern solution for boat owners.
             </p>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              {isLoggedIn ? (
-                <Link href="/member/request-service">
-                  <Button className="bg-[#FF6B6B] hover:bg-opacity-90 text-white px-6 py-3 h-auto rounded-md font-semibold transition duration-150 text-center">
-                    Request Service
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  className="bg-[#FF6B6B] hover:bg-opacity-90 text-white px-6 py-3 h-auto rounded-md font-semibold transition duration-150 text-center"
-                  onClick={() => setAuthModalOpen(true)}
-                >
-                  Get Started
-                </Button>
-              )}
-              
-              <Link href="/services">
-                <Button className="bg-[#0B1F3A] hover:bg-opacity-90 text-white px-6 py-3 h-auto rounded-md font-semibold transition duration-150 text-center">
-                  Learn More
-                </Button>
-              </Link>
-            </div>
+            {/* Buttons moved to below "How It Works" section for better mobile experience */}
             
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
