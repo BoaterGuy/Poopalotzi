@@ -52,6 +52,11 @@ const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static HTML page directly for the home page
+  app.get('/', (req, res) => {
+    res.sendFile(process.cwd() + '/client/public/static-site.html');
+  });
+  
   // Set up authentication (session, passport, etc)
   setupAuth(app);
 
