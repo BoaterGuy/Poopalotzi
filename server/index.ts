@@ -25,6 +25,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Serve the CORS test page
+app.get("/test-cors", (req, res) => {
+  res.sendFile(process.cwd() + "/test-cors.html");
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
