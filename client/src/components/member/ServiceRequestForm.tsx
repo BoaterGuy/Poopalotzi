@@ -101,14 +101,26 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
         testMode: true // This bypasses quota checks for testing
       };
       
-      await apiRequest("POST", "/api/pump-out-requests", formattedData);
-      
-      toast({
-        title: "Service Requested",
-        description: "Your pump-out service request has been submitted successfully.",
+      const response = await fetch("/api/pump-out-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formattedData),
+        credentials: "include"
       });
       
-      onSuccess();
+      if (response.ok) {
+        toast({
+          title: "Service Requested",
+          description: "Your pump-out service request has been submitted successfully.",
+        });
+        
+        // Call the onSuccess callback with the created request
+        const createdRequest = await response.json();
+        onSuccess(createdRequest);
+      } else {
+        const errorText = await response.text();
+        throw new Error(`Failed to submit request: ${errorText}`);
+      }
     } catch (error) {
       console.error("Error submitting service request:", error);
       toast({
