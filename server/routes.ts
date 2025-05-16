@@ -837,6 +837,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Handle payment for pump-out requests
+  app.post("/api/pump-out-requests/:id/payment", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const request = await storage.getPumpOutRequest(id);
+      if (!request) {
+        return res.status(404).json({ message: "Pump-out request not found" });
+      }
+      
+      // Check if user is authorized to make payment for this request
+      if (req.user.role !== "admin" && req.user.role !== "employee") {
+        const boat = await storage.getBoat(request.boatId);
+        if (!boat) {
+          return res.status(404).json({ message: "Boat not found" });
+        }
+        
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to make payment for this request" });
+        }
+      }
+      
+      // Update the payment status to paid
+      const updatedRequest = await storage.updatePumpOutRequest(id, {
+        paymentStatus: "Paid",
+        paymentId: `sim_${Date.now()}`  // Simulated payment ID
+      });
+      
+      if (!updatedRequest) {
+        return res.status(500).json({ message: "Failed to update payment status" });
+      }
+      
+      res.status(200).json(updatedRequest);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Error handling middleware
   app.use(handleError);
 
