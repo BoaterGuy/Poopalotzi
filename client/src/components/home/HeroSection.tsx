@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "../auth/AuthModal";
 import { useState } from "react";
-import logoImage from "../../assets/logo.png";
 
 export default function HeroSection() {
   const { isLoggedIn } = useAuth();
@@ -25,7 +24,7 @@ export default function HeroSection() {
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
             <img 
-              src={logoImage} 
+              src="/logo.png" 
               alt="Poopalotzi Logo" 
               className="rounded-lg shadow-xl w-2/3 h-auto mb-4"
             />
