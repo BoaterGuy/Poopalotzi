@@ -217,12 +217,7 @@ export default function MemberDashboard() {
               Manage your boat services and monitor upcoming appointments.
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
-            <Link href="/member/request-service">
-              <Button className="bg-[#FF6B6B] hover:bg-opacity-90">
-                <CalendarPlus className="mr-2 h-4 w-4" /> Request Pump-Out
-              </Button>
-            </Link>
+          <div className="mt-4 md:mt-0">
             <Link href="/member/service-history">
               <Button variant="outline">
                 <History className="mr-2 h-4 w-4" /> Service History
