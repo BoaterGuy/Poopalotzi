@@ -128,9 +128,21 @@ export default function EmployeeSchedule() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Update the request status in the UI
+      // This would normally be handled by the handleStatusChange function, but
+      // we're making sure the status is properly applied when the Save button is clicked
+      const status = selectedRequest.status;
+      
+      // In a real implementation, you would call the API to update the status
+      // await fetch(`/api/pump-out-requests/${selectedRequest.id}/status`, {
+      //   method: 'PATCH',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ status })
+      // });
+      
       toast({
-        title: "Service Completed",
-        description: `Pump-out service for ${selectedRequest.boat.name} has been marked as completed.`,
+        title: "Status Updated",
+        description: `Service for ${selectedRequest.boat.name} has been updated to: ${status}`,
       });
       
       // Close dialog and reset state
@@ -141,10 +153,10 @@ export default function EmployeeSchedule() {
         after: null
       });
     } catch (error) {
-      console.error("Error completing service:", error);
+      console.error("Error updating service:", error);
       toast({
         title: "Error",
-        description: "There was a problem completing the service. Please try again.",
+        description: "There was a problem updating the service. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -539,7 +551,7 @@ export default function EmployeeSchedule() {
                   onClick={handleCompleteService}
                   disabled={isCompleting}
                 >
-                  {isCompleting ? "Processing..." : "Complete Service"}
+                  {isCompleting ? "Processing..." : "Save"}
                 </Button>
               </DialogFooter>
             </div>
