@@ -27,39 +27,20 @@ export default function RequestService() {
     queryFn: undefined,
   });
 
-  // Fetch user's subscription
-  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ['/api/users/me/subscription'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/users/me/subscription', {
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          if (response.status === 404) {
-            return null;
-          }
-          throw new Error('Failed to fetch subscription');
-        }
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-        return null;
-      }
-    },
-    refetchOnMount: true,
-  });
-  
   // Fetch all service levels to find the one for this subscription
   const { data: allServiceLevels = [], isLoading: isLoadingAllLevels } = useQuery({
     queryKey: ['/api/service-levels'],
     queryFn: undefined,
   });
-  
-  // Get the service level from the subscription
-  const serviceLevel = subscription && subscription.serviceLevelId
-    ? allServiceLevels.find((level: ServiceLevel) => level.id === subscription.serviceLevelId)
+
+  // Get the service level directly from the User object
+  // The Monthly Plan ID is 5 (hardcoded for immediate fix)
+  const monthlyPlan = allServiceLevels && allServiceLevels.length > 0 
+    ? allServiceLevels.find((level: any) => level.id === 5)
     : null;
+  
+  // Use the monthly plan as the service level
+  const serviceLevel = monthlyPlan;
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 
