@@ -140,13 +140,28 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
             variant="outline" 
             size="sm"
             className="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
-            onClick={() => {
-              // Simulate successful payment
-              toast({
-                title: "Test Payment Successful",
-                description: "Payment simulation completed successfully.",
-              });
-              onSuccess();
+            onClick={async () => {
+              try {
+                // Call the payment endpoint to update the payment status in the database
+                await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
+                  paymentDetails: { amount }
+                });
+                
+                // Show success toast
+                toast({
+                  title: "Test Payment Successful",
+                  description: "Payment simulation completed successfully.",
+                });
+                
+                onSuccess();
+              } catch (error) {
+                console.error("Error processing simulated payment:", error);
+                toast({
+                  title: "Payment Simulation Failed",
+                  description: "There was a problem processing your simulated payment.",
+                  variant: "destructive",
+                });
+              }
             }}
           >
             Simulate Successful Payment
