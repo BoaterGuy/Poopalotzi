@@ -102,12 +102,11 @@ export default function ServiceSubscription() {
   const handleConfirmSubscription = async () => {
     if (!user || !selectedPlan) return;
     
-    if (selectedPlan.type === 'one-time') {
-      // One-time services require payment first
+    // Both one-time and seasonal plans require payment first
+    if (selectedPlan.type === 'one-time' || selectedPlan.type === 'seasonal') {
       setShowPayment(true);
-    } else {
-      // Monthly and seasonal plans may not require immediate payment
-      // This depends on your business logic
+    } else if (selectedPlan.type === 'monthly') {
+      // Only monthly plans can be subscribed without immediate payment
       try {
         await apiRequest("POST", "/api/users/me/subscription", {
           serviceLevelId: selectedPlan.id,
