@@ -323,13 +323,6 @@ export default function EmployeeSchedule() {
                         <MapPin className="mr-2 h-5 w-5 text-[#38B2AC]" />
                         {group.name}
                       </CardTitle>
-                      
-                      <Button 
-                        size="sm" 
-                        className="bg-[#38B2AC]"
-                      >
-                        <Route className="mr-2 h-4 w-4" /> Optimize Route
-                      </Button>
                     </CardHeader>
                     <CardContent className="p-0">
                       <div className="divide-y">
