@@ -28,6 +28,7 @@ import EmployeeManualEntry from "@/pages/employee/ManualEntry";
 // Admin Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminCustomerManagement from "@/pages/admin/CustomerManagement";
+import AdminManualEntry from "@/pages/employee/AdminManualEntry";
 import AdminMarinaManagement from "@/pages/admin/MarinaManagement";
 import AdminRequestManagement from "@/pages/admin/RequestManagement";
 import AdminCalendar from "@/pages/admin/Calendar";
@@ -145,6 +146,9 @@ function App() {
                 </Route>
                 <Route path="/admin/service-levels">
                   <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
+                </Route>
+                <Route path="/admin/manual-entry">
+                  <AdminRoute component={AdminManualEntry} path="/admin/manual-entry" />
                 </Route>
                 
                 {/* 404 Route */}
