@@ -28,15 +28,18 @@ export default function RequestService() {
   });
 
   // Fetch all service levels to find the one for this subscription
-  const { data: allServiceLevels = [], isLoading: isLoadingAllLevels } = useQuery({
+  const { data: allServiceLevels, isLoading: isLoadingAllLevels } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
     queryFn: undefined,
   });
 
   // Get the service level directly from the User object
   // The Monthly Plan ID is 5 (hardcoded for immediate fix)
-  const monthlyPlan = allServiceLevels && allServiceLevels.length > 0 
-    ? allServiceLevels.find((level: any) => level.id === 5)
+  // Find the monthly plan - we know it's called "Monthly Plan (Single-Head)" 
+  // or has ID 5 in our sample data
+  const monthlyPlan = allServiceLevels && Array.isArray(allServiceLevels) 
+    ? allServiceLevels.find(level => level.id === 5 || 
+        (level.name && level.name.includes("Monthly Plan")))
     : null;
   
   // Use the monthly plan as the service level
@@ -119,7 +122,7 @@ export default function RequestService() {
     setSelectedRequest(null);
   };
 
-  if (isLoadingBoats || isLoadingServiceLevel || isLoadingSubscription) {
+  if (isLoadingBoats || isLoadingServiceLevel) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
