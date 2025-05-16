@@ -146,16 +146,18 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       let savedBoat;
       if (boat) {
         // Update existing boat
-        savedBoat = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+        const response = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+        savedBoat = await response.json();
       } else {
         // For testing, we'll use a simplified approach with a hardcoded owner ID
         // In the real app, we would need to fetch the current user's boat owner ID
         
         // Now create the boat with the fixed owner ID (using 2 for the sample data)
-        savedBoat = await apiRequest("POST", "/api/boats", {
+        const response = await apiRequest("POST", "/api/boats", {
           ...data,
           ownerId: 2
         });
+        savedBoat = await response.json();
       }
       
       // If marina is selected, create or update slip assignment
