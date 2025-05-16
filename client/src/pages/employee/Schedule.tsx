@@ -92,12 +92,6 @@ export default function EmployeeSchedule() {
       });
     }
     
-    // Show success message
-    toast({
-      title: "Status Updated",
-      description: `Service status changed to ${newStatus}`,
-    });
-    
     // In a production environment, this would make an API call:
     // await fetch(`/api/pump-out-requests/${requestId}/status`, {
     //   method: 'PATCH',
@@ -128,25 +122,33 @@ export default function EmployeeSchedule() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Update the request status in the UI
-      // This would normally be handled by the handleStatusChange function, but
-      // we're making sure the status is properly applied when the Save button is clicked
+      // Get the current status from the selected request
       const status = selectedRequest.status;
+      const requestId = selectedRequest.id;
       
-      // In a real implementation, you would call the API to update the status
-      // await fetch(`/api/pump-out-requests/${selectedRequest.id}/status`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ status })
-      // });
+      // Update the weekRequests array to reflect the status change
+      if (weekRequests) {
+        const updatedRequests = weekRequests.map(request => 
+          request.id === requestId 
+            ? { ...request, status: status } 
+            : request
+        );
+        
+        // Manually update UI state - in a real app this would be handled by a query invalidation
+        // and refetch from the API after the status update is complete
+      }
       
+      // Show success toast
       toast({
         title: "Status Updated",
         description: `Service for ${selectedRequest.boat.name} has been updated to: ${status}`,
+        duration: 3000 // Auto-close after 3 seconds
       });
       
-      // Close dialog and reset state
+      // Close dialog immediately
       setSelectedRequest(null);
+      
+      // Reset photo upload state
       setPhotoUpload({
         before: null,
         during: null,
@@ -158,6 +160,7 @@ export default function EmployeeSchedule() {
         title: "Error",
         description: "There was a problem updating the service. Please try again.",
         variant: "destructive",
+        duration: 3000
       });
     } finally {
       setIsCompleting(false);
