@@ -41,7 +41,6 @@ export default function BoatManagement() {
   const [isAddingBoat, setIsAddingBoat] = useState(false);
   const [editingBoat, setEditingBoat] = useState<Boat | null>(null);
   const [deletingBoat, setDeletingBoat] = useState<Boat | null>(null);
-  const [assigningMarina, setAssigningMarina] = useState<Boat | null>(null);
 
   const { data: boats, isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],

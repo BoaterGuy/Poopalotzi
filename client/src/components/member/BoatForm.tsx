@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -22,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
-import { insertBoatSchema } from "@shared/schema";
+import { insertBoatSchema, Marina } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +59,7 @@ const boatFormSchema = insertBoatSchema
     slip: z.coerce.number().optional().nullable(),
     notes: z.string().optional().nullable(),
     photoUrl: z.string().optional(),
+    marinaId: z.coerce.number().optional().nullable(),
   });
 
 type BoatFormValues = z.infer<typeof boatFormSchema>;
@@ -70,6 +72,49 @@ interface BoatFormProps {
 export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch existing slip assignment for this boat
+  const { data: existingAssignment } = useQuery({
+    queryKey: [`/api/slip-assignments/boat/${boat?.id}`],
+    queryFn: async () => {
+      if (!boat?.id) return null;
+      
+      try {
+        const response = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null; // No assignment exists yet
+          }
+          throw new Error('Failed to fetch slip assignment');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching slip assignment:", error);
+        return null;
+      }
+    },
+    enabled: !!boat?.id,
+  });
+
+  // Fetch list of marinas
+  const { data: marinas = [] } = useQuery<Marina[]>({
+    queryKey: ['/api/marinas'],
+    queryFn: async () => {
+      const response = await fetch('/api/marinas', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch marinas');
+      }
+      
+      return response.json();
+    },
+  });
 
   // Set default values based on whether we're editing or creating
   const defaultValues: Partial<BoatFormValues> = {
@@ -82,8 +127,9 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     dockingDirection: boat?.dockingDirection || "bow_in",
     tieUpSide: boat?.tieUpSide || "port",
     pumpPortLocations: boat?.pumpPortLocations || [],
-    dock: boat?.dock || "",
-    slip: boat?.slip || null,
+    dock: existingAssignment?.dock || boat?.dock || "",
+    slip: existingAssignment?.slip || boat?.slip || null,
+    marinaId: existingAssignment?.marinaId || null,
     notes: boat?.notes || null,
     photoUrl: boat?.photoUrl || "",
   };
@@ -96,18 +142,32 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const onSubmit = async (data: BoatFormValues) => {
     setIsSubmitting(true);
     try {
+      // First save the boat information
+      let savedBoat;
       if (boat) {
         // Update existing boat
-        await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+        savedBoat = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
       } else {
         // For testing, we'll use a simplified approach with a hardcoded owner ID
         // In the real app, we would need to fetch the current user's boat owner ID
         
         // Now create the boat with the fixed owner ID (using 2 for the sample data)
-        await apiRequest("POST", "/api/boats", {
+        savedBoat = await apiRequest("POST", "/api/boats", {
           ...data,
           ownerId: 2
         });
+      }
+      
+      // If marina is selected, create or update slip assignment
+      if (data.marinaId) {
+        const slipData = {
+          boatId: boat?.id || savedBoat.id,
+          marinaId: data.marinaId,
+          dock: data.dock || "A",
+          slip: data.slip || 1
+        };
+        
+        await apiRequest("POST", "/api/slip-assignments", slipData);
       }
       
       toast({
@@ -281,6 +341,38 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
+          {/* Marina selection */}
+          <FormField
+            control={form.control}
+            name="marinaId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Marina</FormLabel>
+                <Select 
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value?.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a marina" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {marinas.map((marina) => (
+                      <SelectItem key={marina.id} value={marina.id.toString()}>
+                        {marina.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Where your boat is docked
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
           {/* Slip */}
           <FormField
             control={form.control}
