@@ -229,7 +229,52 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
-          {/* We'll manage dock and slip through the Marina dialog instead */}
+          {/* Dock */}
+          <FormField
+            control={form.control}
+            name="dockName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dock Name/Number</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="text" 
+                    placeholder="e.g. A" 
+                    {...field} 
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your dock letter or number
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Slip */}
+          <FormField
+            control={form.control}
+            name="slipNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slip Number</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="e.g. 42" 
+                    {...field} 
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your assigned slip number
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
 
 

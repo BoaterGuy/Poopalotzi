@@ -6,7 +6,6 @@ import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
-import { staticRouter } from "./static-routes";
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
@@ -14,15 +13,6 @@ export let storage: IStorage = memStorage;
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Serve static HTML directly - this needs to be before Vite setup
-app.use('/static-public', express.static('client/public'));
-app.get('/static-site', (req, res) => {
-  res.sendFile(process.cwd() + '/client/public/static-site.html');
-});
-
-// Add static website routes
-app.use(staticRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();

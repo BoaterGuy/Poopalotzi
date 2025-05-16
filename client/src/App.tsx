@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
-import { FixedThemeProvider } from "./components/ui/fixed-theme-provider";
+import { ThemeProvider } from "./context/ThemeProvider";
 
 // Public Pages
 import Home from "@/pages/Home";
@@ -81,7 +81,7 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
 
 function App() {
   return (
-    <FixedThemeProvider>
+    <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
@@ -148,7 +148,7 @@ function App() {
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
-    </FixedThemeProvider>
+    </ThemeProvider>
   );
 }
 

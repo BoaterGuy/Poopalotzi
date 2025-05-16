@@ -207,7 +207,7 @@ export default function BoatManagement() {
                     <p className="flex items-center">
                       <MapPin className="mr-1 h-4 w-4 text-[#38B2AC]" />
                       <span className="text-sm">
-                        No marina assigned
+                        {getBoatLocation(boat) ? `${getBoatLocation(boat)?.marinaName} - Dock ${getBoatLocation(boat)?.dock}, Slip ${getBoatLocation(boat)?.slip}` : 'No marina assigned'}
                       </span>
                     </p>
                   </div>
