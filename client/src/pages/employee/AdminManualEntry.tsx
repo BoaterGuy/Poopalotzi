@@ -193,7 +193,7 @@ export default function AdminManualEntry() {
         </div>
 
         <Alert className="mb-6 bg-blue-50 border-blue-200">
-          <AlertIcon className="h-4 w-4 text-blue-500" />
+          <AlertCircle className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-blue-700">
             All manual entries are automatically marked as "Completed"
           </AlertDescription>
