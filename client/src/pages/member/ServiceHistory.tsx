@@ -181,16 +181,32 @@ export default function ServiceHistory() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  // Fetch service history
-  const { data: requests, isLoading } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests'],
-    queryFn: undefined,
-  });
-
-  // Fetch boats for reference
+  // Fetch boats first
   const { data: boats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
     queryFn: undefined,
+  });
+
+  // Fetch service history for all boats owned by the member
+  const { data: requests, isLoading } = useQuery<PumpOutRequest[]>({
+    queryKey: ['/api/pump-out-requests/member'],
+    queryFn: async () => {
+      if (!boats || boats.length === 0) return [];
+      
+      // Fetch requests for all boats and combine them
+      const allRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`);
+        if (response.ok) {
+          const boatRequests = await response.json();
+          allRequests.push(...boatRequests);
+        }
+      }
+      
+      return allRequests;
+    },
+    enabled: !!boats && boats.length > 0,
   });
 
   // Fetch service levels for payment
