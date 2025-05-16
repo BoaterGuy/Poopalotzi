@@ -73,6 +73,7 @@ export default function Profile() {
     queryKey: ['/api/users/me/subscription'],
     queryFn: async () => {
       try {
+        // First try to get from subscription endpoint
         const response = await fetch('/api/users/me/subscription', {
           credentials: 'include'
         });
@@ -81,13 +82,29 @@ export default function Profile() {
           return response.json();
         }
         
-        throw new Error('No subscription found');
+        // If that fails, create a fallback subscription from user data
+        if (user?.serviceLevelId) {
+          return {
+            userId: user.id,
+            serviceLevelId: user.serviceLevelId,
+            startDate: new Date().toISOString()
+          };
+        }
+        
+        return null;
       } catch (error) {
         console.error('Error fetching subscription:', error);
+        // Still create fallback from user data if possible
+        if (user?.serviceLevelId) {
+          return {
+            userId: user.id,
+            serviceLevelId: user.serviceLevelId,
+            startDate: new Date().toISOString()
+          };
+        }
         return null;
       }
     },
-    retry: false,
   });
 
   // Get all service levels
