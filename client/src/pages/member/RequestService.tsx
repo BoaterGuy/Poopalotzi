@@ -33,17 +33,37 @@ export default function RequestService() {
     queryFn: undefined,
   });
 
-  // Get the service level directly from the User object
-  // The Monthly Plan ID is 5 (hardcoded for immediate fix)
-  // Find the monthly plan - we know it's called "Monthly Plan (Single-Head)" 
-  // or has ID 5 in our sample data
-  const monthlyPlan = allServiceLevels && Array.isArray(allServiceLevels) 
-    ? allServiceLevels.find(level => level.id === 5 || 
-        (level.name && level.name.includes("Monthly Plan")))
-    : null;
+  // Get subscription from local storage
+  const [localSubscription, setLocalSubscription] = useState<any>(null);
   
-  // Use the monthly plan as the service level
-  const serviceLevel = monthlyPlan;
+  // Check for local storage data on component mount
+  useEffect(() => {
+    import("@/lib/utils").then(utils => {
+      const savedSubscription = utils.getSubscriptionFromLocal();
+      if (savedSubscription) {
+        setLocalSubscription(savedSubscription);
+      }
+    });
+  }, []);
+
+  // Get the service level from various sources (API or local storage)
+  // First try to find it in service levels by ID, then by name
+  const serviceLevel = useMemo(() => {
+    if (allServiceLevels && Array.isArray(allServiceLevels)) {
+      // If we have a local subscription, use that first
+      if (localSubscription && localSubscription.serviceLevelId) {
+        const found = allServiceLevels.find(level => level.id === localSubscription.serviceLevelId);
+        if (found) return found;
+      }
+      
+      // Fallback to finding Monthly Plan
+      return allServiceLevels.find(level => 
+        level.id === 5 || 
+        (level.name && level.name.includes("Monthly Plan"))
+      );
+    }
+    return null;
+  }, [allServiceLevels, localSubscription]);
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 

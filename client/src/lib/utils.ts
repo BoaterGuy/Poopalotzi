@@ -81,6 +81,27 @@ export function isValidPhoneNumber(phone: string): boolean {
   return phoneRegex.test(phone);
 }
 
+// Subscription helpers for persistence
+export function saveSubscriptionToLocal(subscriptionData: any) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('poopalotzi_subscription', JSON.stringify(subscriptionData));
+  }
+}
+
+export function getSubscriptionFromLocal() {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('poopalotzi_subscription');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing stored subscription:', e);
+      }
+    }
+  }
+  return null;
+}
+
 export function formatPhoneNumber(phone: string): string {
   if (!phone) return '';
   

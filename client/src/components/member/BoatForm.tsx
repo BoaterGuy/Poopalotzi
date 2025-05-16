@@ -345,11 +345,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           )}
         />
 
-        <DialogFooter>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#0B1F3A] hover:bg-opacity-90">
+        <div className="mt-8 flex justify-center">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="bg-[#0B1F3A] hover:bg-opacity-90 w-full max-w-xs py-6 text-lg"
+          >
             {isSubmitting ? 'Saving...' : boat ? 'Update Boat' : 'Add Boat'}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
     </Form>
   );

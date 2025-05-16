@@ -109,13 +109,27 @@ export default function ServiceSubscription() {
   const handlePaymentSuccess = async () => {
     try {
       // Update user subscription after payment
-      await apiRequest("POST", "/api/users/me/subscription", {
+      const response = await apiRequest("POST", "/api/users/me/subscription", {
         serviceLevelId: selectedPlan.id,
       });
       
       toast({
         title: "Payment Successful",
         description: `Your payment for ${selectedPlan.name} has been processed successfully.`,
+      });
+      
+      // Save subscription to local storage for persistence across pages
+      import("@/lib/utils").then(utils => {
+        const subscriptionData = {
+          serviceLevelId: selectedPlan.id,
+          name: selectedPlan.name,
+          price: selectedPlan.price,
+          type: selectedPlan.type,
+          description: selectedPlan.description,
+          monthlyQuota: selectedPlan.monthlyQuota || 0,
+          startDate: new Date().toISOString(),
+        };
+        utils.saveSubscriptionToLocal(subscriptionData);
       });
       
       queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
