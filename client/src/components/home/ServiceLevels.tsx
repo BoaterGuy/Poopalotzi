@@ -12,8 +12,32 @@ export default function ServiceLevels() {
   const { isLoggedIn } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
+  const { data: serviceLevels, isLoading, isError } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/service-levels', {
+          method: 'GET',
+          credentials: 'include', // This is important for cookies
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch service levels');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching service levels:', error);
+        // Return an empty array instead of throwing to prevent query from going into error state
+        return [];
+      }
+    },
+    // If we can't get service levels, retry 3 times with a 2 second delay
+    retry: 3,
+    retryDelay: 2000
   });
 
   const getFormattedPrice = (price: number, type: string) => {
@@ -57,9 +81,18 @@ export default function ServiceLevels() {
               </Card>
             ))}
           </div>
+        ) : isError || !serviceLevels || serviceLevels.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 border rounded-lg bg-gray-50">
+            <p className="text-lg text-gray-600 mb-4">
+              We're currently experiencing technical difficulties loading our service plans.
+            </p>
+            <p className="text-gray-600">
+              Please try refreshing the page or contact our support team if the issue persists.
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {serviceLevels?.map((plan, index) => {
+            {serviceLevels.map((plan, index) => {
               const isPopular = plan.name === "Standard";
               return (
                 <Card 
@@ -82,9 +115,9 @@ export default function ServiceLevels() {
                     <ul className="space-y-3 mb-6">
                       {[
                         { feature: plan.type === 'one-time' ? 'Single head pump-out' : 
-                                 plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
+                                 plan.type === 'monthly' ? `Up to ${plan.monthlyQuota || 4} pump-outs per month` : 
                                  'Unlimited pump-outs (May-Oct)', included: true },
-                        { feature: plan.headCount > 1 ? `Single or multi-head boats (up to ${plan.headCount})` : 'Single head boats only', included: true },
+                        { feature: (plan.headCount || 1) > 1 ? `Single or multi-head boats (up to ${plan.headCount || 1})` : 'Single head boats only', included: true },
                         { feature: 'Service history & reporting', included: true },
                         { feature: plan.type !== 'one-time' ? 'Priority scheduling' : 'Recurring scheduling', included: plan.type !== 'one-time' },
                       ].map((item, i) => (
