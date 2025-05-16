@@ -13,6 +13,7 @@ import ServiceRequestForm from "@/components/member/ServiceRequestForm";
 import PaymentForm from "@/components/member/PaymentForm";
 import { Boat, PumpOutRequest, ServiceLevel } from "@shared/schema";
 import { formatCurrency, formatWeekRange } from "@/lib/utils";
+import { useServiceSubscription } from "@/hooks/use-service-subscription";
 
 export default function RequestService() {
   const { user } = useAuth();
@@ -133,8 +134,15 @@ export default function RequestService() {
         description: "Your pump-out service has been scheduled. You can view it in your dashboard.",
       });
       
-      // Refresh data
+      // Refresh all relevant data to update dashboard
       queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/pump-out-requests/boat/${request.boatId}`] });
+      
+      // If we have a boat ID, invalidate any queries related to that boat
+      if (request.boatId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/boats`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${request.boatId}`] });
+      }
     }
   };
 
@@ -144,10 +152,36 @@ export default function RequestService() {
       description: "Your service has been scheduled and payment has been processed.",
     });
     
-    // Refresh data
+    // Save service plan to local storage for persistence
+    if (serviceLevel) {
+      import("@/lib/utils").then(utils => {
+        utils.saveSubscriptionToLocal({
+          userId: user?.id,
+          serviceLevelId: serviceLevel.id,
+          name: serviceLevel.name,
+          price: serviceLevel.price,
+          type: serviceLevel.type,
+          description: serviceLevel.description,
+          monthlyQuota: serviceLevel.monthlyQuota,
+          startDate: new Date().toISOString(),
+        });
+      });
+    }
+    
+    // Refresh all relevant data
     queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+    
+    if (selectedRequest?.boatId) {
+      // Invalidate specific boat request data to ensure dashboard shows it
+      queryClient.invalidateQueries({ queryKey: [`/api/pump-out-requests/boat/${selectedRequest.boatId}`] });
+    }
+    
+    // Reset form
     setStep("request");
     setSelectedRequest(null);
+    
+    // Redirect to dashboard to see the new request
+    window.location.href = '/member/dashboard';
   };
 
   if (isLoadingBoats || isLoadingServiceLevel) {
