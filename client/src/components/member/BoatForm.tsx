@@ -134,15 +134,35 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     notes: boat?.notes || null,
     photoUrl: boat?.photoUrl || "",
   };
-
+  
   const form = useForm<BoatFormValues>({
     resolver: zodResolver(boatFormSchema),
     defaultValues,
   });
+  
+  // Make sure defaultValues have updated marina values from server
+  useEffect(() => {
+    if (existingAssignment) {
+      form.setValue('marinaId', existingAssignment.marinaId);
+      form.setValue('dock', existingAssignment.dock);
+      form.setValue('slip', existingAssignment.slip);
+    }
+  }, [existingAssignment, form]);
 
   const onSubmit = async (data: BoatFormValues) => {
     setIsSubmitting(true);
     try {
+      // Make sure we have valid marina values
+      if (!data.marinaId) {
+        toast({
+          title: "Missing Marina",
+          description: "Please select a marina for your boat.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // First save the boat information
       let savedBoat;
       if (boat) {

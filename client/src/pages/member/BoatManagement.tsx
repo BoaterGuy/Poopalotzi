@@ -141,6 +141,9 @@ export default function BoatManagement() {
     },
     // Don't cache the results, always fetch fresh data
     staleTime: 0,
+    // Force refetch on focus and reconnect
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
   
   // Helper function to get formatted boat location info
@@ -347,16 +350,15 @@ export default function BoatManagement() {
                 queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
                 queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${editingBoat.id}`] });
                 
-                // Force a refetch of slip assignments and marinas
-                refetchBoats();
-                refetchSlipAssignments();
-                refetchMarinas();
-                
+                // Reset the edit boat state to close the dialog
                 setEditingBoat(null);
-                toast({
-                  title: "Boat updated",
-                  description: "Your boat information has been updated successfully.",
-                });
+                
+                // Force a refetch of slip assignments and marinas after the dialog closes
+                setTimeout(() => {
+                  refetchBoats();
+                  refetchSlipAssignments();
+                  refetchMarinas();
+                }, 100);
               }}
             />
           )}
