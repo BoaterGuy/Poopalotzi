@@ -149,6 +149,11 @@ export default function RequestService() {
         queryClient.invalidateQueries({ queryKey: [`/api/boats`] });
         queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${request.boatId}`] });
       }
+      
+      // Redirect to dashboard after successful request with subscription
+      setTimeout(() => {
+        window.location.href = '/member/dashboard';
+      }, 1000); // Short delay to allow toast to be seen
     }
   };
 
