@@ -53,6 +53,8 @@ const boatFormSchema = insertBoatSchema
     }).nullable(),
     color: z.string().nullable(),
     pumpPortLocations: z.array(z.string()).optional().nullable(),
+    dock: z.string().optional().nullable(),
+    slip: z.coerce.number().optional().nullable(),
     notes: z.string().optional().nullable(),
   });
 
@@ -78,6 +80,8 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     dockingDirection: boat?.dockingDirection || "bow_in",
     tieUpSide: boat?.tieUpSide || "port",
     pumpPortLocations: boat?.pumpPortLocations || [],
+    dock: boat?.dock || "",
+    slip: boat?.slip || null,
     notes: boat?.notes || null,
   };
 
