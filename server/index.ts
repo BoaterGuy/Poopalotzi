@@ -6,6 +6,7 @@ import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
+import { setupAuth } from "./auth";
 
 // Replace memory storage with database storage
 export let storage: IStorage = memStorage;
@@ -44,18 +45,13 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  // For now, let's use in-memory storage to ensure the application works
-  // This will allow us to focus on application functionality
-  log("Using in-memory storage for this session");
-  
-  // Seed the memory storage with initial data
-  // This ensures we have some data to work with even without a database
+// Helper function to seed initial data if needed
+async function initializeMemoryData() {
   try {
     // Add service levels
     await Promise.all([
       // Single-head boats
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Single Service (Single-Head)",
         price: 60, // $60.00 in dollars
         type: "one-time",
@@ -63,7 +59,7 @@ app.use((req, res, next) => {
         description: "One-time pump-out service for single-head boats",
         isActive: true,
       }),
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Monthly Plan (Single-Head)",
         price: 100, // $100.00 in dollars
         type: "monthly",
@@ -72,7 +68,7 @@ app.use((req, res, next) => {
         description: "Monthly plan with up to 2 pump-outs for single-head boats",
         isActive: true,
       }),
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Seasonal Service (Single-Head)",
         price: 475, // $475.00 in dollars
         type: "seasonal",
@@ -86,7 +82,7 @@ app.use((req, res, next) => {
       }),
       
       // Multi-head boats
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Single Service (Multi-Head)",
         price: 75, // $75.00 in dollars
         type: "one-time",
@@ -94,7 +90,7 @@ app.use((req, res, next) => {
         description: "One-time pump-out service for multi-head boats",
         isActive: true,
       }),
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Monthly Plan (Multi-Head)",
         price: 140, // $140.00 in dollars
         type: "monthly",
@@ -103,7 +99,7 @@ app.use((req, res, next) => {
         description: "Monthly plan with up to 2 pump-outs for multi-head boats",
         isActive: true,
       }),
-      memStorage.createServiceLevel({
+      storage.createServiceLevel({
         name: "Seasonal Service (Multi-Head)",
         price: 675, // $675.00 in dollars
         type: "seasonal",
@@ -119,25 +115,29 @@ app.use((req, res, next) => {
     
     // Add some sample marinas
     await Promise.all([
-      memStorage.createMarina({
-        name: "Bayside Marina",
+      storage.createMarina({
+        name: "Cedar Point Marina",
         isActive: true,
       }),
-      memStorage.createMarina({
-        name: "Harbor Point Yacht Club",
+      storage.createMarina({
+        name: "Son Rise Marina",
         isActive: true,
       }),
-      memStorage.createMarina({
-        name: "Sunset Cove Marina",
+      storage.createMarina({
+        name: "Port Clinton Yacht Club",
+        isActive: true,
+      }),
+      storage.createMarina({
+        name: "Craft Marine",
         isActive: true,
       }),
     ]);
     
-    // Hash the password before storing it (these are sample accounts)
+    // Hash the password before storing it
     const hashedPassword = await bcrypt.hash("admin123", 10);
     
     // Create sample admin user
-    const adminUser = await memStorage.createUser(
+    const adminUser = await storage.createUser(
       {
         email: "admin@poopalotzi.com",
         firstName: "Admin",
@@ -149,7 +149,7 @@ app.use((req, res, next) => {
     );
     
     // Create sample employee user
-    const employeeUser = await memStorage.createUser(
+    const employeeUser = await storage.createUser(
       {
         email: "employee@poopalotzi.com",
         firstName: "Employee",
@@ -161,7 +161,7 @@ app.use((req, res, next) => {
     );
     
     // Create sample member user
-    const memberUser = await memStorage.createUser(
+    const memberUser = await storage.createUser(
       {
         email: "member@poopalotzi.com",
         firstName: "Member",
@@ -173,10 +173,10 @@ app.use((req, res, next) => {
     );
     
     // Create boat owner record for member
-    const boatOwner = await memStorage.createBoatOwner({ userId: memberUser.id });
+    const boatOwner = await storage.createBoatOwner({ userId: memberUser.id });
     
     // Create boats for scheduling test data
-    const boat1 = await memStorage.createBoat({
+    const boat1 = await storage.createBoat({
       ownerId: boatOwner.id,
       name: "Summer Dream",
       year: 2018,
@@ -189,7 +189,7 @@ app.use((req, res, next) => {
       notes: "Access code for dock is #1234"
     });
 
-    const boat2 = await memStorage.createBoat({
+    const boat2 = await storage.createBoat({
       ownerId: boatOwner.id,
       name: "Wave Runner",
       year: 2020,
@@ -202,56 +202,22 @@ app.use((req, res, next) => {
       notes: "Call 15 mins before arrival"
     });
 
-    // Create another member and boat
-    const memberUser2 = await memStorage.createUser(
-      {
-        email: "john@boatowner.com",
-        firstName: "John",
-        lastName: "Smith",
-        role: "member",
-        password: "admin123",
-      },
-      hashedPassword
-    );
-    const boatOwner2 = await memStorage.createBoatOwner({ userId: memberUser2.id });
-    
-    const boat3 = await memStorage.createBoat({
-      ownerId: boatOwner2.id,
-      name: "Sea Spirit",
-      year: 2019,
-      make: "Beneteau",
-      model: "Oceanis 41.1",
-      color: "Navy/White",
-      dockingDirection: "side_to",
-      tieUpSide: "both",
-      pumpPortLocations: ["mid_ship"],
-      notes: "Sailboat with keel, be careful when approaching"
-    });
-
     // Create slip assignments
-    await memStorage.createSlipAssignment({
+    await storage.createSlipAssignment({
       boatId: boat1.id,
-      marinaId: 1, // Bayside Marina
+      marinaId: 1, // Cedar Point Marina
       dock: 3,
       slip: 12
     });
 
-    await memStorage.createSlipAssignment({
+    await storage.createSlipAssignment({
       boatId: boat2.id,
-      marinaId: 2, // Harbor Point Yacht Club
+      marinaId: 2, // Son Rise Marina
       dock: 5,
       slip: 7
     });
 
-    await memStorage.createSlipAssignment({
-      boatId: boat3.id,
-      marinaId: 3, // Sunset Cove Marina
-      dock: 2,
-      slip: 4
-    });
-
-    // Create pump-out requests with different dates and statuses
-    // Current week
+    // Create current week for pump-out requests
     const currentDate = new Date();
     const weekStart = new Date(currentDate);
     weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday of current week
@@ -261,87 +227,46 @@ app.use((req, res, next) => {
       return date.toISOString().split('T')[0];
     };
 
-    // Create a completed request for this week
-    const request1 = await memStorage.createPumpOutRequest({
-      boatId: boat1.id,
-      weekStartDate: formatDateForRequest(weekStart),
-      status: "Completed",
-      ownerNotes: "Please service early in the week",
-      paymentStatus: "Paid"
-    });
-
-    // Create a scheduled request for this week
-    const request2 = await memStorage.createPumpOutRequest({
-      boatId: boat2.id,
-      weekStartDate: formatDateForRequest(weekStart),
-      status: "Scheduled",
-      ownerNotes: "Thursday morning preferred",
-      paymentStatus: "Paid"
-    });
-
-    // Next week
-    const nextWeekStart = new Date(weekStart);
-    nextWeekStart.setDate(weekStart.getDate() + 7);
-    
-    const request3 = await memStorage.createPumpOutRequest({
-      boatId: boat1.id,
-      weekStartDate: formatDateForRequest(nextWeekStart),
-      status: "Requested",
-      ownerNotes: "Any day is fine",
-      paymentStatus: "Pending"
-    });
-
-    const request4 = await memStorage.createPumpOutRequest({
-      boatId: boat3.id,
-      weekStartDate: formatDateForRequest(nextWeekStart),
-      status: "Requested",
-      ownerNotes: "Tuesday afternoon preferred",
-      paymentStatus: "Paid"
-    });
-
-    // Following week
-    const twoWeeksLaterStart = new Date(nextWeekStart);
-    twoWeeksLaterStart.setDate(nextWeekStart.getDate() + 7);
-    
-    const request5 = await memStorage.createPumpOutRequest({
-      boatId: boat2.id,
-      weekStartDate: formatDateForRequest(twoWeeksLaterStart),
-      status: "Waitlisted",
-      ownerNotes: "Flexible timing",
-      paymentStatus: "Pending"
-    });
-
-    // Create employee assignments
-    await memStorage.createEmployeeAssignment({
-      employeeId: employeeUser.id,
-      requestId: request1.id
-    });
-
-    await memStorage.createEmployeeAssignment({
-      employeeId: employeeUser.id,
-      requestId: request2.id
-    });
-
-    // Create pump-out logs for completed request
-    await memStorage.createPumpOutLog({
-      requestId: request1.id,
-      prevStatus: "Requested",
-      newStatus: "Scheduled"
-    });
-
-    await memStorage.createPumpOutLog({
-      requestId: request1.id,
-      prevStatus: "Scheduled",
-      newStatus: "Completed",
-      beforeUrl: "https://example.com/before-image.jpg",
-      duringUrl: "https://example.com/during-image.jpg",
-      afterUrl: "https://example.com/after-image.jpg"
-    });
-    
     log("Sample data initialized in memory storage");
   } catch (seedError) {
     log("Error seeding initial data: " + seedError);
   }
+}
+
+(async () => {
+  try {
+    // First try to connect to the Supabase database
+    log("Setting up Supabase connection...");
+    
+    // Try specialized Supabase connection first
+    const supabaseDb = await createSupabaseClient();
+    
+    // Verify if the schema is properly initialized
+    const isSchemaValid = await verifySchema(supabaseDb);
+    
+    if (!isSchemaValid) {
+      log("Schema not initialized in Supabase. Running setup...");
+      await setupDatabase();
+    }
+    
+    // Create a database storage instance
+    const dbStorage = new DatabaseStorage();
+    
+    // Replace memory storage with database
+    storage = dbStorage;
+    
+    log("Successfully connected to Supabase!");
+  } catch (dbError: any) {
+    // If database connection fails, fall back to memory storage
+    log(`Database connection error: ${dbError.message}`);
+    log("Using in-memory storage for this session");
+    
+    // Initialize sample data
+    await initializeMemoryData();
+  }
+  
+  // Set up authentication with the proper storage
+  setupAuth(app);
   
   const server = await registerRoutes(app);
 

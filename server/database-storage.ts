@@ -48,6 +48,19 @@ if (!process.env.SESSION_SECRET) {
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
+  // Add the missing deleteMarina method
+  async deleteMarina(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(schema.marina)
+        .where(eq(schema.marina.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting marina:", error);
+      return false;
+    }
+  }
   sessionStore: session.Store;
 
   constructor() {
