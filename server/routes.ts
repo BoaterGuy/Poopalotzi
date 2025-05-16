@@ -434,6 +434,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestData.status = "Waitlisted";
       }
 
+      // For subscription users (monthly or seasonal), mark payment as already paid
+      if (req.user && req.user.serviceLevelId) {
+        const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
+        if (serviceLevel && (serviceLevel.type === 'monthly' || serviceLevel.type === 'seasonal')) {
+          requestData.paymentStatus = 'Paid';
+          requestData.paymentId = `sub_${Date.now()}`;
+        }
+      }
+
       // Create pump-out request
       const request = await storage.createPumpOutRequest(requestData);
       

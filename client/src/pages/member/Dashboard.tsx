@@ -9,6 +9,7 @@ import { Boat, PumpOutRequest, ServiceLevel, SlipAssignment, Marina } from "@sha
 import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export default function MemberDashboard() {
   const { user } = useAuth();
@@ -359,11 +360,23 @@ export default function MemberDashboard() {
                       {serviceLevel?.name || 'No active plan'}
                     </p>
                     {serviceLevel && (
-                      <p className="text-sm text-gray-600">
-                        {serviceLevel.type === 'one-time' ? 'Single Service' :
-                          serviceLevel.type === 'monthly' ? `Monthly (${serviceLevel.monthlyQuota} services)` :
-                          'Seasonal (Unlimited)'}
-                      </p>
+                      <>
+                        <p className="text-sm text-gray-600">
+                          {serviceLevel.type === 'one-time' ? 'Single Service' :
+                            serviceLevel.type === 'monthly' ? `Monthly (${serviceLevel.monthlyQuota} services)` :
+                            'Seasonal (Unlimited)'}
+                        </p>
+                        {serviceLevel.type === 'monthly' && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Valid: {format(new Date(), 'MMMM 1')} - {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'MMMM d, yyyy')}
+                          </p>
+                        )}
+                        {serviceLevel.type === 'seasonal' && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Valid: May 1, 2025 - October 31, 2025
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 
