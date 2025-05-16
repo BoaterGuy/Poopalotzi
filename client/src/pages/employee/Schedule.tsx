@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,13 +84,22 @@ export default function EmployeeSchedule() {
   
   // Function to handle status changes
   const handleStatusChange = (requestId: number, newStatus: string) => {
-    // Update the UI immediately
+    // Update the UI immediately in the dialog
     if (selectedRequest && selectedRequest.id === requestId) {
       setSelectedRequest({
         ...selectedRequest,
         status: newStatus
       });
     }
+    
+    // Update the local requests state to reflect the change
+    setLocalRequests(prevRequests => 
+      prevRequests.map(request => 
+        request.id === requestId 
+          ? { ...request, status: newStatus } 
+          : request
+      )
+    );
     
     // In a production environment, this would make an API call:
     // await fetch(`/api/pump-out-requests/${requestId}/status`, {
@@ -100,7 +109,18 @@ export default function EmployeeSchedule() {
     // });
   };
 
-  const { weekRequests, isLoading, error } = useEmployeeSchedule();
+  // Get initial data from the hook
+  const { weekRequests: initialRequests, isLoading, error } = useEmployeeSchedule();
+  
+  // Use state to track the requests so we can modify them
+  const [localRequests, setLocalRequests] = useState<ScheduleItem[]>([]);
+  
+  // Initialize local requests from the data source when it loads
+  useEffect(() => {
+    if (initialRequests) {
+      setLocalRequests(initialRequests);
+    }
+  }, [initialRequests]);
 
   const handlePrevDay = () => {
     setSelectedDate(prevDate => addDays(prevDate, -1));
@@ -126,12 +146,14 @@ export default function EmployeeSchedule() {
       const status = selectedRequest.status;
       const requestId = selectedRequest.id;
       
-      // This is a workaround to force UI refresh
-      // In a real app, this would be handled by a query invalidation and refetch
-      setTimeout(() => {
-        // Force component to re-render after dialog is closed
-        setSelectedDate(new Date(selectedDate.getTime()));
-      }, 100);
+      // Update the local requests to reflect the status change
+      setLocalRequests(prevRequests => 
+        prevRequests.map(request => 
+          request.id === requestId 
+            ? { ...request, status: status } 
+            : request
+        )
+      );
       
       // Show success toast
       toast({
@@ -168,8 +190,7 @@ export default function EmployeeSchedule() {
     
     items
       .filter(item => 
-        isSameDay(new Date(selectedDate), new Date()) && 
-        item.status === 'Scheduled'
+        isSameDay(new Date(selectedDate), new Date())
       )
       .forEach(item => {
         if (!item.marina) return;
@@ -197,15 +218,15 @@ export default function EmployeeSchedule() {
     return Object.values(groups);
   };
 
-  const marinaGroups = getMarinaGroups(weekRequests);
+  const marinaGroups = getMarinaGroups(localRequests);
   
   // Get counts for today
-  const totalForToday = weekRequests?.filter(req => 
+  const totalForToday = localRequests?.filter(req => 
     isSameDay(new Date(selectedDate), new Date()) && 
     req.status === 'Scheduled'
   ).length || 0;
   
-  const completedToday = weekRequests?.filter(req => 
+  const completedToday = localRequests?.filter(req => 
     isSameDay(new Date(selectedDate), new Date()) && 
     req.status === 'Completed'
   ).length || 0;
