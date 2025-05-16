@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import BoatForm from "@/components/member/BoatForm";
+import BoatForm from "@/components/member/BoatForm-new";
 import MarinaSelection from "@/components/member/MarinaSelection";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -43,18 +42,20 @@ export default function BoatManagement() {
   const [deletingBoat, setDeletingBoat] = useState<Boat | null>(null);
   const [assigningMarina, setAssigningMarina] = useState<Boat | null>(null);
 
-  const { data: boats, isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
+  // Fetch boats
+  const { data: boats = [], isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
   });
 
-  const { data: marinas } = useQuery<Marina[]>({
+  // Fetch marinas for the dropdown
+  const { data: marinas = [] } = useQuery<Marina[]>({
     queryKey: ['/api/marinas'],
-    queryFn: undefined,
   });
 
+  // Delete a boat
   const handleDeleteBoat = async (boatId: number) => {
     try {
-      await apiRequest('DELETE', `/api/boats/${boatId}`, {});
+      await apiRequest('DELETE', `/api/boats/${boatId}`);
       
       toast({
         title: "Boat deleted",
@@ -73,54 +74,54 @@ export default function BoatManagement() {
     }
   };
 
-  const getSlipAssignment = async (boatId: number) => {
+  // Get slip assignment for a boat
+  const getSlipAssignment = useCallback(async (boatId: number): Promise<SlipAssignment | null> => {
     try {
       const res = await fetch(`/api/slip-assignments/boat/${boatId}`, {
         credentials: 'include',
       });
       
       if (res.ok) {
-        const data: SlipAssignment = await res.json();
-        return data;
+        return await res.json();
       }
       return null;
     } catch (error) {
       console.error('Error fetching slip assignment:', error);
       return null;
     }
-  };
+  }, []);
 
-  const getMarinaInfo = async (marinaId: number) => {
+  // Get marina info
+  const getMarinaInfo = useCallback(async (marinaId: number): Promise<Marina | null> => {
     try {
       const res = await fetch(`/api/marinas/${marinaId}`, {
         credentials: 'include',
       });
       
       if (res.ok) {
-        const data: Marina = await res.json();
-        return data;
+        return await res.json();
       }
       return null;
     } catch (error) {
       console.error('Error fetching marina info:', error);
       return null;
     }
-  };
+  }, []);
 
-  const getBoatLocation = async (boat: Boat) => {
+  // Get boat location details
+  const getBoatLocation = useCallback(async (boat: Boat) => {
     const slipAssignment = await getSlipAssignment(boat.id);
-    if (slipAssignment) {
-      const marina = await getMarinaInfo(slipAssignment.marinaId);
-      if (marina) {
-        return {
-          marinaName: marina.name,
-          dock: slipAssignment.dock,
-          slip: slipAssignment.slip,
-        };
-      }
-    }
-    return null;
-  };
+    if (!slipAssignment) return null;
+    
+    const marina = await getMarinaInfo(slipAssignment.marinaId);
+    if (!marina) return null;
+    
+    return {
+      marinaName: marina.name,
+      dock: slipAssignment.dock,
+      slip: slipAssignment.slip,
+    };
+  }, [getSlipAssignment, getMarinaInfo]);
 
   return (
     <>
@@ -159,7 +160,7 @@ export default function BoatManagement() {
               </Card>
             ))}
           </div>
-        ) : boats && boats.length > 0 ? (
+        ) : boats.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {boats.map((boat) => (
               <Card key={boat.id} className="overflow-hidden">
@@ -207,7 +208,7 @@ export default function BoatManagement() {
                     <p className="flex items-center">
                       <MapPin className="mr-1 h-4 w-4 text-[#38B2AC]" />
                       <span className="text-sm">
-                        {getBoatLocation(boat) ? `${getBoatLocation(boat)?.marinaName} - Dock ${getBoatLocation(boat)?.dock}, Slip ${getBoatLocation(boat)?.slip}` : 'No marina assigned'}
+                        Loading location...
                       </span>
                     </p>
                   </div>
@@ -219,14 +220,14 @@ export default function BoatManagement() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="bg-gray-50 flex flex-row gap-2 justify-between p-3">
+                <CardFooter className="bg-gray-50 flex flex-wrap gap-2 justify-center p-4">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setEditingBoat(boat)}
                     className="flex-1"
                   >
-                    <Edit className="mr-1 h-4 w-4" /> Edit
+                    <Edit className="mr-2 h-4 w-4" /> Edit
                   </Button>
                   <Button 
                     variant="outline" 
@@ -234,7 +235,7 @@ export default function BoatManagement() {
                     onClick={() => setAssigningMarina(boat)}
                     className="flex-1"
                   >
-                    <MapPin className="mr-1 h-4 w-4" /> Marina
+                    <MapPin className="mr-2 h-4 w-4" /> Assign Marina
                   </Button>
                   <Button 
                     variant="outline" 
@@ -242,7 +243,7 @@ export default function BoatManagement() {
                     className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => setDeletingBoat(boat)}
                   >
-                    <Trash className="mr-1 h-4 w-4" /> Delete
+                    <Trash className="mr-2 h-4 w-4" /> Delete
                   </Button>
                 </CardFooter>
               </Card>
@@ -257,7 +258,7 @@ export default function BoatManagement() {
                 You haven't added any boats yet. Add your boat to get started with pump-out services.
               </p>
               <Button 
-                className="bg-[#38B2AC] hover:bg-opacity-90"
+                className="bg-[#0B1F3A] hover:bg-opacity-90"
                 onClick={() => setIsAddingBoat(true)}
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Your First Boat

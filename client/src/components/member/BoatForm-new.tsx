@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DialogFooter } from "@/components/ui/dialog";
 import { insertBoatSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -53,7 +52,9 @@ const boatFormSchema = insertBoatSchema
     }).nullable(),
     color: z.string().nullable(),
     pumpPortLocations: z.array(z.string()).optional().nullable(),
-    notes: z.string().optional().nullable(),
+    // Adding form-only fields (not in database schema)
+    dock: z.string().optional(),
+    slip: z.coerce.number().optional(),
   });
 
 type BoatFormValues = z.infer<typeof boatFormSchema>;
@@ -79,6 +80,8 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     tieUpSide: boat?.tieUpSide || "port",
     pumpPortLocations: boat?.pumpPortLocations || [],
     notes: boat?.notes || null,
+    dock: boat?.dock || "",
+    slip: boat?.slip || null,
   };
 
   const form = useForm<BoatFormValues>({
@@ -232,16 +235,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           {/* Dock */}
           <FormField
             control={form.control}
-            name="dockName"
+            name="dock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Dock Name/Number</FormLabel>
+                <FormLabel>Dock</FormLabel>
                 <FormControl>
                   <Input 
                     type="text" 
                     placeholder="e.g. A" 
                     {...field} 
-                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormDescription>
@@ -255,7 +257,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           {/* Slip */}
           <FormField
             control={form.control}
-            name="slipNumber"
+            name="slip"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Slip Number</FormLabel>
@@ -275,8 +277,6 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
               </FormItem>
             )}
           />
-
-
 
           {/* Docking Direction */}
           <FormField
