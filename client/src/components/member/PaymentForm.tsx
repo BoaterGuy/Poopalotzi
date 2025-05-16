@@ -131,6 +131,27 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Development Test Button - Remove in Production */}
+        <div className="bg-purple-50 border border-purple-200 rounded-md p-3 mb-2">
+          <h4 className="text-sm font-medium text-purple-700 mb-1">Development Testing</h4>
+          <p className="text-xs text-purple-600 mb-2">Skip payment processing for testing purposes.</p>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            className="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
+            onClick={() => {
+              // Simulate successful payment
+              toast({
+                title: "Test Payment Successful",
+                description: "Payment simulation completed successfully.",
+              });
+              onSuccess();
+            }}
+          >
+            Simulate Successful Payment
+          </Button>
+        </div>
         <div className="p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-6">
           <Lock className="h-5 w-5 text-blue-500" />
           <div>

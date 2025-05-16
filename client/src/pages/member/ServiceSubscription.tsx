@@ -342,13 +342,51 @@ export default function ServiceSubscription() {
             </div>
           )}
           
-          <DialogFooter className="flex gap-2">
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => setIsSubscribing(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmSubscription} className="bg-[#38B2AC] hover:bg-opacity-90">
+            <Button 
+              onClick={handleConfirmSubscription} 
+              className="bg-[#0B1F3A] hover:bg-opacity-90"
+            >
               {selectedPlan?.type === 'one-time' ? "Proceed to Payment" : "Confirm Subscription"}
             </Button>
+            
+            {/* Development Test Option - Remove in Production */}
+            <div className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full sm:w-auto text-xs bg-purple-50 text-purple-800 border-purple-300 hover:bg-purple-100"
+                onClick={async () => {
+                  // Skip payment and directly subscribe
+                  try {
+                    await apiRequest("POST", "/api/users/me/subscription", {
+                      serviceLevelId: selectedPlan?.id,
+                    });
+                    
+                    toast({
+                      title: "Test Subscription Added",
+                      description: `Your ${selectedPlan?.name} has been added successfully (test mode).`,
+                    });
+                    
+                    queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
+                    setIsSubscribing(false);
+                    setSelectedPlan(null);
+                  } catch (error) {
+                    console.error("Error creating test subscription:", error);
+                    toast({
+                      title: "Test Error",
+                      description: "There was a problem adding your test subscription.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                Test: Skip Payment
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
