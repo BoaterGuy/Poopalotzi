@@ -15,6 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static HTML directly - this needs to be before Vite setup
+app.use('/static-public', express.static('client/public'));
 app.get('/static-site', (req, res) => {
   res.sendFile(process.cwd() + '/client/public/static-site.html');
 });
