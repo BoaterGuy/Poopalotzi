@@ -126,17 +126,12 @@ export default function EmployeeSchedule() {
       const status = selectedRequest.status;
       const requestId = selectedRequest.id;
       
-      // Update the weekRequests array to reflect the status change
-      if (weekRequests) {
-        const updatedRequests = weekRequests.map(request => 
-          request.id === requestId 
-            ? { ...request, status: status } 
-            : request
-        );
-        
-        // Manually update UI state - in a real app this would be handled by a query invalidation
-        // and refetch from the API after the status update is complete
-      }
+      // This is a workaround to force UI refresh
+      // In a real app, this would be handled by a query invalidation and refetch
+      setTimeout(() => {
+        // Force component to re-render after dialog is closed
+        setSelectedDate(new Date(selectedDate.getTime()));
+      }, 100);
       
       // Show success toast
       toast({
@@ -342,7 +337,7 @@ export default function EmployeeSchedule() {
                                 </div>
                               </div>
                               <div>
-                                <Badge className="bg-yellow-500">Scheduled</Badge>
+                                <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
                               </div>
                             </div>
                           </div>
