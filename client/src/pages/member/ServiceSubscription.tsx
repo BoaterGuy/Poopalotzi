@@ -102,33 +102,8 @@ export default function ServiceSubscription() {
   const handleConfirmSubscription = async () => {
     if (!user || !selectedPlan) return;
     
-    // Both one-time and seasonal plans require payment first
-    if (selectedPlan.type === 'one-time' || selectedPlan.type === 'seasonal') {
-      setShowPayment(true);
-    } else if (selectedPlan.type === 'monthly') {
-      // Only monthly plans can be subscribed without immediate payment
-      try {
-        await apiRequest("POST", "/api/users/me/subscription", {
-          serviceLevelId: selectedPlan.id,
-        });
-        
-        toast({
-          title: "Subscription Updated",
-          description: `You are now subscribed to the ${selectedPlan.name} plan.`,
-        });
-        
-        queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
-        setIsSubscribing(false);
-        setSelectedPlan(null);
-      } catch (error) {
-        console.error("Error updating subscription:", error);
-        toast({
-          title: "Error",
-          description: "There was a problem updating your subscription. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
+    // All service plans require payment first
+    setShowPayment(true);
   };
   
   const handlePaymentSuccess = async () => {
