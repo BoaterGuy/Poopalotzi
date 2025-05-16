@@ -249,6 +249,85 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Marina selection - moved to top */}
+          <FormField
+            control={form.control}
+            name="marinaId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Marina</FormLabel>
+                <Select 
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value?.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a marina" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {marinas.map((marina) => (
+                      <SelectItem key={marina.id} value={marina.id.toString()}>
+                        {marina.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Where your boat is docked
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Dock - moved to top */}
+          <FormField
+            control={form.control}
+            name="dock"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dock</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="text" 
+                    placeholder="e.g. A" 
+                    {...field} 
+                    value={field.value || ""} 
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your dock letter or number
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Slip - moved to top */}
+          <FormField
+            control={form.control}
+            name="slip"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slip Number</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="e.g. 42" 
+                    {...field} 
+                    value={field.value || ""} 
+                    onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Your assigned slip number
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Boat Name */}
           <FormField
             control={form.control}
@@ -351,84 +430,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
-          {/* Dock */}
-          <FormField
-            control={form.control}
-            name="dock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dock</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="text" 
-                    placeholder="e.g. A" 
-                    {...field} 
-                    value={field.value || ""} 
-                  />
-                </FormControl>
-                <FormDescription>
-                  Your dock letter or number
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Marina selection */}
-          <FormField
-            control={form.control}
-            name="marinaId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Marina</FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a marina" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {marinas.map((marina) => (
-                      <SelectItem key={marina.id} value={marina.id.toString()}>
-                        {marina.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Where your boat is docked
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Slip */}
-          <FormField
-            control={form.control}
-            name="slip"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slip Number</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="e.g. 42" 
-                    {...field} 
-                    value={field.value || ""} 
-                    onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value))}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Your assigned slip number
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Marina, Dock and Slip have been moved to the top of the form */}
 
 
 
