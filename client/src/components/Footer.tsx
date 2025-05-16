@@ -3,7 +3,8 @@ import {
   FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn,
   FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock 
 } from "react-icons/fa";
-import logo from "@/assets/logo.png";
+// Use a relative path that works better in production
+import logo from "../assets/logo.png";
 
 export default function Footer() {
   return (
