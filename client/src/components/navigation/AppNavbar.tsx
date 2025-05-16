@@ -179,7 +179,7 @@ export default function AppNavbar() {
                           Service Levels
                         </DropdownMenuItem>
                       </Link>
-                      <Link to="/admin/manual-entry">
+                      <Link to="/admin/manual-service-form">
                         <DropdownMenuItem className="cursor-pointer">
                           Manual Service Entry
                         </DropdownMenuItem>
@@ -321,7 +321,7 @@ export default function AppNavbar() {
                       <Link to="/admin/service-levels">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service Levels</a>
                       </Link>
-                      <Link to="/admin/manual-entry">
+                      <Link to="/admin/manual-service-form">
                         <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Manual Service Entry</a>
                       </Link>
                     </>

@@ -147,8 +147,8 @@ function App() {
                 <Route path="/admin/service-levels">
                   <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
                 </Route>
-                <Route path="/admin/manual-entry">
-                  <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-entry" />
+                <Route path="/admin/manual-service-form">
+                  <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-service-form" />
                 </Route>
                 
                 {/* 404 Route */}
