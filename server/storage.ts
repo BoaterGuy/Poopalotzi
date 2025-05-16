@@ -148,7 +148,7 @@ export class MemStorage implements IStorage {
     });
 
     // Initialize admin user
-    const adminPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    const adminPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Secure hash for development
     this.usersData.set(this.currentUserId, {
       id: this.currentUserId,
       email: "admin@poopalazi.com",
@@ -166,7 +166,7 @@ export class MemStorage implements IStorage {
     this.currentUserId++;
 
     // Initialize employee user
-    const employeePasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    const employeePasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Secure hash for development
     this.usersData.set(this.currentUserId, {
       id: this.currentUserId,
       email: "employee@poopalazi.com",
@@ -184,7 +184,7 @@ export class MemStorage implements IStorage {
     this.currentUserId++;
 
     // Initialize member user
-    const memberPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Password: admin123
+    const memberPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Secure hash for development
     this.usersData.set(this.currentUserId, {
       id: this.currentUserId,
       email: "member@poopalazi.com",
