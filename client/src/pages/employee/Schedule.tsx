@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 import { Calendar as CalendarIcon, ArrowLeft, ArrowRight, Route, Ship, MapPin, Check, Calendar as CalendarLucide } from "lucide-react";
@@ -36,10 +37,13 @@ interface ScheduleItem {
     name: string;
   };
   slipAssignment: {
-    dock: number;
+    dock: string | number;
     slip: number;
   };
   ownerNotes?: string;
+  requestedDate?: string;
+  weekStartDate?: string;
+  pumpOutPorts?: string[];
 }
 
 interface MarinaGroup {
@@ -59,6 +63,48 @@ export default function EmployeeSchedule() {
     during: null as File | null,
     after: null as File | null
   });
+  
+  // Status colors function
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case "Requested":
+        return "bg-blue-500";
+      case "Scheduled":
+        return "bg-yellow-500";
+      case "Completed":
+        return "bg-green-500";
+      case "Canceled":
+        return "bg-red-500";
+      case "Waitlisted":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+  
+  // Function to handle status changes
+  const handleStatusChange = (requestId: number, newStatus: string) => {
+    // Update the UI immediately
+    if (selectedRequest && selectedRequest.id === requestId) {
+      setSelectedRequest({
+        ...selectedRequest,
+        status: newStatus
+      });
+    }
+    
+    // Show success message
+    toast({
+      title: "Status Updated",
+      description: `Service status changed to ${newStatus}`,
+    });
+    
+    // In a production environment, this would make an API call:
+    // await fetch(`/api/pump-out-requests/${requestId}/status`, {
+    //   method: 'PATCH',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ status: newStatus })
+    // });
+  };
 
   const { weekRequests, isLoading, error } = useEmployeeSchedule();
 
@@ -467,6 +513,25 @@ export default function EmployeeSchedule() {
                 </div>
               </div>
 
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Update Status</h3>
+                <div className="flex items-center gap-4">
+                  <Select defaultValue={selectedRequest.status} onValueChange={(value) => handleStatusChange(selectedRequest.id, value)}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Requested">Requested</SelectItem>
+                      <SelectItem value="Scheduled">Scheduled</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                      <SelectItem value="Canceled">Canceled</SelectItem>
+                      <SelectItem value="Waitlisted">Waitlisted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-gray-500">Current: <Badge className={`${getStatusColor(selectedRequest.status)}`}>{selectedRequest.status}</Badge></span>
+                </div>
+              </div>
+              
               <DialogFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => setSelectedRequest(null)}>
                   Cancel
@@ -476,7 +541,7 @@ export default function EmployeeSchedule() {
                   onClick={handleCompleteService}
                   disabled={isCompleting}
                 >
-                  {isCompleting ? "Processing..." : "Mark as Completed"}
+                  {isCompleting ? "Processing..." : "Complete Service"}
                 </Button>
               </DialogFooter>
             </div>
