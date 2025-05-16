@@ -28,11 +28,13 @@ export default function Services() {
   });
 
   const getFormattedPrice = (price: number, type: string) => {
-    // Price is already in dollars
-    if (type === "one-time") return `${formatCurrency(price)}/service`;
-    if (type === "monthly") return `${formatCurrency(price)}/month`;
-    if (type === "seasonal") return `${formatCurrency(price)}/season`;
-    return formatCurrency(price);
+    // Convert price from cents to dollars
+    const priceInDollars = price / 100;
+    
+    if (type === "one-time") return `${formatCurrency(priceInDollars)}/service`;
+    if (type === "monthly") return `${formatCurrency(priceInDollars)}/month`;
+    if (type === "seasonal") return `${formatCurrency(priceInDollars)}/season`;
+    return formatCurrency(priceInDollars);
   };
 
   return (

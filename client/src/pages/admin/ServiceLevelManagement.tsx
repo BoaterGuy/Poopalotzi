@@ -419,7 +419,7 @@ export default function ServiceLevelManagement() {
                               {getTypeLabel(level.type)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold">${level.price.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-semibold">${(level.price / 100).toFixed(2)}</TableCell>
                           <TableCell className="max-w-xs truncate">{level.description}</TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${level.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>

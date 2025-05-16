@@ -1,7 +1,13 @@
 import {
   users,
+  serviceLevel,
+  marina,
   type User,
   type InsertUser,
+  type ServiceLevel,
+  type InsertServiceLevel,
+  type Marina,
+  type InsertMarina
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -11,6 +17,17 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   upsertUser(user: Partial<User>): Promise<User>;
+  
+  // Service Level operations
+  getServiceLevel(id: number): Promise<ServiceLevel | undefined>;
+  getAllServiceLevels(): Promise<ServiceLevel[]>;
+  createServiceLevel(serviceLevel: Partial<ServiceLevel>): Promise<ServiceLevel>;
+  
+  // Marina operations
+  getMarina(id: number): Promise<Marina | undefined>;
+  getAllMarinas(activeOnly?: boolean): Promise<Marina[]>;
+  createMarina(marinaData: Partial<Marina>): Promise<Marina>;
+  
   // Other operations
 }
 
@@ -63,16 +80,101 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Service Level operations
+  async getServiceLevel(id: number): Promise<ServiceLevel | undefined> {
+    const [level] = await db.select().from(serviceLevel).where(eq(serviceLevel.id, id));
+    return level;
+  }
+  
+  async getAllServiceLevels(): Promise<ServiceLevel[]> {
+    return db.select().from(serviceLevel).where(eq(serviceLevel.isActive, true));
+  }
+  
+  async createServiceLevel(serviceLevelData: Partial<ServiceLevel>): Promise<ServiceLevel> {
+    const [level] = await db
+      .insert(serviceLevel)
+      .values(serviceLevelData as any)
+      .returning();
+    return level;
+  }
+
+  // Marina operations
+  async getMarina(id: number): Promise<Marina | undefined> {
+    const [marinaResult] = await db.select().from(marina).where(eq(marina.id, id));
+    return marinaResult;
+  }
+  
+  async getAllMarinas(activeOnly = true): Promise<Marina[]> {
+    if (activeOnly) {
+      return db.select().from(marina).where(eq(marina.isActive, true));
+    }
+    return db.select().from(marina);
+  }
+  
+  async createMarina(marinaData: Partial<Marina>): Promise<Marina> {
+    const [marinaResult] = await db
+      .insert(marina)
+      .values(marinaData as any)
+      .returning();
+    return marinaResult;
+  }
+
   // Other operations
 }
 
 // In-memory storage for development/fallback
 export class MemStorage implements IStorage {
   private usersData: Map<number, User>;
-  private nextId: number = 1;
+  private serviceLevelData: Map<number, ServiceLevel>;
+  private marinaData: Map<number, Marina>;
+  private nextUserId: number = 1;
+  private nextServiceLevelId: number = 1;
+  private nextMarinaId: number = 1;
   
   constructor() {
     this.usersData = new Map();
+    this.serviceLevelData = new Map();
+    this.marinaData = new Map();
+    
+    // Add some default service levels
+    this.createServiceLevel({
+      name: "Single Service",
+      price: 3500, // $35.00
+      description: "One-time pump-out service for your boat",
+      headCount: 1,
+      type: "one-time",
+      isActive: true
+    });
+    
+    this.createServiceLevel({
+      name: "Monthly Unlimited",
+      price: 8900, // $89.00
+      description: "Unlimited pump-outs for one month",
+      headCount: 1,
+      type: "monthly",
+      monthlyQuota: 6,
+      isActive: true
+    });
+    
+    this.createServiceLevel({
+      name: "Seasonal Package",
+      price: 39900, // $399.00
+      description: "Seasonal unlimited pump-outs (May-October)",
+      headCount: 1,
+      type: "seasonal",
+      seasonStart: "05-01", // May 1
+      seasonEnd: "10-31", // October 31
+      monthlyQuota: 8,
+      isActive: true
+    });
+    
+    // Add a default marina
+    this.createMarina({
+      name: "Sailfish Marina",
+      address: "123 Harbor Way",
+      phone: "555-123-4567",
+      isActive: true
+    });
   }
   
   async getUser(id: number): Promise<User | undefined> {
@@ -92,7 +194,7 @@ export class MemStorage implements IStorage {
     }
     
     // Create new user
-    const id = userData.id || this.nextId++;
+    const id = userData.id || this.nextUserId++;
     const user = {
       ...userData,
       id,
@@ -104,6 +206,57 @@ export class MemStorage implements IStorage {
     
     this.usersData.set(id, user);
     return user;
+  }
+  
+  // Service Level operations
+  async getServiceLevel(id: number): Promise<ServiceLevel | undefined> {
+    return this.serviceLevelData.get(id);
+  }
+  
+  async getAllServiceLevels(): Promise<ServiceLevel[]> {
+    return Array.from(this.serviceLevelData.values())
+      .filter(level => level.isActive);
+  }
+  
+  async createServiceLevel(serviceLevelData: Partial<ServiceLevel>): Promise<ServiceLevel> {
+    const id = serviceLevelData.id || this.nextServiceLevelId++;
+    const level = {
+      ...serviceLevelData,
+      id,
+      isActive: serviceLevelData.isActive ?? true,
+      createdAt: new Date()
+    } as ServiceLevel;
+    
+    this.serviceLevelData.set(id, level);
+    return level;
+  }
+  
+  // Marina operations
+  async getMarina(id: number): Promise<Marina | undefined> {
+    return this.marinaData.get(id);
+  }
+  
+  async getAllMarinas(activeOnly = true): Promise<Marina[]> {
+    let marinas = Array.from(this.marinaData.values());
+    
+    if (activeOnly) {
+      marinas = marinas.filter(marina => marina.isActive);
+    }
+    
+    return marinas;
+  }
+  
+  async createMarina(marinaData: Partial<Marina>): Promise<Marina> {
+    const id = marinaData.id || this.nextMarinaId++;
+    const marina = {
+      ...marinaData,
+      id,
+      isActive: marinaData.isActive ?? true,
+      createdAt: new Date()
+    } as Marina;
+    
+    this.marinaData.set(id, marina);
+    return marina;
   }
   
   // Other operations
