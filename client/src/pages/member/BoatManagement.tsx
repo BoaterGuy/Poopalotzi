@@ -245,11 +245,13 @@ export default function BoatManagement() {
                       <span className="text-sm">
                         {isLoadingSlips || isLoadingMarinas ? (
                           "Loading marina information..."
-                        ) : getBoatLocationInfo(boat.id) ? (
-                          `${getBoatLocationInfo(boat.id)?.marinaName} - Dock ${getBoatLocationInfo(boat.id)?.dock}, Slip ${getBoatLocationInfo(boat.id)?.slip}`
-                        ) : (
-                          'No marina assigned'
-                        )}
+                        ) : (() => {
+                          // Force recalculation of location info on each render
+                          const locationInfo = getBoatLocationInfo(boat.id);
+                          return locationInfo ? 
+                            `${locationInfo.marinaName} - Dock ${locationInfo.dock}, Slip ${locationInfo.slip}` : 
+                            'No marina assigned';
+                        })()}
                       </span>
                     </p>
                   </div>
