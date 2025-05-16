@@ -72,7 +72,6 @@ export default function AdminManualEntry() {
   // Fetch all marinas
   const { data: marinas = [], isLoading: isLoadingMarinas } = useQuery({
     queryKey: ['/api/marinas'],
-    queryFn: undefined,
   });
 
   // Port location options
@@ -228,7 +227,7 @@ export default function AdminManualEntry() {
                                 <SelectValue placeholder="Choose marina" />
                               </SelectTrigger>
                               <SelectContent>
-                                {marinas.map((marina: any) => (
+                                {Array.isArray(marinas) && marinas.map((marina: any) => (
                                   <SelectItem key={marina.id} value={marina.id.toString()}>
                                     {marina.name}
                                   </SelectItem>
