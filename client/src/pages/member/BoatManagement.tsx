@@ -44,10 +44,7 @@ export default function BoatManagement() {
     queryKey: ['/api/boats'],
   });
 
-  const { data: marinas } = useQuery<Marina[]>({
-    queryKey: ['/api/marinas'],
-    queryFn: undefined,
-  });
+  // This query will be replaced by our marinasMap query
 
   const handleDeleteBoat = async (boatId: number) => {
     try {

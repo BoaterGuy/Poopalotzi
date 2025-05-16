@@ -160,16 +160,47 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         savedBoat = await response.json();
       }
       
-      // If marina is selected, create or update slip assignment
+      // Handle marina assignment
       if (data.marinaId) {
-        const slipData = {
-          boatId: boat?.id || savedBoat.id,
-          marinaId: data.marinaId,
-          dock: data.dock || "A",
-          slip: data.slip || 1
-        };
-        
-        await apiRequest("POST", "/api/slip-assignments", slipData);
+        try {
+          // First check if there's an existing slip assignment
+          const boatId = boat?.id || savedBoat.id;
+          let existingSlipFound = false;
+          
+          if (boat?.id) {
+            // Try to get existing slip assignment for update
+            const slipResponse = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+              credentials: 'include'
+            });
+            
+            if (slipResponse.ok) {
+              // Found existing assignment, update it
+              existingSlipFound = true;
+              const existingSlip = await slipResponse.json();
+              
+              await apiRequest("PUT", `/api/slip-assignments/${existingSlip.id}`, {
+                marinaId: data.marinaId,
+                dock: data.dock || existingSlip.dock,
+                slip: data.slip || existingSlip.slip
+              });
+            }
+          }
+          
+          // If no existing assignment was found, create a new one
+          if (!existingSlipFound) {
+            const slipData = {
+              boatId,
+              marinaId: data.marinaId,
+              dock: data.dock || "A",
+              slip: data.slip || 1
+            };
+            
+            await apiRequest("POST", "/api/slip-assignments", slipData);
+          }
+        } catch (slipError) {
+          console.error("Error updating slip assignment:", slipError);
+          // Continue with success message - the boat info was saved even if slip assignment failed
+        }
       }
       
       toast({
