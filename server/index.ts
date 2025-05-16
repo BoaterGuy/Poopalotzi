@@ -227,6 +227,66 @@ async function initializeMemoryData() {
       return date.toISOString().split('T')[0];
     };
 
+    // Create sample service history for the member's boats
+    // Create a completed service from last week for boat1
+    await storage.createPumpOutRequest({
+      boatId: boat1.id,
+      requestedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      status: "Completed",
+      paymentStatus: "Paid",
+      paymentId: "sim_" + Date.now() + "1",
+      pumpOutPorts: ["port", "stern"],
+      serviceLevelId: 1, // Single Service (Single-Head)
+      ownerNotes: "Please call before arriving"
+    });
+    
+    // Create a canceled service from 2 weeks ago for boat1
+    await storage.createPumpOutRequest({
+      boatId: boat1.id,
+      requestedDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+      status: "Canceled",
+      paymentStatus: "Refunded",
+      paymentId: "sim_" + Date.now() + "2",
+      pumpOutPorts: ["port"],
+      serviceLevelId: 1, // Single Service (Single-Head)
+      ownerNotes: "Boat will be at slip #12"
+    });
+    
+    // Create a scheduled service for this week for boat1
+    await storage.createPumpOutRequest({
+      boatId: boat1.id,
+      requestedDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+      status: "Scheduled",
+      paymentStatus: "Paid",
+      paymentId: "sim_" + Date.now() + "3",
+      pumpOutPorts: ["port", "stern"],
+      serviceLevelId: 1, // Single Service (Single-Head)
+      ownerNotes: "Please text 30 minutes before arrival"
+    });
+    
+    // Create a pending service for boat2
+    await storage.createPumpOutRequest({
+      boatId: boat2.id,
+      requestedDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000), // 9 days from now
+      status: "Requested",
+      paymentStatus: "Pending",
+      pumpOutPorts: ["starboard"],
+      serviceLevelId: 4, // Single Service (Multi-Head)
+      ownerNotes: ""
+    });
+    
+    // Create a waitlisted service for boat2
+    await storage.createPumpOutRequest({
+      boatId: boat2.id,
+      requestedDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+      status: "Waitlisted",
+      paymentStatus: "Paid",
+      paymentId: "sim_" + Date.now() + "4",
+      pumpOutPorts: ["starboard"],
+      serviceLevelId: 4, // Single Service (Multi-Head)
+      ownerNotes: "High priority for Friday if possible"
+    });
+
     log("Sample data initialized in memory storage");
   } catch (seedError) {
     log("Error seeding initial data: " + seedError);
