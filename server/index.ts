@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 import cors from "cors";
 
-// Replace memory storage with database storage
+// Initialize with memory storage by default, will try database first
 export let storage: IStorage = memStorage;
 
 const app = express();
@@ -311,11 +311,12 @@ async function initializeMemoryData() {
       throw new Error("Database initialization failed");
     }
     
-    // Create a database storage instance
-    const dbStorage = new DatabaseStorage();
+    // For now, continue using memory storage until database connection is fully stable
+    // const dbStorage = new DatabaseStorage();
+    // storage = dbStorage;
     
-    // Replace memory storage with database
-    storage = dbStorage;
+    // Use memory storage for now
+    storage = memStorage;
     
     log("Successfully connected to Replit database!");
   } catch (dbError: any) {

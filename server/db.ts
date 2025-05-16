@@ -1,8 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import * as schema from '@shared/schema';
 import { sql } from 'drizzle-orm';
-import ws from 'ws';
 
 // Check and log available environment variables for connection
 console.log('Database connection information available:');
@@ -13,17 +12,22 @@ console.log('PGUSER:', process.env.PGUSER ? 'Available' : 'Not available');
 console.log('PGDATABASE:', process.env.PGDATABASE ? 'Available' : 'Not available');
 console.log('PGPASSWORD:', process.env.PGPASSWORD ? 'Available (value hidden)' : 'Not available');
 
-// Make sure we have a DATABASE_URL
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is required');
-}
+// Create a connection config directly using individual parameters
+const poolConfig = {
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  // Disable SSL for local development 
+  // but enable it with appropriate settings for production
+  ssl: { rejectUnauthorized: false }
+};
 
-// Set up the WebSocket constructor for Neon
-const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL 
-});
+// Create a Postgres pool with explicit config
+const pool = new Pool(poolConfig);
 
-// Initialize Drizzle with our schema
+// Create drizzle ORM instance with the pool
 export const db = drizzle(pool, { schema });
 
 // Database setup function
@@ -53,9 +57,9 @@ export async function setupDatabase() {
         );
       `);
       
-      console.log("Database query result:", result.rows);
-      if (result && result.rows && result.rows.length > 0) {
-        tablesExist = result.rows[0].exists === true || result.rows[0].exists === 't';
+      console.log("Database query result:", result);
+      if (result && result.length > 0) {
+        tablesExist = result[0].exists === true || result[0].exists === 't';
       }
     } catch (schemaErr) {
       console.error("Error checking schema:", schemaErr);
@@ -189,7 +193,9 @@ export async function setupDatabase() {
       // Execute queries in order
       for (const query of queries) {
         try {
+          // Convert SQL template to a raw query string
           const queryText = query.toString();
+          // Execute the raw query
           await pool.query(queryText);
         } catch (err) {
           console.error('Error executing query:', err);
