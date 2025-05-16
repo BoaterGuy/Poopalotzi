@@ -300,18 +300,15 @@ async function initializeMemoryData() {
 
 (async () => {
   try {
-    // First try to connect to the Supabase database
-    log("Setting up Supabase connection...");
+    // Connect directly to Replit database using the DATABASE_URL
+    log("Setting up Replit database connection...");
     
-    // Try specialized Supabase connection first
-    const supabaseDb = await createSupabaseClient();
+    // Set up the database schema
+    const dbInitialized = await setupDatabase();
     
-    // Verify if the schema is properly initialized
-    const isSchemaValid = await verifySchema(supabaseDb);
-    
-    if (!isSchemaValid) {
-      log("Schema not initialized in Supabase. Running setup...");
-      await setupDatabase();
+    if (!dbInitialized) {
+      log("Failed to initialize database schema. Using in-memory storage.");
+      throw new Error("Database initialization failed");
     }
     
     // Create a database storage instance
@@ -320,7 +317,7 @@ async function initializeMemoryData() {
     // Replace memory storage with database
     storage = dbStorage;
     
-    log("Successfully connected to Supabase!");
+    log("Successfully connected to Replit database!");
   } catch (dbError: any) {
     // If database connection fails, fall back to memory storage
     log(`Database connection error: ${dbError.message}`);

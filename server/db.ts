@@ -1,12 +1,8 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import pg from 'pg';
+import { Pool } from '@neondatabase/serverless';
 import * as schema from '@shared/schema';
 import { sql } from 'drizzle-orm';
-
-const { Pool } = pg;
-
-// Initialize PostgreSQL connection with explicit parameters
-let pool;
+import ws from 'ws';
 
 // Check and log available environment variables for connection
 console.log('Database connection information available:');
@@ -17,82 +13,15 @@ console.log('PGUSER:', process.env.PGUSER ? 'Available' : 'Not available');
 console.log('PGDATABASE:', process.env.PGDATABASE ? 'Available' : 'Not available');
 console.log('PGPASSWORD:', process.env.PGPASSWORD ? 'Available (value hidden)' : 'Not available');
 
-// Try multiple pool configurations until one works
-const createSuccessfulPool = () => {
-  const configs = [
-    // Try with connection string and no SASL
-    {
-      name: "URL-based with no SASL",
-      config: {
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false
-        },
-        password_encryption: 'md5' // Disable SASL/SCRAM
-      }
-    },
-    // Try with direct parameters and no SASL
-    {
-      name: "Direct parameters with no SASL",
-      config: {
-        host: process.env.PGHOST,
-        port: Number(process.env.PGPORT),
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        database: process.env.PGDATABASE,
-        ssl: {
-          rejectUnauthorized: false
-        },
-        password_encryption: 'md5' // Disable SASL/SCRAM
-      }
-    },
-    // Try with URL but without SSL
-    {
-      name: "URL-based without SSL",
-      config: {
-        connectionString: process.env.DATABASE_URL,
-        ssl: false
-      }
-    },
-    // Basic fallback
-    {
-      name: "Basic URL",
-      config: {
-        connectionString: process.env.DATABASE_URL
-      }
-    }
-  ];
-
-  for (const { name, config } of configs) {
-    try {
-      console.log(`Trying database connection with: ${name}`);
-      const testPool = new Pool(config);
-      console.log(`Successfully created pool with: ${name}`);
-      
-      // Add error handler
-      testPool.on('error', (err) => {
-        console.error(`Database pool error (${name}):`, err.message);
-      });
-      
-      return testPool;
-    } catch (err) {
-      console.error(`Failed to create pool with ${name}:`, err.message);
-    }
-  }
-  
-  // If all attempts fail, throw
-  throw new Error("All database connection attempts failed");
-};
-
-try {
-  pool = createSuccessfulPool();
-} catch (error) {
-  console.error("Error creating all database pool configurations:", error);
-  // Create minimal pool as absolute last resort
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres'
-  });
+// Make sure we have a DATABASE_URL
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is required');
 }
+
+// Set up the WebSocket constructor for Neon
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL 
+});
 
 // Initialize Drizzle with our schema
 export const db = drizzle(pool, { schema });
@@ -101,17 +30,6 @@ export const db = drizzle(pool, { schema });
 export async function setupDatabase() {
   try {
     console.log("Testing database connection...");
-    
-    // Log formatted database URL (redacting password)
-    if (process.env.DATABASE_URL) {
-      try {
-        const url = new URL(process.env.DATABASE_URL);
-        url.password = "REDACTED";
-        console.log("Using database URL format:", url.toString());
-      } catch (err) {
-        console.error("Error parsing DATABASE_URL:", err.message);
-      }
-    }
     
     // First test connection
     try {
@@ -125,8 +43,9 @@ export async function setupDatabase() {
     
     // Check if database is initialized
     console.log("Checking if tables exist...");
+    let tablesExist = false;
     try {
-      const result = await db.execute(sql`
+      const result = await pool.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables 
           WHERE table_schema = 'public' 
@@ -134,8 +53,10 @@ export async function setupDatabase() {
         );
       `);
       
-      console.log("Database query result:", result);
-      const tablesExist = result[0]?.exists;
+      console.log("Database query result:", result.rows);
+      if (result && result.rows && result.rows.length > 0) {
+        tablesExist = result.rows[0].exists === true || result.rows[0].exists === 't';
+      }
     } catch (schemaErr) {
       console.error("Error checking schema:", schemaErr);
       return false;
@@ -268,7 +189,8 @@ export async function setupDatabase() {
       // Execute queries in order
       for (const query of queries) {
         try {
-          await db.execute(query);
+          const queryText = query.toString();
+          await pool.query(queryText);
         } catch (err) {
           console.error('Error executing query:', err);
           // Continue with other queries
