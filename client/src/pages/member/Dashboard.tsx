@@ -27,6 +27,34 @@ export default function MemberDashboard() {
     },
   });
 
+  // Get all pump-out requests for the user's boats
+  const { data: allRequests, isLoading: isLoadingAllRequests } = useQuery<PumpOutRequest[]>({
+    queryKey: ['/api/pump-out-requests/all-boats'],
+    queryFn: async () => {
+      if (!boats || boats.length === 0) return [];
+      
+      // Get all pump-out requests for all boats
+      const allBoatRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        try {
+          const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const boatRequests = await response.json();
+            allBoatRequests.push(...boatRequests);
+          }
+        } catch (error) {
+          console.error(`Error fetching pump-out requests for boat ${boat.id}:`, error);
+        }
+      }
+      
+      return allBoatRequests;
+    },
+    enabled: !!boats && boats.length > 0,
+  });
+
   const { data: serviceLevel, isLoading: isLoadingServiceLevel } = useQuery<ServiceLevel>({
     queryKey: ['/api/service-levels', user?.serviceLevelId],
     queryFn: async () => {
@@ -363,7 +391,7 @@ export default function MemberDashboard() {
                         </p>
                         
                         {/* Display remaining pump-out requests count for monthly plans */}
-                        {serviceLevel.type === 'monthly' && pumpOutRequests && serviceLevel.monthlyQuota && (
+                        {serviceLevel.type === 'monthly' && serviceLevel.monthlyQuota && (
                           <div className="flex items-center mt-1 text-sm">
                             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-normal">
                               {(() => {
@@ -373,14 +401,15 @@ export default function MemberDashboard() {
                                 const currentYear = now.getFullYear();
                                 
                                 // Filter requests that are in current month and not canceled
-                                const activeRequests = pumpOutRequests.filter(req => {
+                                const activeRequests = allRequests?.filter(req => {
+                                  if (!req.createdAt) return false;
                                   const requestDate = new Date(req.createdAt);
                                   return (
                                     requestDate.getMonth() === currentMonth &&
                                     requestDate.getFullYear() === currentYear &&
                                     req.status !== 'Canceled'
                                   );
-                                });
+                                }) || [];
                                 
                                 // Calculate remaining requests
                                 const used = activeRequests.length;
