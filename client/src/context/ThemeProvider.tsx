@@ -27,7 +27,10 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => "light" // Force light theme for all pages
+    () => {
+      const storedTheme = localStorage.getItem(storageKey);
+      return (storedTheme as Theme) || defaultTheme;
+    }
   );
 
   useEffect(() => {
