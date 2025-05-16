@@ -284,6 +284,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
+  
+  // PUT route to update slip assignment
+  app.put("/api/slip-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const slipId = parseInt(req.params.id);
+      const slipData = insertSlipAssignmentSchema.partial().parse(req.body);
+      
+      // Get the slip assignment
+      const existingSlip = await storage.getSlipAssignment(slipId);
+      if (!existingSlip) {
+        return res.status(404).json({ message: "Slip assignment not found" });
+      }
+      
+      // Get the boat to verify ownership
+      const boat = await storage.getBoat(existingSlip.boatId);
+      if (!boat) {
+        return res.status(404).json({ message: "Boat not found" });
+      }
+      
+      // Verify boat ownership
+      if (req.user.role !== "admin" && req.user.role !== "employee") {
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to update slip assignment for this boat" });
+        }
+      }
+      
+      // Check if marina exists if marinaId is being updated
+      if (slipData.marinaId) {
+        const marina = await storage.getMarina(slipData.marinaId);
+        if (!marina) {
+          return res.status(404).json({ message: "Marina not found" });
+        }
+      }
+      
+      // Update the slip assignment
+      const updatedSlip = await storage.updateSlipAssignment(slipId, slipData);
+      
+      res.status(200).send(); // Send a simple success response
+    } catch (err) {
+      next(err);
+    }
+  });
 
   app.get("/api/slip-assignments/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
