@@ -131,6 +131,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Login successful",
         description: `Welcome back, ${userData.firstName}!`,
       });
+      
+      // Automatically redirect based on role
+      if (userData.role === 'admin') {
+        window.location.href = '/admin/dashboard';
+      } else if (userData.role === 'employee') {
+        window.location.href = '/employee/schedule';
+      } else {
+        window.location.href = '/member/dashboard';
+      }
+      
     } catch (error) {
       console.error('Login error:', error);
       toast({
