@@ -1,5 +1,8 @@
 export function registerSW() {
-  if ('serviceWorker' in navigator) {
+  // Check if not Safari, as Safari has compatibility issues with service workers
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  
+  if ('serviceWorker' in navigator && !isSafari) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
         .then(registration => {
@@ -9,6 +12,8 @@ export function registerSW() {
           console.error('ServiceWorker registration failed: ', error);
         });
     });
+  } else if (isSafari) {
+    console.log('Service worker registration skipped for Safari browser');
   }
 }
 
