@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import * as React from "react";
+import { createContext, useContext, useEffect } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -14,7 +15,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "light", // Changed from system to light
   setTheme: () => null,
 };
 
@@ -22,13 +23,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light", // Changed default theme to light
+  defaultTheme = "light",
   storageKey = "poopalotzi-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => "light" // Force light theme for all pages
-  );
+  // Use React's useState instead of importing it separately
+  const [theme, setTheme] = React.useState<Theme>("light");
 
   useEffect(() => {
     const root = window.document.documentElement;
