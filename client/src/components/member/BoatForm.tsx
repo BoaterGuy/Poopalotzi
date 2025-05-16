@@ -26,6 +26,7 @@ import { insertBoatSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 // Define pump port location options
 const pumpPortLocationOptions = [
@@ -56,6 +57,7 @@ const boatFormSchema = insertBoatSchema
     dock: z.string().optional().nullable(),
     slip: z.coerce.number().optional().nullable(),
     notes: z.string().optional().nullable(),
+    photoUrl: z.string().optional(),
   });
 
 type BoatFormValues = z.infer<typeof boatFormSchema>;
@@ -83,6 +85,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     dock: boat?.dock || "",
     slip: boat?.slip || null,
     notes: boat?.notes || null,
+    photoUrl: boat?.photoUrl || "",
   };
 
   const form = useForm<BoatFormValues>({
@@ -130,6 +133,28 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 pb-4">
+        {/* Boat Photo Upload */}
+        <FormField
+          control={form.control}
+          name="photoUrl"
+          render={({ field }) => (
+            <FormItem className="mb-6">
+              <FormLabel>Boat Photo</FormLabel>
+              <FormControl>
+                <ImageUpload 
+                  value={field.value} 
+                  onChange={field.onChange}
+                  className="mx-auto"
+                />
+              </FormControl>
+              <FormDescription>
+                Upload a photo of your boat to help service providers identify it easily
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Boat Name */}
           <FormField
