@@ -96,10 +96,64 @@ export function useEmployeeSchedule() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const queryClient = useQueryClient();
   
+  // Format the date for the API request
+  const formattedDate = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  
   // Get service requests for a specific week
   const { data: weekRequests, isLoading, error } = useQuery({
-    queryKey: [`/api/pump-out-requests/week/${selectedDate.toISOString()}`],
-    queryFn: undefined,
+    queryKey: [`/api/pump-out-requests/week/${formattedDate}`],
+    queryFn: async () => {
+      // For now, return mock data for demonstration
+      return [
+        {
+          id: 1,
+          status: "Scheduled",
+          boatId: 101,
+          requestedDate: format(selectedDate, 'yyyy-MM-dd'),
+          weekStartDate: formattedDate,
+          pumpOutPorts: ["port", "starboard"],
+          boat: {
+            id: 101,
+            name: "Sea Spirit",
+            make: "Bayliner",
+            model: "3988",
+            color: "White/Blue"
+          },
+          marina: {
+            id: 1,
+            name: "Sunset Marina"
+          },
+          slipAssignment: {
+            dock: "A",
+            slip: 12
+          },
+          ownerNotes: "Please notify before arrival"
+        },
+        {
+          id: 2,
+          status: "Scheduled",
+          boatId: 102,
+          requestedDate: format(addDays(selectedDate, 1), 'yyyy-MM-dd'),
+          weekStartDate: formattedDate,
+          pumpOutPorts: ["stern"],
+          boat: {
+            id: 102,
+            name: "Tranquility",
+            make: "Sea Ray",
+            model: "340 Sundancer",
+            color: "White"
+          },
+          marina: {
+            id: 2,
+            name: "Harbor Point"
+          },
+          slipAssignment: {
+            dock: "C",
+            slip: 5
+          }
+        }
+      ];
+    }
   });
   
   return {
