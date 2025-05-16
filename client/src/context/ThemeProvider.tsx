@@ -26,10 +26,19 @@ export function ThemeProvider({
   storageKey = "poopalotzi-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Check if localStorage is available and has a saved theme
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedTheme = window.localStorage.getItem(storageKey) as Theme;
+      return storedTheme || defaultTheme;
+    }
+    return defaultTheme;
+  });
 
   useEffect(() => {
     try {
+      if (typeof window === 'undefined') return;
+      
       const root = window.document.documentElement;
       root.classList.remove("light", "dark");
 
@@ -50,8 +59,15 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(storageKey, theme);
+        }
+        setTheme(theme);
+      } catch (error) {
+        console.error("Error saving theme:", error);
+        setTheme(theme); // Still update the state even if storage fails
+      }
     },
   };
 

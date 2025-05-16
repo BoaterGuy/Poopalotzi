@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, signInWithOAuth } from '../lib/supabase';
+// Temporarily comment out supabase imports to switch to Replit Auth
+// import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, signInWithOAuth } from '../lib/supabase';
 import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 
@@ -45,8 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchUser = async () => {
       setIsLoading(true);
       try {
-        // First check if we have a valid session with our API
-        const response = await fetch('/api/auth/me', {
+        // Check if we have a valid session with our API
+        const response = await fetch('/api/auth/user', {
           credentials: 'include',
         });
 
@@ -65,82 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     fetchUser();
-
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // When a user signs in with Supabase, we need to create/verify them in our system
-        if (event === 'SIGNED_IN' && session) {
-          try {
-            const supaUser = session.user;
-            
-            // Check if the user exists in our system
-            const response = await fetch('/api/auth/me', {
-              credentials: 'include',
-            });
-
-            if (!response.ok) {
-              // User doesn't exist in our system, create them
-              const registerResponse = await apiRequest('POST', '/api/auth/register', {
-                email: supaUser.email,
-                firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
-                lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-                role: 'member',
-                oauthProvider: supaUser.app_metadata.provider,
-                oauthId: supaUser.id,
-                password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
-              });
-
-              if (registerResponse.ok) {
-                const userData = await registerResponse.json();
-                setUser(userData);
-              }
-            } else {
-              // User exists, get their data
-              const userData = await response.json();
-              setUser(userData);
-            }
-          } catch (error) {
-            console.error('Error syncing user after auth state change:', error);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       
-      // Login to our API
-      const response = await apiRequest('POST', '/api/auth/login', {
-        email,
-        password,
-      });
-
-      const userData = await response.json();
-      setUser(userData);
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.firstName}!`,
-      });
-      
-      // Automatically redirect based on role
-      if (userData.role === 'admin') {
-        window.location.href = '/admin/dashboard';
-      } else if (userData.role === 'employee') {
-        window.location.href = '/employee/schedule';
-      } else {
-        window.location.href = '/member/dashboard';
-      }
-      
+      // With Replit Auth, redirect to login page
+      window.location.href = '/api/login';
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -157,17 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: any) => {
     try {
       setIsLoading(true);
-      
-      // Register with our API
-      const response = await apiRequest('POST', '/api/auth/register', userData);
-      
-      const newUser = await response.json();
-      setUser(newUser);
-      
-      toast({
-        title: "Registration successful",
-        description: `Welcome to Poopalotzi, ${newUser.firstName}!`,
-      });
+      // With Replit Auth, users register through the Replit login page
+      window.location.href = '/api/login';
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -186,10 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Logout from our API
-      await apiRequest('POST', '/api/auth/logout', {});
-      
-      // Also logout from Supabase if we're using it
-      await signOut();
+      window.location.href = '/api/logout';
       
       setUser(null);
       
@@ -204,14 +125,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // These methods redirect to Replit Auth
   const loginWithGoogle = async () => {
     try {
-      await signInWithOAuth('google');
+      window.location.href = '/api/login';
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('Login error:', error);
       toast({
-        title: "Google login failed",
-        description: "There was an error logging in with Google.",
+        title: "Login failed",
+        description: "There was an error logging in.",
         variant: "destructive",
       });
     }
@@ -219,12 +141,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithFacebook = async () => {
     try {
-      await signInWithOAuth('facebook');
+      window.location.href = '/api/login';
     } catch (error) {
-      console.error('Facebook login error:', error);
+      console.error('Login error:', error);
       toast({
-        title: "Facebook login failed",
-        description: "There was an error logging in with Facebook.",
+        title: "Login failed",
+        description: "There was an error logging in.",
         variant: "destructive",
       });
     }
@@ -232,12 +154,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithApple = async () => {
     try {
-      await signInWithOAuth('apple');
+      window.location.href = '/api/login';
     } catch (error) {
-      console.error('Apple login error:', error);
+      console.error('Login error:', error);
       toast({
-        title: "Apple login failed",
-        description: "There was an error logging in with Apple.",
+        title: "Login failed",
+        description: "There was an error logging in.",
         variant: "destructive",
       });
     }
