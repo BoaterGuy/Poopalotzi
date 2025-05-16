@@ -149,7 +149,10 @@ export const insertServiceLevelSchema = createInsertSchema(serviceLevel)
   .omit({ id: true, createdAt: true });
 
 export const insertPumpOutRequestSchema = createInsertSchema(pumpOutRequest)
-  .omit({ id: true, createdAt: true, updatedAt: true });
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    testMode: z.boolean().optional(),
+  });
 
 export const insertPumpOutLogSchema = createInsertSchema(pumpOutLog)
   .omit({ id: true, createdAt: true });
