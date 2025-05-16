@@ -68,6 +68,29 @@ export default function Profile() {
   const [tab, setTab] = useState("profile");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Get current subscription data
+  const { data: subscription } = useQuery({
+    queryKey: ['/api/users/me/subscription'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/users/me/subscription', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          return response.json();
+        }
+        
+        throw new Error('No subscription found');
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+        return null;
+      }
+    },
+    retry: false,
+  });
+
+  // Get all service levels
   const { data: serviceLevels } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
     queryFn: undefined,
@@ -363,23 +386,35 @@ export default function Profile() {
                   <div className="bg-[#F4EBD0] p-4 rounded-md">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                       <div>
-                        <p className="text-xl font-bold text-[#0B1F3A]">
-                          {serviceLevels?.find(plan => plan.id === user?.serviceLevelId)?.name || 'No active plan'}
-                        </p>
-                        {user?.serviceLevelId && (
-                          <p className="text-gray-600">
-                            {serviceLevels?.find(plan => plan.id === user?.serviceLevelId)?.description}
-                          </p>
+                        {subscription && subscription.serviceLevelId ? (
+                          <>
+                            <p className="text-xl font-bold text-[#0B1F3A]">
+                              {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.name}
+                            </p>
+                            <p className="text-gray-600">
+                              {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.description}
+                            </p>
+                            
+                            {/* Show subscription period for monthly/seasonal plans */}
+                            {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type !== 'one-time' && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'monthly' ?
+                                  'Valid: May 1 - May 31' : 'Valid: May 1 - Oct 31'}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-xl font-bold text-[#0B1F3A]">No active plan</p>
                         )}
                       </div>
-                      {user?.serviceLevelId && (
+                      {subscription && subscription.serviceLevelId && (
                         <div className="mt-2 md:mt-0">
-                          <span className="text-lg font-bold text-[#38B2AC]">
-                            {formatCurrency(serviceLevels?.find(plan => plan.id === user?.serviceLevelId)?.price || 0)}
+                          <span className="text-lg font-bold text-[#0B1F3A]">
+                            {formatCurrency(serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.price || 0)}
                           </span>
                           <span className="text-gray-600 text-sm">
-                            /{serviceLevels?.find(plan => plan.id === user?.serviceLevelId)?.type === 'one-time' ? 'service' : 
-                              serviceLevels?.find(plan => plan.id === user?.serviceLevelId)?.type === 'monthly' ? 'month' : 'season'}
+                            /{serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'one-time' ? 'service' : 
+                              serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'monthly' ? 'month' : 'season'}
                           </span>
                         </div>
                       )}
