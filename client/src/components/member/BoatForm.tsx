@@ -199,10 +199,11 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
               existingSlipFound = true;
               const existingSlip = await slipResponse.json();
               
+              // Ensure dock is sent as a string and slip as a number
               await apiRequest("PUT", `/api/slip-assignments/${existingSlip.id}`, {
-                marinaId: data.marinaId,
-                dock: data.dock || existingSlip.dock,
-                slip: data.slip || existingSlip.slip
+                marinaId: Number(data.marinaId),
+                dock: String(data.dock || existingSlip.dock),
+                slip: Number(data.slip || existingSlip.slip)
               });
             }
           }

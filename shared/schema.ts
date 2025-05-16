@@ -70,7 +70,7 @@ export const slipAssignment = pgTable('slip_assignment', {
   id: serial('id').primaryKey(),
   boatId: integer('boat_id').notNull().references(() => boat.id),
   marinaId: integer('marina_id').notNull().references(() => marina.id),
-  dock: integer('dock').notNull(),
+  dock: text('dock').notNull(), // Changed from integer to text
   slip: integer('slip').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });

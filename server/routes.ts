@@ -289,7 +289,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/slip-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const slipId = parseInt(req.params.id);
-      const slipData = insertSlipAssignmentSchema.partial().parse(req.body);
+      
+      // Force certain data types to match schema
+      const rawData = req.body;
+      const slipData = {
+        ...rawData,
+        marinaId: rawData.marinaId ? Number(rawData.marinaId) : undefined,
+        dock: rawData.dock, // Leave as string
+        slip: rawData.slip ? Number(rawData.slip) : undefined
+      };
       
       // Get the slip assignment
       const existingSlip = await storage.getSlipAssignment(slipId);
