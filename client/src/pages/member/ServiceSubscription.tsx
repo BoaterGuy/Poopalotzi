@@ -23,8 +23,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Sailboat, CheckCircle, ArrowRight, Clock, DollarSign, CalendarClock } from "lucide-react";
+import { Sailboat, CheckCircle, ArrowRight, Clock, DollarSign, CalendarClock, Repeat } from "lucide-react";
 import PaymentForm from "@/components/member/PaymentForm";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export default function ServiceSubscription() {
   const { toast } = useToast();
@@ -33,6 +42,15 @@ export default function ServiceSubscription() {
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    // Default to current month if within May-October, otherwise default to May
+    return currentMonth >= 4 && currentMonth <= 9 
+      ? (currentMonth + 1).toString().padStart(2, '0') 
+      : '05'; // May
+  });
+  const [autoRenew, setAutoRenew] = useState(false);
   
   // Fetch service levels
   const { data: serviceLevels = [], isLoading } = useQuery({
@@ -108,14 +126,36 @@ export default function ServiceSubscription() {
   
   const handlePaymentSuccess = async () => {
     try {
-      // Update user subscription after payment
-      const response = await apiRequest("POST", "/api/users/me/subscription", {
+      // Create subscription object with additional properties for monthly subscriptions
+      const subscriptionRequest = {
         serviceLevelId: selectedPlan.id,
-      });
+        // Only include these fields for monthly subscriptions
+        ...(selectedPlan.type === 'monthly' && {
+          activeMonth: selectedMonth,
+          autoRenew: autoRenew
+        })
+      };
+      
+      // Update user subscription after payment
+      const response = await apiRequest("POST", "/api/users/me/subscription", subscriptionRequest);
+      
+      // Determine subscription period text
+      let periodText = '';
+      if (selectedPlan.type === 'monthly') {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthIndex = parseInt(selectedMonth) - 1;
+        periodText = `for ${monthNames[monthIndex]}`;
+        if (autoRenew) {
+          periodText += ' with auto-renewal';
+        }
+      } else if (selectedPlan.type === 'seasonal') {
+        periodText = 'for the season (May-October)';
+      }
       
       toast({
         title: "Payment Successful",
-        description: `Your payment for ${selectedPlan.name} has been processed successfully.`,
+        description: `Your payment for ${selectedPlan.name} ${periodText} has been processed successfully.`,
       });
       
       // Save subscription to local storage for persistence across pages
@@ -128,6 +168,9 @@ export default function ServiceSubscription() {
           description: selectedPlan.description,
           monthlyQuota: selectedPlan.monthlyQuota || 0,
           startDate: new Date().toISOString(),
+          // Add new fields
+          activeMonth: selectedPlan.type === 'monthly' ? selectedMonth : undefined,
+          autoRenew: selectedPlan.type === 'monthly' ? autoRenew : undefined,
         };
         utils.saveSubscriptionToLocal(subscriptionData);
       });
@@ -344,15 +387,61 @@ export default function ServiceSubscription() {
                 </div>
               </div>
               
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-sm text-muted-foreground mb-4">
                 {selectedPlan.type === 'one-time' ? (
                   "This is a one-time purchase. You will be prompted to enter payment information."
                 ) : selectedPlan.type === 'monthly' ? (
-                  "This is a monthly subscription. You will be billed monthly for the service."
+                  "This is a monthly subscription valid for one month from the start date."
                 ) : (
                   "This is a seasonal subscription covering May 1 through October 31."
                 )}
               </p>
+              
+              {selectedPlan.type === 'monthly' && (
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="month-select">Select Active Month</Label>
+                    <Select 
+                      value={selectedMonth} 
+                      onValueChange={setSelectedMonth}
+                    >
+                      <SelectTrigger id="month-select">
+                        <SelectValue placeholder="Select month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="05">May</SelectItem>
+                        <SelectItem value="06">June</SelectItem>
+                        <SelectItem value="07">July</SelectItem>
+                        <SelectItem value="08">August</SelectItem>
+                        <SelectItem value="09">September</SelectItem>
+                        <SelectItem value="10">October</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Your plan will be active from the 1st to the last day of the selected month.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="auto-renew" 
+                      checked={autoRenew}
+                      onCheckedChange={(checked) => setAutoRenew(checked as boolean)} 
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label 
+                        htmlFor="auto-renew" 
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Auto-Renew Subscription
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Automatically renew this subscription every month until canceled.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
