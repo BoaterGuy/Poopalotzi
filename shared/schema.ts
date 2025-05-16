@@ -24,6 +24,10 @@ export const users = pgTable('users', {
   oauthProvider: text('oauth_provider'),
   oauthId: text('oauth_id'),
   serviceLevelId: integer('service_level_id').references(() => serviceLevel.id),
+  subscriptionStartDate: timestamp('subscription_start_date'),
+  subscriptionEndDate: timestamp('subscription_end_date'),
+  activeMonth: text('active_month'), // Stored as "MM" format
+  autoRenew: boolean('auto_renew').default(false),
   emailVerified: boolean('email_verified').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });

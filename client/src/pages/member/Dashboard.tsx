@@ -362,9 +362,32 @@ export default function MemberDashboard() {
                             'Seasonal (Unlimited)'}
                         </p>
                         {serviceLevel.type === 'monthly' && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Valid: {format(new Date(), 'MMMM 1')} - {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'MMMM d, yyyy')}
-                          </p>
+                          <div className="space-y-1 mt-1">
+                            <p className="text-xs text-gray-500">
+                              {user?.activeMonth ? (
+                                <>
+                                  {/* Display user's specific selected month */}
+                                  {(() => {
+                                    const monthNum = parseInt(user.activeMonth) - 1; // Convert to 0-based
+                                    const year = new Date().getFullYear();
+                                    const startDate = new Date(year, monthNum, 1);
+                                    const endDate = new Date(year, monthNum + 1, 0);
+                                    return `Valid: ${format(startDate, 'MMMM 1')} - ${format(endDate, 'MMMM d, yyyy')}`;
+                                  })()}
+                                </>
+                              ) : (
+                                <>
+                                  Valid: {format(new Date(), 'MMMM 1')} - {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'MMMM d, yyyy')}
+                                </>
+                              )}
+                            </p>
+                            {user?.autoRenew && (
+                              <div className="flex items-center gap-1 text-xs text-green-600">
+                                <Check className="h-3 w-3" />
+                                <span>Auto-renewal enabled</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                         {serviceLevel.type === 'seasonal' && (
                           <p className="text-xs text-gray-500 mt-1">

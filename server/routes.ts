@@ -810,7 +810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const { serviceLevelId } = req.body;
+      const { serviceLevelId, activeMonth, autoRenew } = req.body;
       if (!serviceLevelId) {
         return res.status(400).json({ message: "Service level ID is required" });
       }
@@ -830,8 +830,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Service level is not active" });
       }
       
-      // Update user's service level
-      const updatedUser = await storage.updateUser(req.user.id, { serviceLevelId: id });
+      // Calculate subscription details based on plan type
+      const now = new Date();
+      let startDate = now;
+      let endDate: Date | null = null;
+      
+      if (serviceLevel.type === 'monthly' && activeMonth) {
+        // For monthly plans with selected month
+        const year = now.getFullYear();
+        const month = parseInt(activeMonth) - 1; // JavaScript months are 0-based
+        
+        // Create start date (1st of selected month)
+        startDate = new Date(year, month, 1);
+        
+        // Create end date (last day of selected month)
+        endDate = new Date(year, month + 1, 0);
+      } else if (serviceLevel.type === 'seasonal') {
+        // For seasonal plans (May 1 - Oct 31)
+        const year = now.getFullYear();
+        startDate = new Date(year, 4, 1); // May 1
+        endDate = new Date(year, 9, 31); // October 31
+      }
+      
+      // Update user's subscription information
+      const subscriptionData = {
+        serviceLevelId: id,
+        subscriptionStartDate: startDate,
+        subscriptionEndDate: endDate,
+        autoRenew: serviceLevel.type === 'monthly' ? !!autoRenew : false
+      };
+      
+      const updatedUser = await storage.updateUser(req.user.id, subscriptionData);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -839,7 +868,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({
         message: "Subscription updated successfully",
         userId: updatedUser.id,
-        serviceLevelId: updatedUser.serviceLevelId
+        serviceLevelId: updatedUser.serviceLevelId,
+        subscriptionStartDate: startDate,
+        subscriptionEndDate: endDate,
+        autoRenew: subscriptionData.autoRenew
       });
     } catch (err) {
       next(err);
