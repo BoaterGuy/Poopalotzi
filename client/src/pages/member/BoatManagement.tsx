@@ -219,31 +219,31 @@ export default function BoatManagement() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="bg-gray-50 justify-between">
+                <CardFooter className="bg-gray-50 flex flex-wrap gap-2 justify-center">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setEditingBoat(boat)}
+                    className="flex-1"
                   >
                     <Edit className="mr-2 h-4 w-4" /> Edit
                   </Button>
-                  <div className="space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setAssigningMarina(boat)}
-                    >
-                      <MapPin className="mr-2 h-4 w-4" /> Assign Marina
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => setDeletingBoat(boat)}
-                    >
-                      <Trash className="mr-2 h-4 w-4" /> Delete
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setAssigningMarina(boat)}
+                    className="flex-1"
+                  >
+                    <MapPin className="mr-2 h-4 w-4" /> Assign Marina
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setDeletingBoat(boat)}
+                  >
+                    <Trash className="mr-2 h-4 w-4" /> Delete
+                  </Button>
                 </CardFooter>
               </Card>
             ))}

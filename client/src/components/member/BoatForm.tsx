@@ -228,6 +228,47 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
+          {/* Dock */}
+          <FormField
+            control={form.control}
+            name="dock"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dock</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="text" 
+                    placeholder="e.g. A" 
+                    {...field} 
+                    value={field.value || ""} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Slip */}
+          <FormField
+            control={form.control}
+            name="slip"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slip Number</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="e.g. 42" 
+                    {...field} 
+                    value={field.value || ""} 
+                    onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Docking Direction */}
           <FormField
             control={form.control}
