@@ -192,6 +192,7 @@ export default function ServiceSubscription() {
                 {plan.type === 'monthly' ? '/mo' : '/season'}
               </span>
             )}
+            <div className="text-sm font-normal text-muted-foreground mt-1">Plus Tax</div>
           </div>
           <div className="space-y-2">
             {(plan.monthlyQuota && plan.monthlyQuota > 0) && (
@@ -270,12 +271,13 @@ export default function ServiceSubscription() {
                       <div className="flex items-center mt-2">
                         <DollarSign className="h-4 w-4 text-green-600 mr-1" />
                         <span className="font-medium text-green-600">
-                          ${(currentServiceLevel.price / 100).toFixed(2)}
+                          ${currentServiceLevel.price.toFixed(2)}
                           {currentServiceLevel.type !== 'one-time' && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {currentServiceLevel.type === 'monthly' ? '/mo' : '/season'}
                             </span>
                           )}
+                          <span className="text-sm font-normal text-muted-foreground ml-1">Plus Tax</span>
                         </span>
                       </div>
                     </div>
@@ -343,12 +345,13 @@ export default function ServiceSubscription() {
                 <div className="flex justify-between items-center">
                   <span>Price:</span>
                   <span className="font-bold">
-                    ${(selectedPlan.price / 100).toFixed(2)}
+                    ${selectedPlan.price.toFixed(2)}
                     {selectedPlan.type !== 'one-time' && (
                       <span className="text-sm font-normal text-muted-foreground">
                         {selectedPlan.type === 'monthly' ? '/mo' : '/season'}
                       </span>
                     )}
+                    <span className="text-sm font-normal text-muted-foreground ml-1">Plus Tax</span>
                   </span>
                 </div>
               </div>
@@ -389,7 +392,7 @@ export default function ServiceSubscription() {
           {selectedPlan && (
             <PaymentForm
               requestId={0} // Not tied to a specific request for service subscription
-              amount={selectedPlan.price / 100}
+              amount={selectedPlan.price}
               onSuccess={handlePaymentSuccess}
             />
           )}
