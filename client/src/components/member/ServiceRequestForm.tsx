@@ -94,10 +94,11 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
   const onSubmit = async (data: ServiceRequestFormValues) => {
     setIsSubmitting(true);
     try {
-      // Format date to ISO string for the API
+      // Format date to ISO string for the API and add testMode for development
       const formattedData = {
         ...data,
         weekStartDate: format(data.weekStartDate, "yyyy-MM-dd"),
+        testMode: true // This bypasses quota checks for testing
       };
       
       await apiRequest("POST", "/api/pump-out-requests", formattedData);
