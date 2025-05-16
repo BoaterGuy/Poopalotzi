@@ -179,9 +179,7 @@ export default function EmployeeSchedule() {
     // Sort requests by dock and slip
     Object.values(groups).forEach(group => {
       group.requests.sort((a, b) => {
-        if (a.slipAssignment.dock !== b.slipAssignment.dock) {
-          return a.slipAssignment.dock - b.slipAssignment.dock;
-        }
+        // Sort by slip numbers instead of dock for simplicity
         return a.slipAssignment.slip - b.slipAssignment.slip;
       });
     });

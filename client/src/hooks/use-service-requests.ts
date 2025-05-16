@@ -129,7 +129,7 @@ export function useEmployeeSchedule() {
         },
         {
           id: 2,
-          status: "Scheduled",
+          status: "Completed",
           boatId: 102,
           requestedDate: new Date().toISOString().split('T')[0],
           weekStartDate: "2025-05-12",
@@ -149,6 +149,30 @@ export function useEmployeeSchedule() {
             dock: "C",
             slip: 5
           }
+        },
+        {
+          id: 3,
+          status: "Waitlisted",
+          boatId: 103,
+          requestedDate: new Date().toISOString().split('T')[0],
+          weekStartDate: "2025-05-12",
+          pumpOutPorts: ["port"],
+          boat: {
+            id: 103,
+            name: "Wave Dancer",
+            make: "Catalina",
+            model: "350",
+            color: "Navy/White"
+          },
+          marina: {
+            id: 1,
+            name: "Sunset Marina"
+          },
+          slipAssignment: {
+            dock: "B",
+            slip: 8
+          },
+          ownerNotes: "Call ahead"
         }
       ];
     }
