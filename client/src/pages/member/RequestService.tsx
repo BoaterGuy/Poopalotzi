@@ -355,16 +355,29 @@ export default function RequestService() {
                 <CardTitle>Payment Details</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <PaymentForm 
-                  selectedRequest={selectedRequest}
-                  pendingPaymentRequests={pendingPaymentRequests}
-                  serviceLevel={serviceLevel}
-                  onSuccess={handlePaymentComplete}
-                  onCancel={() => {
-                    setStep("request");
-                    setSelectedRequest(null);
-                  }}
-                />
+                {selectedRequest ? (
+                  <PaymentForm 
+                    requestId={selectedRequest.id}
+                    amount={serviceLevel.price}
+                    onSuccess={handlePaymentComplete}
+                  />
+                ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 ? (
+                  <PaymentForm 
+                    requestId={pendingPaymentRequests[0].id}
+                    amount={serviceLevel.price}
+                    onSuccess={handlePaymentComplete}
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
+                    <Button 
+                      onClick={() => setStep("request")}
+                      className="bg-[#0B1F3A]"
+                    >
+                      Go to Request Service
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
