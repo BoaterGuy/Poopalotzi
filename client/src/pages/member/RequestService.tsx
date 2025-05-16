@@ -24,7 +24,15 @@ export default function RequestService() {
   // Fetch boats owned by the user
   const { data: boats, isLoading: isLoadingBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/boats', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch boats');
+      }
+      return response.json();
+    },
   });
 
   // Fetch all service levels to find the one for this subscription
