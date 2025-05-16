@@ -367,22 +367,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Pump-Out Request routes
   app.post("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const requestData = insertPumpOutRequestSchema.parse(req.body);
+      let requestData = req.body;
+      let isManualEntry = false;
       
-      // Verify boat ownership
-      const boat = await storage.getBoat(requestData.boatId);
-      if (!boat) {
-        return res.status(404).json({ message: "Boat not found" });
-      }
+      // Special handling for manual service entries by admin
+      if (req.user.role === 'admin' && requestData.manualEntry && requestData.manualBoatInfo) {
+        isManualEntry = true;
+        // Skip boat ownership verification for manual entries
+        // Create a temporary pump-out request from manual info
+        
+        // Check that we have the minimum required fields
+        if (!requestData.manualBoatInfo.name || !requestData.weekStartDate || !requestData.requestedDate) {
+          return res.status(400).json({ message: "Missing required fields for manual service entry" });
+        }
+        
+        // Proceed with manual request handling
+      } else {
+        // Regular request handling with schema validation
+        requestData = insertPumpOutRequestSchema.parse(requestData);
+        
+        // Verify boat ownership for regular requests
+        const boat = await storage.getBoat(requestData.boatId);
+        if (!boat) {
+          return res.status(404).json({ message: "Boat not found" });
+        }
 
-      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
-      if (!boatOwner || boat.ownerId !== boatOwner.id) {
-        return res.status(403).json({ message: "Not authorized to request service for this boat" });
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to request service for this boat" });
+        }
       }
 
       // Check service quota
       // Adding a test mode flag for development
       const testMode = req.query.test === 'true' || req.body.testMode === true;
+      
+      // Special handling for manual entries by admin
+      if (isManualEntry) {
+        const manualInfo = requestData.manualBoatInfo;
+        
+        // Create a manual pump-out request
+        const manualRequest = {
+          boatId: 0, // Will be updated in storage layer
+          weekStartDate: requestData.weekStartDate,
+          requestedDate: requestData.requestedDate,
+          pumpOutPorts: requestData.pumpOutPorts,
+          ownerNotes: requestData.ownerNotes || "",
+          status: "Completed", // Manual entries are always completed
+          manualEntry: true,
+          manualBoatInfo: manualInfo,
+          paymentStatus: requestData.paymentStatus || "Pending",
+          paymentId: requestData.paymentId
+        };
+        
+        const newRequest = await storage.createPumpOutRequest(manualRequest);
+        return res.status(201).json(newRequest);
+      }
       
       if (!testMode) {
         const user = await storage.getUser(req.user.id);
