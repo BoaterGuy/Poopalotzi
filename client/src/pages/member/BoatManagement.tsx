@@ -68,7 +68,7 @@ export default function BoatManagement() {
   };
 
   // Use React Query to efficiently fetch all slip assignments and marina data
-  const { data: slipAssignments = {}, isLoading: isLoadingSlips } = useQuery<Record<number, SlipAssignment>>({
+  const { data: slipAssignments = {}, isLoading: isLoadingSlips, refetch: refetchSlipAssignments } = useQuery<Record<number, SlipAssignment>>({
     queryKey: ['/api/slip-assignments'],
     queryFn: async () => {
       if (!boats || boats.length === 0) return {};
@@ -81,6 +81,11 @@ export default function BoatManagement() {
         try {
           const res = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
             credentials: 'include',
+            // Add cache-busting parameter to force fresh data
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
           });
           
           if (!res.ok) {
@@ -100,15 +105,22 @@ export default function BoatManagement() {
       return assignments;
     },
     enabled: !!boats && boats.length > 0,
+    // Don't cache the results, always fetch fresh data
+    staleTime: 0,
   });
   
   // Fetch all marinas
-  const { data: marinasMap = {}, isLoading: isLoadingMarinas } = useQuery<Record<number, Marina>>({
+  const { data: marinasMap = {}, isLoading: isLoadingMarinas, refetch: refetchMarinas } = useQuery<Record<number, Marina>>({
     queryKey: ['/api/marinas/all'],
     queryFn: async () => {
       try {
         const res = await fetch('/api/marinas', {
           credentials: 'include',
+          // Add cache-busting headers
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         
         if (!res.ok) {
@@ -127,6 +139,8 @@ export default function BoatManagement() {
         return {};
       }
     },
+    // Don't cache the results, always fetch fresh data
+    staleTime: 0,
   });
   
   // Helper function to get formatted boat location info
@@ -324,7 +338,18 @@ export default function BoatManagement() {
             <BoatForm 
               boat={editingBoat}
               onSuccess={() => {
+                // Refresh all data completely to ensure displays are updated
                 queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/slip-assignments'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
+                queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${editingBoat.id}`] });
+                
+                // Force a refetch of slip assignments and marinas
+                refetchBoats();
+                refetchSlipAssignments();
+                refetchMarinas();
+                
                 setEditingBoat(null);
                 toast({
                   title: "Boat updated",
