@@ -39,8 +39,42 @@ export default function RequestService() {
     queryKey: ['/api/pump-out-requests/payment/pending'],
     queryFn: undefined,
   });
+  
+  // Get all pump-out requests for quota checking (for when user has boats)
+  const { data: allRequests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
+    queryKey: ['/api/pump-out-requests'],
+    queryFn: undefined,
+    enabled: !!boats && boats.length > 0,
+  });
 
   const hasPendingPayments = pendingPaymentRequests && pendingPaymentRequests.length > 0;
+  
+  // Calculate remaining quota for monthly plans
+  const calculateRemainingQuota = () => {
+    if (!serviceLevel || !allRequests || serviceLevel.type !== 'monthly' || !serviceLevel.monthlyQuota) {
+      return null;
+    }
+    
+    // Get current month's requests
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    const monthRequests = allRequests.filter(r => {
+      // Make sure to handle null createdAt values
+      if (!r.createdAt) return false;
+      const requestDate = new Date(r.createdAt);
+      return requestDate >= firstDayOfMonth && requestDate <= lastDayOfMonth;
+    });
+    
+    const used = monthRequests.length;
+    const total = serviceLevel.monthlyQuota;
+    const remaining = total - used;
+    
+    return { used, total, remaining };
+  };
+  
+  const quotaInfo = calculateRemainingQuota();
 
   const handleServiceRequested = (request: PumpOutRequest) => {
     setSelectedRequest(request);
@@ -181,11 +215,33 @@ export default function RequestService() {
                     <CardTitle>Schedule a Pump-Out</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
-                    <ServiceRequestForm 
-                      boats={boats || []}
-                      serviceLevel={serviceLevel}
-                      onSuccess={handleServiceRequested}
-                    />
+                    {quotaInfo && quotaInfo.remaining <= 0 && serviceLevel.type === 'monthly' ? (
+                      <div className="text-center py-8">
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                          <h3 className="text-lg font-semibold text-red-700 mb-2">Monthly Quota Reached</h3>
+                          <p className="text-gray-700">
+                            You have used all {quotaInfo.total} pump-out services included in your monthly plan.
+                          </p>
+                          <p className="text-gray-700 mt-2">
+                            Your quota will reset at the beginning of next month. If you need additional services, 
+                            you can purchase a one-time service.
+                          </p>
+                          <Button 
+                            className="mt-4 bg-[#0B1F3A]"
+                            onClick={() => window.location.href = '/member/subscription'}
+                          >
+                            View Service Options
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <ServiceRequestForm 
+                        boats={boats || []}
+                        serviceLevel={serviceLevel}
+                        onSuccess={handleServiceRequested}
+                        quotaInfo={quotaInfo}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -216,7 +272,20 @@ export default function RequestService() {
                       {serviceLevel.type === 'monthly' && serviceLevel.monthlyQuota && (
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-medium">Monthly Quota:</span>
-                          <span>{serviceLevel.monthlyQuota} services</span>
+                          <div>
+                            <span>{serviceLevel.monthlyQuota} services</span>
+                            {quotaInfo && (
+                              <div className="text-sm mt-1">
+                                <span className={quotaInfo.remaining > 0 ? "text-green-600" : "text-red-600"}>
+                                  {quotaInfo.remaining > 0 ? (
+                                    <>Available: <strong>{quotaInfo.remaining} remaining</strong> this month</>
+                                  ) : (
+                                    <strong>Monthly quota reached</strong>
+                                  )} 
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 

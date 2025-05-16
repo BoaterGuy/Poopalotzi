@@ -50,10 +50,12 @@ type ServiceRequestFormValues = z.infer<typeof serviceRequestFormSchema>;
 
 interface ServiceRequestFormProps {
   boats: any[]; // The user's boats
-  onSuccess: () => void; // Callback when form is successfully submitted
+  serviceLevel: any; // The service level details
+  onSuccess: (request: any) => void; // Callback when form is successfully submitted
+  quotaInfo?: { used: number; total: number; remaining: number } | null; // Monthly quota information
 }
 
-export default function ServiceRequestForm({ boats, onSuccess }: ServiceRequestFormProps) {
+export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quotaInfo }: ServiceRequestFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -125,6 +127,21 @@ export default function ServiceRequestForm({ boats, onSuccess }: ServiceRequestF
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Display quota warning if on monthly plan and quota is running low */}
+        {quotaInfo && quotaInfo.remaining === 1 && serviceLevel.type === 'monthly' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-amber-700 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Quota Alert
+            </h3>
+            <p className="text-sm text-amber-700 mt-1">
+              You have <strong>1 service remaining</strong> for this month with your monthly plan.
+            </p>
+          </div>
+        )}
+        
         <div className="space-y-6">
           {/* Boat Selection */}
           <FormField
