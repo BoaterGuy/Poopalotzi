@@ -1,12 +1,6 @@
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import { registerSW } from "./lib/service-worker";
+import React from 'react';
 
-// Register service worker for PWA functionality
-registerSW();
-
-// Create a very basic React component without any hooks or providers
-const BasicApp = () => {
+function TempApp() {
   return (
     <div className="min-h-screen bg-white">
       <header className="bg-[#0B1F3A] text-white p-4">
@@ -67,13 +61,13 @@ const BasicApp = () => {
               <p>Email: poopalotzillc@gmail.com</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">© 2025 Poopalotzi LLC. All rights reserved.</p>
+              <p className="text-sm text-gray-600">© {new Date().getFullYear()} Poopalotzi LLC. All rights reserved.</p>
             </div>
           </div>
         </div>
       </footer>
     </div>
   );
-};
+}
 
-createRoot(document.getElementById("root")!).render(<BasicApp />);
+export default TempApp;
