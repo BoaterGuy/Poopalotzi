@@ -222,15 +222,14 @@ export default function Profile() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#0B1F3A]">Account Settings</h1>
           <p className="text-gray-600">
-            Manage your profile information, password, and service plan.
+            Manage your profile information and password.
           </p>
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-3">
+          <TabsList className="grid w-full md:w-auto grid-cols-2">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="password">Password</TabsTrigger>
-            <TabsTrigger value="billing">Service Plan</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -388,90 +387,7 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          {/* Service Plan Tab */}
-          <TabsContent value="billing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Plan</CardTitle>
-                <CardDescription>
-                  Manage your subscription and service plan.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Current Plan</h3>
-                  <div className="bg-[#F4EBD0] p-4 rounded-md">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                      <div>
-                        {subscription && subscription.serviceLevelId ? (
-                          <>
-                            <p className="text-xl font-bold text-[#0B1F3A]">
-                              {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.name}
-                            </p>
-                            <p className="text-gray-600">
-                              {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.description}
-                            </p>
-                            
-                            {/* Show subscription period for monthly/seasonal plans */}
-                            {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type !== 'one-time' && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                {serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'monthly' ?
-                                  'Valid: May 1 - May 31' : 'Valid: May 1 - Oct 31'}
-                              </p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-xl font-bold text-[#0B1F3A]">No active plan</p>
-                        )}
-                      </div>
-                      {subscription && subscription.serviceLevelId && (
-                        <div className="mt-2 md:mt-0">
-                          <span className="text-lg font-bold text-[#0B1F3A]">
-                            {formatCurrency(serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.price || 0)}
-                          </span>
-                          <span className="text-gray-600 text-sm">
-                            /{serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'one-time' ? 'service' : 
-                              serviceLevels?.find(plan => plan.id === subscription.serviceLevelId)?.type === 'monthly' ? 'month' : 'season'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Change Plan</h3>
-                  <Select
-                    onValueChange={handleServiceLevelChange}
-                    defaultValue={user?.serviceLevelId?.toString()}
-                    disabled={isUpdating}
-                  >
-                    <SelectTrigger className="w-full md:w-[300px]">
-                      <SelectValue placeholder="Select a service plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {serviceLevels?.map(plan => (
-                        <SelectItem key={plan.id} value={plan.id.toString()}>
-                          {plan.name} - {formatCurrency(plan.price)}/{plan.type === 'one-time' ? 'service' : 
-                          plan.type === 'monthly' ? 'month' : 'season'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Payment Methods</h3>
-                  <p className="text-gray-600 mb-4">
-                    Manage your payment methods and billing preferences.
-                  </p>
-                  <Button variant="outline">Manage Payment Methods</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </>
