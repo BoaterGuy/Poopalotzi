@@ -57,13 +57,41 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
   // Fetch existing slip assignment for this boat
   const { data: existingAssignment, isLoading: isLoadingAssignment } = useQuery({
     queryKey: [`/api/slip-assignments/boat/${boat.id}`],
-    queryFn: undefined,
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null; // No assignment exists yet
+          }
+          throw new Error('Failed to fetch slip assignment');
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching slip assignment:", error);
+        return null;
+      }
+    },
   });
 
   // Fetch list of marinas
   const { data: marinas = [], isLoading: isLoadingMarinas } = useQuery<Marina[]>({
     queryKey: ['/api/marinas'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/marinas', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch marinas');
+      }
+      
+      return response.json();
+    },
   });
 
   // Set default values based on existing assignment

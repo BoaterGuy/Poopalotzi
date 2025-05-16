@@ -83,6 +83,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
+  
+  // Marina routes
+  app.get("/api/marinas", async (req, res, next) => {
+    try {
+      const marinas = await storage.getAllMarinas();
+      res.json(marinas);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  app.get("/api/marinas/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const marina = await storage.getMarina(id);
+      if (!marina) {
+        return res.status(404).json({ message: "Marina not found" });
+      }
+      res.json(marina);
+    } catch (err) {
+      next(err);
+    }
+  });
 
   // Boat routes
   app.post("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
