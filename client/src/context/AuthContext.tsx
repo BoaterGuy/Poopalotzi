@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       try {
         // Check if we have a valid session with our API
-        const response = await fetch('/api/auth/user', {
+        const response = await fetch('/api/auth/me', {
           credentials: 'include',
         });
 
@@ -72,8 +72,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // With Replit Auth, redirect to login page
-      window.location.href = '/api/login';
+      // Use traditional login with email/password
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to login');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -90,8 +111,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: any) => {
     try {
       setIsLoading(true);
-      // With Replit Auth, users register through the Replit login page
-      window.location.href = '/api/login';
+      
+      // Use traditional registration
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to register');
+      }
+
+      const user = await response.json();
+      setUser(user);
+      
+      toast({
+        title: "Registration successful",
+        description: "Welcome to Poopalotzi!",
+      });
+      
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -110,7 +153,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Logout from our API
-      window.location.href = '/api/logout';
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
       
       setUser(null);
       
@@ -125,10 +171,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // These methods redirect to Replit Auth
+  // Social login methods
   const loginWithGoogle = async () => {
     try {
-      window.location.href = '/api/login';
+      toast({
+        title: "Coming soon",
+        description: "Google login will be available in the future.",
+      });
+      // For now, just show a message that it's coming soon
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -141,7 +191,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithFacebook = async () => {
     try {
-      window.location.href = '/api/login';
+      toast({
+        title: "Coming soon",
+        description: "Facebook login will be available in the future.",
+      });
+      // For now, just show a message that it's coming soon
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -154,7 +208,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithApple = async () => {
     try {
-      window.location.href = '/api/login';
+      toast({
+        title: "Coming soon",
+        description: "Apple login will be available in the future.",
+      });
+      // For now, just show a message that it's coming soon
     } catch (error) {
       console.error('Login error:', error);
       toast({
