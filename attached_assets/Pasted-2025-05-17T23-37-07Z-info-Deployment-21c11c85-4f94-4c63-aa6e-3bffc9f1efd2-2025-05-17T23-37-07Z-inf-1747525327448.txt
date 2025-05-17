@@ -1,0 +1,96 @@
+2025-05-17T23:37:07Z info: Deployment: 21c11c85-4f94-4c63-aa6e-3bffc9f1efd2
+2025-05-17T23:37:07Z info: Connecting to builder
+2025-05-17T23:37:12Z info: Builder connected
+2025-05-17T23:37:13Z info: Installing packages
+2025-05-17T23:37:13Z info: Starting Build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.14 building for production...
+
+transforming...
+
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+✓ 3519 modules transformed.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /home/runner/workspace/client/src/lib/utils.ts is dynamically imported by /home/runner/workspace/client/src/pages/member/RequestService.tsx, /home/runner/workspace/client/src/pages/member/RequestService.tsx, /home/runner/workspace/client/src/pages/member/ServiceSubscription.tsx but also statically imported by /home/runner/workspace/client/src/components/member/ServiceRequestForm.tsx, /home/runner/workspace/client/src/components/ui/alert-dialog.tsx, /home/runner/workspace/client/src/components/ui/alert.tsx, /home/runner/workspace/client/src/components/ui/avatar.tsx, /home/runner/workspace/client/src/components/ui/badge.tsx, /home/runner/workspace/client/src/components/ui/button.tsx, /home/runner/workspace/client/src/components/ui/calendar.tsx, /home/runner/workspace/client/src/components/ui/card.tsx, /home/runner/workspace/client/src/components/ui/checkbox.tsx, /home/runner/workspace/client/src/components/ui/dialog.tsx, /home/runner/workspace/client/src/components/ui/dropdown-menu.tsx, /home/runner/workspace/client/src/components/ui/form.tsx, /home/runner/workspace/client/src/components/ui/input.tsx, /home/runner/workspace/client/src/components/ui/label.tsx, /home/runner/workspace/client/src/components/ui/popover.tsx, /home/runner/workspace/client/src/components/ui/select.tsx, /home/runner/workspace/client/src/components/ui/separator.tsx, /home/runner/workspace/client/src/components/ui/switch.tsx, /home/runner/workspace/client/src/components/ui/table.tsx, /home/runner/workspace/client/src/components/ui/tabs.tsx, /home/runner/workspace/client/src/components/ui/textarea.tsx, /home/runner/workspace/client/src/components/ui/toast.tsx, /home/runner/workspace/client/src/components/ui/tooltip.tsx, /home/runner/workspace/client/src/hooks/use-service-subscription.tsx, /home/runner/workspace/client/src/pages/Services.tsx, /home/runner/workspace/client/src/pages/admin/AdminManualServiceEntry.tsx, /home/runner/workspace/client/src/pages/admin/Dashboard.tsx, /home/runner/workspace/client/src/pages/employee/ManualEntry.tsx, /home/runner/workspace/client/src/pages/member/Dashboard.tsx, /home/runner/workspace/client/src/pages/member/RequestService.tsx, /home/runner/workspace/client/src/pages/member/ServiceHistory.tsx, dynamic import will not move module into another chunk.
+
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                           1.87 kB │ gzip:   0.79 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 11.69s
+
+
+  dist/index.js  61.6kb
+
+⚡ Done in 152ms
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.4.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.0
+npm notice To update run: npm install -g npm@11.4.0
+npm notice
+
+2025-05-17T23:37:30Z info: Pushing pid1 binary layer...
+2025-05-17T23:37:32Z info: Created pid1 binary layer
+2025-05-17T23:37:33Z info: Pushing hosting layer...
+2025-05-17T23:37:33Z info: Pushing Repl layer...
+2025-05-17T23:37:33Z info: Retrieved cached nix layer
+2025-05-17T23:37:34Z info: Created hosting layer
+2025-05-17T23:39:48Z info: Created Repl layer
+2025-05-17T23:39:49Z info: Pushed image manifest
+2025-05-17T23:39:50Z info: Pushed soci index manifest
+2025-05-17T23:39:54Z info: Creating Autoscale service
+starting up user application
+  code: 'MODULE_NOT_FOUND',
+    at node:internal/main/run_main_module:28:49 {
+
+  requireStack: []
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:173:12)
+node:internal/modules/cjs/loader:1228
+Node.js v20.18.1
+Error: Cannot find module '/home/runner/workspace/dist/server/production.js'
+    at Module._load (node:internal/modules/cjs/loader:1051:27)
+  throw err;
+node:internal/modules/cjs/loader:1228
+}
+}
+
+  ^
+    at Module._load (node:internal/modules/cjs/loader:1051:27)
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+  requireStack: []
+node:internal/modules/cjs/loader:1228
+
+  requireStack: []
+node:internal/modules/cjs/loader:1228
+  ^
+command finished with error [sh -c NODE_ENV=production node dist/server/production.js]: exit status 1
+
+  throw err;
+    at node:internal/main/run_main_module:28:49 {
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:173:12)
+  requireStack: []
+node:internal/modules/cjs/loader:1228
+}
+command finished with error [sh -c NODE_ENV=production node dist/server/production.js]: exit status 1
+
+
+crash loop detected
+2025-05-17T23:41:23Z error: The deployment is crash looping. This can happen if the run command fails or exits immediately after starting. Check the logs for more information.
