@@ -15,7 +15,7 @@ import { eq } from "drizzle-orm";
 // Interface for storage operations
 export interface IStorage {
   // User operations
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: number | string): Promise<User | undefined>;
   upsertUser(user: Partial<User>): Promise<User>;
   
   // Service Level operations
@@ -124,7 +124,7 @@ export class DatabaseStorage implements IStorage {
 
 // In-memory storage for development/fallback
 export class MemStorage implements IStorage {
-  private usersData: Map<number, User>;
+  private usersData: Map<string, User>;
   private serviceLevelData: Map<number, ServiceLevel>;
   private marinaData: Map<number, Marina>;
   private nextUserId: number = 1;
@@ -177,34 +177,41 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getUser(id: number): Promise<User | undefined> {
-    return this.usersData.get(id);
+  async getUser(id: number | string): Promise<User | undefined> {
+    // Convert id to string to ensure compatibility with different types of IDs
+    const idStr = String(id);
+    return this.usersData.get(idStr);
   }
   
   async upsertUser(userData: Partial<User>): Promise<User> {
+    // Convert id to string
+    const idStr = userData.id ? String(userData.id) : String(this.nextUserId++);
+    
     // If id exists, update the user
-    if (userData.id && this.usersData.has(userData.id)) {
-      const existingUser = this.usersData.get(userData.id)!;
+    if (userData.id && this.usersData.has(idStr)) {
+      const existingUser = this.usersData.get(idStr)!;
       const updatedUser = {
         ...existingUser,
         ...userData,
+        updatedAt: new Date()
       } as User;
-      this.usersData.set(userData.id, updatedUser);
+      this.usersData.set(idStr, updatedUser);
       return updatedUser;
     }
     
     // Create new user
-    const id = userData.id || this.nextUserId++;
     const user = {
       ...userData,
-      id,
+      id: idStr,
       firstName: userData.firstName || 'User',
-      lastName: userData.lastName || String(id),
-      email: userData.email || `user${id}@example.com`,
-      role: userData.role || 'member'
+      lastName: userData.lastName || String(idStr),
+      email: userData.email || `user${idStr}@example.com`,
+      role: userData.role || 'member',
+      createdAt: new Date(),
+      updatedAt: new Date()
     } as User;
     
-    this.usersData.set(id, user);
+    this.usersData.set(idStr, user);
     return user;
   }
   

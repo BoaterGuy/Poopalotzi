@@ -51,11 +51,33 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(
-  claims: any,
-) {
-  // Just return for now - we'll implement this later when database is working
-  return;
+async function upsertUser(claims: any) {
+  try {
+    const userId = claims.sub;
+    // Check if user exists in storage
+    const existingUser = await storage.getUser(userId);
+    
+    if (!existingUser) {
+      // Create new user with data from claims
+      await storage.upsertUser({
+        id: userId,
+        email: claims.email || 'user@example.com',
+        firstName: claims.first_name || claims.name?.split(' ')[0] || 'User',
+        lastName: claims.last_name || claims.name?.split(' ').slice(1).join(' ') || '',
+        role: 'member', // Default role for new users
+        profileImageUrl: claims.profile_image_url || '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      console.log(`Created new user with ID: ${userId}`);
+    } else {
+      console.log(`User with ID ${userId} already exists`);
+    }
+    return userId;
+  } catch (error) {
+    console.error('Error upserting user:', error);
+    return null;
+  }
 }
 
 export async function setupAuth(app: Express) {
