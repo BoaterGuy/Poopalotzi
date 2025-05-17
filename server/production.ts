@@ -1,3 +1,4 @@
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,6 +20,32 @@ app.use(express.static(path.join(process.cwd(), 'dist', 'client')));
 // API routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Service data
+const serviceLevels = [
+  {
+    id: 1,
+    name: "Basic Pump-Out",
+    description: "One-time pump-out service",
+    priceInCents: 3500,
+    serviceType: "one-time",
+    serviceLevel: "single-head",
+    isActive: true
+  },
+  {
+    id: 2,
+    name: "Premium Weekly",
+    description: "Weekly scheduled pump-out service",
+    priceInCents: 12000,
+    serviceType: "monthly",
+    serviceLevel: "multi-head",
+    isActive: true
+  }
+];
+
+app.get('/api/service-levels', (req, res) => {
+  res.json(serviceLevels);
 });
 
 // SPA fallback
