@@ -123,10 +123,25 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/auth/callback", (req, res, next) => {
+    console.log("Auth callback received", req.query);
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
+  });
+  
+  // Add a test endpoint to check auth status
+  app.get("/api/auth/status", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({ 
+        authenticated: true, 
+        user: req.user 
+      });
+    } else {
+      res.json({ 
+        authenticated: false 
+      });
+    }
   });
 
   app.get("/api/logout", (req, res) => {

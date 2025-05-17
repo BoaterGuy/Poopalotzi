@@ -50,17 +50,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
 
+  // User auth route
+  app.get("/api/auth/user", async (req: AuthRequest, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = req.user.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Invalid user session" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        // If user doesn't exist yet, create a default member user
+        const newUser = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims?.email || null,
+          firstName: req.user.claims?.first_name || null,
+          lastName: req.user.claims?.last_name || null,
+          role: "member",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        return res.json(newUser);
+      }
+      
+      return res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Debug route to check if admin user is available
   app.get("/api/debug/users", async (req, res) => {
     try {
-      const adminUser = await storage.getUserByEmail("admin@poopalotzi.com");
-      const employeeUser = await storage.getUserByEmail("employee@poopalotzi.com");
-      const memberUser = await storage.getUserByEmail("member@poopalotzi.com");
-
+      // Use getUser instead of getUserByEmail for compatibility
+      const users = await Promise.all([
+        storage.getUser("admin"),
+        storage.getUser("employee"),
+        storage.getUser("member")
+      ]);
+      
       res.json({
-        adminExists: !!adminUser,
-        employeeExists: !!employeeUser,
-        memberExists: !!memberUser,
+        adminExists: !!users[0],
+        employeeExists: !!users[1],
+        memberExists: !!users[2],
         message: "Use admin@poopalotzi.com / admin123 to login as admin",
         version: "1.0.0"
       });
