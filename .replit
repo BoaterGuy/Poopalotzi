@@ -8,8 +8,8 @@ packages = ["imagemagick", "jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "NODE_ENV=production node --experimental-modules --experimental-specifier-resolution=node dist/server/production.js"]
+build = ["sh", "-c", "npm run build && tsc server/production.ts --outDir dist/server --esModuleInterop"]
+run = ["sh", "-c", "NODE_ENV=production node dist/server/production.js"]
 
 [workflows]
 runButton = "Development Server"
