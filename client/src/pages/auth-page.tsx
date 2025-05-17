@@ -26,8 +26,12 @@ const AuthPage = () => {
 
   const handleLogin = () => {
     setIsLoading(true);
-    // Redirect to Replit Auth login endpoint
-    window.location.href = '/api/login';
+    // Show the AuthModal for traditional login
+    // Since we can't directly call the modal from here, we'll navigate to home
+    // where the modal is available
+    navigate('/');
+    // Adding a small timeout to ensure we unset loading state
+    setTimeout(() => setIsLoading(false), 300);
   };
 
   return (
