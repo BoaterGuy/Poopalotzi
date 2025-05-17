@@ -87,14 +87,15 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <PageLayout>
-              <Switch>
-                {/* Public Routes */}
-                <Route path="/" component={Home} />
-                <Route path="/services" component={Services} />
-                <Route path="/about" component={About} />
-                <Route path="/contact" component={Contact} />
-                <Route path="/auth" component={AuthPage} />
+            <Router base="">
+              <PageLayout>
+                <Switch>
+                  {/* Public Routes */}
+                  <Route path="/" component={Home} />
+                  <Route path="/services" component={Services} />
+                  <Route path="/about" component={About} />
+                  <Route path="/contact" component={Contact} />
+                  <Route path="/auth" component={AuthPage} />
                 
                 {/* Member Routes */}
                 <Route path="/member/dashboard">
@@ -154,7 +155,8 @@ function App() {
                 {/* 404 Route */}
                 <Route component={NotFound} />
               </Switch>
-            </PageLayout>
+              </PageLayout>
+            </Router>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
