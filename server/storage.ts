@@ -250,6 +250,23 @@ export class MemStorage implements IStorage {
     return level;
   }
   
+  async updateServiceLevel(id: number, serviceLevelData: Partial<ServiceLevel>): Promise<ServiceLevel | undefined> {
+    const existingLevel = this.serviceLevelData.get(id);
+    
+    if (!existingLevel) {
+      return undefined;
+    }
+    
+    const updatedLevel = {
+      ...existingLevel,
+      ...serviceLevelData,
+      updatedAt: new Date()
+    } as ServiceLevel;
+    
+    this.serviceLevelData.set(id, updatedLevel);
+    return updatedLevel;
+  }
+  
   // Marina operations
   async getMarina(id: number): Promise<Marina | undefined> {
     return this.marinaData.get(id);
