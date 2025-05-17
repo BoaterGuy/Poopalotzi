@@ -2,23 +2,25 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-if (!process.env.DATABASE_URL) {
+// Check for database environment variables
+if (!process.env.DATABASE_URL && 
+    !(process.env.PGHOST && process.env.PGPORT && process.env.PGUSER && 
+      process.env.PGPASSWORD && process.env.PGDATABASE)) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "Database connection details must be set. Did you forget to provision a database?",
   );
 }
 
 // Create a standard pg Pool with better error handling
 export const pool = new Pool({
+  // If individual connection parameters are available, use those
   host: process.env.PGHOST,
-  port: Number(process.env.PGPORT),
+  port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : undefined,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
   database: process.env.PGDATABASE,
-  ssl: {
-    rejectUnauthorized: false,
-    sslmode: 'require'
-  },
+  // Required for Replit PostgreSQL
+  ssl: { rejectUnauthorized: false },
   max: 3,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
