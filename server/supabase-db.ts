@@ -25,15 +25,17 @@ export async function createSupabaseClient() {
     console.log(`Connecting to: ${host}:${port}/${database} as ${user}`);
     
     // Create specialized pool for Supabase
-    // Using direct connection URL to avoid parsing issues
+    const connectionString = process.env.DATABASE_URL;
+    
+    // Check if [YOUR-PASSWORD] placeholder is still in the URL
+    if (connectionString?.includes('[YOUR-PASSWORD]')) {
+      throw new Error('Please replace [YOUR-PASSWORD] in the DATABASE_URL with your actual Supabase password');
+    }
+    
     const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      },
-      connectionTimeoutMillis: 5000,
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 10000
+      connectionString,
+      ssl: true,
+      connectionTimeoutMillis: 8000
     });
     
     // Test connection
