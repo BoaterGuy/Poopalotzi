@@ -672,8 +672,8 @@ export default function RequestManagement() {
       </Dialog>
       
       {/* Request Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="sm:max-w-4xl">
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} modal={true}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
             <DialogDescription>
@@ -683,7 +683,7 @@ export default function RequestManagement() {
           
           {selectedRequest && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Left column */}
                 <div className="space-y-4">
                   <div>
