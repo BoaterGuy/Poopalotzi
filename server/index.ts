@@ -94,6 +94,12 @@ async function initializeMemoryData() {
 // Initialize the application
 async function init() {
   try {
+    log("Using in-memory storage for demonstration purposes");
+    storage = memStorage;
+    await initializeMemoryData();
+    
+    /* 
+    // Database connection code is kept but commented out for future use
     log("Setting up database connection...");
     
     // Check if DATABASE_URL is provided for Supabase
@@ -125,6 +131,7 @@ async function init() {
       storage = memStorage;
       await initializeMemoryData();
     }
+    */
   } catch (error: any) {
     log(`Error initializing app: ${error.message}`);
     process.exit(1);

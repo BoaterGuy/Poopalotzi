@@ -27,14 +27,11 @@ export async function createSupabaseClient() {
     // Create specialized pool for Supabase
     const connectionString = process.env.DATABASE_URL;
     
-    // Check if [YOUR-PASSWORD] placeholder is still in the URL
-    if (connectionString?.includes('[YOUR-PASSWORD]')) {
-      throw new Error('Please replace [YOUR-PASSWORD] in the DATABASE_URL with your actual Supabase password');
-    }
-    
     const pool = new pg.Pool({
       connectionString,
-      ssl: true,
+      ssl: {
+        rejectUnauthorized: false
+      },
       connectionTimeoutMillis: 8000
     });
     
