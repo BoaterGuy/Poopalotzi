@@ -90,6 +90,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = await response.json();
       setUser(userData);
       
+      // Redirect based on user role
+      if (userData.role === 'admin') {
+        window.location.href = '/admin/dashboard';
+      } else if (userData.role === 'employee') {
+        window.location.href = '/employee/schedule';
+      } else {
+        window.location.href = '/member/dashboard';
+      }
+      
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -129,6 +138,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const user = await response.json();
       setUser(user);
+      
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        window.location.href = '/admin/dashboard';
+      } else if (user.role === 'employee') {
+        window.location.href = '/employee/schedule';
+      } else {
+        window.location.href = '/member/dashboard';
+      }
       
       toast({
         title: "Registration successful",
