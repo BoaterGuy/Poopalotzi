@@ -68,6 +68,23 @@ async function initializeMemoryData() {
     // Service level data is already in the MemStorage constructor
     // No need to re-add it
     
+    // Create a default admin user for testing
+    const { hashPassword } = await import('./auth');
+    const passwordHash = await hashPassword('admin123');
+    
+    await storage.upsertUser({
+      id: 1, 
+      email: 'admin@poopalotzi.com',
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'admin',
+      passwordHash,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    console.log("Created default admin user: admin@poopalotzi.com / admin123");
+    
     // Log success
     console.log("Memory data initialization completed successfully");
   } catch (error) {
