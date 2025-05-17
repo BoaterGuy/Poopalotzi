@@ -57,27 +57,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const userId = req.user.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Invalid user session" });
-      }
-      
-      const user = await storage.getUser(userId);
-      if (!user) {
-        // If user doesn't exist yet, create a default member user
-        const newUser = await storage.upsertUser({
-          id: userId,
-          email: req.user.claims?.email || null,
-          firstName: req.user.claims?.first_name || null,
-          lastName: req.user.claims?.last_name || null,
-          role: "member",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-        return res.json(newUser);
-      }
-      
-      return res.json(user);
+      // Using standard passport auth where user object is directly available
+      return res.json(req.user);
     } catch (error) {
       console.error("Error fetching user:", error);
       return res.status(500).json({ message: "Failed to fetch user" });

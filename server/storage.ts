@@ -16,6 +16,7 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: Partial<User>): Promise<User>;
   
   // Service Level operations
@@ -181,6 +182,16 @@ export class MemStorage implements IStorage {
     // Convert id to string to ensure compatibility with different types of IDs
     const idStr = String(id);
     return this.usersData.get(idStr);
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    // Find the user with the matching email
+    for (const user of this.usersData.values()) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
   }
   
   async upsertUser(userData: Partial<User>): Promise<User> {
