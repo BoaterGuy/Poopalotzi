@@ -1,0 +1,16 @@
+{
+  "name": "poopalotzi",
+  "version": "1.0.0",
+  "description": "Marina Pump-Out Service Management",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}

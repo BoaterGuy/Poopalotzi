@@ -200,14 +200,14 @@ app.get('*', (req, res) => {
                 
                 services.forEach(service => {
                   const price = (service.priceInCents / 100).toFixed(2);
-                  container.innerHTML += `
-                    <div class="card">
-                      <h3>${service.name}</h3>
-                      <p>${service.description}</p>
-                      <div class="price">$${price}</div>
-                      <a href="#" class="btn">Book Now</a>
-                    </div>
-                  `;
+                  const card = document.createElement('div');
+                  card.className = 'card';
+                  card.innerHTML = 
+                    '<h3>' + service.name + '</h3>' +
+                    '<p>' + service.description + '</p>' +
+                    '<div class="price">$' + price + '</div>' +
+                    '<a href="#" class="btn">Book Now</a>';
+                  container.appendChild(card);
                 });
               }
             })
