@@ -6,7 +6,7 @@ import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
-import { setupAuth } from "./replitAuth";
+import { setupAuth } from "./auth";
 import cors from "cors";
 
 // Initialize with memory storage by default, will try database first
@@ -106,8 +106,7 @@ async function initializeMemoryData() {
   }
   
   // Set up authentication with the proper storage
-  // Use the original auth instead of replitAuth
-  require('./auth').setupAuth(app);
+  setupAuth(app);
   
   const server = await registerRoutes(app);
 
