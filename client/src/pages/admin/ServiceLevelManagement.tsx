@@ -105,7 +105,8 @@ export default function ServiceLevelManagement() {
     
     const defaultValues: Partial<ServiceLevelFormValues> = {
       name: level?.name || "",
-      price: level?.price || 0,
+      // Convert price from cents to dollars for editing
+      price: level ? level.price / 100 : 0,
       type: level?.type || "one-time",
       description: level?.description || "",
       monthlyQuota: level?.monthlyQuota || null,
@@ -123,16 +124,23 @@ export default function ServiceLevelManagement() {
     const onSubmit = async (data: ServiceLevelFormValues) => {
       setIsSubmitting(true);
       try {
+        // Convert price from dollars to cents before saving
+        const dataToSave = {
+          ...data,
+          // Multiply by 100 to convert dollars to cents
+          price: Math.round(data.price * 100)
+        };
+        
         if (level) {
           // Update existing service level
-          await apiRequest("PUT", `/api/service-levels/${level.id}`, data);
+          await apiRequest("PUT", `/api/service-levels/${level.id}`, dataToSave);
           toast({
             title: "Service Level Updated",
             description: "The service level has been updated successfully.",
           });
         } else {
           // Create new service level
-          await apiRequest("POST", "/api/service-levels", data);
+          await apiRequest("POST", "/api/service-levels", dataToSave);
           toast({
             title: "Service Level Created",
             description: "The new service level has been created successfully.",
