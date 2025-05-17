@@ -44,10 +44,10 @@ export default function ServiceLevels() {
     // Convert price from cents to dollars
     const priceInDollars = price / 100;
     
-    if (type === "one-time") return `${formatCurrency(priceInDollars)}/service`;
-    if (type === "monthly") return `${formatCurrency(priceInDollars)}/month`;
-    if (type === "seasonal") return `${formatCurrency(priceInDollars)}/season`;
-    return formatCurrency(priceInDollars);
+    if (type === "one-time") return `${formatCurrency(priceInDollars, true)}/service`;
+    if (type === "monthly") return `${formatCurrency(priceInDollars, true)}/month`;
+    if (type === "seasonal") return `${formatCurrency(priceInDollars, true)}/season`;
+    return formatCurrency(priceInDollars, true);
   };
 
   const handleChoosePlan = () => {
