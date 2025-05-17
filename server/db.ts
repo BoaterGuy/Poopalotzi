@@ -14,11 +14,10 @@ export const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  max: 5,
+  max: 3,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
-  application_name: 'poopalotzi_app',
-  connectionTimeoutMillis: 2000,
+  application_name: 'poopalotzi_app'
 });
 
 // Create drizzle instance

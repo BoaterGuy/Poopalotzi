@@ -98,13 +98,14 @@ async function init() {
     log("Setting up Replit database connection...");
     const dbInitialized = await setupDatabase();
 
-    if (!dbInitialized) {
-      log("Failed to initialize database schema. Using in-memory storage.");
-      throw new Error("Database initialization failed");
+    if (dbInitialized) {
+      storage = new DatabaseStorage();
+      log("Successfully connected to Replit database!");
+    } else {
+      storage = memStorage;
+      log("Using in-memory storage for this session");
+      await initializeMemoryData();
     }
-
-    storage = memStorage;
-    log("Successfully connected to Replit database!");
   } catch (dbError: any) {
     log(`Database connection error: ${dbError.message}`);
     log("Using in-memory storage for this session");
