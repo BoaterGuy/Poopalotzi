@@ -1,54 +1,33 @@
-/**
- * This file provides a CommonJS compatible entry point for production deployments
- */
-import express from "express";
-import { serveStatic, log } from "./vite";
-import { setupAuth } from "./auth";
-import { registerRoutes } from "./routes";
-import { storage as memStorage } from "./storage";
-import cors from "cors";
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cors from 'cors';
 
-// Create express app
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Configure middleware
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-// Setup authentication
-setupAuth(app);
+// Serve static files from the dist directory
+app.use(express.static(path.join(process.cwd(), 'dist', 'client')));
 
-// Simple startup function that doesn't use top-level await
-async function startServer() {
-  try {
-    // Initialize data
-    console.log("Using memory storage for production");
-    
-    // Register API routes
-    const server = await registerRoutes(app);
-    
-    // Serve static files for the frontend
-    serveStatic(app);
-    
-    // Start the server
-    const port = process.env.PORT || 5000;
-    server.listen(port, () => {
-      log(`Server running on port ${port}`);
-    });
-  } catch (error) {
-    console.error("Server startup error:", error);
-    process.exit(1);
-  }
-}
+// API routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
-// Start the server
-startServer();
+// SPA fallback
+app.get('*', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'dist', 'client', 'index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Production server running on port ${PORT}`);
+});
 
 export default app;
