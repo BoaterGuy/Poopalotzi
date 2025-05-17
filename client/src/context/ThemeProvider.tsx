@@ -26,23 +26,33 @@ export function ThemeProvider({
   storageKey = "poopalotzi-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  // Simplify to avoid hook errors
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  // Use a safer approach for initialization to prevent errors
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      return defaultTheme;
+    } catch (error) {
+      console.error("Error initializing theme:", error);
+      return "light";
+    }
+  });
 
   useEffect(() => {
     try {
-      const root = window.document.documentElement;
-      root.classList.remove("light", "dark");
+      // Check if window is defined (client-side) before proceeding
+      if (typeof window !== 'undefined') {
+        const root = window.document.documentElement;
+        root.classList.remove("light", "dark");
 
-      if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-        root.classList.add(systemTheme);
-        return;
+        if (theme === "system") {
+          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+          root.classList.add(systemTheme);
+          return;
+        }
+
+        root.classList.add(theme);
       }
-
-      root.classList.add(theme);
     } catch (error) {
       console.error("Theme application error:", error);
     }
