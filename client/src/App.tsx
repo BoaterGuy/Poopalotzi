@@ -1,6 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { Router, Route, Switch } from "wouter";
+import { Router, Route, Switch, useLocation } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -81,13 +81,29 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
   return <Component {...rest} />;
 };
 
+// Helper component to redirect to home if we're on an unexpected route
+const HomeRedirect = () => {
+  const [location, setLocation] = useLocation();
+  
+  // If we're at the root path with additional segments (e.g., /%7B%22pathname%22)
+  // but not at a known route, redirect to the home page
+  if (location !== "/" && 
+      !["/services", "/about", "/contact", "/auth", 
+       "/member", "/employee", "/admin"].some(path => location.startsWith(path))) {
+    setLocation("/");
+  }
+  
+  return null;
+};
+
 function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <Router base="">
+            <Router>
+              <HomeRedirect />
               <PageLayout>
                 <Switch>
                   {/* Public Routes */}
