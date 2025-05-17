@@ -96,65 +96,65 @@ function App() {
                   <Route path="/about" component={About} />
                   <Route path="/contact" component={Contact} />
                   <Route path="/auth" component={AuthPage} />
-                
-                {/* Member Routes */}
-                <Route path="/member/dashboard">
-                  <MemberRoute component={MemberDashboard} path="/member/dashboard" />
-                </Route>
-                <Route path="/member/profile">
-                  <MemberRoute component={MemberProfile} path="/member/profile" />
-                </Route>
-                <Route path="/member/boats">
-                  <MemberRoute component={MemberBoatManagement} path="/member/boats" />
-                </Route>
-                <Route path="/member/request-service">
-                  <MemberRoute component={MemberRequestService} path="/member/request-service" />
-                </Route>
-                {/* Add support for /member/request as an alternative URL */}
-                <Route path="/member/request">
-                  <MemberRoute component={MemberRequestService} path="/member/request" />
-                </Route>
-                <Route path="/member/service-history">
-                  <MemberRoute component={MemberServiceHistory} path="/member/service-history" />
-                </Route>
-                <Route path="/member/subscription">
-                  <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
-                </Route>
-                
-                {/* Employee Routes */}
-                <Route path="/employee/schedule">
-                  <EmployeeRoute component={EmployeeSchedule} path="/employee/schedule" />
-                </Route>
-                <Route path="/employee/manual-entry">
-                  <EmployeeRoute component={EmployeeManualEntry} path="/employee/manual-entry" />
-                </Route>
-                
-                {/* Admin Routes */}
-                <Route path="/admin/dashboard">
-                  <AdminRoute component={AdminDashboard} path="/admin/dashboard" />
-                </Route>
-                <Route path="/admin/customers">
-                  <AdminRoute component={AdminCustomerManagement} path="/admin/customers" />
-                </Route>
-                <Route path="/admin/marinas">
-                  <AdminRoute component={AdminMarinaManagement} path="/admin/marinas" />
-                </Route>
-                <Route path="/admin/requests">
-                  <AdminRoute component={AdminRequestManagement} path="/admin/requests" />
-                </Route>
-                <Route path="/admin/calendar">
-                  <AdminRoute component={AdminCalendar} path="/admin/calendar" />
-                </Route>
-                <Route path="/admin/service-levels">
-                  <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
-                </Route>
-                <Route path="/admin/manual-service-form">
-                  <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-service-form" />
-                </Route>
-                
-                {/* 404 Route */}
-                <Route component={NotFound} />
-              </Switch>
+                  
+                  {/* Member Routes */}
+                  <Route path="/member/dashboard">
+                    <MemberRoute component={MemberDashboard} path="/member/dashboard" />
+                  </Route>
+                  <Route path="/member/profile">
+                    <MemberRoute component={MemberProfile} path="/member/profile" />
+                  </Route>
+                  <Route path="/member/boats">
+                    <MemberRoute component={MemberBoatManagement} path="/member/boats" />
+                  </Route>
+                  <Route path="/member/request-service">
+                    <MemberRoute component={MemberRequestService} path="/member/request-service" />
+                  </Route>
+                  {/* Add support for /member/request as an alternative URL */}
+                  <Route path="/member/request">
+                    <MemberRoute component={MemberRequestService} path="/member/request" />
+                  </Route>
+                  <Route path="/member/service-history">
+                    <MemberRoute component={MemberServiceHistory} path="/member/service-history" />
+                  </Route>
+                  <Route path="/member/subscription">
+                    <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
+                  </Route>
+                  
+                  {/* Employee Routes */}
+                  <Route path="/employee/schedule">
+                    <EmployeeRoute component={EmployeeSchedule} path="/employee/schedule" />
+                  </Route>
+                  <Route path="/employee/manual-entry">
+                    <EmployeeRoute component={EmployeeManualEntry} path="/employee/manual-entry" />
+                  </Route>
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin/dashboard">
+                    <AdminRoute component={AdminDashboard} path="/admin/dashboard" />
+                  </Route>
+                  <Route path="/admin/customers">
+                    <AdminRoute component={AdminCustomerManagement} path="/admin/customers" />
+                  </Route>
+                  <Route path="/admin/marinas">
+                    <AdminRoute component={AdminMarinaManagement} path="/admin/marinas" />
+                  </Route>
+                  <Route path="/admin/requests">
+                    <AdminRoute component={AdminRequestManagement} path="/admin/requests" />
+                  </Route>
+                  <Route path="/admin/calendar">
+                    <AdminRoute component={AdminCalendar} path="/admin/calendar" />
+                  </Route>
+                  <Route path="/admin/service-levels">
+                    <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
+                  </Route>
+                  <Route path="/admin/manual-service-form">
+                    <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-service-form" />
+                  </Route>
+                  
+                  {/* 404 Route */}
+                  <Route component={NotFound} />
+                </Switch>
               </PageLayout>
             </Router>
           </AuthProvider>
