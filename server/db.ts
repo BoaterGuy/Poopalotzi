@@ -9,10 +9,15 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Create a standard pg Pool with better error handling
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
+export const pool = new Pool({
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    sslmode: 'require'
   },
   max: 3,
   idleTimeoutMillis: 30000,
