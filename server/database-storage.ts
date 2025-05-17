@@ -19,14 +19,29 @@ import {
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
   
+  private supabaseDB: any;
+  
   constructor() {
     // Initialize session store with PostgreSQL
     const PgStore = connectPg(session);
     this.sessionStore = new PgStore({
       conString: process.env.DATABASE_URL,
       createTableIfMissing: true,
-      tableName: 'session'
+      tableName: 'session',
+      ssl: { rejectUnauthorized: false }
     });
+    
+    // We'll initialize the actual DB client when needed
+    this.supabaseDB = db;
+  }
+  
+  // Get DB client
+  private async getDB() {
+    // Use existing client or create a new Supabase client if needed
+    if (!this.supabaseDB) {
+      this.supabaseDB = await createSupabaseClient();
+    }
+    return this.supabaseDB;
   }
   
   // User operations
