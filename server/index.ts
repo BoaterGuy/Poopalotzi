@@ -64,14 +64,14 @@ app.use((req, res, next) => {
 async function initializeMemoryData() {
   try {
     console.log("Initializing memory data with service levels...");
-    
+
     // Service level data is already in the MemStorage constructor
     // No need to re-add it
-    
+
     // Create a default admin user for testing
     const { hashPassword } = await import('./auth');
     const passwordHash = await hashPassword('admin123');
-    
+
     await storage.upsertUser({
       id: 1, 
       email: 'admin@poopalotzi.com',
@@ -82,9 +82,9 @@ async function initializeMemoryData() {
       createdAt: new Date(),
       updatedAt: new Date()
     });
-    
+
     console.log("Created default admin user: admin@poopalotzi.com / admin123");
-    
+
     // Log success
     console.log("Memory data initialization completed successfully");
   } catch (error) {
@@ -92,67 +92,56 @@ async function initializeMemoryData() {
   }
 }
 
-(async () => {
+// Initialize the application
+async function init() {
   try {
-    // Connect directly to Replit database using the DATABASE_URL
     log("Setting up Replit database connection...");
-    
-    // Set up the database schema
     const dbInitialized = await setupDatabase();
-    
+
     if (!dbInitialized) {
       log("Failed to initialize database schema. Using in-memory storage.");
       throw new Error("Database initialization failed");
     }
-    
-    // For now, continue using memory storage until database connection is fully stable
-    // const dbStorage = new DatabaseStorage();
-    // storage = dbStorage;
-    
-    // Use memory storage for now
+
     storage = memStorage;
-    
     log("Successfully connected to Replit database!");
   } catch (dbError: any) {
-    // If database connection fails, fall back to memory storage
     log(`Database connection error: ${dbError.message}`);
     log("Using in-memory storage for this session");
-    
-    // Initialize sample data
     await initializeMemoryData();
   }
-  
-  // Set up authentication with the proper storage
+
   setupAuth(app);
-  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
     console.error(err);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  return new Promise((resolve) => {
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+      resolve(server);
+    });
   });
-})();
+}
+
+// Start the server
+init().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
