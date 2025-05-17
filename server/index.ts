@@ -133,8 +133,9 @@ async function init() {
       port,
       host: "0.0.0.0",
       reusePort: true,
+      backlog: 511
     }, () => {
-      log(`serving on port ${port}`);
+      log(`Server running at http://0.0.0.0:${port}`);
       resolve(server);
     });
   });
