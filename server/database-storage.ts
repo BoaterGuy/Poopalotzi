@@ -27,8 +27,7 @@ export class DatabaseStorage implements IStorage {
     this.sessionStore = new PgStore({
       conString: process.env.DATABASE_URL,
       createTableIfMissing: true,
-      tableName: 'session',
-      ssl: { rejectUnauthorized: false }
+      tableName: 'session'
     });
     
     // We'll initialize the actual DB client when needed
@@ -46,12 +45,50 @@ export class DatabaseStorage implements IStorage {
   
   // User operations
   async getUser(id: number): Promise<User | undefined> {
+    const db = await this.getDB();
     const result = await db.select().from(users).where(eq(users.id, id));
     return result[0];
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    const db = await this.getDB();
     const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0];
+  }
+  
+  async upsertUser(userData: Partial<User>): Promise<User> {
+    const db = await this.getDB();
+    
+    // Check if user already exists
+    if (userData.id) {
+      const existingUser = await this.getUser(userData.id);
+      if (existingUser) {
+        // Update existing user
+        const result = await db
+          .update(users)
+          .set(userData)
+          .where(eq(users.id, userData.id))
+          .returning();
+        return result[0];
+      }
+    } else if (userData.email) {
+      const existingUser = await this.getUserByEmail(userData.email);
+      if (existingUser) {
+        // Update user by email
+        const result = await db
+          .update(users)
+          .set(userData)
+          .where(eq(users.email, userData.email))
+          .returning();
+        return result[0];
+      }
+    }
+    
+    // Insert new user
+    const result = await db
+      .insert(users)
+      .values(userData)
+      .returning();
     return result[0];
   }
 

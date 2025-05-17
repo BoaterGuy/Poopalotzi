@@ -25,17 +25,12 @@ export async function createSupabaseClient() {
     console.log(`Connecting to: ${host}:${port}/${database} as ${user}`);
     
     // Create specialized pool for Supabase
+    // Using direct connection URL to avoid parsing issues
     const pool = new pg.Pool({
-      user,
-      password,
-      host,
-      port,
-      database,
+      connectionString: process.env.DATABASE_URL,
       ssl: {
         rejectUnauthorized: false
       },
-      // These options help with SCRAM issues
-      options: "-c password_encryption=md5",
       connectionTimeoutMillis: 5000,
       keepAlive: true,
       keepAliveInitialDelayMillis: 10000
