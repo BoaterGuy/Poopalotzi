@@ -112,10 +112,10 @@ async function init() {
         } else {
           log("Database schema does not exist. Attempting to run migration...");
           try {
-            // Import the entire module since migrateSchema isn't exported as named export
-            const migrationModule = await import('./migrate-schema');
-            // Execute the migration function directly
-            await migrationModule.default();
+            // Import the migration function
+            const { migrateSchema } = await import('./migrate-schema');
+            // Execute the migration function
+            await migrateSchema();
             log("Schema migration successful!");
             storage = new DatabaseStorage();
           } catch (migrationError: any) {

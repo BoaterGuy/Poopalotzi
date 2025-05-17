@@ -235,12 +235,17 @@ export async function migrateSchema() {
   }
 }
 
-// Run the migration
-migrateSchema().then(success => {
-  if (success) {
-    console.log('Migration completed successfully');
-  } else {
-    console.error('Migration failed');
-  }
-  process.exit(success ? 0 : 1);
-});
+// When this file is run directly, execute the migration
+if (require.main === module) {
+  migrateSchema().then(success => {
+    if (success) {
+      console.log('Migration completed successfully');
+    } else {
+      console.error('Migration failed');
+    }
+    process.exit(success ? 0 : 1);
+  });
+}
+
+// Default export for compatibility
+export default migrateSchema;
