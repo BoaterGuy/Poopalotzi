@@ -79,8 +79,7 @@ async function initializeMemoryData() {
       lastName: 'User',
       role: 'admin',
       passwordHash,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date()
     });
 
     console.log("Created default admin user: admin@poopalotzi.com / admin123");
@@ -95,21 +94,13 @@ async function initializeMemoryData() {
 // Initialize the application
 async function init() {
   try {
-    log("Setting up Replit database connection...");
-    const dbInitialized = await setupDatabase();
-
-    if (dbInitialized) {
-      storage = new DatabaseStorage();
-      log("Successfully connected to Replit database!");
-    } else {
-      storage = memStorage;
-      log("Using in-memory storage for this session");
-      await initializeMemoryData();
-    }
-  } catch (dbError: any) {
-    log(`Database connection error: ${dbError.message}`);
+    // Skip database connection for now and use in-memory storage directly
+    storage = memStorage;
     log("Using in-memory storage for this session");
     await initializeMemoryData();
+  } catch (error: any) {
+    log(`Error initializing app: ${error.message}`);
+    process.exit(1);
   }
 
   setupAuth(app);
@@ -128,13 +119,11 @@ async function init() {
     serveStatic(app);
   }
 
-  const port = 5000;
+  const port = process.env.PORT || 5000;
   return new Promise((resolve) => {
     server.listen({
       port,
       host: "0.0.0.0",
-      reusePort: true,
-      backlog: 511
     }, () => {
       log(`Server running at http://0.0.0.0:${port}`);
       resolve(server);
@@ -143,9 +132,7 @@ async function init() {
 }
 
 // Start the server
-try {
-  await init();
-} catch (err) {
+init().catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
-}
+});
