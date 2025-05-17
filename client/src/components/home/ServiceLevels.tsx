@@ -96,7 +96,8 @@ export default function ServiceLevels() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {serviceLevels.map((plan, index) => {
-              const isPopular = plan.name === "Standard";
+              // Mark monthly plans as most popular
+              const isPopular = plan.type === "monthly" && plan.name.includes("Single Head");
               return (
                 <Card 
                   key={plan.id}
