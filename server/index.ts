@@ -94,10 +94,37 @@ async function initializeMemoryData() {
 // Initialize the application
 async function init() {
   try {
-    // Skip database connection for now and use in-memory storage directly
-    storage = memStorage;
-    log("Using in-memory storage for this session");
-    await initializeMemoryData();
+    log("Setting up database connection...");
+    
+    // Check if DATABASE_URL is provided for Supabase
+    if (process.env.DATABASE_URL) {
+      try {
+        // Try to create Supabase client
+        const supabaseDB = await createSupabaseClient();
+        
+        // Check if schema exists
+        const schemaExists = await verifySchema(supabaseDB);
+        
+        if (schemaExists) {
+          // Initialize database storage with Supabase client
+          storage = new DatabaseStorage();
+          log("Successfully connected to Supabase database!");
+        } else {
+          log("Database schema does not exist. Using in-memory storage for now.");
+          storage = memStorage;
+          await initializeMemoryData();
+        }
+      } catch (dbError: any) {
+        log(`Supabase connection error: ${dbError.message}`);
+        log("Falling back to in-memory storage");
+        storage = memStorage;
+        await initializeMemoryData();
+      }
+    } else {
+      log("No DATABASE_URL found. Using in-memory storage");
+      storage = memStorage;
+      await initializeMemoryData();
+    }
   } catch (error: any) {
     log(`Error initializing app: ${error.message}`);
     process.exit(1);
