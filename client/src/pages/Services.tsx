@@ -146,7 +146,7 @@ export default function Services() {
                         
                         <div className="mt-auto">
                           <div className="text-center mb-4">
-                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price)}</span>
+                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price / 100, true)}</span>
                             <span className="text-lg text-gray-600">/{plan.type === 'one-time' ? 'service' : plan.type === 'monthly' ? 'month' : 'season'}</span>
                           </div>
                           
