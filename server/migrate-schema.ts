@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm';
 /**
  * Script to create database schema in Supabase
  */
-async function migrateSchema() {
+export async function migrateSchema() {
   try {
     console.log('Creating database schema in Supabase...');
     const db = await createSupabaseClient();

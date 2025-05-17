@@ -94,12 +94,6 @@ async function initializeMemoryData() {
 // Initialize the application
 async function init() {
   try {
-    log("Using in-memory storage for demonstration purposes");
-    storage = memStorage;
-    await initializeMemoryData();
-    
-    /* 
-    // Database connection code is kept but commented out for future use
     log("Setting up database connection...");
     
     // Check if DATABASE_URL is provided for Supabase
@@ -116,9 +110,20 @@ async function init() {
           storage = new DatabaseStorage();
           log("Successfully connected to Supabase database!");
         } else {
-          log("Database schema does not exist. Using in-memory storage for now.");
-          storage = memStorage;
-          await initializeMemoryData();
+          log("Database schema does not exist. Attempting to run migration...");
+          try {
+            // Import the entire module since migrateSchema isn't exported as named export
+            const migrationModule = await import('./migrate-schema');
+            // Execute the migration function directly
+            await migrationModule.default();
+            log("Schema migration successful!");
+            storage = new DatabaseStorage();
+          } catch (migrationError: any) {
+            log(`Migration error: ${migrationError.message}`);
+            log("Falling back to in-memory storage");
+            storage = memStorage;
+            await initializeMemoryData();
+          }
         }
       } catch (dbError: any) {
         log(`Supabase connection error: ${dbError.message}`);
@@ -131,7 +136,6 @@ async function init() {
       storage = memStorage;
       await initializeMemoryData();
     }
-    */
   } catch (error: any) {
     log(`Error initializing app: ${error.message}`);
     process.exit(1);

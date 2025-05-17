@@ -32,7 +32,9 @@ export async function createSupabaseClient() {
       ssl: {
         rejectUnauthorized: false
       },
-      connectionTimeoutMillis: 8000
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+      max: 10
     });
     
     // Test connection
