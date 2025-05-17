@@ -15,7 +15,7 @@ import { eq } from "drizzle-orm";
 // Interface for storage operations
 export interface IStorage {
   // User operations
-  getUser(id: number | string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   upsertUser(user: Partial<User>): Promise<User>;
   
   // Service Level operations

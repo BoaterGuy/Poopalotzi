@@ -106,7 +106,8 @@ async function initializeMemoryData() {
   }
   
   // Set up authentication with the proper storage
-  setupAuth(app);
+  // Use the original auth instead of replitAuth
+  require('./auth').setupAuth(app);
   
   const server = await registerRoutes(app);
 
