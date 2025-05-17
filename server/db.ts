@@ -11,7 +11,9 @@ if (!process.env.DATABASE_URL) {
 // Create a standard pg Pool with better error handling
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: true,
+  ssl: {
+    rejectUnauthorized: false
+  },
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
