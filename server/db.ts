@@ -12,11 +12,12 @@ if (!process.env.DATABASE_URL) {
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false,
-    sslmode: 'require'
+    rejectUnauthorized: false
   },
-  max: 20,
+  max: 5,
   idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+  application_name: 'poopalotzi_app',
   connectionTimeoutMillis: 2000,
 });
 
