@@ -23,6 +23,7 @@ export interface IStorage {
   getServiceLevel(id: number): Promise<ServiceLevel | undefined>;
   getAllServiceLevels(): Promise<ServiceLevel[]>;
   createServiceLevel(serviceLevel: Partial<ServiceLevel>): Promise<ServiceLevel>;
+  updateServiceLevel(id: number, serviceLevel: Partial<ServiceLevel>): Promise<ServiceLevel | undefined>;
   
   // Marina operations
   getMarina(id: number): Promise<Marina | undefined>;
