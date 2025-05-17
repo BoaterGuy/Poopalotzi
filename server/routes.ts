@@ -13,7 +13,7 @@ import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { format, addDays } from "date-fns";
-import { setupAuth } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 // Extended Request type with user information
 interface AuthRequest extends Request {
@@ -30,12 +30,7 @@ const handleError = (err: any, req: Request, res: Response, next: NextFunction) 
 };
 
 // Auth middleware
-const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
+// Using the imported isAuthenticated from replitAuth instead of this local function
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.isAuthenticated() && req.user.role === "admin") {
