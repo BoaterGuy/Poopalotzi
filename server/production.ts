@@ -7,7 +7,7 @@ import { registerRoutes } from './routes';
 import { storage as memStorage } from './storage';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = parseInt(process.env.PORT ?? "5000", 10);
 
 // Middleware
 app.use(cors({
