@@ -1,4 +1,4 @@
-import { sendEmail } from './sendgrid';
+import { sendServiceStatusEmail } from './sendgrid';
 import {
   getWelcomeEmailTemplate,
   getSubscriptionConfirmationTemplate,

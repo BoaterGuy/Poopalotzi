@@ -106,12 +106,12 @@ async function init() {
     await setupVite(app, server);
   } else {
     // Serve static assets from root public directory
-    const staticPath = path.join(process.cwd(), "public");
-    app.use(express.static(staticPath));
-    // SPA fallback
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(staticPath, "index.html"));
-    });
+    const staticPath = path.join(process.cwd(), "dist", "public");
+     app.use(express.static(staticPath));
+     // SPA fallback
+     app.get("*", (_req, res) => {
+       res.sendFile(path.join(staticPath, "index.html"));
+     });
   }
 
   // Start server

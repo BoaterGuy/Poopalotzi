@@ -9,7 +9,6 @@
     "jsx": "preserve",                        // leave JSX for Vite/React to handle
     "esModuleInterop": true,                  
     "skipLibCheck": true,                     // skip type-checking 3rd-party .d.ts files
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",

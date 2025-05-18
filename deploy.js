@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = process.env.port || 5000;
 
 // Service data
 const serviceLevels = [
@@ -167,8 +167,8 @@ app.get('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
 });
 
 // Export as ES module
