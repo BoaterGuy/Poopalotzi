@@ -9,7 +9,7 @@ packages = ["imagemagick","jq"]
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "npm start"]
+run = ["sh", "-c", "node dist/server/production.js"]
 
 [workflows]
 runButton = "Development Server"
