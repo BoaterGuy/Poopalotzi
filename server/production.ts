@@ -40,8 +40,8 @@ async function init() {
       res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
     });
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Production server running at http://0.0.0.0:${PORT}`);
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Production server running at http://0.0.0.0:${port}`);
     });
   } catch (error: any) {
     console.error('Failed to start server:', error);
