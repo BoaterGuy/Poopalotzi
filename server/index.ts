@@ -62,6 +62,8 @@ app.use((req, res, next) => {
 async function initializeMemoryData() {
   try {
     console.log("Initializing memory data...");
+    
+    // Create admin user
     const { hashPassword } = await import("./auth");
     const passwordHash = await hashPassword("admin123");
     await storage.upsertUser({
@@ -74,6 +76,80 @@ async function initializeMemoryData() {
       createdAt: new Date()
     });
     console.log("Default admin created: admin@poopalotzi.com / admin123");
+    
+    // Add service levels
+    await storage.createServiceLevel({
+      id: 1,
+      name: "Basic Pump-Out",
+      description: "One-time pump-out service",
+      price: 4995,
+      type: "one-time",
+      serviceLevel: "single-head",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await storage.createServiceLevel({
+      id: 2,
+      name: "Monthly Subscription",
+      description: "Unlimited pump-outs for the month",
+      price: 14995,
+      type: "monthly", 
+      serviceLevel: "single-head",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await storage.createServiceLevel({
+      id: 3,
+      name: "Seasonal Pass",
+      description: "Unlimited pump-outs for the season (April-October)",
+      price: 69995,
+      type: "seasonal",
+      serviceLevel: "multi-head",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Add marinas
+    await storage.createMarina({
+      id: 1,
+      name: "Harbor Bay Marina",
+      address: "123 Harbor Way",
+      city: "Bay Harbor",
+      state: "MI",
+      zipCode: "49770",
+      phone: "231-555-1234",
+      email: "info@harborbay.com",
+      website: "https://harborbay.com",
+      latitude: 45.3735,
+      longitude: -84.9551,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await storage.createMarina({
+      id: 2,
+      name: "Sunset Point Marina",
+      address: "789 Sunset Drive",
+      city: "Traverse City",
+      state: "MI",
+      zipCode: "49684",
+      phone: "231-555-6789",
+      email: "info@sunsetpointmarina.com",
+      website: "https://sunsetpointmarina.com",
+      latitude: 44.7631,
+      longitude: -85.6206,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    console.log("Demo data initialization completed");
   } catch (err) {
     console.error("Error seeding memory data:", err);
   }
