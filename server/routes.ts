@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./index";
 import { insertBoatSchema, insertMarinaSchema, insertPumpOutRequestSchema } from "@shared/schema";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 // Utility for async errors
 const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) =>

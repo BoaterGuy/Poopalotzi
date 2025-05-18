@@ -9,7 +9,7 @@ packages = ["imagemagick","jq"]
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "node dist/server/production.js"]
+run = ["sh", "-c", "npm start"]
 
 [workflows]
 runButton = "Development Server"
@@ -22,10 +22,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
-
-[[ports]]
-localPort = 3000
-externalPort = 3000
 
 [[ports]]
 localPort = 5000

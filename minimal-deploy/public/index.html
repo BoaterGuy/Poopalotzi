@@ -5,61 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Poopalotzi - Marina Pump-Out Services</title>
   <style>
-    body { 
-      font-family: system-ui, sans-serif; 
-      max-width: 1200px; 
-      margin: 0 auto; 
-      padding: 20px;
-      line-height: 1.6;
-      color: #333;
-      background-color: #f9fafb;
+    :root {
+      --primary: #0e7490;
+      --primary-hover: #155e75;
+      --secondary: #64748b;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --border: #e2e8f0;
+      --radius: 0.5rem;
     }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.5;
+    }
+    
     header {
-      background-color: #0e7490;
+      background-color: var(--primary);
       color: white;
       padding: 2rem;
-      border-radius: 8px;
-      margin-bottom: 2rem;
       text-align: center;
     }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
     .services {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 2rem;
-    }
-    .service-card {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .price {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #0e7490;
-      margin: 1rem 0;
-    }
-    .btn {
-      display: inline-block;
-      background: #f59e0b;
-      color: white;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .api-test {
-      background: #f0f0f0;
-      padding: 1.5rem;
-      border-radius: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
       margin-top: 2rem;
     }
-    code {
-      background: #333;
+    
+    .service-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      transition: transform 0.2s;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .service-card h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    
+    .price {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 1rem 0;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: var(--accent);
       color: white;
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+    
+    footer {
+      background-color: var(--foreground);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 3rem;
+    }
+    
+    @media (max-width: 768px) {
+      .services {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -71,43 +116,45 @@
   
   <main>
     <h2>Our Service Plans</h2>
-    <div class="services">
-      <div class="service-card">
-        <h3>Basic Pump-Out</h3>
-        <p>One-time pump-out service for boats with a single holding tank.</p>
-        <div class="price">$49.95</div>
-        <a href="#" class="btn">Book Now</a>
-      </div>
-      
-      <div class="service-card">
-        <h3>Monthly Subscription</h3>
-        <p>Unlimited pump-outs for the month. Perfect for frequent boaters.</p>
-        <div class="price">$149.95</div>
-        <a href="#" class="btn">Subscribe</a>
-      </div>
-      
-      <div class="service-card">
-        <h3>Seasonal Pass</h3>
-        <p>Unlimited service for the entire boating season (April-October).</p>
-        <div class="price">$699.95</div>
-        <a href="#" class="btn">Get Season Pass</a>
-      </div>
-    </div>
+    <p>We provide reliable and efficient pump-out services for boat owners. Choose the plan that best suits your needs.</p>
     
-    <div class="api-test">
-      <h3>API Test Links</h3>
-      <p>This is a simplified version of the Poopalotzi application with in-memory storage:</p>
-      <ul>
-        <li><a href="/api/service-levels">View Service Levels API</a></li>
-        <li><a href="/api/marinas">View Marinas API</a></li>
-        <li><a href="/health">Health Check API</a></li>
-      </ul>
-      <p>Default admin account: <code>admin@poopalotzi.com</code> / <code>admin123</code></p>
+    <div class="services" id="services">
+      <div class="loading">Loading services...</div>
     </div>
   </main>
   
-  <footer style="margin-top: 2rem; text-align: center; color: #666;">
-    <p>&copy; 2025 Poopalotzi. All Rights Reserved.</p>
+  <footer>
+    <p>&copy; 2025 Poopalotzi. All rights reserved.</p>
   </footer>
+  
+  <script>
+    // Fetch service levels from API
+    fetch('/api/service-levels')
+      .then(response => response.json())
+      .then(services => {
+        const servicesContainer = document.getElementById('services');
+        servicesContainer.innerHTML = '';
+        
+        services.forEach(service => {
+          const price = (service.priceInCents / 100).toFixed(2);
+          
+          const serviceCard = document.createElement('div');
+          serviceCard.className = 'service-card';
+          
+          serviceCard.innerHTML = `
+            <h2>${service.name}</h2>
+            <p>${service.description}</p>
+            <div class="price">$${price}</div>
+            <a href="#" class="btn">Book Now</a>
+          `;
+          
+          servicesContainer.appendChild(serviceCard);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching services:', error);
+        document.getElementById('services').innerHTML = '<p>Error loading services. Please try again later.</p>';
+      });
+  </script>
 </body>
 </html>
