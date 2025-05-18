@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, log } from "./vite";
 import { setupDatabase } from "./db";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
@@ -30,10 +31,11 @@ app.get("/test-cors", (req, res) => {
   res.sendFile(process.cwd() + "/test-cors.html");
 });
 
+// Logging middleware for /api endpoints
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  const pathUrl = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -43,16 +45,14 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (pathUrl.startsWith("/api")) {
+      let logLine = `${req.method} ${pathUrl} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
       log(logLine);
     }
   });
@@ -60,20 +60,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Helper function to seed initial data if needed
+// Helper to seed in-memory data
 async function initializeMemoryData() {
   try {
     console.log("Initializing memory data with service levels...");
-
-    // Service level data is already in the MemStorage constructor
-    // No need to re-add it
-
-    // Create a default admin user for testing
     const { hashPassword } = await import('./auth');
     const passwordHash = await hashPassword('admin123');
 
     await storage.upsertUser({
-      id: 1, 
+      id: 1,
       email: 'admin@poopalotzi.com',
       firstName: 'Admin',
       lastName: 'User',
@@ -83,65 +78,19 @@ async function initializeMemoryData() {
     });
 
     console.log("Created default admin user: admin@poopalotzi.com / admin123");
-
-    // Log success
     console.log("Memory data initialization completed successfully");
   } catch (error) {
     console.error("Error seeding initial data:", error);
   }
 }
 
-// Initialize the application
+// Application bootstrap
 async function init() {
   try {
     log("Using in-memory storage for development");
     storage = memStorage;
     await initializeMemoryData();
-    
-    /* Database connection code is kept for future use
-    log("Setting up database connection...");
-    
-    // Check if DATABASE_URL is provided for Supabase
-    if (process.env.DATABASE_URL) {
-      try {
-        // Try to create Supabase client
-        const supabaseDB = await createSupabaseClient();
-        
-        // Check if schema exists
-        const schemaExists = await verifySchema(supabaseDB);
-        
-        if (schemaExists) {
-          // Initialize database storage with Supabase client
-          storage = new DatabaseStorage();
-          log("Successfully connected to Supabase database!");
-        } else {
-          log("Database schema does not exist. Attempting to run migration...");
-          try {
-            // Import the migration function
-            const { migrateSchema } = await import('./migrate-schema');
-            // Execute the migration function
-            await migrateSchema();
-            log("Schema migration successful!");
-            storage = new DatabaseStorage();
-          } catch (migrationError: any) {
-            log(`Migration error: ${migrationError.message}`);
-            log("Falling back to in-memory storage");
-            storage = memStorage;
-            await initializeMemoryData();
-          }
-        }
-      } catch (dbError: any) {
-        log(`Supabase connection error: ${dbError.message}`);
-        log("Falling back to in-memory storage");
-        storage = memStorage;
-        await initializeMemoryData();
-      }
-    } else {
-      log("No DATABASE_URL found. Using in-memory storage");
-      storage = memStorage;
-      await initializeMemoryData();
-    }
-    */
+    // Note: Database/Supabase initialization code commented out for now
   } catch (error: any) {
     log(`Error initializing app: ${error.message}`);
     process.exit(1);
@@ -150,6 +99,7 @@ async function init() {
   setupAuth(app);
   const server = await registerRoutes(app);
 
+  // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -157,25 +107,29 @@ async function init() {
     console.error(err);
   });
 
+  // Development vs Production handling
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve static assets and health-check route
+    const staticPath = path.join(process.cwd(), 'dist', 'public');
+    app.use(express.static(staticPath));
+    app.get('/', (_req, res) => {
+      res.sendFile(path.join(staticPath, 'index.html'));
+    });
   }
 
-  const port = process.env.PORT || 5000;
+  // Start the HTTP server
+  const port = parseInt(process.env.PORT ?? '5000', 10);
   return new Promise((resolve) => {
-    server.listen({
-      port,
-      host: "0.0.0.0",
-    }, () => {
+    server.listen({ port, host: '0.0.0.0' }, () => {
       log(`Server running at http://0.0.0.0:${port}`);
       resolve(server);
     });
   });
 }
 
-// Start the server
+// Kick off the server
 init().catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
