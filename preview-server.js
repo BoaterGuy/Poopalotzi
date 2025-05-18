@@ -1,6 +1,6 @@
-// Simple deployable version of Poopalotzi
-import express from 'express';
-import bcrypt from 'bcryptjs';
+// Simple preview version of Poopalotzi that should run reliably in Replit
+const express = require('express');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
