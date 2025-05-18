@@ -1,6 +1,7 @@
-// Minimal server for Poopalotzi that should work in Replit preview
+// Minimal Poopalotzi server
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -87,11 +88,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', mode: 'in-memory' });
-});
-
 // API Routes
 app.get('/api/service-levels', (req, res) => {
   res.json(Array.from(serviceLevels.values()));
@@ -99,6 +95,11 @@ app.get('/api/service-levels', (req, res) => {
 
 app.get('/api/marinas', (req, res) => {
   res.json(Array.from(marinas.values()));
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', mode: 'in-memory' });
 });
 
 // Serve static HTML for all other routes
@@ -118,6 +119,7 @@ app.get('*', (req, res) => {
           padding: 20px;
           line-height: 1.6;
           color: #333;
+          background-color: #f9fafb;
         }
         header {
           background-color: #0e7490;
@@ -131,6 +133,7 @@ app.get('*', (req, res) => {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
           gap: 20px;
+          margin-bottom: 2rem;
         }
         .service-card {
           background: white;
@@ -152,6 +155,18 @@ app.get('*', (req, res) => {
           border-radius: 8px;
           text-decoration: none;
           font-weight: bold;
+        }
+        .api-test {
+          background: #f0f0f0;
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin-top: 2rem;
+        }
+        code {
+          background: #333;
+          color: white;
+          padding: 0.2rem 0.4rem;
+          border-radius: 4px;
         }
       </style>
     </head>
@@ -186,13 +201,16 @@ app.get('*', (req, res) => {
           </div>
         </div>
         
-        <h2>API Test Links</h2>
-        <ul>
-          <li><a href="/api/service-levels">View Service Levels</a></li>
-          <li><a href="/api/marinas">View Marinas</a></li>
-          <li><a href="/health">Health Check</a></li>
-        </ul>
-        <p>Admin account: admin@poopalotzi.com / admin123</p>
+        <div class="api-test">
+          <h3>API Test Links</h3>
+          <p>This is a simplified version of the Poopalotzi application with in-memory storage:</p>
+          <ul>
+            <li><a href="/api/service-levels">View Service Levels API</a></li>
+            <li><a href="/api/marinas">View Marinas API</a></li>
+            <li><a href="/health">Health Check API</a></li>
+          </ul>
+          <p>Default admin account: <code>admin@poopalotzi.com</code> / <code>admin123</code></p>
+        </div>
       </main>
       
       <footer style="margin-top: 2rem; text-align: center; color: #666;">
@@ -209,8 +227,7 @@ async function startServer() {
     await initData();
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`Visit in browser: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
-      console.log(`Admin account: admin@poopalotzi.com / admin123`);
+      console.log(`Default admin account: admin@poopalotzi.com / admin123`);
     });
   } catch (error) {
     console.error('Server startup error:', error);
