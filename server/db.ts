@@ -1,6 +1,9 @@
+// server/db.ts
+
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "@shared/schema.js";
+// 👇 switch from the alias to a real relative import with .js
+import * as schema from "../shared/schema.js";
 
 // Check for database environment variables
 if (!process.env.DATABASE_URL) {
@@ -24,7 +27,7 @@ export const db = drizzle(pool, { schema });
 export async function setupDatabase() {
   try {
     console.log("Testing database connection...");
-    
+
     // First test connection
     try {
       await pool.query('SELECT 1');
@@ -34,7 +37,7 @@ export async function setupDatabase() {
       console.log("Falling back to memory storage");
       return false;
     }
-    
+
     // Check if database is initialized
     console.log("Checking if tables exist...");
     let tablesExist = false;
@@ -46,13 +49,13 @@ export async function setupDatabase() {
           AND table_name = 'users'
         );
       `);
-      
+
       tablesExist = result.rows[0].exists === true || result.rows[0].exists === 't';
     } catch (schemaErr) {
       console.error("Error checking schema:", schemaErr);
       return false;
     }
-    
+
     // For now, don't try to create tables - we'll use drizzle migrations later
     if (!tablesExist) {
       console.log('Database tables do not exist. Falling back to memory storage.');
@@ -60,7 +63,7 @@ export async function setupDatabase() {
     } else {
       console.log('Database tables already exist');
     }
-    
+
     return true;
   } catch (error) {
     console.error('Database setup error:', error);
