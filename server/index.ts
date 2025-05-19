@@ -64,7 +64,7 @@ async function initializeMemoryData() {
     console.log("Initializing memory data...");
     
     // Create admin user
-    const { hashPassword } = await import("./auth");
+    const { hashPassword } = await import("./auth.js");
     const passwordHash = await hashPassword("admin123");
     await storage.upsertUser({
       id: 1,

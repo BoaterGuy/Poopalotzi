@@ -1,4 +1,3 @@
-
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -7,6 +6,7 @@ import { registerRoutes } from './routes.js';
 import { storage as memStorage } from './storage.js';
 
 const app = express();
+// Read PORT from env or default to 5000
 const port = parseInt(process.env.PORT ?? "5000", 10);
 
 // Middleware
@@ -22,17 +22,17 @@ app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
 async function init() {
   try {
     console.log('Using in-memory storage for production');
-    
+
     // Setup auth and routes
     await setupAuth(app);
     await registerRoutes(app);
-    
+
     // Error handler
     app.use((err: any, _req: any, res: any, _next: any) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-      res.status(status).json({ message });
       console.error(err);
+      res.status(status).json({ message });
     });
 
     // SPA fallback
@@ -40,8 +40,9 @@ async function init() {
       res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
     });
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Production server running at http://0.0.0.0:${PORT}`);
+    // Start the server on 0.0.0.0 so it’s reachable externally
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Production server running at http://0.0.0.0:${port}`);
     });
   } catch (error: any) {
     console.error('Failed to start server:', error);

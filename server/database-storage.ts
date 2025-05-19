@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db } from './db.js';
 import { createSupabaseClient } from './supabase-db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import session from 'express-session';
