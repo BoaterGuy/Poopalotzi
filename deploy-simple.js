@@ -202,45 +202,59 @@ function setupRoutes() {
       res.send(`
         <html>
           <head>
-            <title>Poopalotzi</title>
+            <title>Poopalotzi - Professional Pump-Out Services</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="description" content="Professional marina pump-out services for boat owners. Schedule on-demand or subscription pump-out services for your boat.">
             <style>
-              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-              h1 { color: #0e7490; }
-              .service { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
-              .price { font-weight: bold; color: #0e7490; font-size: 18px; }
+              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+              header { text-align: center; margin-bottom: 2rem; }
+              h1 { color: #0e7490; margin-bottom: 0.5rem; }
+              h2 { color: #0e7490; border-bottom: 2px solid #0e7490; padding-bottom: 0.5rem; margin-top: 2rem; }
+              .service { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+              .price { font-weight: bold; color: #0e7490; font-size: 20px; }
+              .logo { max-width: 200px; margin: 0 auto; display: block; }
+              .api-section { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 2rem; }
+              @media (max-width: 600px) {
+                body { padding: 15px; }
+              }
             </style>
           </head>
           <body>
-            <h1>Poopalotzi</h1>
-            <p>Professional Marina Pump-Out Services</p>
+            <header>
+              <img src="https://replit.s3.amazonaws.com/images/1747313657068_poopalotzi.jpg" alt="Poopalotzi Logo" class="logo">
+              <h1>Poopalotzi</h1>
+              <p>Professional Marina Pump-Out Services</p>
+            </header>
             
             <h2>Our Services</h2>
             <div id="services">
               <div class="service">
                 <h3>Basic Pump-Out</h3>
-                <p>One-time pump-out service</p>
+                <p>One-time pump-out service for your boat's holding tank.</p>
                 <p class="price">$49.95</p>
               </div>
               <div class="service">
                 <h3>Monthly Plan</h3>
-                <p>4 pump-outs per month</p>
+                <p>4 pump-outs per month, perfect for regular boaters.</p>
                 <p class="price">$149.95</p>
               </div>
               <div class="service">
                 <h3>Seasonal Pass</h3>
-                <p>Unlimited service April-October</p>
+                <p>Unlimited service April-October, best value for frequent boaters.</p>
                 <p class="price">$699.95</p>
               </div>
             </div>
             
-            <p>This is the Poopalotzi API server.</p>
-            <p>Available endpoints:</p>
-            <ul>
-              <li>/api/service-levels</li>
-              <li>/api/marinas</li>
-              <li>/api/boats</li>
-            </ul>
-            <p>Demo admin account: admin@poopalotzi.com / admin123</p>
+            <div class="api-section">
+              <h2>API Information</h2>
+              <p>This is the Poopalotzi API server. Available endpoints:</p>
+              <ul>
+                <li>/api/service-levels - View our service plans</li>
+                <li>/api/marinas - List of partner marinas</li>
+                <li>/api/boats - Manage your boats (requires authentication)</li>
+              </ul>
+              <p><strong>Demo admin account:</strong> admin@poopalotzi.com / admin123</p>
+            </div>
           </body>
         </html>
       `);
