@@ -4,8 +4,8 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { promisify } from "util";
-import { storage } from "./index";
-import { User as SelectUser } from "@shared/schema";
+import { storage } from "./index.js";
+import { User as SelectUser } from "@shared/schema.js";
 
 declare global {
   namespace Express {

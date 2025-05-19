@@ -8,7 +8,7 @@ import {
   type ServiceLevel,
   type Marina,
   // ...add all types you use
-} from "@shared/schema";
+} from "@shared/schema.js";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 

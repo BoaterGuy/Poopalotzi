@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import cors from "cors";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes.js";
 import { setupVite, log } from "./vite";
 import { setupAuth } from "./auth";
 import { storage as memStorage, IStorage } from "./storage";

@@ -1,5 +1,5 @@
 import express from 'express';
-import { testEmailService } from './utils/email-service';
+import { testEmailService } from './utils/email-service.js';
 
 // Create a router for testing email functionality
 const router = express.Router();

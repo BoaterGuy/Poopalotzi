@@ -5,8 +5,8 @@ import {
   getSubscriptionRenewalReminderTemplate,
   getPaymentReceiptTemplate,
   getEmployeeWeeklyScheduleTemplate
-} from './email-templates';
-import { User, ServiceLevel, Boat, PumpOutRequest } from '@shared/schema';
+} from './email-templates.js';
+import { User, ServiceLevel, Boat, PumpOutRequest } from '@shared/schema.js';
 
 // Email service to handle all types of notifications
 

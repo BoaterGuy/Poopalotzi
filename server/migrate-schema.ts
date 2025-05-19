@@ -1,5 +1,5 @@
-import { createSupabaseClient } from './supabase-db';
-import * as schema from '@shared/schema';
+import { createSupabaseClient } from './supabase-db.js';
+import * as schema from '@shared/schema.js';
 import { sql } from 'drizzle-orm';
 
 /**

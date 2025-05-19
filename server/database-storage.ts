@@ -3,7 +3,7 @@ import { createSupabaseClient } from './supabase-db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import session from 'express-session';
 import connectPg from 'connect-pg-simple';
-import * as schema from '@shared/schema';
+import * as schema from '@shared/schema.js';
 import { IStorage } from './storage';
 import {
   User, InsertUser, Boat, InsertBoat, Marina, InsertMarina,
