@@ -12,12 +12,13 @@ export let storage: IStorage = memStorage;
 // Initialize Express app
 const app = express();
 
-// Middleware: CORS
+// Middleware: CORS - Allow specific Replit domains
 app.use(cors({
-  origin: true,
+  // Allow any origin including your Replit domain
+  origin: '*',
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
 // Middleware: Body parsing
