@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist/server",
     "rootDir": ".",
-    "module": "ESNext",
+    "module": "Node16",
     "moduleResolution": "node16",
     "target": "ES2022",
     "esModuleInterop": true,
@@ -14,5 +14,6 @@
   "include": [
   "server/**/*",
   "shared/**/*.ts", 
-  "vite.config.ts"]
+  "vite.config.ts"
+  ]
 }
