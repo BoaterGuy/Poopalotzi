@@ -168,9 +168,6 @@ export const insertEmployeeAssignmentSchema = createInsertSchema(employeeAssignm
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Add a UpsertUser type for our auth system
-export type UpsertUser = Partial<User>;
-
 export type InsertBoatOwner = z.infer<typeof insertBoatOwnerSchema>;
 export type BoatOwner = typeof boatOwner.$inferSelect;
 

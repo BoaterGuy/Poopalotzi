@@ -4,8 +4,8 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { promisify } from "util";
-import { storage } from "./index.js";
-import { User as SelectUser } from "@shared/schema.js";
+import { storage } from "./index";
+import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -23,24 +23,14 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Generate a dynamic secret if none is provided
-  const sessionSecret = process.env.SESSION_SECRET || "poopalotzi-secret-" + Date.now();
-  
-  console.log("Auth environment:", {
-    nodeEnv: process.env.NODE_ENV,
-    isProduction: process.env.NODE_ENV === "production"
-  });
-  
   const sessionSettings: session.SessionOptions = {
-    secret: sessionSecret,
+    secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: { 
-      // In production, we'll need to handle this differently depending on the hosting environment
-      secure: false, // Setting to false regardless of environment to ensure login works
+      secure: process.env.NODE_ENV === "production" ? 'auto' : false,
       sameSite: 'lax',
-      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   };
@@ -118,7 +108,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/auth/login", (req, res, next) => {
-      passport.authenticate("local", (err: any, user: any, info: any) => {
+    passport.authenticate("local", (err, user, info) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info.message });
       

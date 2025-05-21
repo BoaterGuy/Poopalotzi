@@ -1,6 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react';
-// Temporarily comment out supabase imports to switch to Replit Auth
-// import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, signInWithOAuth } from '../lib/supabase';
+import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, signInWithOAuth } from '../lib/supabase';
 import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 
@@ -46,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchUser = async () => {
       setIsLoading(true);
       try {
-        // Check if we have a valid session with our API
+        // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
           credentials: 'include',
         });
@@ -66,31 +65,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     fetchUser();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // When a user signs in with Supabase, we need to create/verify them in our system
+        if (event === 'SIGNED_IN' && session) {
+          try {
+            const supaUser = session.user;
+            
+            // Check if the user exists in our system
+            const response = await fetch('/api/auth/me', {
+              credentials: 'include',
+            });
+
+            if (!response.ok) {
+              // User doesn't exist in our system, create them
+              const registerResponse = await apiRequest('POST', '/api/auth/register', {
+                email: supaUser.email,
+                firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
+                lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+                role: 'member',
+                oauthProvider: supaUser.app_metadata.provider,
+                oauthId: supaUser.id,
+                password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
+              });
+
+              if (registerResponse.ok) {
+                const userData = await registerResponse.json();
+                setUser(userData);
+              }
+            } else {
+              // User exists, get their data
+              const userData = await response.json();
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Error syncing user after auth state change:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       
-      // Use traditional login with email/password
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
+      // Login to our API
+      const response = await apiRequest('POST', '/api/auth/login', {
+        email,
+        password,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to login');
-      }
 
       const userData = await response.json();
       setUser(userData);
       
-      // Redirect based on user role
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userData.firstName}!`,
+      });
+      
+      // Automatically redirect based on role
       if (userData.role === 'admin') {
         window.location.href = '/admin/dashboard';
       } else if (userData.role === 'employee') {
@@ -98,11 +140,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         window.location.href = '/member/dashboard';
       }
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
       
     } catch (error) {
       console.error('Login error:', error);
@@ -121,38 +158,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Use traditional registration
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to register');
-      }
-
-      const user = await response.json();
-      setUser(user);
+      // Register with our API
+      const response = await apiRequest('POST', '/api/auth/register', userData);
       
-      // Redirect based on user role
-      if (user.role === 'admin') {
-        window.location.href = '/admin/dashboard';
-      } else if (user.role === 'employee') {
-        window.location.href = '/employee/schedule';
-      } else {
-        window.location.href = '/member/dashboard';
-      }
+      const newUser = await response.json();
+      setUser(newUser);
       
       toast({
         title: "Registration successful",
-        description: "Welcome to Poopalotzi!",
+        description: `Welcome to Poopalotzi, ${newUser.firstName}!`,
       });
-      
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -171,10 +186,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Logout from our API
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await apiRequest('POST', '/api/auth/logout', {});
+      
+      // Also logout from Supabase if we're using it
+      await signOut();
       
       setUser(null);
       
@@ -189,19 +204,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Social login methods
   const loginWithGoogle = async () => {
     try {
-      toast({
-        title: "Coming soon",
-        description: "Google login will be available in the future.",
-      });
-      // For now, just show a message that it's coming soon
+      await signInWithOAuth('google');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Google login error:', error);
       toast({
-        title: "Login failed",
-        description: "There was an error logging in.",
+        title: "Google login failed",
+        description: "There was an error logging in with Google.",
         variant: "destructive",
       });
     }
@@ -209,16 +219,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithFacebook = async () => {
     try {
-      toast({
-        title: "Coming soon",
-        description: "Facebook login will be available in the future.",
-      });
-      // For now, just show a message that it's coming soon
+      await signInWithOAuth('facebook');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Facebook login error:', error);
       toast({
-        title: "Login failed",
-        description: "There was an error logging in.",
+        title: "Facebook login failed",
+        description: "There was an error logging in with Facebook.",
         variant: "destructive",
       });
     }
@@ -226,16 +232,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithApple = async () => {
     try {
-      toast({
-        title: "Coming soon",
-        description: "Apple login will be available in the future.",
-      });
-      // For now, just show a message that it's coming soon
+      await signInWithOAuth('apple');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Apple login error:', error);
       toast({
-        title: "Login failed",
-        description: "There was an error logging in.",
+        title: "Apple login failed",
+        description: "There was an error logging in with Apple.",
         variant: "destructive",
       });
     }

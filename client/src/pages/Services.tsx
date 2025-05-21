@@ -28,13 +28,11 @@ export default function Services() {
   });
 
   const getFormattedPrice = (price: number, type: string) => {
-    // Convert price from cents to dollars
-    const priceInDollars = price / 100;
-    
-    if (type === "one-time") return `${formatCurrency(priceInDollars)}/service`;
-    if (type === "monthly") return `${formatCurrency(priceInDollars)}/month`;
-    if (type === "seasonal") return `${formatCurrency(priceInDollars)}/season`;
-    return formatCurrency(priceInDollars);
+    // Price is already in dollars
+    if (type === "one-time") return `${formatCurrency(price)}/service`;
+    if (type === "monthly") return `${formatCurrency(price)}/month`;
+    if (type === "seasonal") return `${formatCurrency(price)}/season`;
+    return formatCurrency(price);
   };
 
   return (
@@ -146,7 +144,7 @@ export default function Services() {
                         
                         <div className="mt-auto">
                           <div className="text-center mb-4">
-                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price / 100, true)}</span>
+                            <span className="text-3xl font-bold text-[#0B1F3A]">{formatCurrency(plan.price)}</span>
                             <span className="text-lg text-gray-600">/{plan.type === 'one-time' ? 'service' : plan.type === 'monthly' ? 'month' : 'season'}</span>
                           </div>
                           

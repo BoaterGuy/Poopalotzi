@@ -217,7 +217,7 @@ export default function ServiceSubscription() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-center mb-6">
-            ${(plan.price / 100).toFixed(2)}
+            ${plan.price.toFixed(2)}
             {plan.type !== 'one-time' && (
               <span className="text-sm font-normal text-muted-foreground">
                 {plan.type === 'monthly' ? '/mo' : '/season'}
@@ -302,7 +302,7 @@ export default function ServiceSubscription() {
                       <div className="flex items-center mt-2">
                         <DollarSign className="h-4 w-4 text-green-600 mr-1" />
                         <span className="font-medium text-green-600">
-                          ${(currentServiceLevel.price / 100).toFixed(2)}
+                          ${currentServiceLevel.price.toFixed(2)}
                           {currentServiceLevel.type !== 'one-time' && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {currentServiceLevel.type === 'monthly' ? '/mo' : '/season'}
@@ -376,7 +376,7 @@ export default function ServiceSubscription() {
                 <div className="flex justify-between items-center">
                   <span>Price:</span>
                   <span className="font-bold">
-                    ${(selectedPlan.price / 100).toFixed(2)}
+                    ${selectedPlan.price.toFixed(2)}
                     {selectedPlan.type !== 'one-time' && (
                       <span className="text-sm font-normal text-muted-foreground">
                         {selectedPlan.type === 'monthly' ? '/mo' : '/season'}

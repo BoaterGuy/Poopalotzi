@@ -14,7 +14,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: "light",
+  theme: "system",
   setTheme: () => null,
 };
 
@@ -22,37 +22,26 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "light", // Changed default theme to light
   storageKey = "poopalotzi-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  // Use a safer approach for initialization to prevent errors
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      return defaultTheme;
-    } catch (error) {
-      console.error("Error initializing theme:", error);
-      return "light";
-    }
-  });
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useEffect(() => {
     try {
-      // Check if window is defined (client-side) before proceeding
-      if (typeof window !== 'undefined') {
-        const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
+      const root = window.document.documentElement;
+      root.classList.remove("light", "dark");
 
-        if (theme === "system") {
-          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-          root.classList.add(systemTheme);
-          return;
-        }
-
-        root.classList.add(theme);
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        root.classList.add(systemTheme);
+        return;
       }
+
+      root.classList.add(theme);
     } catch (error) {
       console.error("Theme application error:", error);
     }
@@ -60,8 +49,9 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (newTheme: Theme) => {
-      setTheme(newTheme);
+    setTheme: (theme: Theme) => {
+      localStorage.setItem(storageKey, theme);
+      setTheme(theme);
     },
   };
 

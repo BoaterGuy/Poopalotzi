@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '@shared/schema.js';
+import * as schema from '@shared/schema';
 
 // Create a more specialized connection for Supabase
 export async function createSupabaseClient() {
@@ -25,16 +25,20 @@ export async function createSupabaseClient() {
     console.log(`Connecting to: ${host}:${port}/${database} as ${user}`);
     
     // Create specialized pool for Supabase
-    const connectionString = process.env.DATABASE_URL;
-    
     const pool = new pg.Pool({
-      connectionString,
+      user,
+      password,
+      host,
+      port,
+      database,
       ssl: {
         rejectUnauthorized: false
       },
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
-      max: 10
+      // These options help with SCRAM issues
+      options: "-c password_encryption=md5",
+      connectionTimeoutMillis: 5000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000
     });
     
     // Test connection

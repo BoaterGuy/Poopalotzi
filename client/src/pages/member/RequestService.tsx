@@ -271,7 +271,7 @@ export default function RequestService() {
         <p className="text-gray-600 mb-8">Schedule a pump-out service for your boat</p>
 
         {hasPendingPayments && (
-          <Alert className="mb-6 bg-amber-50 border-amber-200">
+          <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-500" />
             <AlertTitle>Payment Required</AlertTitle>
             <AlertDescription>
@@ -347,7 +347,7 @@ export default function RequestService() {
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">Price:</span>
                         <span className="font-bold text-[#38B2AC]">
-                          {formatCurrency(serviceLevel.price / 100)}
+                          {formatCurrency(serviceLevel.price)}
                           <span className="text-gray-500 text-sm">
                             /{serviceLevel.type === 'one-time' ? 'service' : 
                               serviceLevel.type === 'monthly' ? 'month' : 'season'}
@@ -415,13 +415,13 @@ export default function RequestService() {
                 {selectedRequest ? (
                   <PaymentForm 
                     requestId={selectedRequest.id}
-                    amount={serviceLevel.price / 100}
+                    amount={serviceLevel.price}
                     onSuccess={handlePaymentComplete}
                   />
                 ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 ? (
                   <PaymentForm 
                     requestId={pendingPaymentRequests[0].id}
-                    amount={serviceLevel.price / 100}
+                    amount={serviceLevel.price}
                     onSuccess={handlePaymentComplete}
                   />
                 ) : (

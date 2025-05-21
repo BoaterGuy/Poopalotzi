@@ -186,9 +186,9 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Amount</p>
-            <p className="text-2xl font-bold text-green-600">${(amount / 100).toFixed(2)}</p>
-            <p className="text-sm text-gray-500">Tax (6.75%): ${((amount / 100) * 0.0675).toFixed(2)}</p>
-            <p className="text-lg font-semibold text-green-700">Total: ${((amount / 100) + ((amount / 100) * 0.0675)).toFixed(2)}</p>
+            <p className="text-2xl font-bold text-green-600">${amount.toFixed(2)}</p>
+            <p className="text-sm text-gray-500">Tax (6.75%): ${(amount * 0.0675).toFixed(2)}</p>
+            <p className="text-lg font-semibold text-green-700">Total: ${(amount + (amount * 0.0675)).toFixed(2)}</p>
           </div>
         </div>
 
@@ -318,7 +318,7 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
 
         <p className="text-sm text-gray-500">
           By clicking "Pay Now", you agree to the terms of service and privacy policy.
-          Your card will be charged ${((amount / 100) + ((amount / 100) * 0.0675)).toFixed(2)} (including 6.75% tax) for the pump-out service.
+          Your card will be charged ${(amount + (amount * 0.0675)).toFixed(2)} (including 6.75% tax) for the pump-out service.
         </p>
 
         <DialogFooter>
@@ -330,7 +330,7 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
             {isSubmitting ? "Processing..." : (
               <span className="flex items-center">
                 <DollarSign className="mr-2 h-4 w-4" />
-                Pay ${((amount / 100) + ((amount / 100) * 0.0675)).toFixed(2)} Now
+                Pay ${(amount + (amount * 0.0675)).toFixed(2)} Now
               </span>
             )}
           </Button>

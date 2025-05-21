@@ -1,19 +1,12 @@
-// server/utils/email-service.ts
-
-import { sendServiceStatusEmail as sendEmail } from './sendgrid.js';
+import { sendEmail } from './sendgrid';
 import {
   getWelcomeEmailTemplate,
   getSubscriptionConfirmationTemplate,
   getSubscriptionRenewalReminderTemplate,
   getPaymentReceiptTemplate,
   getEmployeeWeeklyScheduleTemplate
-} from './email-templates.js';
-import {
-  User,
-  ServiceLevel,
-  Boat,
-  PumpOutRequest
-} from '../shared/schema.js';
+} from './email-templates';
+import { User, ServiceLevel, Boat, PumpOutRequest } from '@shared/schema';
 
 // Email service to handle all types of notifications
 
@@ -22,6 +15,7 @@ import {
  */
 export async function sendWelcomeEmail(user: User): Promise<boolean> {
   const html = getWelcomeEmailTemplate(user.firstName);
+  
   return sendEmail({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
@@ -46,6 +40,7 @@ export async function sendSubscriptionConfirmationEmail(
     endDate,
     serviceLevel.price
   );
+  
   return sendEmail({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
@@ -63,12 +58,14 @@ export async function sendSubscriptionRenewalReminderEmail(
   expiryDate: Date
 ): Promise<boolean> {
   const renewalLink = `${process.env.APP_URL || 'https://poopalotzi.com'}/member/service-subscription`;
+  
   const html = getSubscriptionRenewalReminderTemplate(
     user.firstName,
     serviceLevel.name,
     expiryDate,
     renewalLink
   );
+  
   return sendEmail({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
@@ -91,6 +88,7 @@ export async function sendPaymentReceiptEmail(
 ): Promise<boolean> {
   const serviceDate = new Date(request.weekStartDate);
   const paymentDate = new Date();
+  
   const html = getPaymentReceiptTemplate(
     user.firstName,
     serviceName,
@@ -101,6 +99,7 @@ export async function sendPaymentReceiptEmail(
     paymentMethod,
     paymentDate
   );
+  
   return sendEmail({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
@@ -130,13 +129,11 @@ export async function sendEmployeeWeeklyScheduleEmail(
     weekStartDate,
     assignments
   );
+  
   return sendEmail({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
-    subject: `Your Weekly Schedule - ${weekStartDate.toLocaleDateString(
-      'en-US',
-      { month: 'short', day: 'numeric' }
-    )}`,
+    subject: `Your Weekly Schedule - ${weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
     html,
   });
 }
@@ -162,6 +159,7 @@ export async function testEmailService(testEmail: string): Promise<boolean> {
       </div>
     </div>
   `;
+  
   return sendEmail({
     to: testEmail,
     from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',

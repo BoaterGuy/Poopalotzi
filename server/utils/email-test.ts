@@ -1,4 +1,4 @@
-import { sendServiceStatusEmail } from './sendgrid.js';
+import { sendServiceStatusEmail } from './sendgrid';
 
 // This file contains functions to test email sending functionality
 
