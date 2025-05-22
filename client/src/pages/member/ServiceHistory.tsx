@@ -191,6 +191,9 @@ const RequestDetail = ({ request, boat, onClose }: RequestDetailProps) => {
               
               // Then confirm with user before canceling
               if (confirm("Are you sure you want to cancel this pump-out service request?")) {
+                // Show user we're processing
+                setIsCanceling(true);
+                
                 // Make the API call to cancel the request
                 fetch(`/api/pump-out-requests/${request.id}/status`, {
                   method: 'PATCH',
@@ -200,17 +203,34 @@ const RequestDetail = ({ request, boat, onClose }: RequestDetailProps) => {
                   body: JSON.stringify({ status: 'Canceled' }),
                   credentials: 'include'
                 })
-                .then(response => {
-                  if (!response.ok) throw new Error('Failed to cancel request');
-                  return response.json();
-                })
-                .then(() => {
+                .then(async response => {
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    console.error("Server error:", data);
+                    throw new Error(data.message || 'Failed to cancel request');
+                  }
+                  
+                  // Success! Show toast and reload
+                  toast({
+                    title: "Request Canceled",
+                    description: "Your pump-out service request has been successfully canceled.",
+                    variant: "default",
+                  });
+                  
                   // Reload the page to show the updated status
-                  window.location.reload();
+                  setTimeout(() => window.location.reload(), 1000);
                 })
                 .catch(err => {
                   console.error("Error canceling request:", err);
-                  alert("There was a problem canceling your request. Please try again.");
+                  toast({
+                    title: "Cancellation Failed",
+                    description: err.message || "There was a problem canceling your request. Please try again.",
+                    variant: "destructive",
+                  });
+                })
+                .finally(() => {
+                  setIsCanceling(false);
                 });
               }
             }}
