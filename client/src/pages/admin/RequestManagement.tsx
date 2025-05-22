@@ -333,26 +333,41 @@ export default function RequestManagement() {
     return `Week of ${format(date, "MMM d, yyyy")}`;
   };
 
-  const handleUpdateStatus = (id: number, newStatus: StatusType) => {
-    // Update the local state
-    const updatedRequests = requestsData.map(request => 
-      request.id === id ? { ...request, status: newStatus } : request
-    );
-    
-    setRequestsData(updatedRequests);
-    
-    // Show success message
-    toast({
-      title: "Status Updated",
-      description: `Request #${id} status changed to ${newStatus}`,
-    });
-    
-    // In production this would make an API call
-    // Example: await fetch(`/api/pump-out-requests/${id}/status`, {
-    //   method: 'PATCH',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ status: newStatus })
-    // });
+  const handleUpdateStatus = async (id: number, newStatus: StatusType) => {
+    try {
+      // First make the API call to update the database
+      const response = await fetch(`/api/pump-out-requests/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.statusText}`);
+      }
+      
+      // If the API call was successful, update the local state
+      const updatedRequests = requestsData.map(request => 
+        request.id === id ? { ...request, status: newStatus } : request
+      );
+      
+      setRequestsData(updatedRequests);
+      
+      // Show success message
+      toast({
+        title: "Status Updated",
+        description: `Request #${id} status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      
+      // Show error message
+      toast({
+        title: "Update Failed",
+        description: "Failed to update the request status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAssignEmployee = (id: number) => {
