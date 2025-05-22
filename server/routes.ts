@@ -591,11 +591,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all pump-out requests (for admin view)
   app.get("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      console.log("Fetching all pump-out requests for admin view");
+      // Log that this is being called
+      console.log("Fetching all pump-out requests for admin view - DATABASE ONLY");
       
-      // Use the same storage interface that the rest of the app uses
-      // This guarantees data consistency across all parts of the application
-      const allRequests = await storage.getPumpOutRequestsByStatus("all");
+      // Get database instance directly
+      const { db } = require('./db');
+      const { pumpOutRequest } = require('@shared/schema');
+      const { desc } = require('drizzle-orm');
+      
+      // Fetch directly from the database to ensure no cached or mock data
+      const allRequests = await db.select().from(pumpOutRequest).orderBy(desc(pumpOutRequest.createdAt));
+      console.log(`Found ${allRequests.length} pump-out requests in the database`);
       
       // Parse query params for filtering
       const status = req.query.status as string;

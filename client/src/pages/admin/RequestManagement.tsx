@@ -100,7 +100,7 @@ export default function RequestManagement() {
   
   // Fetch pump-out requests from the database with filters
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter }],
+    queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter, timestamp: Date.now() }],
     queryFn: async () => {
       let url = '/api/pump-out-requests';
       const params = new URLSearchParams();
@@ -109,12 +109,31 @@ export default function RequestManagement() {
       if (weekFilter !== 'all') params.append('week', weekFilter);
       if (marinaFilter !== 'all') params.append('marina', marinaFilter);
       
-      if (params.toString()) url += `?${params.toString()}`;
+      // Add timestamp to prevent caching
+      params.append('t', Date.now().toString());
       
-      const response = await fetch(url);
+      // Always include params now
+      url += `?${params.toString()}`;
+      
+      console.log("Fetching from URL:", url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('Failed to fetch requests');
-      return await response.json();
-    }
+      const result = await response.json();
+      console.log("Fetched requests:", result.length);
+      return result;
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 0
   });
   
   // IMPORTANT: Only use REAL database data - NO mock data allowed
