@@ -591,73 +591,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all pump-out requests (for admin view)
   app.get("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      // Get all pump-out requests directly from database
-      const { Pool } = require('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-      const dbRequests = await pool.query(`
-        SELECT 
-          por.id, 
-          por.boat_id, 
-          por.week_start_date, 
-          por.status, 
-          por.payment_status, 
-          por.owner_notes,
-          por.created_at,
-          b.name AS boat_name,
-          bo.id AS owner_id,
-          u.first_name,
-          u.last_name,
-          sa.dock,
-          sa.slip,
-          sa.marina_id,
-          m.name AS marina_name
-        FROM 
-          pump_out_request por
-        JOIN 
-          boat b ON por.boat_id = b.id
-        JOIN 
-          boat_owner bo ON b.owner_id = bo.id
-        JOIN 
-          "user" u ON bo.user_id = u.id
-        LEFT JOIN 
-          slip_assignment sa ON b.id = sa.boat_id
-        LEFT JOIN 
-          marina m ON sa.marina_id = m.id
-        ORDER BY 
-          por.created_at DESC
-      `);
+      console.log("Fetching all pump-out requests for admin view");
+      
+      // Use the same storage interface that the rest of the app uses
+      // This guarantees data consistency across all parts of the application
+      const allRequests = await storage.getPumpOutRequestsByStatus("all");
       
       // Parse query params for filtering
       const status = req.query.status as string;
       const week = req.query.week as string;
       const marinaId = req.query.marina as string;
       
-      // Process results and apply filters
-      const enrichedRequests = dbRequests.rows.map(row => {
-        // Create a date object for the week start date to handle filtering
-        const weekStartDate = row.week_start_date ? new Date(row.week_start_date).toISOString().split('T')[0] : '';
+      // We need to enrich the requests with additional data
+      const enrichedRequests = await Promise.all(allRequests.map(async (request) => {
+        const boat = await storage.getBoat(request.boatId);
+        const boatOwner = boat ? await storage.getBoatOwner(boat.ownerId) : null;
+        const user = boatOwner ? await storage.getUser(boatOwner.userId) : null;
+        const slipAssignment = await storage.getSlipAssignmentByBoatId(request.boatId);
+        const marina = slipAssignment ? await storage.getMarina(slipAssignment.marinaId) : null;
+        
+        // Format the week start date for filtering
+        const weekStartDate = request.weekStartDate ? new Date(request.weekStartDate).toISOString().split('T')[0] : '';
         
         return {
-          id: row.id,
-          boatId: row.boat_id,
-          boatName: row.boat_name || 'Unknown Boat',
-          ownerName: `${row.first_name || ''} ${row.last_name || ''}`.trim() || 'Unknown Owner',
-          marinaId: row.marina_id || 0,
-          marinaName: row.marina_name || 'Unassigned',
-          dock: row.dock || '-',
-          slip: row.slip?.toString() || '-',
-          status: row.status,
+          id: request.id,
+          boatId: request.boatId,
+          boatName: boat?.name || 'Unknown Boat',
+          ownerName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Unknown Owner',
+          marinaId: marina?.id || 0,
+          marinaName: marina?.name || 'Unassigned',
+          dock: slipAssignment?.dock || '-',
+          slip: slipAssignment?.slip?.toString() || '-',
+          status: request.status,
           weekStartDate: weekStartDate,
-          paymentStatus: row.payment_status,
-          createdAt: row.created_at,
-          notes: row.owner_notes || '',
+          paymentStatus: request.paymentStatus,
+          createdAt: request.createdAt,
+          notes: request.ownerNotes || '',
           beforeImageUrl: null,
           duringImageUrl: null,
           afterImageUrl: null
         };
-      });
+      }));
+      
+      console.log(`Found ${enrichedRequests.length} pump-out requests`);
       
       // Apply filters
       let filteredRequests = enrichedRequests;
