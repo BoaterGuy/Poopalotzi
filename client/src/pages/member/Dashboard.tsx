@@ -413,7 +413,8 @@ export default function MemberDashboard() {
                                 
                                 // Calculate remaining requests
                                 const used = activeRequests.length;
-                                const remaining = serviceLevel.monthlyQuota - used;
+                                // Ensure the remaining count is never negative
+                                const remaining = Math.max(0, serviceLevel.monthlyQuota - used);
                                 
                                 return `${remaining} of ${serviceLevel.monthlyQuota} pump-outs remaining`;
                               })()}
