@@ -9,7 +9,8 @@ import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
 // Variable to hold our storage implementation
-export let storage: IStorage = memStorage;
+// Start directly with database storage to ensure consistent behavior across browsers
+export let storage: IStorage;
 
 const app = express();
 app.use(express.json());
