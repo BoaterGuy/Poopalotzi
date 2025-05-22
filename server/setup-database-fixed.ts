@@ -75,7 +75,7 @@ export async function setupFullDatabase() {
         )
       `);
     }
-      
+    
     // Always ensure we have our complete set of marina data
     try {
       console.log('Ensuring marina data is complete...');
@@ -153,10 +153,10 @@ export async function setupFullDatabase() {
           "status" VARCHAR(20) NOT NULL DEFAULT 'Requested',
           "owner_notes" TEXT,
           "admin_notes" TEXT,
-          "payment_status" VARCHAR(20) DEFAULT 'Pending',
+          "payment_status" VARCHAR(20) NOT NULL DEFAULT 'Pending',
           "payment_id" VARCHAR(255),
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          "updated_at" TIMESTAMP,
+          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
     }
@@ -185,49 +185,24 @@ export async function setupFullDatabase() {
           "id" SERIAL PRIMARY KEY,
           "employee_id" INTEGER NOT NULL REFERENCES "users"("id"),
           "request_id" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
-          "assigned_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          "assigned_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          "notes" TEXT,
+          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
     }
     
-    // Add sample data to service level
-    if (!existingTables.includes('service_level')) {
-      console.log('Adding sample service level data...');
-      await pool.query(`
-        INSERT INTO service_level (name, price, description, head_count, type, monthly_quota, on_demand_quota)
-        VALUES 
-        ('Basic - Single Head', 49900, 'Monthly pump-out service for boats with a single head', 1, 'monthly', 4, 0),
-        ('Premium - Multi Head', 69900, 'Monthly pump-out service for boats with multiple heads', 2, 'monthly', 8, 0),
-        ('On-Demand Service', 17900, 'One-time pump-out service', 1, 'one-time', 0, 1),
-        ('Seasonal Package', 249900, 'Seasonal pump-out service package (May through October)', 1, 'seasonal', 4, 0)
-      `);
-    }
-    
-    // Add sample marinas if none exist
-    const marinaCount = await pool.query('SELECT COUNT(*) FROM marina');
-    if (parseInt(marinaCount.rows[0].count) === 0) {
-      console.log('Adding sample marina data...');
-      await pool.query(`
-        INSERT INTO marina (name, is_active)
-        VALUES 
-        ('Cedar Point Marina', TRUE),
-        ('Son Rise Marina', TRUE),
-        ('Bay Harbor Marina', TRUE)
-      `);
-    }
-    
-    console.log('Database setup completed successfully');
     return true;
   } catch (error) {
-    console.error('Database setup error:', error);
+    console.error('Error setting up database tables:', error);
     return false;
   } finally {
-    // Close pool
+    // Close the pool
     await pool.end();
   }
 }
 
-// Helper to get existing tables
+// Helper function to get existing tables
 async function getExistingTables(pool: Pool): Promise<string[]> {
   const result = await pool.query(`
     SELECT table_name 
