@@ -1,8 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupDatabase } from "./db";
-import { DatabaseStorage } from "./database-storage";
+import { setupDatabase } from "./simple-db";
+import { SimpleDatabaseStorage } from "./database-storage-simple";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";

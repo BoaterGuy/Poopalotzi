@@ -18,17 +18,50 @@ console.log('PGDATABASE:', process.env.PGDATABASE ? 'Available' : 'Not available
 console.log('PGPASSWORD:', process.env.PGPASSWORD ? 'Available (value hidden)' : 'Not available');
 
 // Try multiple pool configurations until one works
-const createSuccessfulPool = () => {
-  const configs = [
-    // Try with connection string and no SASL
+const createSuccessfulPool = (): pg.Pool | null => {
+  const configOptions = [
+    // Try with the PostgreSQL database we set up via the tool
     {
-      name: "URL-based with no SASL",
+      name: "PostgreSQL database via environment variables",
+      config: {
+        host: process.env.PGHOST,
+        port: parseInt(process.env.PGPORT || '5432'),
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE
+      }
+    },
+    // Try with connection string and no SASL - multiple options
+    {
+      name: "URL-based with no SASL and different auth",
       config: {
         connectionString: process.env.DATABASE_URL,
         ssl: {
           rejectUnauthorized: false
         },
-        password_encryption: 'md5' // Disable SASL/SCRAM
+        password_encryption: 'md5', // Disable SASL/SCRAM
+        client_encoding: 'utf8'
+      }
+    },
+    {
+      name: "URL-based with explicit parameters",
+      config: () => {
+        try {
+          const url = new URL(process.env.DATABASE_URL || '');
+          return {
+            host: url.hostname,
+            port: parseInt(url.port),
+            user: url.username,
+            password: url.password,
+            database: url.pathname.substring(1),
+            ssl: {
+              rejectUnauthorized: false
+            }
+          };
+        } catch (err) {
+          console.error('Error parsing DATABASE_URL:', err);
+          return null;
+        }
       }
     },
     // Try with direct parameters and no SASL
