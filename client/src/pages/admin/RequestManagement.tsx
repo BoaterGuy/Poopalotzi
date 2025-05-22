@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import {
@@ -293,8 +293,8 @@ export default function RequestManagement() {
     }
   }, [data]);
 
-  // Get unique weeks for the filter
-  const uniqueWeeks = Array.from(new Set(MOCK_REQUESTS.map(r => r.weekStartDate))).sort();
+  // Get unique weeks for the filter from the actual data
+  const uniqueWeeks = Array.from(new Set(requestsData.map(r => r.weekStartDate))).sort();
 
   // Apply filters directly to our state
   let filteredRequests = requestsData;

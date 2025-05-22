@@ -108,6 +108,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marina routes
+  app.get("/api/marinas", isAuthenticated, async (req, res, next) => {
+    try {
+      const marinas = await storage.getAllMarinas();
+      res.json(marinas);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Boat routes
   app.post("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
@@ -550,6 +560,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(enrichedRequests);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get all pump-out requests (for admin view)
+  app.get("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      // Parse query params for filtering
+      const status = req.query.status as string;
+      const week = req.query.week as string;
+      const marina = req.query.marina as string;
+      
+      // Get all requests
+      let requests;
+      if (status && status !== 'all') {
+        requests = await storage.getPumpOutRequestsByStatus(status);
+      } else {
+        // Fetch all requests - currently this is retrieving from the simple database
+        // In a production environment, this would be a proper database query with filtering
+        const allRequests = await storage.getPumpOutRequestsByStatus('Requested');
+        const scheduledRequests = await storage.getPumpOutRequestsByStatus('Scheduled');
+        const completedRequests = await storage.getPumpOutRequestsByStatus('Completed');
+        const canceledRequests = await storage.getPumpOutRequestsByStatus('Canceled');
+        const waitlistedRequests = await storage.getPumpOutRequestsByStatus('Waitlisted');
+        
+        requests = [
+          ...allRequests,
+          ...scheduledRequests,
+          ...completedRequests,
+          ...canceledRequests,
+          ...waitlistedRequests
+        ];
+      }
+      
+      // Enrich requests with boat and marina data
+      const enrichedRequests = await Promise.all(requests.map(async (request) => {
+        const boat = await storage.getBoat(request.boatId);
+        if (!boat) {
+          return null; // Skip if boat not found
+        }
+        
+        const owner = await storage.getBoatOwner(boat.ownerId);
+        const user = owner ? await storage.getUser(owner.userId) : null;
+        const slipAssignment = await storage.getSlipAssignmentByBoatId(boat.id);
+        const marina = slipAssignment ? await storage.getMarina(slipAssignment.marinaId) : null;
+        
+        // Filter by marina if requested
+        if (marina && marina !== 'all' && marina && slipAssignment && slipAssignment.marinaId.toString() !== marina) {
+          return null;
+        }
+        
+        // Filter by week if requested
+        if (week && week !== 'all' && request.weekStartDate !== week) {
+          return null;
+        }
+        
+        return {
+          id: request.id,
+          boatId: boat.id,
+          boatName: boat.name,
+          ownerName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+          marinaId: marina?.id || 0,
+          marinaName: marina?.name || 'Unassigned',
+          dock: slipAssignment?.dock || '-',
+          slip: slipAssignment?.slip?.toString() || '-',
+          status: request.status,
+          weekStartDate: request.weekStartDate,
+          paymentStatus: request.paymentStatus,
+          createdAt: request.createdAt,
+          notes: request.ownerNotes || '',
+          beforeImageUrl: null,
+          duringImageUrl: null,
+          afterImageUrl: null
+        };
+      }));
+      
+      // Filter out null values and sort by date
+      const filteredRequests = enrichedRequests
+        .filter(req => req !== null)
+        .sort((a, b) => new Date(b!.createdAt).getTime() - new Date(a!.createdAt).getTime());
+      
+      res.json(filteredRequests);
     } catch (err) {
       next(err);
     }
