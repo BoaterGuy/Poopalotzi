@@ -11,7 +11,8 @@ import { setupAuth } from "./auth";
 
 // Create a database storage instance right away
 const dbStorage = new SimpleDatabaseStorage();
-// Always use the database storage in production
+// ALWAYS use the database storage, not the in-memory storage
+// This ensures all parts of the application use the same data source
 export let storage: IStorage = dbStorage;
 
 const app = express();
