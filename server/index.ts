@@ -311,28 +311,19 @@ async function initializeMemoryData() {
     // Initialize database schema
     const dbSuccess = await setupDatabase();
     
-    if (dbSuccess) {
-      // Create a database storage instance
-      const dbStorage = new SimpleDatabaseStorage();
-      
-      // Replace memory storage with database
-      storage = dbStorage;
-      
-      log("Successfully connected to the database!");
-    } else {
+    if (!dbSuccess) {
       throw new Error("Database setup failed");
     }
-  } catch (dbError: any) {
-    // If database connection fails, fall back to memory storage
-    log(`Database connection error: ${dbError.message}`);
-    log("Using in-memory storage for this session");
-    
-    // Initialize sample data
-    await initializeMemoryData();
-  }
-  
-  // Set up authentication with the proper storage
-  setupAuth(app);
+
+    // Create a database storage instance and replace memory storage
+    storage = new SimpleDatabaseStorage();
+    log("Successfully connected to the database!");
+
+    // Set up authentication with the proper storage
+    setupAuth(app);
+
+    // Register routes after auth is set up
+    const server = await registerRoutes(app);
   
   const server = await registerRoutes(app);
 

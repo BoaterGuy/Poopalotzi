@@ -27,14 +27,17 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
     cookie: { 
-      secure: false, // Set to false for development to make it work in all environments
+      secure: false,
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   };
+
+  if (storage.sessionStore) {
+    sessionSettings.store = storage.sessionStore;
+  }
   
   console.log("Setting up authentication with session store");
 
