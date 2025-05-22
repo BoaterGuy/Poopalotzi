@@ -43,7 +43,7 @@ export class SimpleDatabaseStorage implements IStorage {
       createTableIfMissing: true,
       pruneSessionInterval: 60 // Clean up expired sessions every minute
     });
-    
+
     console.log("Session store initialized successfully");
   }
 
@@ -55,11 +55,11 @@ export class SimpleDatabaseStorage implements IStorage {
         `SELECT * FROM users WHERE id = $1`,
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         return undefined;
       }
-      
+
       // Convert snake_case column names to camelCase for our app
       const user = result.rows[0];
       return {
@@ -83,17 +83,17 @@ export class SimpleDatabaseStorage implements IStorage {
     try {
       // Make email case-insensitive by converting to lowercase
       const normalizedEmail = email.toLowerCase();
-      
+
       // Use a simpler direct SQL query instead of the ORM query to avoid schema mismatches
       const result = await sessionPool.query(
         `SELECT * FROM users WHERE LOWER(email) = $1`,
         [normalizedEmail]
       );
-      
+
       if (result.rows.length === 0) {
         return undefined;
       }
-      
+
       // Convert snake_case column names to camelCase for our app
       const user = result.rows[0];
       return {
@@ -129,7 +129,7 @@ export class SimpleDatabaseStorage implements IStorage {
           user.role || 'member'
         ]
       );
-      
+
       // Convert the result to match our app's schema
       const newUser = result.rows[0];
       return {
@@ -164,7 +164,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   // Placeholder implementations for required methods
   // These would be properly implemented when we fully migrate to database storage
-  
+
   // Boat Owner operations
   async getBoatOwner(id: number): Promise<BoatOwner | undefined> {
     // Placeholder implementation
@@ -180,7 +180,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     throw new Error("Not implemented");
   }
-  
+
   // Boat operations
   async getBoat(id: number): Promise<Boat | undefined> {
     // Placeholder implementation
@@ -206,7 +206,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     return false;
   }
-  
+
   // Marina operations
   async getMarina(id: number): Promise<Marina | undefined> {
     // Placeholder implementation
@@ -232,7 +232,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     return false;
   }
-  
+
   // Slip Assignment operations
   async getSlipAssignment(id: number): Promise<SlipAssignment | undefined> {
     // Placeholder implementation
@@ -253,7 +253,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     return undefined;
   }
-  
+
   // Service Level operations
   async getServiceLevel(id: number): Promise<ServiceLevel | undefined> {
     // Placeholder implementation
@@ -274,7 +274,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     return undefined;
   }
-  
+
   // Pump Out Request operations
   async getPumpOutRequest(id: number): Promise<PumpOutRequest | undefined> {
     // Placeholder implementation
@@ -293,45 +293,32 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getPumpOutRequestsByStatus(status: string): Promise<PumpOutRequest[]> {
     try {
-      // Import and use the same pool that's used elsewhere
       const { Pool } = require('pg');
-      
-      // Create a new database connection
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false
-        }
+        ssl: { rejectUnauthorized: false }
       });
-      
+
       let query = `
         SELECT por.* 
-        FROM pump_out_request por
-        JOIN boat b ON por.boat_id = b.id
+        FROM pump_out_requests por
+        JOIN boats b ON por.boat_id = b.id
         WHERE b.active = true
-        AND por.status NOT IN ('Canceled', 'Completed')
         AND por.week_start_date >= CURRENT_DATE
         AND por.week_start_date <= CURRENT_DATE + INTERVAL '28 days'
       `;
       const values: any[] = [];
-      
-      // If status is not "all", override the default status filter
+
       if (status && status !== "all") {
-        query = query.replace("AND por.status NOT IN ('Canceled', 'Completed')", "AND por.status = $1");
+        query += ` AND por.status = $1`;
         values.push(status);
       }
-      
-      // Order by creation date, newest first
-      query += ` ORDER BY created_at DESC`;
-      
-      console.log(`Executing query: ${query} with status: ${status || 'all'}`);
-      
+
+      query += ` ORDER BY por.created_at DESC`;
+
       const result = await pool.query(query, values);
-      await pool.end(); // Close connection
-      
-      console.log(`Found ${result.rows.length} pump-out requests in database`);
-      
-      // Convert the database rows to our PumpOutRequest type
+      await pool.end();
+
       return result.rows.map((row: any) => ({
         id: row.id,
         boatId: row.boat_id,
@@ -340,9 +327,6 @@ export class SimpleDatabaseStorage implements IStorage {
         ownerNotes: row.owner_notes || '',
         paymentStatus: row.payment_status,
         paymentId: row.payment_id || null,
-        beforeImageUrl: row.before_image_url || null,
-        duringImageUrl: row.during_image_url || null,
-        afterImageUrl: row.after_image_url || null,
         createdAt: row.created_at,
         updatedAt: row.updated_at
       }));
@@ -363,10 +347,43 @@ export class SimpleDatabaseStorage implements IStorage {
   }
 
   async updatePumpOutRequestStatus(id: number, status: string): Promise<PumpOutRequest | undefined> {
-    // Placeholder implementation
-    return undefined;
+    try {
+      const { Pool } = require('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
+
+      const result = await pool.query(
+        `UPDATE pump_out_requests 
+         SET status = $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $2 
+         RETURNING *`,
+        [status, id]
+      );
+
+      await pool.end();
+
+      if (result.rows.length === 0) return undefined;
+
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        boatId: row.boat_id,
+        weekStartDate: row.week_start_date,
+        status: row.status,
+        ownerNotes: row.owner_notes || '',
+        paymentStatus: row.payment_status,
+        paymentId: row.payment_id || null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } catch (error) {
+      console.error("Error updating pump-out request status:", error);
+      return undefined;
+    }
   }
-  
+
   // Pump Out Log operations
   async getPumpOutLog(id: number): Promise<PumpOutLog | undefined> {
     // Placeholder implementation
@@ -382,7 +399,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     throw new Error("Not implemented");
   }
-  
+
   // Employee Assignment operations
   async getEmployeeAssignment(id: number): Promise<EmployeeAssignment | undefined> {
     // Placeholder implementation
@@ -408,7 +425,7 @@ export class SimpleDatabaseStorage implements IStorage {
     // Placeholder implementation
     return false;
   }
-  
+
   // Analytics operations
   async countActiveUsersByServiceLevel(): Promise<{ serviceLevelId: number, count: number }[]> {
     // Placeholder implementation
