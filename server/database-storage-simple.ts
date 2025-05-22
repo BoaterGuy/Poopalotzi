@@ -309,12 +309,14 @@ export class SimpleDatabaseStorage implements IStorage {
         FROM pump_out_request por
         JOIN boat b ON por.boat_id = b.id
         WHERE b.active = true
+        AND por.status NOT IN ('Canceled', 'Completed')
+        AND por.week_start_date >= CURRENT_DATE - INTERVAL '7 days'
       `;
       const values: any[] = [];
       
-      // If status is not "all", add status filter
+      // If status is not "all", override the default status filter
       if (status && status !== "all") {
-        query += ` AND por.status = $1`;
+        query = query.replace("AND por.status NOT IN ('Canceled', 'Completed')", "AND por.status = $1");
         values.push(status);
       }
       
