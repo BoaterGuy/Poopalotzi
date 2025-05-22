@@ -568,82 +568,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all pump-out requests (for admin view)
   app.get("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
+      // Get all pump-out requests directly from database
+      const dbRequests = await db.query(`
+        SELECT 
+          por.id, 
+          por.boat_id, 
+          por.week_start_date, 
+          por.status, 
+          por.payment_status, 
+          por.owner_notes,
+          por.created_at,
+          b.name AS boat_name,
+          bo.id AS owner_id,
+          u.first_name,
+          u.last_name,
+          sa.dock,
+          sa.slip,
+          sa.marina_id,
+          m.name AS marina_name
+        FROM 
+          pump_out_request por
+        JOIN 
+          boat b ON por.boat_id = b.id
+        JOIN 
+          boat_owner bo ON b.owner_id = bo.id
+        JOIN 
+          "user" u ON bo.user_id = u.id
+        LEFT JOIN 
+          slip_assignment sa ON b.id = sa.boat_id
+        LEFT JOIN 
+          marina m ON sa.marina_id = m.id
+        ORDER BY 
+          por.created_at DESC
+      `);
+      
       // Parse query params for filtering
       const status = req.query.status as string;
       const week = req.query.week as string;
-      const marina = req.query.marina as string;
+      const marinaId = req.query.marina as string;
       
-      // Get all requests
-      let requests;
-      if (status && status !== 'all') {
-        requests = await storage.getPumpOutRequestsByStatus(status);
-      } else {
-        // Fetch all requests - currently this is retrieving from the simple database
-        // In a production environment, this would be a proper database query with filtering
-        const allRequests = await storage.getPumpOutRequestsByStatus('Requested');
-        const scheduledRequests = await storage.getPumpOutRequestsByStatus('Scheduled');
-        const completedRequests = await storage.getPumpOutRequestsByStatus('Completed');
-        const canceledRequests = await storage.getPumpOutRequestsByStatus('Canceled');
-        const waitlistedRequests = await storage.getPumpOutRequestsByStatus('Waitlisted');
-        
-        requests = [
-          ...allRequests,
-          ...scheduledRequests,
-          ...completedRequests,
-          ...canceledRequests,
-          ...waitlistedRequests
-        ];
-      }
-      
-      // Enrich requests with boat and marina data
-      const enrichedRequests = await Promise.all(requests.map(async (request) => {
-        const boat = await storage.getBoat(request.boatId);
-        if (!boat) {
-          return null; // Skip if boat not found
-        }
-        
-        const owner = await storage.getBoatOwner(boat.ownerId);
-        const user = owner ? await storage.getUser(owner.userId) : null;
-        const slipAssignment = await storage.getSlipAssignmentByBoatId(boat.id);
-        const marina = slipAssignment ? await storage.getMarina(slipAssignment.marinaId) : null;
-        
-        // Filter by marina if requested
-        if (marina && marina !== 'all' && marina && slipAssignment && slipAssignment.marinaId.toString() !== marina) {
-          return null;
-        }
-        
-        // Filter by week if requested
-        if (week && week !== 'all' && request.weekStartDate !== week) {
-          return null;
-        }
+      // Process results and apply filters
+      const enrichedRequests = dbRequests.rows.map(row => {
+        // Create a date object for the week start date to handle filtering
+        const weekStartDate = row.week_start_date ? new Date(row.week_start_date).toISOString().split('T')[0] : '';
         
         return {
-          id: request.id,
-          boatId: boat.id,
-          boatName: boat.name,
-          ownerName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
-          marinaId: marina?.id || 0,
-          marinaName: marina?.name || 'Unassigned',
-          dock: slipAssignment?.dock || '-',
-          slip: slipAssignment?.slip?.toString() || '-',
-          status: request.status,
-          weekStartDate: request.weekStartDate,
-          paymentStatus: request.paymentStatus,
-          createdAt: request.createdAt,
-          notes: request.ownerNotes || '',
+          id: row.id,
+          boatId: row.boat_id,
+          boatName: row.boat_name || 'Unknown Boat',
+          ownerName: `${row.first_name || ''} ${row.last_name || ''}`.trim() || 'Unknown Owner',
+          marinaId: row.marina_id || 0,
+          marinaName: row.marina_name || 'Unassigned',
+          dock: row.dock || '-',
+          slip: row.slip?.toString() || '-',
+          status: row.status,
+          weekStartDate: weekStartDate,
+          paymentStatus: row.payment_status,
+          createdAt: row.created_at,
+          notes: row.owner_notes || '',
           beforeImageUrl: null,
           duringImageUrl: null,
           afterImageUrl: null
         };
-      }));
+      });
       
-      // Filter out null values and sort by date
-      const filteredRequests = enrichedRequests
-        .filter(req => req !== null)
-        .sort((a, b) => new Date(b!.createdAt).getTime() - new Date(a!.createdAt).getTime());
+      // Apply filters
+      let filteredRequests = enrichedRequests;
+      
+      if (status && status !== 'all') {
+        filteredRequests = filteredRequests.filter(req => req.status === status);
+      }
+      
+      if (week && week !== 'all') {
+        filteredRequests = filteredRequests.filter(req => req.weekStartDate === week);
+      }
+      
+      if (marinaId && marinaId !== 'all') {
+        filteredRequests = filteredRequests.filter(req => req.marinaId.toString() === marinaId);
+      }
       
       res.json(filteredRequests);
     } catch (err) {
+      console.error('Error fetching pump-out requests:', err);
       next(err);
     }
   });
