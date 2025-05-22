@@ -313,7 +313,7 @@ async function initializeMemoryData() {
     
     if (dbSuccess) {
       // Create a database storage instance
-      const dbStorage = new DatabaseStorage();
+      const dbStorage = new SimpleDatabaseStorage();
       
       // Replace memory storage with database
       storage = dbStorage;

@@ -19,7 +19,10 @@ const sessionPool = new Pool({
   port: parseInt(process.env.PGPORT || '5432'),
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE
+  database: process.env.PGDATABASE,
+  ssl: {
+    rejectUnauthorized: false // For development - handles self-signed certificates
+  }
 });
 
 // Generate a SESSION_SECRET if it doesn't exist
