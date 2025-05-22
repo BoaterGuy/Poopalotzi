@@ -485,47 +485,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create pump-out request directly in the database
+      console.log("Creating new pump-out request with data:", JSON.stringify(requestData));
+      
+      // Get a direct database connection from our db.ts file
       const { Pool } = require('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL
       });
       
-      // Prepare data for database insertion
-      const insertResult = await pool.query(`
-        INSERT INTO pump_out_request (
-          boat_id, 
-          week_start_date,
-          status,
-          owner_notes,
-          payment_status
-        ) VALUES (
-          $1, $2, $3, $4, $5
-        ) RETURNING *
-      `, [
-        requestData.boatId,
-        requestData.weekStartDate,
-        requestData.status || 'Requested',
-        requestData.ownerNotes || '',
-        requestData.paymentStatus || 'Pending'
-      ]);
-      
-      const request = insertResult.rows[0];
-      
-      // Create initial log entry
-      await pool.query(`
-        INSERT INTO pump_out_log (
-          request_id,
-          new_status
-        ) VALUES (
-          $1, $2
-        )
-      `, [
-        request.id,
-        request.status
-      ]);
-      
-      res.status(201).json(request);
+      try {
+        // Start a transaction
+        await pool.query('BEGIN');
+        
+        // Insert the request with proper error handling
+        const insertResult = await pool.query(`
+          INSERT INTO pump_out_request (
+            boat_id, 
+            week_start_date,
+            status,
+            owner_notes,
+            payment_status
+          ) VALUES (
+            $1, $2, $3, $4, $5
+          ) RETURNING *
+        `, [
+          requestData.boatId,
+          requestData.weekStartDate,
+          requestData.status || 'Requested',
+          requestData.ownerNotes || '',
+          requestData.paymentStatus || 'Pending'
+        ]);
+        
+        if (insertResult.rows.length === 0) {
+          throw new Error("Failed to insert pump-out request");
+        }
+        
+        const request = insertResult.rows[0];
+        console.log("Successfully created pump-out request with ID:", request.id);
+        
+        // Create initial log entry
+        await pool.query(`
+          INSERT INTO pump_out_log (
+            request_id,
+            new_status
+          ) VALUES (
+            $1, $2
+          )
+        `, [
+          request.id,
+          request.status
+        ]);
+        
+        // Commit the transaction
+        await pool.query('COMMIT');
+        
+        // Return response with the newly created request
+        res.status(201).json(request);
+        return;
+      } catch (dbError) {
+        // Rollback in case of error
+        await pool.query('ROLLBACK');
+        console.error("Database error creating pump-out request:", dbError);
+        next(dbError);
+      }
     } catch (err) {
       next(err);
     }

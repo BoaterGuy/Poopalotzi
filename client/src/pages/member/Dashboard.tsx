@@ -404,12 +404,15 @@ export default function MemberDashboard() {
                                 const activeRequests = allRequests?.filter(req => {
                                   if (!req.createdAt) return false;
                                   const requestDate = new Date(req.createdAt);
+                                  // Explicitly filter out canceled requests
                                   return (
                                     requestDate.getMonth() === currentMonth &&
                                     requestDate.getFullYear() === currentYear &&
                                     req.status !== 'Canceled'
                                   );
                                 }) || [];
+                                
+                                console.log('Active requests (excluding canceled):', activeRequests.length);
                                 
                                 // Calculate remaining requests
                                 const used = activeRequests.length;

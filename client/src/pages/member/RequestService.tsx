@@ -112,7 +112,10 @@ export default function RequestService() {
       // Make sure to handle null createdAt values
       if (!r.createdAt) return false;
       const requestDate = new Date(r.createdAt);
-      return requestDate >= firstDayOfMonth && requestDate <= lastDayOfMonth;
+      // Only count non-canceled requests
+      return requestDate >= firstDayOfMonth && 
+             requestDate <= lastDayOfMonth && 
+             r.status !== 'Canceled';
     });
     
     const used = monthRequests.length;
