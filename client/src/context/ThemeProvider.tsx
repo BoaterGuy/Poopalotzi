@@ -29,21 +29,24 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useEffect(() => {
-    try {
-      const root = window.document.documentElement;
-      root.classList.remove("light", "dark");
+    // Check if window is defined (client-side only)
+    if (typeof window !== 'undefined') {
+      try {
+        const root = window.document.documentElement;
+        root.classList.remove("light", "dark");
 
-      if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-        root.classList.add(systemTheme);
-        return;
+        if (theme === "system") {
+          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+          root.classList.add(systemTheme);
+          return;
+        }
+
+        root.classList.add(theme);
+      } catch (error) {
+        console.error("Theme application error:", error);
       }
-
-      root.classList.add(theme);
-    } catch (error) {
-      console.error("Theme application error:", error);
     }
   }, [theme]);
 
