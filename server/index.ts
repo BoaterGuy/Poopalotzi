@@ -232,28 +232,29 @@ async function startServer() {
     // Set up vite middleware for development
     await setupVite(app);
     
-    // Try to initialize storage
+    // Always use database storage first
     try {
       // Initialize database schema
       const dbSuccess = await setupDatabase();
       
+      // Create a database storage instance
+      const dbStorage = new SimpleDatabaseStorage();
+      
+      // Set the storage to use database
+      storage = dbStorage;
+      
       if (dbSuccess) {
-        // Create a database storage instance
-        const dbStorage = new SimpleDatabaseStorage();
-        
-        // Replace memory storage with database
-        storage = dbStorage;
-        
         log("Successfully connected to the database!");
       } else {
-        throw new Error("Database setup failed");
+        log("Warning: Database tables might not be fully set up, but we'll try to use the database anyway");
       }
     } catch (dbError: any) {
-      // If database connection fails, fall back to memory storage
+      // If database connection fails completely, fall back to memory storage
       log(`Database connection error: ${dbError.message}`);
       log("Using in-memory storage for this session");
       
-      // Initialize sample data
+      // Initialize with memory storage and sample data
+      storage = memStorage;
       await initializeMemoryData();
     }
     
