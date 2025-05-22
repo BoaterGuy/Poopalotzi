@@ -485,15 +485,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create pump-out request
-      const request = await storage.createPumpOutRequest(requestData);
+      // Create pump-out request directly in the database
+      const { Pool } = require('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      // Prepare data for database insertion
+      const insertResult = await pool.query(`
+        INSERT INTO pump_out_request (
+          boat_id, 
+          week_start_date,
+          status,
+          owner_notes,
+          payment_status
+        ) VALUES (
+          $1, $2, $3, $4, $5
+        ) RETURNING *
+      `, [
+        requestData.boatId,
+        requestData.weekStartDate,
+        requestData.status || 'Requested',
+        requestData.ownerNotes || '',
+        requestData.paymentStatus || 'Pending'
+      ]);
+      
+      const request = insertResult.rows[0];
       
       // Create initial log entry
-      await storage.createPumpOutLog({
-        requestId: request.id,
-        prevStatus: undefined,
-        newStatus: request.status
-      });
+      await pool.query(`
+        INSERT INTO pump_out_log (
+          request_id,
+          new_status
+        ) VALUES (
+          $1, $2
+        )
+      `, [
+        request.id,
+        request.status
+      ]);
       
       res.status(201).json(request);
     } catch (err) {
