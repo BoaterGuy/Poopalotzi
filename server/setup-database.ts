@@ -74,6 +74,23 @@ export async function setupFullDatabase() {
           "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      
+      // Check if we need to add initial marina data
+      const marinaCount = await pool.query('SELECT COUNT(*) FROM marina');
+      if (parseInt(marinaCount.rows[0].count) === 0) {
+        console.log('Adding initial marina data...');
+        // Add some initial marinas
+        await pool.query(`
+          INSERT INTO marina (name, address, phone, is_active) VALUES
+          ('Harbor Bay Marina', '123 Marina Way, Newport, RI 02840', '(401) 555-1234', TRUE),
+          ('Sunset Cove Marina', '500 Waterfront Dr, San Diego, CA 92101', '(619) 555-6789', TRUE),
+          ('Cedar Point Yacht Club', '1 Bluff Point, Westport, CT 06880', '(203) 555-4321', TRUE),
+          ('Blue Water Marina', '789 Lake Shore Dr, Chicago, IL 60611', '(312) 555-8765', TRUE),
+          ('Bayside Marina', '2200 Bayside Dr, Miami, FL 33139', '(305) 555-2468', TRUE),
+          ('North Shore Marina', '455 Lakeside Ave, Seattle, WA 98115', '(206) 555-1357', TRUE),
+          ('East Bay Marina', '300 Harbor Dr, Annapolis, MD 21403', '(410) 555-9876', TRUE)
+        `);
+      }
     }
     
     if (!existingTables.includes('slip_assignment')) {

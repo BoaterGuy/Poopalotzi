@@ -52,10 +52,7 @@ const formatDateForRequest = (date: Date): string => {
 // Main function to start the server
 async function startServer() {
   try {
-    // Set up vite middleware for development
-    await setupVite(app);
-    
-    // Initialize database schema
+    // Initialize database schema first
     const dbSuccess = await setupDatabase();
     if (dbSuccess) {
       log("Successfully connected to the database!");
@@ -76,8 +73,10 @@ async function startServer() {
     // Set up authentication with the proper storage
     setupAuth(app);
     
+    // Register API routes before setting up Vite
     const server = await registerRoutes(app);
 
+    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -86,9 +85,8 @@ async function startServer() {
       console.error(err);
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
+    // Setup Vite AFTER registering all API routes
+    // so the catch-all route doesn't interfere with the API
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
