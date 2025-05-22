@@ -292,8 +292,49 @@ export class SimpleDatabaseStorage implements IStorage {
   }
 
   async getPumpOutRequestsByStatus(status: string): Promise<PumpOutRequest[]> {
-    // Placeholder implementation
-    return [];
+    try {
+      // Create a new database connection
+      const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false
+        }
+      });
+      
+      let query = `SELECT * FROM pump_out_request`;
+      const values: any[] = [];
+      
+      // If status is not "all", filter by status
+      if (status && status !== "all") {
+        query += ` WHERE status = $1`;
+        values.push(status);
+      }
+      
+      // Order by creation date, newest first
+      query += ` ORDER BY created_at DESC`;
+      
+      const result = await pool.query(query, values);
+      await pool.end(); // Close connection
+      
+      // Convert the database rows to our PumpOutRequest type
+      return result.rows.map(row => ({
+        id: row.id,
+        boatId: row.boat_id,
+        weekStartDate: row.week_start_date,
+        status: row.status,
+        ownerNotes: row.owner_notes || '',
+        paymentStatus: row.payment_status,
+        paymentId: row.payment_id || null,
+        beforeImageUrl: row.before_image_url || null,
+        duringImageUrl: row.during_image_url || null,
+        afterImageUrl: row.after_image_url || null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+    } catch (error) {
+      console.error("Error fetching pump-out requests by status:", error);
+      return [];
+    }
   }
 
   async createPumpOutRequest(request: InsertPumpOutRequest): Promise<PumpOutRequest> {
