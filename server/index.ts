@@ -8,8 +8,28 @@ import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
-// Replace memory storage with database storage
+// Variable to hold our storage implementation
 export let storage: IStorage = memStorage;
+
+// Function to initialize our storage implementation
+async function initializeStorage() {
+  try {
+    // Try to set up the database
+    const dbSuccess = await setupDatabase();
+    
+    if (dbSuccess) {
+      console.log("Database setup successful - using database storage");
+      storage = new SimpleDatabaseStorage();
+      return true;
+    } else {
+      console.log("Database setup failed - fallback to memory storage");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error initializing storage:", error);
+    return false;
+  }
+}
 
 const app = express();
 app.use(express.json());
