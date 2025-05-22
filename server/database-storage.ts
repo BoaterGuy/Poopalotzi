@@ -281,6 +281,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPumpOutRequestsByStatus(status: string): Promise<PumpOutRequest[]> {
+    // If status is "all", return all requests without filtering by status
+    if (status === "all") {
+      return await db.select()
+        .from(schema.pumpOutRequest)
+        .orderBy(desc(schema.pumpOutRequest.createdAt));
+    }
+    
+    // Otherwise, filter by the requested status
     return await db.select()
       .from(schema.pumpOutRequest)
       .where(eq(schema.pumpOutRequest.status, status as any))
