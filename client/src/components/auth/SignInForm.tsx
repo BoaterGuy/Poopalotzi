@@ -42,7 +42,7 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
   const onSubmit = async (values: SignInFormValues) => {
     setIsLoading(true);
     try {
-      await login(values.email, values.password);
+      await login(values.email, values.password, { credentials: 'include' });
       onSuccess();
     } catch (error: any) {
       console.error("Login error:", error);

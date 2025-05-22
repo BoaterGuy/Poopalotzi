@@ -4,8 +4,8 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { promisify } from "util";
-import { storage } from "./index";
-import { User as SelectUser } from "@shared/schema";
+import { storage } from "./index.js";
+import { User as SelectUser } from "../shared/schema.js";
 
 declare global {
   namespace Express {
@@ -23,6 +23,9 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+  
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
