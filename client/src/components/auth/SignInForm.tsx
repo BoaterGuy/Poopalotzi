@@ -44,8 +44,14 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
     try {
       await login(values.email, values.password);
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      const message = error?.response?.data?.message || "Login failed. Please check your credentials and try again.";
+      toast({
+        title: "Login Failed",
+        description: message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

@@ -114,12 +114,24 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/auth/login", (req, res, next) => {
+    if (!req.body.email || !req.body.password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
     passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info.message });
+      if (err) {
+        console.error("Login error:", err);
+        return res.status(500).json({ message: "Internal server error during login" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
       
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Session error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
         
         // Remove sensitive data
         const { passwordHash: _, ...safeUser } = user;
