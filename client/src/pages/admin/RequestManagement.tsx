@@ -45,41 +45,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin } from "lucide-react";
 import { format } from "date-fns";
 
-// Empty fallback array for marinas
-const EMPTY_MARINAS: { id: number; name: string }[] = [];
-
-// Define types for the mock data structure
+// Define types for our data structures
 type StatusType = "Requested" | "Scheduled" | "Completed" | "Canceled" | "Waitlisted";
 type PaymentStatusType = "Pending" | "Paid" | "Failed" | "Refunded";
 
-interface RequestType {
-  id: number;
-  boatId: number;
-  boatName: string;
-  ownerName: string;
-  marinaId: number;
-  marinaName: string;
-  dock: string;
-  slip: string;
-  status: StatusType;
-  weekStartDate: string;
-  paymentStatus: PaymentStatusType;
-  createdAt: string;
-  notes: string;
-  beforeImageUrl: string | null;
-  duringImageUrl: string | null;
-  afterImageUrl: string | null;
-}
-
-interface MarinaType {
-  id: number;
-  name: string;
-}
-
-// Empty array for initial state - we'll use real data from the database
-const EMPTY_REQUESTS: RequestType[] = [];
-
-// Define types for the mock data structure
 interface RequestType {
   id: number;
   boatId: number;

@@ -301,11 +301,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
       let query = `
         SELECT por.* 
-        FROM pump_out_requests por
-        JOIN boats b ON por.boat_id = b.id
-        WHERE b.active = true
-        AND por.week_start_date >= CURRENT_DATE
-        AND por.week_start_date <= CURRENT_DATE + INTERVAL '28 days'
+        FROM pump_out_request por
       `;
       const values: any[] = [];
 
