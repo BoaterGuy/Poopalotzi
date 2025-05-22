@@ -140,23 +140,33 @@ export default function RequestManagement() {
   // Create an empty array for initial state
   const [requestsData, setRequestsData] = useState<RequestType[]>([]);
   
-  // Clear state and update ONLY when real data is fetched from the database
+  // Completely override state with ONLY database data, no previous state allowed
   useEffect(() => {
-    // Reset to empty array first to clear any possible stale data
+    // Always start fresh with an empty array
     setRequestsData([]);
     
-    // Only set real database data - nothing else
+    // Only add data that actually came from the database, discard everything else
     if (data) {
-      console.log("Setting real database data:", data.length, "records");
-      setRequestsData(data);
+      console.log("Setting ONLY database data:", data.length, "records - timestamp:", Date.now());
+      
+      // Force a deep copy to ensure there's no reference to previous state
+      const freshData = JSON.parse(JSON.stringify(data));
+      setRequestsData(freshData);
+      
+      // Log the data we're setting for debugging
+      console.log("Data being set:", freshData);
     }
   }, [data]);
 
   // Get unique weeks for the filter from the actual data
   const uniqueWeeks = Array.from(new Set(requestsData.map(r => r.weekStartDate))).sort();
 
-  // Apply filters directly to our state
-  let filteredRequests = requestsData;
+  // IMPORTANT: Apply filters starting with an empty array to ensure no mock data
+  // Create a reference to our database data only
+  let filteredRequests = data ? [...data] : [];
+  
+  // Log raw data counts before filtering for debugging
+  console.log("Raw data from API:", filteredRequests.length, "records");
   
   // Apply status filter
   if (statusFilter !== "all") {
@@ -176,11 +186,14 @@ export default function RequestManagement() {
   // Apply search filter
   filteredRequests = filteredRequests.filter(
     (request) =>
-      request.boatName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.marinaName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${request.dock}-${request.slip}`.toLowerCase().includes(searchQuery.toLowerCase())
+      request.boatName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.ownerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.marinaName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${request.dock || ''}-${request.slip || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  // Log filtered results count
+  console.log("Filtered results:", filteredRequests.length, "records");
 
   const getStatusColor = (status: StatusType) => {
     switch (status) {
