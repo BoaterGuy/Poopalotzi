@@ -8,9 +8,9 @@ import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
-// Variable to hold our storage implementation
-// Start directly with database storage to ensure consistent behavior across browsers
-export let storage: IStorage;
+// Create a database storage instance right away
+const dbStorage = new SimpleDatabaseStorage();
+export let storage: IStorage = dbStorage;
 
 const app = express();
 app.use(express.json());
@@ -41,190 +41,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize memory data for development
-async function initializeMemoryData() {
-  log('Initializing sample data in memory storage');
-  
-  // Create service levels
-  await storage.createServiceLevel({
-    name: 'Basic - Single Head',
-    price: 49900, // $499.00
-    type: 'monthly',
-    description: 'Monthly pump-out service for boats with a single head',
-    headCount: 1,
-    monthlyQuota: 4,
-    onDemandQuota: 0
-  });
-  
-  await storage.createServiceLevel({
-    name: 'Premium - Multi Head',
-    price: 69900, // $699.00
-    type: 'monthly',
-    description: 'Monthly pump-out service for boats with multiple heads',
-    headCount: 2,
-    monthlyQuota: 8,
-    onDemandQuota: 0
-  });
-  
-  await storage.createServiceLevel({
-    name: 'On-Demand Service',
-    price: 17900, // $179.00
-    type: 'one-time',
-    description: 'One-time pump-out service',
-    headCount: 1,
-    monthlyQuota: 0,
-    onDemandQuota: 1
-  });
-  
-  await storage.createServiceLevel({
-    name: 'Seasonal Package',
-    price: 249900, // $2,499.00
-    type: 'seasonal',
-    description: 'Seasonal pump-out service package (May through October)',
-    headCount: 1,
-    monthlyQuota: 4,
-    onDemandQuota: 0,
-    seasonStart: new Date(2023, 4, 1), // May 1
-    seasonEnd: new Date(2023, 9, 31) // October 31
-  });
-  
-  // Create marinas
-  await storage.createMarina({
-    name: 'Cedar Point Marina',
-    isActive: true
-  });
-  
-  await storage.createMarina({
-    name: 'Son Rise Marina',
-    isActive: true
-  });
-  
-  await storage.createMarina({
-    name: 'Bay Harbor Marina',
-    isActive: true
-  });
-  
-  // Create admin user
-  const adminHash = await bcrypt.hash('admin123', 10);
-  const adminUser = await storage.createUser({
-    email: 'admin@poopalotzi.com',
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'admin'
-  }, adminHash);
-  
-  // Create employee user
-  const employeeHash = await bcrypt.hash('employee123', 10);
-  const employeeUser = await storage.createUser({
-    email: 'employee@poopalotzi.com',
-    firstName: 'Employee',
-    lastName: 'User',
-    role: 'employee'
-  }, employeeHash);
-  
-  // Create member user
-  const memberHash = await bcrypt.hash('member123', 10);
-  const memberUser = await storage.createUser({
-    email: 'member@poopalotzi.com',
-    firstName: 'Member',
-    lastName: 'User',
-    role: 'member',
-    serviceLevelId: 1
-  }, memberHash);
-  
-  // Create boat owner
-  const boatOwner = await storage.createBoatOwner({
-    userId: memberUser.id
-  });
-  
-  // Create boats for the member
-  const boat1 = await storage.createBoat({
-    ownerId: boatOwner.id,
-    name: "Summer Dream",
-    year: 2018,
-    make: "Sea Ray",
-    model: "Sundancer 320",
-    color: "White/Blue",
-    dockingDirection: "bow_in",
-    tieUpSide: "starboard",
-    pumpPortLocations: ["port", "stern"],
-    notes: "Access code for dock is #1234"
-  });
-
-  const boat2 = await storage.createBoat({
-    ownerId: boatOwner.id,
-    name: "Wave Runner",
-    year: 2020,
-    make: "Boston Whaler",
-    model: "Conquest 285",
-    color: "White/Navy",
-    dockingDirection: "stern_in",
-    tieUpSide: "port",
-    pumpPortLocations: ["starboard"],
-    notes: "Call 15 mins before arrival"
-  });
-
-  // Create slip assignments
-  await storage.createSlipAssignment({
-    boatId: boat1.id,
-    marinaId: 1, // Cedar Point Marina
-    dock: "3",
-    slip: 12
-  });
-
-  await storage.createSlipAssignment({
-    boatId: boat2.id,
-    marinaId: 2, // Son Rise Marina
-    dock: "5",
-    slip: 7
-  });
-
-  // Create current week for pump-out requests
-  const currentDate = new Date();
-  const weekStart = new Date(currentDate);
-  weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday of current week
-  
-  // Format dates as ISO strings (YYYY-MM-DD)
-  const formatDateForRequest = (date: Date): string => {
-    return date.toISOString().split('T')[0];
-  };
-
-  // Create sample service history for the member's boats
-  // Completed request from last week for Boat 1
-  const lastWeekStart = new Date(weekStart);
-  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-  
-  await storage.createPumpOutRequest({
-    boatId: boat1.id,
-    weekStartDate: formatDateForRequest(lastWeekStart),
-    status: 'Completed',
-    ownerNotes: 'Please clean deck area when done',
-    paymentStatus: 'Paid'
-  });
-  
-  // Current week request for Boat 1
-  await storage.createPumpOutRequest({
-    boatId: boat1.id,
-    weekStartDate: formatDateForRequest(weekStart),
-    status: 'Scheduled',
-    ownerNotes: 'Dock key in lock box',
-    paymentStatus: 'Paid'
-  });
-  
-  // Upcoming request for Boat 2
-  const nextWeekStart = new Date(weekStart);
-  nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-  
-  await storage.createPumpOutRequest({
-    boatId: boat2.id,
-    weekStartDate: formatDateForRequest(nextWeekStart),
-    status: 'Requested',
-    ownerNotes: 'Please text 30 mins before arrival',
-    paymentStatus: 'Pending'
-  });
-  
-  log('Sample data initialization complete');
-}
+// Format dates as ISO strings (YYYY-MM-DD)
+const formatDateForRequest = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
 
 // Main function to start the server
 async function startServer() {
@@ -232,30 +52,13 @@ async function startServer() {
     // Set up vite middleware for development
     await setupVite(app);
     
-    // Always use database storage first
-    try {
-      // Initialize database schema
-      const dbSuccess = await setupDatabase();
-      
-      // Create a database storage instance
-      const dbStorage = new SimpleDatabaseStorage();
-      
-      // Set the storage to use database
-      storage = dbStorage;
-      
-      if (dbSuccess) {
-        log("Successfully connected to the database!");
-      } else {
-        log("Warning: Database tables might not be fully set up, but we'll try to use the database anyway");
-      }
-    } catch (dbError: any) {
-      // If database connection fails completely, fall back to memory storage
-      log(`Database connection error: ${dbError.message}`);
-      log("Using in-memory storage for this session");
-      
-      // Initialize with memory storage and sample data
-      storage = memStorage;
-      await initializeMemoryData();
+    // Initialize database schema
+    const dbSuccess = await setupDatabase();
+    if (dbSuccess) {
+      log("Successfully connected to the database!");
+    } else {
+      log("Database connection error - exiting");
+      process.exit(1);
     }
     
     // Set up authentication with the proper storage
