@@ -3,10 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import bcrypt from "bcryptjs";
+import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail } from "./utils/sendgrid";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertSlipAssignmentSchema, insertPumpOutRequestSchema } from "@shared/schema";
 import { z } from "zod";
@@ -54,6 +51,9 @@ const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
+  
+  // Add authentication routes
+  app.use('/api/auth', authRoutes);
 
   // Debug route to check if admin user is available
   app.get("/api/debug/users", async (req, res) => {
