@@ -353,4 +353,9 @@ async function initializeMemoryData() {
   }, () => {
     log(`serving on port ${port}`);
   });
-})();
+})().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+}).finally(() => {
+  log('Server startup process completed');
+});
