@@ -54,19 +54,28 @@ export default function MarinaManagement() {
   const [marinaToDelete, setMarinaToDelete] = useState<number | null>(null);
 
   // API call to get marinas
-  const { data: marinas = [], isLoading } = useQuery({
+  const { data: marinas = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/marinas", { activeOnly: !showInactive }],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("activeOnly", (!showInactive).toString());
+      
+      // Add a cache-busting timestamp to force a fresh request
+      params.append("t", Date.now().toString());
+      
+      console.log("Fetching marinas from API...");
       const response = await fetch(`/api/marinas?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch marinas");
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log("Marina data from API:", data);
+      return data;
     },
+    refetchOnMount: "always",
+    staleTime: 0, // Always consider data stale
   });
 
   // Get boat counts for each marina (this would be a real API call in a full implementation)
