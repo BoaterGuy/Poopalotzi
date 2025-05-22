@@ -42,6 +42,7 @@ interface RequestDetailProps {
   request: PumpOutRequest;
   boat?: Boat;
   onClose: () => void;
+  onCancel?: (requestId: number) => void;
 }
 
 const RequestDetail = ({ request, boat, onClose }: RequestDetailProps) => {
@@ -179,7 +180,44 @@ const RequestDetail = ({ request, boat, onClose }: RequestDetailProps) => {
         </div>
       ) : null}
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-between pt-4">
+        {['Requested', 'Scheduled', 'Waitlisted'].includes(request.status) && (
+          <Button 
+            variant="outline" 
+            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+            onClick={() => {
+              // First close the detail view
+              onClose();
+              
+              // Then confirm with user before canceling
+              if (confirm("Are you sure you want to cancel this pump-out service request?")) {
+                // Make the API call to cancel the request
+                fetch(`/api/pump-out-requests/${request.id}/status`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ status: 'Canceled' }),
+                  credentials: 'include'
+                })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to cancel request');
+                  return response.json();
+                })
+                .then(() => {
+                  // Reload the page to show the updated status
+                  window.location.reload();
+                })
+                .catch(err => {
+                  console.error("Error canceling request:", err);
+                  alert("There was a problem canceling your request. Please try again.");
+                });
+              }
+            }}
+          >
+            Cancel Request
+          </Button>
+        )}
         <Button variant="outline" onClick={onClose}>Close Details</Button>
       </div>
     </div>
@@ -251,50 +289,6 @@ export default function ServiceHistory() {
 
   const getBoatById = (boatId?: number) => {
     return boats?.find(boat => boat.id === boatId);
-  };
-  
-  // Function to cancel a pump-out request
-  const handleCancelRequest = async (requestId: number) => {
-    if (!requestId) return;
-    
-    setIsCanceling(true);
-    
-    try {
-      const response = await fetch(`/api/pump-out-requests/${requestId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'Canceled' }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to cancel the request');
-      }
-      
-      // Update the UI by refetching
-      await queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
-      
-      toast({
-        title: "Request Canceled",
-        description: "Your pump-out service request has been canceled successfully.",
-      });
-      
-      // Close the detail view if it was open
-      if (selectedRequest?.id === requestId) {
-        setSelectedRequest(null);
-      }
-    } catch (error) {
-      console.error("Error canceling request:", error);
-      toast({
-        title: "Error",
-        description: "There was a problem canceling your request. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCanceling(false);
-    }
   };
 
   return (

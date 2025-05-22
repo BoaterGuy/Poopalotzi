@@ -691,7 +691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/pump-out-requests/:id/status", isEmployee, async (req: AuthRequest, res, next) => {
+  app.patch("/api/pump-out-requests/:id/status", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const requestId = parseInt(req.params.id);
       const { status } = req.body;
@@ -703,6 +703,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const request = await storage.getPumpOutRequest(requestId);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
+      }
+      
+      // Only employees can change to any status
+      // Members can only cancel their own requests
+      if (req.user.role !== "admin" && req.user.role !== "employee") {
+        // Verify boat ownership
+        const boat = await storage.getBoat(request.boatId);
+        if (!boat) {
+          return res.status(404).json({ message: "Boat not found" });
+        }
+        
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to update this request" });
+        }
+        
+        // Members can only cancel, not change to other statuses
+        if (status !== "Canceled") {
+          return res.status(403).json({ message: "Members can only cancel requests" });
+        }
       }
 
       // Update status
