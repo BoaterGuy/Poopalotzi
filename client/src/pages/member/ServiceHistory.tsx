@@ -45,7 +45,9 @@ interface RequestDetailProps {
   onCancel?: (requestId: number) => void;
 }
 
-const RequestDetail = ({ request, boat, onClose }: RequestDetailProps) => {
+const RequestDetail = ({ request, boat, onClose, onCancel }: RequestDetailProps) => {
+  const { toast } = useToast();
+  const [isCanceling, setIsCanceling] = useState(false);
   // This would fetch additional details about the request
   const { data: logs } = useQuery({
     queryKey: [`/api/pump-out-logs/${request.id}`],
@@ -251,6 +253,7 @@ export default function ServiceHistory() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
+  // Add these to the RequestDetail component to fix the undefined errors
 
   // Fetch boats first
   const { data: boats } = useQuery<Boat[]>({

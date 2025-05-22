@@ -117,12 +117,18 @@ export default function RequestManagement() {
     }
   });
   
-  // Use the fetched data, or fall back to an empty array if still loading
+  // IMPORTANT: Only use REAL database data - NO mock data allowed
+  // Create an empty array for initial state
   const [requestsData, setRequestsData] = useState<RequestType[]>([]);
   
-  // Update state when data is fetched
+  // Clear state and update ONLY when real data is fetched from the database
   useEffect(() => {
+    // Reset to empty array first to clear any possible stale data
+    setRequestsData([]);
+    
+    // Only set real database data - nothing else
     if (data) {
+      console.log("Setting real database data:", data.length, "records");
       setRequestsData(data);
     }
   }, [data]);
