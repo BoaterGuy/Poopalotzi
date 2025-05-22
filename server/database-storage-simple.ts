@@ -306,7 +306,7 @@ export class SimpleDatabaseStorage implements IStorage {
       const values: any[] = [];
 
       if (status && status !== "all") {
-        query += ` AND por.status = $1`;
+        query += ` WHERE por.status = $1`;
         values.push(status);
       }
 
@@ -321,6 +321,7 @@ export class SimpleDatabaseStorage implements IStorage {
         weekStartDate: row.week_start_date,
         status: row.status,
         ownerNotes: row.owner_notes || '',
+        adminNotes: row.admin_notes || '',
         paymentStatus: row.payment_status,
         paymentId: row.payment_id || null,
         createdAt: row.created_at,
