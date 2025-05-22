@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupDatabase } from "./simple-db";
+import { setupFullDatabase } from "./setup-database";
 import { SimpleDatabaseStorage } from "./database-storage-simple";
 import { storage as memStorage, IStorage } from "./storage";
 import { createSupabaseClient, verifySchema } from "./supabase-db";
@@ -56,6 +57,15 @@ async function startServer() {
     const dbSuccess = await setupDatabase();
     if (dbSuccess) {
       log("Successfully connected to the database!");
+      
+      // Ensure all required tables are created
+      log("Setting up all required database tables...");
+      const tablesSuccess = await setupFullDatabase();
+      if (tablesSuccess) {
+        log("All database tables set up successfully!");
+      } else {
+        log("Warning: Some database tables may not have been created properly");
+      }
     } else {
       log("Database connection error - exiting");
       process.exit(1);
