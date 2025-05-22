@@ -10,20 +10,10 @@ import type {
 import { IStorage } from './storage';
 import connectPg from "connect-pg-simple";
 import session from "express-session";
-import { Pool } from 'pg';
+import { pool } from './simple-db'; // Use the same pool instance for all database operations
 
 // Create a session store with the DB connection
 const PostgresSessionStore = connectPg(session);
-const sessionPool = new Pool({
-  host: process.env.PGHOST,
-  port: parseInt(process.env.PGPORT || '5432'),
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  ssl: {
-    rejectUnauthorized: false // For development - handles self-signed certificates
-  }
-});
 
 // Generate a SESSION_SECRET if it doesn't exist
 if (!process.env.SESSION_SECRET) {
@@ -38,7 +28,7 @@ export class SimpleDatabaseStorage implements IStorage {
   constructor() {
     // Initialize session store
     this.sessionStore = new PostgresSessionStore({
-      pool: sessionPool,
+      pool: pool,
       tableName: 'sessions',
       createTableIfMissing: true,
       pruneSessionInterval: 60 // Clean up expired sessions every minute
@@ -51,7 +41,7 @@ export class SimpleDatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     try {
       // Use direct SQL query to match our database schema
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM users WHERE id = $1`,
         [id]
       );
@@ -85,7 +75,7 @@ export class SimpleDatabaseStorage implements IStorage {
       const normalizedEmail = email.toLowerCase();
 
       // Use a simpler direct SQL query instead of the ORM query to avoid schema mismatches
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM users WHERE LOWER(email) = $1`,
         [normalizedEmail]
       );
@@ -116,7 +106,7 @@ export class SimpleDatabaseStorage implements IStorage {
   async createUser(user: InsertUser, passwordHash: string): Promise<User> {
     try {
       // Use direct SQL query with the correct column names for our database schema
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO users (
           email, first_name, last_name, phone, password_hash, role
         ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
@@ -168,7 +158,7 @@ export class SimpleDatabaseStorage implements IStorage {
   // Boat Owner operations
   async getBoatOwner(id: number): Promise<BoatOwner | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM boat_owner WHERE id = $1`,
         [id]
       );
@@ -191,7 +181,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getBoatOwnerByUserId(userId: number): Promise<BoatOwner | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM boat_owner WHERE user_id = $1`,
         [userId]
       );
@@ -216,7 +206,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createBoatOwner(boatOwner: InsertBoatOwner): Promise<BoatOwner> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO boat_owner (user_id) VALUES ($1) RETURNING *`,
         [boatOwner.userId]
       );
@@ -236,7 +226,7 @@ export class SimpleDatabaseStorage implements IStorage {
   // Boat operations
   async getBoat(id: number): Promise<Boat | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM boat WHERE id = $1`,
         [id]
       );
@@ -272,7 +262,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getBoatsByOwnerId(ownerId: number): Promise<Boat[]> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM boat WHERE owner_id = $1 ORDER BY name ASC`,
         [ownerId]
       );
@@ -303,7 +293,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createBoat(boat: InsertBoat): Promise<Boat> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO boat (
           owner_id, name, year, make, model, length, 
           color, photo_url, docking_direction, tie_up_side, 
@@ -433,7 +423,7 @@ export class SimpleDatabaseStorage implements IStorage {
       // Add the ID as the last parameter
       values.push(id);
       
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `UPDATE boat 
          SET ${updates.join(', ')} 
          WHERE id = $${paramCount} 
@@ -472,7 +462,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async deleteBoat(id: number): Promise<boolean> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `DELETE FROM boat WHERE id = $1 RETURNING id`,
         [id]
       );
@@ -487,7 +477,7 @@ export class SimpleDatabaseStorage implements IStorage {
   // Marina operations
   async getMarina(id: number): Promise<Marina | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM marina WHERE id = $1`,
         [id]
       );
@@ -521,7 +511,7 @@ export class SimpleDatabaseStorage implements IStorage {
         params.push(true);
       }
       
-      const result = await sessionPool.query(query, params);
+      const result = await pool.query(query, params);
       
       return result.rows.map(marina => ({
         id: marina.id,
@@ -539,7 +529,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createMarina(marina: InsertMarina): Promise<Marina> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO marina (name, address, phone, is_active) 
          VALUES ($1, $2, $3, $4) 
          RETURNING *`,
@@ -601,7 +591,7 @@ export class SimpleDatabaseStorage implements IStorage {
       // Add the ID as the last parameter
       values.push(id);
       
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `UPDATE marina 
          SET ${updates.join(', ')} 
          WHERE id = $${paramCount} 
@@ -630,7 +620,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async deleteMarina(id: number): Promise<boolean> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `DELETE FROM marina WHERE id = $1 RETURNING id`,
         [id]
       );
@@ -666,7 +656,7 @@ export class SimpleDatabaseStorage implements IStorage {
   // Service Level operations
   async getServiceLevel(id: number): Promise<ServiceLevel | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM service_level WHERE id = $1`,
         [id]
       );
@@ -698,7 +688,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getAllServiceLevels(): Promise<ServiceLevel[]> {
     try {
-      const result = await sessionPool.query(`SELECT * FROM service_level ORDER BY price ASC`);
+      const result = await pool.query(`SELECT * FROM service_level ORDER BY price ASC`);
       
       return result.rows.map(sl => ({
         id: sl.id,
@@ -722,7 +712,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createServiceLevel(serviceLevel: InsertServiceLevel): Promise<ServiceLevel> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO service_level (
           name, price, description, head_count, type, 
           season_start, season_end, monthly_quota, on_demand_quota, is_active
@@ -828,7 +818,7 @@ export class SimpleDatabaseStorage implements IStorage {
       // Add the ID as the last parameter
       values.push(id);
       
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `UPDATE service_level 
          SET ${updates.join(', ')} 
          WHERE id = $${paramCount} 
@@ -864,7 +854,7 @@ export class SimpleDatabaseStorage implements IStorage {
   // Pump Out Request operations
   async getPumpOutRequest(id: number): Promise<PumpOutRequest | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM pump_out_request WHERE id = $1`,
         [id]
       );
@@ -894,7 +884,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getPumpOutRequestsByBoatId(boatId: number): Promise<PumpOutRequest[]> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM pump_out_request 
          WHERE boat_id = $1 
          ORDER BY created_at DESC`,
@@ -924,7 +914,7 @@ export class SimpleDatabaseStorage implements IStorage {
       // Format the date for the database query
       const formattedDate = weekStartDate.toISOString().split('T')[0];
       
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `SELECT * FROM pump_out_request 
          WHERE week_start_date = $1 
          ORDER BY created_at DESC`,
@@ -961,7 +951,7 @@ export class SimpleDatabaseStorage implements IStorage {
       
       query += ` ORDER BY created_at DESC`;
       
-      const result = await sessionPool.query(query, values);
+      const result = await pool.query(query, values);
       
       return result.rows.map(row => ({
         id: row.id,
@@ -983,7 +973,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createPumpOutRequest(request: InsertPumpOutRequest): Promise<PumpOutRequest> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `INSERT INTO pump_out_request (
           boat_id, week_start_date, status, owner_notes, admin_notes, payment_status, payment_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7) 
@@ -1061,7 +1051,7 @@ export class SimpleDatabaseStorage implements IStorage {
       // Add the ID as the last parameter
       values.push(id);
       
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `UPDATE pump_out_request 
          SET ${updates.join(', ')} 
          WHERE id = $${paramCount} 
@@ -1094,7 +1084,7 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async updatePumpOutRequestStatus(id: number, status: string): Promise<PumpOutRequest | undefined> {
     try {
-      const result = await sessionPool.query(
+      const result = await pool.query(
         `UPDATE pump_out_request 
          SET status = $1, updated_at = CURRENT_TIMESTAMP 
          WHERE id = $2 

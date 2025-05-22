@@ -4,7 +4,7 @@ import * as schema from '@shared/schema';
 
 // Create a PostgreSQL connection pool using the environment variables 
 // from the database we created with the tool
-const pool = new Pool({
+export const pool = new Pool({
   host: process.env.PGHOST,
   port: parseInt(process.env.PGPORT || '5432'),
   user: process.env.PGUSER,
