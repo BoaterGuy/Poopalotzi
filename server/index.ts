@@ -285,27 +285,23 @@ async function initializeMemoryData() {
 
 (async () => {
   try {
-    // First try to connect to the Supabase database
-    log("Setting up Supabase connection...");
+    // Set up database connection
+    log("Setting up database connection...");
     
-    // Try specialized Supabase connection first
-    const supabaseDb = await createSupabaseClient();
+    // Initialize database schema
+    const dbSuccess = await setupDatabase();
     
-    // Verify if the schema is properly initialized
-    const isSchemaValid = await verifySchema(supabaseDb);
-    
-    if (!isSchemaValid) {
-      log("Schema not initialized in Supabase. Running setup...");
-      await setupDatabase();
+    if (dbSuccess) {
+      // Create a database storage instance
+      const dbStorage = new DatabaseStorage();
+      
+      // Replace memory storage with database
+      storage = dbStorage;
+      
+      log("Successfully connected to the database!");
+    } else {
+      throw new Error("Database setup failed");
     }
-    
-    // Create a database storage instance
-    const dbStorage = new DatabaseStorage();
-    
-    // Replace memory storage with database
-    storage = dbStorage;
-    
-    log("Successfully connected to Supabase!");
   } catch (dbError: any) {
     // If database connection fails, fall back to memory storage
     log(`Database connection error: ${dbError.message}`);

@@ -43,6 +43,7 @@ try {
 // Generate a SESSION_SECRET if it doesn't exist
 if (!process.env.SESSION_SECRET) {
   process.env.SESSION_SECRET = 'poopalazi-session-secret-' + Math.random().toString(36).substring(2);
+  console.log("Generated a temporary SESSION_SECRET - this should be set as an environment variable in production");
 }
 
 const PostgresSessionStore = connectPg(session);

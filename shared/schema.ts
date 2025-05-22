@@ -1,6 +1,22 @@
-import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, json, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, json, date, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table for authentication
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: json("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => {
+    return {
+      expireIdx: index("IDX_session_expire").on(table.expire),
+    };
+  }
+);
+
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['member', 'employee', 'admin']);
