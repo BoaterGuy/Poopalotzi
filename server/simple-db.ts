@@ -80,11 +80,16 @@ export async function setupTables() {
         )
       `);
       
-      // Create initial admin user
+      // Create or update admin user with known password (admin123)
       await pool.query(`
         INSERT INTO "users" (email, first_name, last_name, role, password_hash)
         VALUES ('admin@poopalotzi.com', 'Admin', 'User', 'admin', '$2a$10$JQOfYsrTBNLmCWaRVyJRceuE6yJpliCVCFY7H0vf44HntRNh.P0Ey')
-        ON CONFLICT (email) DO NOTHING
+        ON CONFLICT (email) 
+        DO UPDATE SET 
+          password_hash = '$2a$10$JQOfYsrTBNLmCWaRVyJRceuE6yJpliCVCFY7H0vf44HntRNh.P0Ey',
+          first_name = 'Admin',
+          last_name = 'User',
+          role = 'admin'
       `);
       
       console.log('Database tables created successfully');
