@@ -80,15 +80,15 @@ export async function setupFullDatabase() {
     try {
       console.log('Ensuring marina data is complete...');
       
-      // Our list of marinas
+      // Our list of marinas - updated to match what's currently in UI
       const marinaList = [
-        {name: 'Harbor Bay Marina', address: '123 Marina Way, Newport, RI 02840', phone: '(401) 555-1234'},
-        {name: 'Sunset Cove Marina', address: '500 Waterfront Dr, San Diego, CA 92101', phone: '(619) 555-6789'},
-        {name: 'Cedar Point Yacht Club', address: '1 Bluff Point, Westport, CT 06880', phone: '(203) 555-4321'},
-        {name: 'Blue Water Marina', address: '789 Lake Shore Dr, Chicago, IL 60611', phone: '(312) 555-8765'},
-        {name: 'Bayside Marina', address: '2200 Bayside Dr, Miami, FL 33139', phone: '(305) 555-2468'},
-        {name: 'North Shore Marina', address: '455 Lakeside Ave, Seattle, WA 98115', phone: '(206) 555-1357'},
-        {name: 'East Bay Marina', address: '300 Harbor Dr, Annapolis, MD 21403', phone: '(410) 555-9876'}
+        {name: 'Sunset Marina', address: '123 Sunset Way, Port Clinton, OH 43452', phone: '(419) 555-1234'},
+        {name: 'Harbor Point', address: '500 Harbor Dr, Port Clinton, OH 43452', phone: '(419) 555-6789'},
+        {name: 'Bay Front', address: '789 Bay View Rd, Port Clinton, OH 43452', phone: '(419) 555-4321'},
+        {name: 'Cedar Point', address: '1 Cedar Point Dr, Sandusky, OH 44870', phone: '(419) 555-8765'},
+        {name: 'Son Rise', address: '2200 Marina Way, Marblehead, OH 43440', phone: '(419) 555-2468'},
+        {name: 'Port Clinton Yacht Club', address: '455 Lakeshore Dr, Port Clinton, OH 43452', phone: '(419) 555-1357'},
+        {name: 'Craft Marine', address: '300 Craft Rd, Port Clinton, OH 43452', phone: '(419) 555-9876'}
       ];
       
       // First get existing marina names
