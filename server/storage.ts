@@ -131,21 +131,8 @@ export class MemStorage implements IStorage {
 
     // Service levels are now initialized in server/index.ts
 
-    // Initialize with a few marinas
-    this.createMarina({
-      name: "Sunset Marina",
-      isActive: true
-    });
-
-    this.createMarina({
-      name: "Harbor Point",
-      isActive: true
-    });
-
-    this.createMarina({
-      name: "Bay Front",
-      isActive: true
-    });
+    // Removed hardcoded marina initialization
+    // Now using the database storage implementation instead
 
     // Initialize admin user
     const adminPasswordHash = "$2a$10$5J5Qn0qWsqa0.Oipdes31OdOjJXZE4cY4AI2OiaJG/Rh1YR/PuOm."; // Secure hash for development
