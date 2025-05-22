@@ -29,7 +29,15 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useEffect(() => {
-    // Check if window is defined (client-side only)
+    // Get stored theme from localStorage
+    const storedTheme = localStorage.getItem(storageKey) as Theme | null;
+    
+    // Use stored theme if available, otherwise use default
+    if (storedTheme) {
+      setTheme(storedTheme);
+    }
+    
+    // Apply theme to document
     if (typeof window !== 'undefined') {
       try {
         const root = window.document.documentElement;
@@ -48,7 +56,7 @@ export function ThemeProvider({
         console.error("Theme application error:", error);
       }
     }
-  }, [theme]);
+  }, [theme, storageKey]);
 
   const value = {
     theme,
