@@ -93,15 +93,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Marina routes
-  app.get("/api/marinas", async (req, res, next) => {
-    try {
-      const marinas = await storage.getAllMarinas();
-      res.json(marinas);
-    } catch (err) {
-      next(err);
-    }
-  });
-  
   app.get("/api/marinas/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
@@ -110,16 +101,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Marina not found" });
       }
       res.json(marina);
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  // Marina routes
-  app.get("/api/marinas", isAuthenticated, async (req, res, next) => {
-    try {
-      const marinas = await storage.getAllMarinas();
-      res.json(marinas);
     } catch (err) {
       next(err);
     }
@@ -198,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Marina routes
+  // Main marina route - this is the single source of truth for marina data
   app.get("/api/marinas", async (req, res, next) => {
     try {
       const activeOnly = req.query.activeOnly !== "false";
