@@ -40,8 +40,11 @@ export class SimpleDatabaseStorage implements IStorage {
     this.sessionStore = new PostgresSessionStore({
       pool: sessionPool,
       tableName: 'sessions',
-      createTableIfMissing: true
+      createTableIfMissing: true,
+      pruneSessionInterval: 60 // Clean up expired sessions every minute
     });
+    
+    console.log("Session store initialized successfully");
   }
 
   // User operations

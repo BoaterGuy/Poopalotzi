@@ -29,11 +29,14 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: { 
-      secure: process.env.NODE_ENV === "production" ? 'auto' : false,
+      secure: false, // Set to false for development to make it work in all environments
+      httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   };
+  
+  console.log("Setting up authentication with session store");
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
