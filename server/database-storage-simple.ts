@@ -81,10 +81,13 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
+      // Make email case-insensitive by converting to lowercase
+      const normalizedEmail = email.toLowerCase();
+      
       // Use a simpler direct SQL query instead of the ORM query to avoid schema mismatches
       const result = await sessionPool.query(
-        `SELECT * FROM users WHERE email = $1`,
-        [email]
+        `SELECT * FROM users WHERE LOWER(email) = $1`,
+        [normalizedEmail]
       );
       
       if (result.rows.length === 0) {
