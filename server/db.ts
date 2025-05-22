@@ -48,6 +48,37 @@ export async function setupDatabase() {
       return false;
     }
     
+    // Check for enums first
+    try {
+      // Check if the user_role enum exists
+      const enumResult = await pool.query(`
+        SELECT EXISTS (
+          SELECT 1 FROM pg_type 
+          WHERE typname = 'user_role'
+        );
+      `);
+      
+      // Create enums if they don't exist
+      if (!enumResult.rows[0]?.exists) {
+        console.log('Creating enum types...');
+        
+        // Create all the enums
+        await pool.query(`CREATE TYPE "user_role" AS ENUM ('member', 'employee', 'admin');`);
+        await pool.query(`CREATE TYPE "docking_direction" AS ENUM ('bow_in', 'stern_in', 'side_to');`);
+        await pool.query(`CREATE TYPE "tie_up_side" AS ENUM ('port', 'starboard', 'both');`);
+        await pool.query(`CREATE TYPE "pump_port_location" AS ENUM ('port', 'starboard', 'bow', 'mid_ship', 'stern');`);
+        await pool.query(`CREATE TYPE "request_status" AS ENUM ('Requested', 'Scheduled', 'Completed', 'Canceled', 'Waitlisted');`);
+        await pool.query(`CREATE TYPE "payment_status" AS ENUM ('Pending', 'Paid', 'Failed', 'Refunded');`);
+        await pool.query(`CREATE TYPE "service_type" AS ENUM ('one-time', 'monthly', 'seasonal');`);
+        await pool.query(`CREATE TYPE "service_level" AS ENUM ('single-head', 'multi-head');`);
+        
+        console.log('Enum types created successfully');
+      }
+    } catch (enumErr) {
+      console.error("Error creating enum types:", enumErr);
+      // Continue even if enum creation fails
+    }
+    
     // Check if database is initialized
     console.log("Checking if tables exist...");
     try {
@@ -69,57 +100,63 @@ export async function setupDatabase() {
           `CREATE TABLE IF NOT EXISTS "users" (
             "id" SERIAL PRIMARY KEY,
             "email" VARCHAR(255) NOT NULL UNIQUE,
-            "firstName" VARCHAR(255) NOT NULL,
-            "lastName" VARCHAR(255) NOT NULL,
+            "first_name" VARCHAR(255) NOT NULL,
+            "last_name" VARCHAR(255) NOT NULL,
             "phone" VARCHAR(20),
-            "passwordHash" TEXT,
-            "role" VARCHAR(20) NOT NULL,
-            "oauthProvider" VARCHAR(50),
-            "oauthId" VARCHAR(255),
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "serviceLevelId" INTEGER,
-            "emailVerified" BOOLEAN
+            "password_hash" TEXT,
+            "role" user_role NOT NULL DEFAULT 'member',
+            "oauth_provider" VARCHAR(50),
+            "oauth_id" VARCHAR(255),
+            "service_level_id" INTEGER,
+            "subscription_start_date" TIMESTAMP,
+            "subscription_end_date" TIMESTAMP,
+            "active_month" VARCHAR(2),
+            "auto_renew" BOOLEAN DEFAULT FALSE,
+            "email_verified" BOOLEAN DEFAULT FALSE,
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "boat_owner" (
             "id" SERIAL PRIMARY KEY,
-            "userId" INTEGER NOT NULL REFERENCES "users"("id"),
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "boat" (
             "id" SERIAL PRIMARY KEY,
+            "owner_id" INTEGER NOT NULL REFERENCES "boat_owner"("id"),
             "name" VARCHAR(255) NOT NULL,
-            "ownerId" INTEGER NOT NULL REFERENCES "boat_owner"("id"),
             "year" INTEGER,
             "make" VARCHAR(255),
             "model" VARCHAR(255),
+            "length" INTEGER,
             "color" VARCHAR(100),
-            "photoUrl" VARCHAR(255),
-            "dockingDirection" VARCHAR(20),
-            "tieUpSide" VARCHAR(20),
-            "pumpPortLocations" TEXT[],
+            "photo_url" VARCHAR(255),
+            "docking_direction" docking_direction,
+            "tie_up_side" tie_up_side,
+            "pump_port_locations" TEXT[],
+            "dock" VARCHAR(50),
+            "slip" INTEGER,
             "notes" TEXT,
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "marina" (
             "id" SERIAL PRIMARY KEY,
             "name" VARCHAR(255) NOT NULL,
-            "isActive" BOOLEAN DEFAULT TRUE,
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "address" VARCHAR(255),
+            "phone" VARCHAR(20),
+            "is_active" BOOLEAN DEFAULT TRUE,
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "slip_assignment" (
             "id" SERIAL PRIMARY KEY,
-            "boatId" INTEGER NOT NULL REFERENCES "boat"("id"),
-            "marinaId" INTEGER NOT NULL REFERENCES "marina"("id"),
-            "dock" VARCHAR(50),
-            "slip" VARCHAR(50),
-            "startDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "endDate" TIMESTAMP,
-            "isActive" BOOLEAN DEFAULT TRUE,
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "boat_id" INTEGER NOT NULL REFERENCES "boat"("id"),
+            "marina_id" INTEGER NOT NULL REFERENCES "marina"("id"),
+            "dock" TEXT NOT NULL,
+            "slip" INTEGER NOT NULL,
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "service_level" (
@@ -127,49 +164,46 @@ export async function setupDatabase() {
             "name" VARCHAR(255) NOT NULL,
             "price" INTEGER NOT NULL,
             "description" TEXT,
-            "headCount" INTEGER,
-            "type" VARCHAR(20) NOT NULL,
-            "seasonStart" VARCHAR(10),
-            "seasonEnd" VARCHAR(10),
-            "monthlyQuota" INTEGER,
-            "onDemandQuota" INTEGER,
-            "isActive" BOOLEAN DEFAULT TRUE,
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "head_count" INTEGER DEFAULT 1,
+            "type" service_type NOT NULL,
+            "season_start" DATE,
+            "season_end" DATE,
+            "monthly_quota" INTEGER,
+            "on_demand_quota" INTEGER,
+            "is_active" BOOLEAN DEFAULT TRUE,
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "pump_out_request" (
             "id" SERIAL PRIMARY KEY,
-            "boatId" INTEGER NOT NULL REFERENCES "boat"("id"),
-            "status" VARCHAR(20) NOT NULL DEFAULT 'Requested',
-            "weekStartDate" VARCHAR(10) NOT NULL,
-            "ownerNotes" TEXT,
-            "adminNotes" TEXT,
-            "paymentStatus" VARCHAR(20) DEFAULT 'Pending',
-            "paymentId" VARCHAR(255),
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "boat_id" INTEGER NOT NULL REFERENCES "boat"("id"),
+            "week_start_date" DATE NOT NULL,
+            "status" request_status NOT NULL DEFAULT 'Requested',
+            "owner_notes" TEXT,
+            "admin_notes" TEXT,
+            "payment_status" payment_status NOT NULL DEFAULT 'Pending',
+            "payment_id" VARCHAR(255),
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "pump_out_log" (
             "id" SERIAL PRIMARY KEY,
-            "requestId" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
-            "changeTimestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "prevStatus" VARCHAR(20),
-            "newStatus" VARCHAR(20) NOT NULL,
-            "beforeUrl" VARCHAR(255),
-            "duringUrl" VARCHAR(255),
-            "afterUrl" VARCHAR(255),
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "request_id" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
+            "change_timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "prev_status" request_status,
+            "new_status" request_status NOT NULL,
+            "before_url" VARCHAR(255),
+            "during_url" VARCHAR(255),
+            "after_url" VARCHAR(255),
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
           `CREATE TABLE IF NOT EXISTS "employee_assignment" (
             "id" SERIAL PRIMARY KEY,
-            "employeeId" INTEGER NOT NULL REFERENCES "users"("id"),
-            "requestId" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
-            "assignedDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            "notes" TEXT,
-            "isCompleted" BOOLEAN DEFAULT FALSE,
-            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            "employee_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "request_id" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
+            "assigned_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`
         ];
         
@@ -213,137 +247,13 @@ export async function setupDatabase() {
         `);
         
         console.log('Sessions table created successfully');
+        console.log('Session store initialized successfully');
       }
     } catch (err) {
       console.error("Error checking sessions table:", err);
     }
     
-    return true;
-  } catch (error) {
-    console.error('Database setup error:', error);
-    return false;
-  }
-}
-          "email" VARCHAR(255) NOT NULL UNIQUE,
-          "firstName" VARCHAR(255) NOT NULL,
-          "lastName" VARCHAR(255) NOT NULL,
-          "phone" VARCHAR(20),
-          "passwordHash" TEXT,
-          "role" user_role NOT NULL,
-          "oauthProvider" VARCHAR(50),
-          "oauthId" VARCHAR(255),
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "serviceLevelId" INTEGER,
-          "emailVerified" BOOLEAN
-        )`,
-        
-        sql`CREATE TABLE "boat_owner" (
-          "id" SERIAL PRIMARY KEY,
-          "userId" INTEGER NOT NULL REFERENCES "users"("id"),
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "boat" (
-          "id" SERIAL PRIMARY KEY,
-          "name" VARCHAR(255) NOT NULL,
-          "ownerId" INTEGER NOT NULL REFERENCES "boat_owner"("id"),
-          "year" INTEGER,
-          "make" VARCHAR(255),
-          "model" VARCHAR(255),
-          "color" VARCHAR(100),
-          "photoUrl" VARCHAR(255),
-          "dockingDirection" docking_direction,
-          "tieUpSide" tie_up_side,
-          "pumpPortLocations" TEXT[],
-          "notes" TEXT,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "marina" (
-          "id" SERIAL PRIMARY KEY,
-          "name" VARCHAR(255) NOT NULL,
-          "isActive" BOOLEAN DEFAULT TRUE,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "slip_assignment" (
-          "id" SERIAL PRIMARY KEY,
-          "boatId" INTEGER NOT NULL REFERENCES "boat"("id"),
-          "marinaId" INTEGER NOT NULL REFERENCES "marina"("id"),
-          "dock" VARCHAR(50),
-          "slip" VARCHAR(50),
-          "startDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "endDate" TIMESTAMP,
-          "isActive" BOOLEAN DEFAULT TRUE,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "service_level" (
-          "id" SERIAL PRIMARY KEY,
-          "name" VARCHAR(255) NOT NULL,
-          "price" INTEGER NOT NULL,
-          "description" TEXT,
-          "headCount" INTEGER,
-          "type" service_type NOT NULL,
-          "seasonStart" VARCHAR(10),
-          "seasonEnd" VARCHAR(10),
-          "monthlyQuota" INTEGER,
-          "onDemandQuota" INTEGER,
-          "isActive" BOOLEAN DEFAULT TRUE,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "pump_out_request" (
-          "id" SERIAL PRIMARY KEY,
-          "boatId" INTEGER NOT NULL REFERENCES "boat"("id"),
-          "status" request_status NOT NULL DEFAULT 'Requested',
-          "weekStartDate" VARCHAR(10) NOT NULL,
-          "ownerNotes" TEXT,
-          "adminNotes" TEXT,
-          "paymentStatus" payment_status DEFAULT 'Pending',
-          "paymentId" VARCHAR(255),
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "pump_out_log" (
-          "id" SERIAL PRIMARY KEY,
-          "requestId" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
-          "changeTimestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "prevStatus" request_status,
-          "newStatus" request_status NOT NULL,
-          "beforeUrl" VARCHAR(255),
-          "duringUrl" VARCHAR(255),
-          "afterUrl" VARCHAR(255),
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-        
-        sql`CREATE TABLE "employee_assignment" (
-          "id" SERIAL PRIMARY KEY,
-          "employeeId" INTEGER NOT NULL REFERENCES "users"("id"),
-          "requestId" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
-          "assignedDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "notes" TEXT,
-          "isCompleted" BOOLEAN DEFAULT FALSE,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`
-      ];
-      
-      // Execute queries in order
-      for (const query of queries) {
-        try {
-          await db.execute(query);
-        } catch (err) {
-          console.error('Error executing query:', err);
-          // Continue with other queries
-        }
-      }
-      
-      console.log('Database tables created successfully');
-    } else {
-      console.log('Database tables already exist');
-    }
-    
+    console.log('Database setup completed successfully');
     return true;
   } catch (error) {
     console.error('Database setup error:', error);
