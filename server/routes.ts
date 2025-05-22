@@ -52,8 +52,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
   
-  // Add authentication routes
-  app.use('/api/auth', authRoutes);
+  // We'll keep using the existing authentication in auth.ts
+  // Commenting out this line to prevent route conflicts
+  // app.use('/api/auth', authRoutes);
 
   // Debug route to check if admin user is available
   app.get("/api/debug/users", async (req, res) => {
