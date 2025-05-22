@@ -50,10 +50,29 @@ export class SimpleDatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
-      const users = await db.query.users.findMany({
-        where: eq(schema.users.id, id)
-      });
-      return users[0];
+      // Use direct SQL query to match our database schema
+      const result = await sessionPool.query(
+        `SELECT * FROM users WHERE id = $1`,
+        [id]
+      );
+      
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      
+      // Convert snake_case column names to camelCase for our app
+      const user = result.rows[0];
+      return {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        passwordHash: user.password_hash,
+        role: user.role,
+        serviceLevelId: user.service_level_id,
+        createdAt: user.created_at
+      } as User;
     } catch (error) {
       console.error("Error in getUser:", error);
       return undefined;
@@ -62,10 +81,29 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
-      const users = await db.query.users.findMany({
-        where: eq(schema.users.email, email)
-      });
-      return users[0];
+      // Use a simpler direct SQL query instead of the ORM query to avoid schema mismatches
+      const result = await sessionPool.query(
+        `SELECT * FROM users WHERE email = $1`,
+        [email]
+      );
+      
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      
+      // Convert snake_case column names to camelCase for our app
+      const user = result.rows[0];
+      return {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        passwordHash: user.password_hash,
+        role: user.role,
+        serviceLevelId: user.service_level_id,
+        createdAt: user.created_at
+      } as User;
     } catch (error) {
       console.error("Error in getUserByEmail:", error);
       return undefined;
@@ -74,13 +112,34 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async createUser(user: InsertUser, passwordHash: string): Promise<User> {
     try {
-      const result = await db.insert(schema.users)
-        .values({
-          ...user,
-          passwordHash
-        })
-        .returning();
-      return result[0];
+      // Use direct SQL query with the correct column names for our database schema
+      const result = await sessionPool.query(
+        `INSERT INTO users (
+          email, first_name, last_name, phone, password_hash, role
+        ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [
+          user.email,
+          user.firstName,
+          user.lastName,
+          user.phone || null,
+          passwordHash,
+          user.role || 'member'
+        ]
+      );
+      
+      // Convert the result to match our app's schema
+      const newUser = result.rows[0];
+      return {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.first_name,
+        lastName: newUser.last_name,
+        phone: newUser.phone,
+        passwordHash: newUser.password_hash,
+        role: newUser.role,
+        serviceLevelId: newUser.service_level_id,
+        createdAt: newUser.created_at
+      } as User;
     } catch (error) {
       console.error("Error in createUser:", error);
       throw new Error("Failed to create user");
