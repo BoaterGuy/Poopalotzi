@@ -23,8 +23,7 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+  // Express middleware already set up in index.ts
   
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",

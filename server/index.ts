@@ -11,26 +11,6 @@ import { setupAuth } from "./auth";
 // Variable to hold our storage implementation
 export let storage: IStorage = memStorage;
 
-// Function to initialize our storage implementation
-async function initializeStorage() {
-  try {
-    // Try to set up the database
-    const dbSuccess = await setupDatabase();
-    
-    if (dbSuccess) {
-      console.log("Database setup successful - using database storage");
-      storage = new SimpleDatabaseStorage();
-      return true;
-    } else {
-      console.log("Database setup failed - fallback to memory storage");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error initializing storage:", error);
-    return false;
-  }
-}
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -48,314 +28,272 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+    const status = res.statusCode;
+    
+    if (path.startsWith("/api") || path.startsWith("/auth")) {
+      log(`${req.method} ${path} ${status} in ${duration}ms :: ${
+        capturedJsonResponse ? JSON.stringify(capturedJsonResponse) : ""
+      }`);
     }
   });
 
   next();
 });
 
-// Helper function to seed initial data if needed
+// Initialize memory data for development
 async function initializeMemoryData() {
+  log('Initializing sample data in memory storage');
+  
+  // Create service levels
+  await storage.createServiceLevel({
+    name: 'Basic - Single Head',
+    price: 49900, // $499.00
+    type: 'monthly',
+    description: 'Monthly pump-out service for boats with a single head',
+    headCount: 1,
+    monthlyQuota: 4,
+    onDemandQuota: 0
+  });
+  
+  await storage.createServiceLevel({
+    name: 'Premium - Multi Head',
+    price: 69900, // $699.00
+    type: 'monthly',
+    description: 'Monthly pump-out service for boats with multiple heads',
+    headCount: 2,
+    monthlyQuota: 8,
+    onDemandQuota: 0
+  });
+  
+  await storage.createServiceLevel({
+    name: 'On-Demand Service',
+    price: 17900, // $179.00
+    type: 'one-time',
+    description: 'One-time pump-out service',
+    headCount: 1,
+    monthlyQuota: 0,
+    onDemandQuota: 1
+  });
+  
+  await storage.createServiceLevel({
+    name: 'Seasonal Package',
+    price: 249900, // $2,499.00
+    type: 'seasonal',
+    description: 'Seasonal pump-out service package (May through October)',
+    headCount: 1,
+    monthlyQuota: 4,
+    onDemandQuota: 0,
+    seasonStart: new Date(2023, 4, 1), // May 1
+    seasonEnd: new Date(2023, 9, 31) // October 31
+  });
+  
+  // Create marinas
+  await storage.createMarina({
+    name: 'Cedar Point Marina',
+    isActive: true
+  });
+  
+  await storage.createMarina({
+    name: 'Son Rise Marina',
+    isActive: true
+  });
+  
+  await storage.createMarina({
+    name: 'Bay Harbor Marina',
+    isActive: true
+  });
+  
+  // Create admin user
+  const adminHash = await bcrypt.hash('admin123', 10);
+  const adminUser = await storage.createUser({
+    email: 'admin@poopalotzi.com',
+    firstName: 'Admin',
+    lastName: 'User',
+    role: 'admin'
+  }, adminHash);
+  
+  // Create employee user
+  const employeeHash = await bcrypt.hash('employee123', 10);
+  const employeeUser = await storage.createUser({
+    email: 'employee@poopalotzi.com',
+    firstName: 'Employee',
+    lastName: 'User',
+    role: 'employee'
+  }, employeeHash);
+  
+  // Create member user
+  const memberHash = await bcrypt.hash('member123', 10);
+  const memberUser = await storage.createUser({
+    email: 'member@poopalotzi.com',
+    firstName: 'Member',
+    lastName: 'User',
+    role: 'member',
+    serviceLevelId: 1
+  }, memberHash);
+  
+  // Create boat owner
+  const boatOwner = await storage.createBoatOwner({
+    userId: memberUser.id
+  });
+  
+  // Create boats for the member
+  const boat1 = await storage.createBoat({
+    ownerId: boatOwner.id,
+    name: "Summer Dream",
+    year: 2018,
+    make: "Sea Ray",
+    model: "Sundancer 320",
+    color: "White/Blue",
+    dockingDirection: "bow_in",
+    tieUpSide: "starboard",
+    pumpPortLocations: ["port", "stern"],
+    notes: "Access code for dock is #1234"
+  });
+
+  const boat2 = await storage.createBoat({
+    ownerId: boatOwner.id,
+    name: "Wave Runner",
+    year: 2020,
+    make: "Boston Whaler",
+    model: "Conquest 285",
+    color: "White/Navy",
+    dockingDirection: "stern_in",
+    tieUpSide: "port",
+    pumpPortLocations: ["starboard"],
+    notes: "Call 15 mins before arrival"
+  });
+
+  // Create slip assignments
+  await storage.createSlipAssignment({
+    boatId: boat1.id,
+    marinaId: 1, // Cedar Point Marina
+    dock: "3",
+    slip: 12
+  });
+
+  await storage.createSlipAssignment({
+    boatId: boat2.id,
+    marinaId: 2, // Son Rise Marina
+    dock: "5",
+    slip: 7
+  });
+
+  // Create current week for pump-out requests
+  const currentDate = new Date();
+  const weekStart = new Date(currentDate);
+  weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday of current week
+  
+  // Format dates as ISO strings (YYYY-MM-DD)
+  const formatDateForRequest = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
+  // Create sample service history for the member's boats
+  // Completed request from last week for Boat 1
+  const lastWeekStart = new Date(weekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  
+  await storage.createPumpOutRequest({
+    boatId: boat1.id,
+    weekStartDate: formatDateForRequest(lastWeekStart),
+    status: 'Completed',
+    ownerNotes: 'Please clean deck area when done',
+    paymentStatus: 'Paid'
+  });
+  
+  // Current week request for Boat 1
+  await storage.createPumpOutRequest({
+    boatId: boat1.id,
+    weekStartDate: formatDateForRequest(weekStart),
+    status: 'Scheduled',
+    ownerNotes: 'Dock key in lock box',
+    paymentStatus: 'Paid'
+  });
+  
+  // Upcoming request for Boat 2
+  const nextWeekStart = new Date(weekStart);
+  nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+  
+  await storage.createPumpOutRequest({
+    boatId: boat2.id,
+    weekStartDate: formatDateForRequest(nextWeekStart),
+    status: 'Requested',
+    ownerNotes: 'Please text 30 mins before arrival',
+    paymentStatus: 'Pending'
+  });
+  
+  log('Sample data initialization complete');
+}
+
+// Main function to start the server
+async function startServer() {
   try {
-    // Add service levels
-    await Promise.all([
-      // Single-head boats
-      storage.createServiceLevel({
-        name: "Single Service (Single-Head)",
-        price: 60, // $60.00 in dollars
-        type: "one-time",
-        headCount: 1,
-        description: "One-time pump-out service for single-head boats",
-        isActive: true,
-      }),
-      storage.createServiceLevel({
-        name: "Monthly Plan (Single-Head)",
-        price: 100, // $100.00 in dollars
-        type: "monthly",
-        headCount: 1,
-        monthlyQuota: 2,
-        description: "Monthly plan with up to 2 pump-outs for single-head boats",
-        isActive: true,
-      }),
-      storage.createServiceLevel({
-        name: "Seasonal Service (Single-Head)",
-        price: 475, // $475.00 in dollars
-        type: "seasonal",
-        headCount: 1,
-        monthlyQuota: 2,
-        onDemandQuota: 1,
-        seasonStart: "05-01",
-        seasonEnd: "10-31",
-        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Oct 31)",
-        isActive: true,
-      }),
+    // Set up vite middleware for development
+    await setupVite(app);
+    
+    // Try to initialize storage
+    try {
+      // Initialize database schema
+      const dbSuccess = await setupDatabase();
       
-      // Multi-head boats
-      storage.createServiceLevel({
-        name: "Single Service (Multi-Head)",
-        price: 75, // $75.00 in dollars
-        type: "one-time",
-        headCount: 2,
-        description: "One-time pump-out service for multi-head boats",
-        isActive: true,
-      }),
-      storage.createServiceLevel({
-        name: "Monthly Plan (Multi-Head)",
-        price: 140, // $140.00 in dollars
-        type: "monthly",
-        headCount: 2,
-        monthlyQuota: 2,
-        description: "Monthly plan with up to 2 pump-outs for multi-head boats",
-        isActive: true,
-      }),
-      storage.createServiceLevel({
-        name: "Seasonal Service (Multi-Head)",
-        price: 675, // $675.00 in dollars
-        type: "seasonal",
-        headCount: 2,
-        monthlyQuota: 2,
-        onDemandQuota: 1,
-        seasonStart: "05-01",
-        seasonEnd: "10-31",
-        description: "2 pump-outs per month plus one Single Service to use anytime during season (May-Oct 31)",
-        isActive: true,
-      }),
-    ]);
+      if (dbSuccess) {
+        // Create a database storage instance
+        const dbStorage = new SimpleDatabaseStorage();
+        
+        // Replace memory storage with database
+        storage = dbStorage;
+        
+        log("Successfully connected to the database!");
+      } else {
+        throw new Error("Database setup failed");
+      }
+    } catch (dbError: any) {
+      // If database connection fails, fall back to memory storage
+      log(`Database connection error: ${dbError.message}`);
+      log("Using in-memory storage for this session");
+      
+      // Initialize sample data
+      await initializeMemoryData();
+    }
     
-    // Add some sample marinas
-    await Promise.all([
-      storage.createMarina({
-        name: "Cedar Point Marina",
-        isActive: true,
-      }),
-      storage.createMarina({
-        name: "Son Rise Marina",
-        isActive: true,
-      }),
-      storage.createMarina({
-        name: "Port Clinton Yacht Club",
-        isActive: true,
-      }),
-      storage.createMarina({
-        name: "Craft Marine",
-        isActive: true,
-      }),
-    ]);
+    // Set up authentication with the proper storage
+    setupAuth(app);
     
-    // Hash the password before storing it
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-    
-    // Create sample admin user
-    const adminUser = await storage.createUser(
-      {
-        email: "admin@poopalotzi.com",
-        firstName: "Admin",
-        lastName: "User",
-        role: "admin",
-        password: "admin123", // This is just for the form, not actually used
-      },
-      hashedPassword // Properly hashed password
-    );
-    
-    // Create sample employee user
-    const employeeUser = await storage.createUser(
-      {
-        email: "employee@poopalotzi.com",
-        firstName: "Employee",
-        lastName: "User",
-        role: "employee",
-        password: "admin123", // This is just for the form, not actually used
-      },
-      hashedPassword // Properly hashed password
-    );
-    
-    // Create sample member user
-    const memberUser = await storage.createUser(
-      {
-        email: "member@poopalotzi.com",
-        firstName: "Member",
-        lastName: "User",
-        role: "member",
-        password: "admin123", // This is just for the form, not actually used
-      },
-      hashedPassword // Properly hashed password
-    );
-    
-    // Create boat owner record for member
-    const boatOwner = await storage.createBoatOwner({ userId: memberUser.id });
-    
-    // Create boats for scheduling test data
-    const boat1 = await storage.createBoat({
-      ownerId: boatOwner.id,
-      name: "Summer Dream",
-      year: 2018,
-      make: "Sea Ray",
-      model: "Sundancer 320",
-      color: "White/Blue",
-      dockingDirection: "bow_in",
-      tieUpSide: "starboard",
-      pumpPortLocations: ["port", "stern"],
-      notes: "Access code for dock is #1234"
+    const server = await registerRoutes(app);
+
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+
+      res.status(status).json({ message });
+      console.error(err);
     });
 
-    const boat2 = await storage.createBoat({
-      ownerId: boatOwner.id,
-      name: "Wave Runner",
-      year: 2020,
-      make: "Boston Whaler",
-      model: "Conquest 285",
-      color: "White/Navy",
-      dockingDirection: "stern_in",
-      tieUpSide: "port",
-      pumpPortLocations: ["starboard"],
-      notes: "Call 15 mins before arrival"
-    });
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
-    // Create slip assignments
-    await storage.createSlipAssignment({
-      boatId: boat1.id,
-      marinaId: 1, // Cedar Point Marina
-      dock: 3,
-      slip: 12
+    // ALWAYS serve the app on port 5000
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
     });
-
-    await storage.createSlipAssignment({
-      boatId: boat2.id,
-      marinaId: 2, // Son Rise Marina
-      dock: 5,
-      slip: 7
-    });
-
-    // Create current week for pump-out requests
-    const currentDate = new Date();
-    const weekStart = new Date(currentDate);
-    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday of current week
-    
-    // Format dates as ISO strings (YYYY-MM-DD)
-    const formatDateForRequest = (date: Date): string => {
-      return date.toISOString().split('T')[0];
-    };
-
-    // Create sample service history for the member's boats
-    // Create a completed service from last week for boat1
-    await storage.createPumpOutRequest({
-      boatId: boat1.id,
-      weekStartDate: formatDateForRequest(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)), // 5 days ago
-      status: "Completed",
-      paymentStatus: "Paid",
-      paymentId: "sim_" + Date.now() + "1",
-      ownerNotes: "Please call before arriving"
-    });
-    
-    // Create a canceled service from 2 weeks ago for boat1
-    await storage.createPumpOutRequest({
-      boatId: boat1.id,
-      weekStartDate: formatDateForRequest(new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)), // 12 days ago
-      status: "Canceled",
-      paymentStatus: "Refunded",
-      paymentId: "sim_" + Date.now() + "2",
-      ownerNotes: "Boat will be at slip #12"
-    });
-    
-    // Create a scheduled service for this week for boat1
-    await storage.createPumpOutRequest({
-      boatId: boat1.id,
-      weekStartDate: formatDateForRequest(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)), // 2 days from now
-      status: "Scheduled",
-      paymentStatus: "Paid",
-      paymentId: "sim_" + Date.now() + "3",
-      ownerNotes: "Please text 30 minutes before arrival"
-    });
-    
-    // Create a pending service for boat2
-    await storage.createPumpOutRequest({
-      boatId: boat2.id,
-      weekStartDate: formatDateForRequest(new Date(Date.now() + 9 * 24 * 60 * 60 * 1000)), // 9 days from now
-      status: "Requested",
-      paymentStatus: "Pending",
-      ownerNotes: ""
-    });
-    
-    // Create a waitlisted service for boat2
-    await storage.createPumpOutRequest({
-      boatId: boat2.id,
-      weekStartDate: formatDateForRequest(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)), // 3 days from now
-      status: "Waitlisted",
-      paymentStatus: "Paid",
-      paymentId: "sim_" + Date.now() + "4",
-      ownerNotes: "High priority for Friday if possible"
-    });
-
-    log("Sample data initialized in memory storage");
-  } catch (seedError) {
-    log("Error seeding initial data: " + seedError);
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
 }
 
-(async () => {
-  try {
-    // Set up database connection
-    log("Setting up database connection...");
-    
-    // Initialize database schema
-    const dbSuccess = await setupDatabase();
-    
-    if (!dbSuccess) {
-      throw new Error("Database setup failed");
-    }
-
-    // Create a database storage instance and replace memory storage
-    storage = new SimpleDatabaseStorage();
-    log("Successfully connected to the database!");
-
-    // Set up authentication with the proper storage
-    setupAuth(app);
-
-    // Register routes after auth is set up
-    const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    console.error(err);
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-}).finally(() => {
-  log('Server startup process completed');
-});
+// Start the server
+startServer();
