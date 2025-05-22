@@ -293,8 +293,11 @@ export class SimpleDatabaseStorage implements IStorage {
 
   async getPumpOutRequestsByStatus(status: string): Promise<PumpOutRequest[]> {
     try {
+      // Import and use the same pool that's used elsewhere
+      const { Pool } = require('pg');
+      
       // Create a new database connection
-      const pool = new pg.Pool({
+      const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: {
           rejectUnauthorized: false
@@ -313,11 +316,15 @@ export class SimpleDatabaseStorage implements IStorage {
       // Order by creation date, newest first
       query += ` ORDER BY created_at DESC`;
       
+      console.log(`Executing query: ${query} with status: ${status || 'all'}`);
+      
       const result = await pool.query(query, values);
       await pool.end(); // Close connection
       
+      console.log(`Found ${result.rows.length} pump-out requests in database`);
+      
       // Convert the database rows to our PumpOutRequest type
-      return result.rows.map(row => ({
+      return result.rows.map((row: any) => ({
         id: row.id,
         boatId: row.boat_id,
         weekStartDate: row.week_start_date,

@@ -45,16 +45,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin } from "lucide-react";
 import { format } from "date-fns";
 
-// Mock data until connected to API
-const MOCK_MARINAS = [
-  { id: 1, name: "Harbor Bay Marina" },
-  { id: 2, name: "Sunset Point Marina" },
-  { id: 3, name: "Golden Anchor Marina" },
-  { id: 4, name: "Cedar Point Marina" },
-  { id: 5, name: "Son Rise Marina" },
-  { id: 6, name: "Port Clinton Yacht Club" },
-  { id: 7, name: "Craft Marine" }
-];
+// Empty fallback array for marinas
+const EMPTY_MARINAS: { id: number; name: string }[] = [];
 
 // Define types for the mock data structure
 type StatusType = "Requested" | "Scheduled" | "Completed" | "Canceled" | "Waitlisted";
@@ -84,135 +76,8 @@ interface MarinaType {
   name: string;
 }
 
-// Mock data for pump-out requests
-const MOCK_REQUESTS: RequestType[] = [
-  {
-    id: 1,
-    boatId: 101,
-    boatName: "Sea Breeze",
-    ownerName: "John Doe",
-    marinaId: 1,
-    marinaName: "Harbor Bay Marina",
-    dock: "A",
-    slip: "12",
-    status: "Scheduled",
-    weekStartDate: "2025-05-12",
-    paymentStatus: "Paid",
-    createdAt: "2025-05-08T10:30:00Z",
-    notes: "Owner will be on site",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-  {
-    id: 2,
-    boatId: 102,
-    boatName: "Wave Runner",
-    ownerName: "Jane Smith",
-    marinaId: 2,
-    marinaName: "Sunset Point Marina",
-    dock: "B",
-    slip: "24",
-    status: "Completed",
-    weekStartDate: "2025-05-05",
-    paymentStatus: "Paid",
-    createdAt: "2025-05-02T14:15:00Z",
-    notes: "",
-    beforeImageUrl: "/src/assets/sample-before.jpg",
-    duringImageUrl: "/src/assets/sample-during.jpg",
-    afterImageUrl: "/src/assets/sample-after.jpg"
-  },
-  {
-    id: 3,
-    boatId: 103,
-    boatName: "Blue Waters",
-    ownerName: "Robert Johnson",
-    marinaId: 1,
-    marinaName: "Harbor Bay Marina",
-    dock: "C",
-    slip: "08",
-    status: "Requested",
-    weekStartDate: "2025-05-19",
-    paymentStatus: "Pending",
-    createdAt: "2025-05-11T09:45:00Z",
-    notes: "Please call 30 minutes before arrival",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-  {
-    id: 4,
-    boatId: 104,
-    boatName: "Sea Wanderer",
-    ownerName: "Emily Chen",
-    marinaId: 3,
-    marinaName: "Golden Anchor Marina",
-    dock: "D",
-    slip: "15",
-    status: "Waitlisted",
-    weekStartDate: "2025-05-12",
-    paymentStatus: "Pending",
-    createdAt: "2025-05-09T16:20:00Z",
-    notes: "",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-  {
-    id: 5,
-    boatId: 105,
-    boatName: "Ocean Explorer",
-    ownerName: "Michael Brown",
-    marinaId: 2,
-    marinaName: "Sunset Point Marina",
-    dock: "E",
-    slip: "03",
-    status: "Canceled",
-    weekStartDate: "2025-05-05",
-    paymentStatus: "Refunded",
-    createdAt: "2025-05-01T11:10:00Z",
-    notes: "Customer requested cancellation",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-  {
-    id: 6,
-    boatId: 106,
-    boatName: "Liberty",
-    ownerName: "Thomas Wilson",
-    marinaId: 4,
-    marinaName: "Cedar Point Marina",
-    dock: "F",
-    slip: "22",
-    status: "Scheduled",
-    weekStartDate: "2025-05-19",
-    paymentStatus: "Paid",
-    createdAt: "2025-05-12T08:30:00Z",
-    notes: "Gate code is 1234",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-  {
-    id: 7,
-    boatId: 107,
-    boatName: "Water Dream",
-    ownerName: "Lisa Parker",
-    marinaId: 5,
-    marinaName: "Son Rise Marina",
-    dock: "G",
-    slip: "05",
-    status: "Requested",
-    weekStartDate: "2025-05-26",
-    paymentStatus: "Pending",
-    createdAt: "2025-05-15T13:10:00Z",
-    notes: "",
-    beforeImageUrl: null,
-    duringImageUrl: null,
-    afterImageUrl: null
-  },
-];
+// Empty array for initial state - we'll use real data from the database
+const EMPTY_REQUESTS: RequestType[] = [];
 
 // Define types for the mock data structure
 interface RequestType {
