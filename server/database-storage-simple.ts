@@ -304,12 +304,17 @@ export class SimpleDatabaseStorage implements IStorage {
         }
       });
       
-      let query = `SELECT * FROM pump_out_request`;
+      let query = `
+        SELECT por.* 
+        FROM pump_out_request por
+        JOIN boat b ON por.boat_id = b.id
+        WHERE b.active = true
+      `;
       const values: any[] = [];
       
-      // If status is not "all", filter by status
+      // If status is not "all", add status filter
       if (status && status !== "all") {
-        query += ` WHERE status = $1`;
+        query += ` AND por.status = $1`;
         values.push(status);
       }
       
