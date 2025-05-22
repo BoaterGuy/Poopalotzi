@@ -699,6 +699,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (status !== "Canceled") {
           return res.status(403).json({ message: "Members can only cancel requests" });
         }
+        
+        // Can only cancel if status is Requested, Scheduled, or Waitlisted
+        if (!["Requested", "Scheduled", "Waitlisted"].includes(request.status)) {
+          return res.status(400).json({ 
+            message: "Cannot cancel a completed or already canceled request"
+          });
+        }
       }
 
       // Update status
