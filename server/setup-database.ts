@@ -5,12 +5,16 @@ import { log } from './vite';
 export async function setupFullDatabase() {
   console.log('Starting complete database setup...');
   
-  // Connect to database
+  // Connect to database using individual parameters from environment variables
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-    } : false
+    host: process.env.PGHOST,
+    port: parseInt(process.env.PGPORT || '5432'),
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+    ssl: {
+      rejectUnauthorized: false // For development - handles self-signed certificates
+    }
   });
   
   try {
