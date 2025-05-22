@@ -252,21 +252,46 @@ export default function RequestManagement() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestType | null>(null);
 
-  // Use the mock marinas data directly
-  const marinas: MarinaType[] = MOCK_MARINAS;
-
-  // State to track the requests (will be replaced with API later)
-  const [requestsData, setRequestsData] = useState(MOCK_REQUESTS);
-
-  // This is just a dummy query that we'll keep to maintain the loading state
-  const { isLoading } = useQuery({
+  // Fetch marinas from the database
+  const { data: marinasData, isLoading: marinasLoading } = useQuery({
+    queryKey: ["/api/marinas"],
+    queryFn: async () => {
+      const response = await fetch('/api/marinas');
+      if (!response.ok) throw new Error('Failed to fetch marinas');
+      return await response.json();
+    }
+  });
+  
+  const marinas: MarinaType[] = marinasData || [];
+  
+  // Fetch pump-out requests from the database with filters
+  const { data, isLoading } = useQuery({
     queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter }],
     queryFn: async () => {
-      // In production, this would fetch from the API
-      return [];
-    },
-    enabled: false, // Don't actually run this query
+      let url = '/api/pump-out-requests';
+      const params = new URLSearchParams();
+      
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (weekFilter !== 'all') params.append('week', weekFilter);
+      if (marinaFilter !== 'all') params.append('marina', marinaFilter);
+      
+      if (params.toString()) url += `?${params.toString()}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch requests');
+      return await response.json();
+    }
   });
+  
+  // Use the fetched data, or fall back to an empty array if still loading
+  const [requestsData, setRequestsData] = useState<RequestType[]>([]);
+  
+  // Update state when data is fetched
+  useEffect(() => {
+    if (data) {
+      setRequestsData(data);
+    }
+  }, [data]);
 
   // Get unique weeks for the filter
   const uniqueWeeks = Array.from(new Set(MOCK_REQUESTS.map(r => r.weekStartDate))).sort();
