@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PumpOutRequest, Boat } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,21 @@ import {
   DialogContent, 
   DialogDescription, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { Search, Calendar, Ship, FileText } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Search, Calendar, Ship, FileText, AlertCircle } from "lucide-react";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import PaymentForm from "@/components/member/PaymentForm";
 import { useToast } from "@/hooks/use-toast";
@@ -180,6 +192,7 @@ export default function ServiceHistory() {
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [isCanceling, setIsCanceling] = useState<boolean>(false);
 
   // Fetch boats first
   const { data: boats } = useQuery<Boat[]>({
@@ -238,6 +251,50 @@ export default function ServiceHistory() {
 
   const getBoatById = (boatId?: number) => {
     return boats?.find(boat => boat.id === boatId);
+  };
+  
+  // Function to cancel a pump-out request
+  const handleCancelRequest = async (requestId: number) => {
+    if (!requestId) return;
+    
+    setIsCanceling(true);
+    
+    try {
+      const response = await fetch(`/api/pump-out-requests/${requestId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'Canceled' }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to cancel the request');
+      }
+      
+      // Update the UI by refetching
+      await queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
+      
+      toast({
+        title: "Request Canceled",
+        description: "Your pump-out service request has been canceled successfully.",
+      });
+      
+      // Close the detail view if it was open
+      if (selectedRequest?.id === requestId) {
+        setSelectedRequest(null);
+      }
+    } catch (error) {
+      console.error("Error canceling request:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem canceling your request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCanceling(false);
+    }
   };
 
   return (
