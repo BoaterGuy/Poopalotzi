@@ -310,7 +310,8 @@ export class SimpleDatabaseStorage implements IStorage {
         JOIN boat b ON por.boat_id = b.id
         WHERE b.active = true
         AND por.status NOT IN ('Canceled', 'Completed')
-        AND por.week_start_date >= CURRENT_DATE - INTERVAL '7 days'
+        AND por.week_start_date >= CURRENT_DATE
+        AND por.week_start_date <= CURRENT_DATE + INTERVAL '28 days'
       `;
       const values: any[] = [];
       

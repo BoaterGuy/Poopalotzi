@@ -30,6 +30,8 @@ export function useServiceRequests(boatId?: number) {
     queryKey: [`/api/pump-out-requests/boat/${boatId}`],
     queryFn: undefined,
     enabled: !!boatId,
+    staleTime: 0, // Consider data always stale
+    cacheTime: 0  // Don't cache the data
   });
   
   // Create a new service request
