@@ -60,40 +60,33 @@ const marinaDistribution = [
   { marina: "Other", count: 15 }
 ];
 
-const revenueData = Array.from({ length: 12 }, (_, i) => {
-  const date = subMonths(new Date(), 11 - i);
-  return {
-    month: format(date, "MMM"),
-    revenue: 8000 + Math.random() * 4000 + (i * 300)
-  };
-});
-
 export default function AdminDashboard() {
   // Fetch analytics data
   const { data: usersByServiceLevel, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['/api/analytics/users-by-service-level'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/users-by-service-level');
+      return res.json();
+    }
   });
 
   const { data: serviceCounts, isLoading: isLoadingCounts } = useQuery({
     queryKey: ['/api/analytics/service-counts'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/service-counts');
+      return res.json();
+    }
   });
 
   const { data: arpuData, isLoading: isLoadingArpu } = useQuery({
     queryKey: ['/api/analytics/arpu'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/arpu');
+      return res.json();
+    }
   });
 
   const isLoading = isLoadingUsers || isLoadingCounts || isLoadingArpu;
-
-  // Mock values - would come from the API
-  const totalCustomers = 254;
-  const activeBoats = 187;
-  const monthlyRevenue = 14328;
-  const arpu = 56.42;
-  const churnRate = 3.2;
-  const customerSatisfaction = 4.8;
 
   return (
     <>

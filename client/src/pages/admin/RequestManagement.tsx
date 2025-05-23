@@ -136,25 +136,11 @@ export default function RequestManagement() {
     staleTime: 0
   });
   
-  // IMPORTANT: Only use REAL database data - NO mock data allowed
-  // Create an empty array for initial state
   const [requestsData, setRequestsData] = useState<RequestType[]>([]);
-  
-  // Completely override state with ONLY database data, no previous state allowed
+
   useEffect(() => {
-    // Always start fresh with an empty array
-    setRequestsData([]);
-    
-    // Only add data that actually came from the database, discard everything else
     if (data) {
-      console.log("Setting ONLY database data:", data.length, "records - timestamp:", Date.now());
-      
-      // Force a deep copy to ensure there's no reference to previous state
-      const freshData = JSON.parse(JSON.stringify(data));
-      setRequestsData(freshData);
-      
-      // Log the data we're setting for debugging
-      console.log("Data being set:", freshData);
+      setRequestsData(data);
     }
   }, [data]);
 

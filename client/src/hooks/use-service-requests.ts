@@ -103,32 +103,12 @@ export function useEmployeeSchedule() {
   const { data: weekRequests, isLoading, error } = useQuery({
     queryKey: [`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`],
     queryFn: async () => {
-      // Return sample data for demonstration
-      return [
-        {
-          id: 1,
-          status: "Scheduled",
-          boatId: 101,
-          requestedDate: new Date().toISOString().split('T')[0],
-          weekStartDate: "2025-05-12",
-          pumpOutPorts: ["port", "starboard"],
-          boat: {
-            id: 101,
-            name: "Sea Spirit",
-            make: "Bayliner",
-            model: "3988",
-            color: "White/Blue"
-          },
-          marina: {
-            id: 1,
-            name: "Sunset Marina"
-          },
-          slipAssignment: {
-            dock: "A",
-            slip: 12
-          },
-          ownerNotes: "Please notify before arrival"
-        },
+      const res = await fetch(`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch requests');
+      }
+      return res.json();
+    }
         {
           id: 2,
           status: "Completed",
