@@ -108,57 +108,87 @@ export function useEmployeeSchedule() {
         throw new Error('Failed to fetch requests');
       }
       return res.json();
-    }
-        {
-          id: 2,
-          status: "Completed",
-          boatId: 102,
-          requestedDate: new Date().toISOString().split('T')[0],
-          weekStartDate: "2025-05-12",
-          pumpOutPorts: ["stern"],
-          boat: {
-            id: 102,
-            name: "Tranquility",
-            make: "Sea Ray",
-            model: "340 Sundancer",
-            color: "White"
-          },
-          marina: {
-            id: 2,
-            name: "Harbor Point"
-          },
-          slipAssignment: {
-            dock: "C",
-            slip: 5
-          }
-        },
-        {
-          id: 3,
-          status: "Waitlisted",
-          boatId: 103,
-          requestedDate: new Date().toISOString().split('T')[0],
-          weekStartDate: "2025-05-12",
-          pumpOutPorts: ["port"],
-          boat: {
-            id: 103,
-            name: "Wave Dancer",
-            make: "Catalina",
-            model: "350",
-            color: "Navy/White"
-          },
-          marina: {
-            id: 1,
-            name: "Sunset Marina"
-          },
-          slipAssignment: {
-            dock: "B",
-            slip: 8
-          },
-          ownerNotes: "Call ahead"
-        }
-      ];
-    }
+    },
+    staleTime: 0,
+    refetchOnMount: true
   });
+
+  return {
+    requests: data || [],
+    isLoading,
+    refetch
+  };
+}
+
+// Mock data for development - this should come from API
+const mockRequests = [
+  {
+    id: 1,
+    status: "Requested",
+    boatId: 101,
+    requestedDate: new Date().toISOString().split('T')[0],
+    weekStartDate: "2025-05-12",
+    pumpOutPorts: ["bow", "stern"],
+    boat: {
+      id: 101,
+      name: "Sea Breeze",
+      owner: {
+        firstName: "John",
+        lastName: "Smith"
+      },
+      marina: {
+        name: "Harbor Bay Marina"
+      }
+    }
+  },
+  {
+    id: 2,
+    status: "Completed",
+    boatId: 102,
+    requestedDate: new Date().toISOString().split('T')[0],
+    weekStartDate: "2025-05-12",
+    pumpOutPorts: ["stern"],
+    boat: {
+      id: 102,
+      name: "Tranquility",
+      make: "Sea Ray",
+      model: "340 Sundancer",
+      color: "White"
+    },
+    marina: {
+      id: 2,
+      name: "Harbor Point"
+    },
+    slipAssignment: {
+      dock: "C",
+      slip: 5
+    }
+  },
+  {
+    id: 3,
+    status: "Waitlisted",
+    boatId: 103,
+    requestedDate: new Date().toISOString().split('T')[0],
+    weekStartDate: "2025-05-12",
+    pumpOutPorts: ["port"],
+    boat: {
+      id: 103,
+      name: "Wave Dancer",
+      make: "Catalina",
+      model: "350",
+      color: "Navy/White"
+    },
+    marina: {
+      id: 1,
+      name: "Sunset Marina"
+    },
+    slipAssignment: {
+      dock: "B",
+      slip: 8
+    },
+    ownerNotes: "Call ahead"
+  }
+];
   
   return {
     weekRequests,
