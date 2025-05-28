@@ -1,0 +1,55 @@
+Okay, you've pasted your routes file again. It seems you're asking if this is the correct file or if the debugging code has been added.
+
+Looking at the code you just sent, the app.get("/api/marinas", ...) route is still in its original state. The detailed debugging log statements and the "TEMPORARY DIRECT DB CHECK" block that we discussed are not present in that specific route handler in the code you've just shown me.
+
+Adding the Debug Logs
+You'll need to manually edit that app.get("/api/marinas", ...) function within this file to include the debugging code.
+
+Here's that specific function block again, this time with the debugging code integrated. Please replace your current app.get("/api/marinas", ...) function with this one:
+
+TypeScript
+
+// Make sure 'log' is available here (it seems to be from your './vite' import at the top of the file)
+// Or replace 'log' with 'console.log' if necessary.
+// You'll also need to ensure 'db' and 'marinaTable' can be imported here.
+// If './db' and '../shared/schema' are not the correct paths from THIS file, adjust them.
+
+app.get("/api/marinas", async (req: Request, res: Response, next: NextFunction) => { // Added Request, Response, NextFunction types
+  try {
+    // ----- START OF NEW DEBUGGING LOGS -----
+    // Assuming 'log' is your logging function, or use console.log
+    log("--- /api/marinas REQUEST RECEIVED ---");
+    log(`DATABASE_URL used by server: ${process.env.DATABASE_URL || "DATABASE_URL not set or empty!"}`);
+
+    // TEMPORARY DIRECT DB CHECK
+    try {
+      // *** IMPORTANT: Adjust these import paths based on your actual file structure
+      // relative to this routes file! ***
+      const { db } = await import('./db'); // e.g., if db.ts is in the same directory
+      const { marina: marinaTable } = await import('../shared/schema'); // e.g., if shared/ is one level up
+
+      const currentMarinasInDb = await db.select().from(marinaTable).limit(10);
+      log(`Direct DB check in /api/marinas - Found ${currentMarinasInDb.length} marinas. First few: ${JSON.stringify(currentMarinasInDb.slice(0,3))}`);
+      
+      if (currentMarinasInDb.length === 0) {
+        log("Direct DB check confirms MARINA TABLE IS EMPTY from API's perspective before calling storage.getAllMarinas");
+      }
+
+    } catch (dbCheckError: any) { 
+      log(`Error during direct DB check in /api/marinas: ${dbCheckError.message}`);
+      console.error("DB Check Error Details for /api/marinas:", dbCheckError); 
+    }
+    // ----- END OF TEMPORARY DIRECT DB CHECK -----
+
+    const activeOnly = req.query.activeOnly !== "false";
+    log(`Calling storage.getAllMarinas with activeOnly = ${activeOnly}`); 
+    const marinas = await storage.getAllMarinas(activeOnly); // This uses the 'storage' instance
+    log(`storage.getAllMarinas returned ${marinas.length} marinas. Data (first 3): ${JSON.stringify(marinas.slice(0,3))}`);
+
+    res.json(marinas); // This was already here
+  } catch (err: any) { 
+    log(`Error in /api/marinas: ${err.message}`); 
+    console.error("API Marinas Route Error Details:", err); 
+    next(err); // This was already here
+  }
+});
