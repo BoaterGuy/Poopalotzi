@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -136,16 +136,8 @@ export default function RequestManagement() {
     staleTime: 0
   });
   
-  const [requestsData, setRequestsData] = useState<RequestType[]>([]);
-
-  useEffect(() => {
-    if (data) {
-      setRequestsData(data);
-    }
-  }, [data]);
-
   // Get unique weeks for the filter from the actual data
-  const uniqueWeeks = Array.from(new Set(requestsData.map(r => r.weekStartDate))).sort();
+  const uniqueWeeks = Array.from(new Set((data || []).map(r => r.weekStartDate))).sort();
 
   // IMPORTANT: Apply filters starting with an empty array to ensure no mock data
   // Create a reference to our database data only

@@ -116,7 +116,7 @@ export function useEmployeeSchedule() {
   return {
     requests: data || [],
     isLoading,
-    refetch
+    fetch
   };
 }
 
@@ -189,9 +189,25 @@ const mockRequests = [
     ownerNotes: "Call ahead"
   }
 ];
+
+export function useWeeklyServiceRequests() {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
+  const { data: weekRequests, isLoading, error } = useQuery({
+    queryKey: ['/api/pump-out-requests/week', selectedDate.toISOString().split('T')[0]],
+    queryFn: async () => {
+      const res = await fetch(`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch requests');
+      }
+      return res.json();
+    },
+    staleTime: 0,
+    refetchOnMount: true
+  });
+
   return {
-    weekRequests,
+    weekRequests: weekRequests || [],
     isLoading,
     error,
     selectedDate,

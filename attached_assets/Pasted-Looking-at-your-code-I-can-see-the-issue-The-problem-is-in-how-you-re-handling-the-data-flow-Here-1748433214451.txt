@@ -1,0 +1,77 @@
+Looking at your code, I can see the issue! The problem is in how you're handling the data flow. Here are the key issues:
+
+## Main Problem: Double State Management
+You're fetching data with React Query, but then copying it to local state, which creates inconsistency:
+
+```javascript
+const [requestsData, setRequestsData] = useState<RequestType[]>([]);
+
+useEffect(() => {
+  if (data) {
+    setRequestsData(data);
+  }
+}, [data]);
+```
+
+Then you're filtering from `data` instead of `requestsData`:
+```javascript
+let filteredRequests = data ? [...data] : [];
+```
+
+## Issues I Found:
+
+1. **Mixed data sources**: You're filtering from `data` (React Query) but updating `requestsData` (local state)
+2. **Stale state**: When you update a request status, you update `requestsData` but filter from `data`
+3. **Race conditions**: The local state might not be in sync with the fetched data
+
+## Quick Fix:
+Replace this line:
+```javascript
+let filteredRequests = data ? [...data] : [];
+```
+
+With:
+```javascript
+let filteredRequests = requestsData ? [...requestsData] : [];
+```
+
+## Better Solution - Remove Duplicate State:
+Since you're already using React Query, you don't need the local state at all. Remove these lines:
+
+```javascript
+const [requestsData, setRequestsData] = useState<RequestType[]>([]);
+
+useEffect(() => {
+  if (data) {
+    setRequestsData(data);
+  }
+}, [data]);
+```
+
+And change all references from `requestsData` to `data`:
+
+1. Line where you get unique weeks:
+```javascript
+const uniqueWeeks = Array.from(new Set((data || []).map(r => r.weekStartDate))).sort();
+```
+
+2. In `handleViewDetails`:
+```javascript
+const request = (data || []).find(req => req.id === id);
+```
+
+3. Remove the `setRequestsData` call in `handleUpdateStatus` and instead invalidate the React Query cache to refetch:
+
+```javascript
+// Add this to your imports
+import { useQueryClient } from "@tanstack/react-query";
+
+// Add this in your component
+const queryClient = useQueryClient();
+
+// In handleUpdateStatus, replace setRequestsData with:
+// Invalidate and refetch the data
+queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
+```
+
+This will ensure you're always working with fresh data from your API instead of stale local state.
