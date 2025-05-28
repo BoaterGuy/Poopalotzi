@@ -138,6 +138,9 @@ function App() {
                 <Route path="/admin/marinas">
                   <AdminRoute component={AdminMarinaManagement} path="/admin/marinas" />
                 </Route>
+                <Route path="/admin/marina-management">
+                  <AdminRoute component={AdminMarinaManagement} path="/admin/marina-management" />
+                </Route>
                 <Route path="/admin/requests">
                   <AdminRoute component={AdminRequestManagement} path="/admin/requests" />
                 </Route>

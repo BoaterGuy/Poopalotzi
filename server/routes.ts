@@ -182,10 +182,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Main marina route - this is the single source of truth for marina data
   app.get("/api/marinas", async (req, res, next) => {
     try {
+      console.log("--- /api/marinas REQUEST RECEIVED ---");
+      console.log(`DATABASE_URL used by server: ${process.env.DATABASE_URL || "DATABASE_URL not set or empty!"}`);
+      
+      // TEMPORARY DIRECT DB CHECK
+      try {
+        const { db } = await import('./db');
+        const { marina: marinaTable } = await import('../shared/schema');
+
+        const currentMarinasInDb = await db.select().from(marinaTable).limit(10);
+        console.log(`Direct DB check in /api/marinas - Found ${currentMarinasInDb.length} marinas. First few: ${JSON.stringify(currentMarinasInDb.slice(0,3))}`);
+        
+        if (currentMarinasInDb.length === 0) {
+          console.log("Direct DB check confirms MARINA TABLE IS EMPTY from API's perspective before calling storage.getAllMarinas");
+        }
+      } catch (dbCheckError: any) {
+        console.log(`Error during direct DB check in /api/marinas: ${dbCheckError.message}`);
+        console.error("DB Check Error Details:", dbCheckError);
+      }
+      // END TEMPORARY DIRECT DB CHECK
+      
       const activeOnly = req.query.activeOnly !== "false";
       const marinas = await storage.getAllMarinas(activeOnly);
+      console.log(`storage.getAllMarinas returned ${marinas.length} marinas. Data (first 3): ${JSON.stringify(marinas.slice(0,3))}`);
       res.json(marinas);
-    } catch (err) {
+    } catch (err: any) {
+      console.log(`Error in /api/marinas: ${err.message}`);
+      console.error("API Marinas Error Details:", err);
       next(err);
     }
   });
