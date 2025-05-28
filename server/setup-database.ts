@@ -80,15 +80,14 @@ export async function setupFullDatabase() {
     try {
       console.log('Ensuring marina data is complete...');
       
-      // Our list of marinas - updated to match what's currently in UI
+      // Our list of marinas - updated to match the API data
       const marinaList = [
-        {name: 'Sunset Marina', address: '123 Sunset Way, Port Clinton, OH 43452', phone: '(419) 555-1234'},
-        {name: 'Harbor Point', address: '500 Harbor Dr, Port Clinton, OH 43452', phone: '(419) 555-6789'},
-        {name: 'Bay Front', address: '789 Bay View Rd, Port Clinton, OH 43452', phone: '(419) 555-4321'},
-        {name: 'Cedar Point', address: '1 Cedar Point Dr, Sandusky, OH 44870', phone: '(419) 555-8765'},
-        {name: 'Son Rise', address: '2200 Marina Way, Marblehead, OH 43440', phone: '(419) 555-2468'},
-        {name: 'Port Clinton Yacht Club', address: '455 Lakeshore Dr, Port Clinton, OH 43452', phone: '(419) 555-1357'},
-        {name: 'Craft Marine', address: '300 Craft Rd, Port Clinton, OH 43452', phone: '(419) 555-9876'}
+        {name: 'Harbor Bay Marina', address: '123 Harbor Bay Dr, Port Clinton, OH 43452', phone: '(419) 555-1234'},
+        {name: 'Sunset Point Marina', address: '500 Sunset Pt, Port Clinton, OH 43452', phone: '(419) 555-6789'},
+        {name: 'Harbor Marina', address: '789 Harbor Dr, Port Clinton, OH 43452', phone: '(419) 555-4321'},
+        {name: 'Golden Anchor Marina', address: '1 Golden Anchor Way, Sandusky, OH 44870', phone: '(419) 555-8765'},
+        {name: 'Cedar Point', address: '1 Cedar Point Dr, Sandusky, OH 44870', phone: '(419) 555-1357'},
+        {name: 'Son Rise', address: '300 Son Rise Dr, Port Clinton, OH 43452', phone: '(419) 555-9876'}
       ];
       
       // First get existing marina names
