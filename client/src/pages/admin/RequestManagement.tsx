@@ -75,6 +75,7 @@ interface MarinaType {
 
 export default function RequestManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekFilter, setWeekFilter] = useState<string>("all");
@@ -221,12 +222,8 @@ export default function RequestManagement() {
         throw new Error(`Failed to update status: ${response.statusText}`);
       }
       
-      // If the API call was successful, update the local state
-      const updatedRequests = requestsData.map(request => 
-        request.id === id ? { ...request, status: newStatus } : request
-      );
-      
-      setRequestsData(updatedRequests);
+      // Invalidate and refetch the data from the server
+      queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
       
       // Show success message
       toast({
@@ -254,7 +251,7 @@ export default function RequestManagement() {
   };
 
   const handleViewDetails = (id: number) => {
-    const request = requestsData.find(req => req.id === id);
+    const request = (data || []).find(req => req.id === id);
     if (request) {
       setSelectedRequest(request);
       setDetailsDialogOpen(true);
