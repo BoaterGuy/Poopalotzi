@@ -50,14 +50,19 @@ const formatDateForRequest = (date: Date): string => {
 // Main function to start the server
 async function startServer() {
   try {
-    // Initialize database schema first
-    const dbSuccess = await setupFullDatabase();
-    if (dbSuccess) {
-      log("Successfully connected to the database!");
-      log("All database tables set up successfully!");
+    // Initialize database schema conditionally
+    if (process.env.NODE_ENV !== 'production') {
+      log("Development environment detected, running full database setup (including seeding)...");
+      const dbSuccess = await setupFullDatabase();
+      if (dbSuccess) {
+        log("Successfully connected to the database!");
+        log("All database tables set up successfully!");
+      } else {
+        log("Database connection error - exiting");
+        process.exit(1);
+      }
     } else {
-      log("Database connection error - exiting");
-      process.exit(1);
+      log("Production environment detected. Skipping automatic database setup/seeding.");
     }
     
     // Set up authentication with the proper storage
