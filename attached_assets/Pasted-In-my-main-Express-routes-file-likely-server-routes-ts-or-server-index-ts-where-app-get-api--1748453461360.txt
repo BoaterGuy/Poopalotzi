@@ -1,0 +1,40 @@
+In my main Express routes file (likely `server/routes.ts` or `server/index.ts` where `app.get("/api/marinas", ...)` is defined):
+
+1.  Locate the existing `app.get("/api/marinas", async (req, res, next) => { ... });` route handler.
+2.  Modify ONLY this specific route handler. Within its `try` block, I want to add extensive logging.
+3.  At the very beginning of the `try` block, add these log statements (ensure `log` is my logging function, or use `console.log`):
+    ```javascript
+    log("--- /api/marinas REQUEST RECEIVED ---");
+    log(`DATABASE_URL used by server: ${process.env.DATABASE_URL || "DATABASE_URL not set or empty!"}`);
+    ```
+4.  After those initial logs, still within the `try` block and BEFORE the existing line `const activeOnly = req.query.activeOnly !== "false";`, insert the following "TEMPORARY DIRECT DB CHECK" block. You will need to ensure `db` (my Drizzle instance) and `marinaTable` (my Drizzle schema for the marina table) are correctly imported or made available within this route handler's scope, adjusting paths for `import('./db')` and `import('../shared/schema')` as necessary based on the file's location:
+    ```javascript
+    // TEMPORARY DIRECT DB CHECK
+    try {
+      const { db } = await import('./db'); // User: Adjust path if needed
+      const { marina: marinaTable } = await import('../shared/schema'); // User: Adjust path if needed
+
+      const currentMarinasInDb = await db.select().from(marinaTable).limit(10);
+      log(`Direct DB check in /api/marinas - Found ${currentMarinasInDb.length} marinas. First few: ${JSON.stringify(currentMarinasInDb.slice(0,3))}`);
+      
+      if (currentMarinasInDb.length === 0) {
+        log("Direct DB check confirms MARINA TABLE IS EMPTY from API's perspective before calling storage.getAllMarinas");
+      }
+    } catch (dbCheckError: any) {
+      log(`Error during direct DB check in /api/marinas: ${dbCheckError.message}`);
+      console.error("DB Check Error Details:", dbCheckError);
+    }
+    // END TEMPORARY DIRECT DB CHECK
+    ```
+5.  After the existing line `const marinas = await storage.getAllMarinas(activeOnly);`, add this log statement:
+    ```javascript
+    log(`storage.getAllMarinas returned ${marinas.length} marinas. Data (first 3): ${JSON.stringify(marinas.slice(0,3))}`);
+    ```
+6.  In the `catch (err)` block for this route, ensure the error message is logged, for example:
+    ```javascript
+    log(`Error in /api/marinas: ${err.message}`);
+    console.error("API Marinas Error Details:", err); // Add this for more detail
+    ```
+7.  Leave all other routes and the rest of the file completely unchanged.
+
+Please ensure the dynamic imports for `db` and `marinaTable` inside the TEMPORARY DIRECT DB CHECK block have their paths adjusted correctly based on the location of the routes file relative to `db.ts` and `schema.ts`. For instance, if `db.ts` is in the same directory, `'./db'` is correct. If `schema.ts` is in a `shared` directory one level up, `'../shared/schema'` is correct.
