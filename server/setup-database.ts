@@ -76,37 +76,8 @@ export async function setupFullDatabase() {
       `);
     }
       
-    // Always ensure we have our complete set of marina data
-    try {
-      console.log('Ensuring marina data is complete...');
-      
-      // Our list of marinas - updated to match the API data
-      const marinaList = [
-        {name: 'Harbor Bay Marina', address: '123 Harbor Bay Dr, Port Clinton, OH 43452', phone: '(419) 555-1234'},
-        {name: 'Sunset Point Marina', address: '500 Sunset Pt, Port Clinton, OH 43452', phone: '(419) 555-6789'},
-        {name: 'Harbor Marina', address: '789 Harbor Dr, Port Clinton, OH 43452', phone: '(419) 555-4321'},
-        {name: 'Golden Anchor Marina', address: '1 Golden Anchor Way, Sandusky, OH 44870', phone: '(419) 555-8765'},
-        {name: 'Cedar Point', address: '1 Cedar Point Dr, Sandusky, OH 44870', phone: '(419) 555-1357'},
-        {name: 'Son Rise', address: '300 Son Rise Dr, Port Clinton, OH 43452', phone: '(419) 555-9876'}
-      ];
-      
-      // First get existing marina names
-      const existingMarinas = await pool.query('SELECT name FROM marina');
-      const existingNames = existingMarinas.rows.map((row: any) => row.name);
-      
-      // Add any missing marinas
-      for (const marina of marinaList) {
-        if (!existingNames.includes(marina.name)) {
-          console.log(`Adding marina: ${marina.name}`);
-          await pool.query(
-            `INSERT INTO marina (name, address, phone, is_active) VALUES ($1, $2, $3, TRUE)`,
-            [marina.name, marina.address, marina.phone]
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error seeding marina data:", error);
-    }
+    // Marina seeding disabled - add your real marina data manually through the admin interface
+    console.log('Marina table created. Add real marina data through the admin interface.');
     
     if (!existingTables.includes('slip_assignment')) {
       console.log('Creating slip_assignment table...');
@@ -189,31 +160,8 @@ export async function setupFullDatabase() {
       `);
     }
     
-    // Add sample data to service level
-    if (!existingTables.includes('service_level')) {
-      console.log('Adding sample service level data...');
-      await pool.query(`
-        INSERT INTO service_level (name, price, description, head_count, type, monthly_quota, on_demand_quota)
-        VALUES 
-        ('Basic - Single Head', 49900, 'Monthly pump-out service for boats with a single head', 1, 'monthly', 4, 0),
-        ('Premium - Multi Head', 69900, 'Monthly pump-out service for boats with multiple heads', 2, 'monthly', 8, 0),
-        ('On-Demand Service', 17900, 'One-time pump-out service', 1, 'one-time', 0, 1),
-        ('Seasonal Package', 249900, 'Seasonal pump-out service package (May through October)', 1, 'seasonal', 4, 0)
-      `);
-    }
-    
-    // Add sample marinas if none exist
-    const marinaCount = await pool.query('SELECT COUNT(*) FROM marina');
-    if (parseInt(marinaCount.rows[0].count) === 0) {
-      console.log('Adding sample marina data...');
-      await pool.query(`
-        INSERT INTO marina (name, is_active)
-        VALUES 
-        ('Cedar Point Marina', TRUE),
-        ('Son Rise Marina', TRUE),
-        ('Bay Harbor Marina', TRUE)
-      `);
-    }
+    // Test data seeding disabled - add your real data through the admin interface
+    console.log('Service level table created. Add real service levels through the admin interface.');
     
     console.log('Database setup completed successfully');
     return true;

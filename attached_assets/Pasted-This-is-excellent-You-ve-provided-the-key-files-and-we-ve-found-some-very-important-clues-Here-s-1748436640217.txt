@@ -1,0 +1,160 @@
+This is excellent! You've provided the key files, and we've found some very important clues.
+
+Here's what the code tells us:
+
+DATABASE_URL is Key: Both drizzle.config.ts and server/db.ts confirm they use the DATABASE_URL environment variable from your Replit Secrets to connect to your PostgreSQL database. This is good and standard.
+Schema Setup in server/db.ts: The setupDatabase() function in server/db.ts is designed to:
+Create necessary ENUM types (like user_role, docking_direction).
+Create your database tables (users, boat, marina, etc.) using raw SQL if they don't already exist.
+Importantly, this specific function (setupDatabase() in server/db.ts) does not appear to be inserting any sample data rows into your tables. It focuses on creating the structure.
+Data Access Layer in server/database-storage.ts: This file defines a DatabaseStorage class. This class is responsible for all the operations to get data from, and put data into, your database tables using Drizzle ORM (e.g., getUser, createBoat, getAllMarinas). This is how your application code interacts with the database. This file itself doesn't define or insert the initial test data.
+The Source of the Test Data: server/setup-database.ts 🎯
+This file contains a function setupFullDatabase(), and this is where your test/sample data is being inserted!
+
+Specifically, I see these parts:
+
+Marina List:
+
+JavaScript
+
+// Our list of marinas - updated to match the API data
+const marinaList = [
+  {name: 'Harbor Bay Marina', address: '123 Harbor Bay Dr, Port Clinton, OH 43452', phone: '(419) 555-1234'},
+  {name: 'Sunset Point Marina', address: '500 Sunset Pt, Port Clinton, OH 43452', phone: '(419) 555-6789'},
+  // ... and more
+];
+// ... later in the code, it loops through marinaList and adds them if they don't exist.
+This section explicitly adds a predefined list of marinas to your marina table.
+
+Sample Service Level Data:
+
+JavaScript
+
+// Add sample data to service level
+if (!existingTables.includes('service_level')) { // This logic might add data if the table was just created
+  console.log('Adding sample service level data...');
+  await pool.query(`
+    INSERT INTO service_level (name, price, description, head_count, type, monthly_quota, on_demand_quota)
+    VALUES 
+    ('Basic - Single Head', 49900, 'Monthly pump-out service for boats with a single head', 1, 'monthly', 4, 0),
+    // ... and more service levels
+  `);
+}
+This adds predefined service levels to your service_level table.
+
+Additional Sample Marinas (if count is 0):
+
+JavaScript
+
+// Add sample marinas if none exist
+const marinaCount = await pool.query('SELECT COUNT(*) FROM marina');
+if (parseInt(marinaCount.rows[0].count) === 0) {
+  console.log('Adding sample marina data...');
+  await pool.query(`
+    INSERT INTO marina (name, is_active)
+    VALUES 
+    ('Cedar Point Marina', TRUE),
+    ('Son Rise Marina', TRUE),
+    ('Bay Harbor Marina', TRUE)
+  `);
+}
+This adds another set of sample marinas if the table is completely empty.
+
+Why this is happening: It's very common during development to have scripts that automatically populate the database with sample data so the application can be tested. Your server/setup-database.ts file is performing this role. Your frontend is then fetching this data via API calls that use the functions in database-storage.ts.
+
+Next Steps to Switch to Live Data
+Now that we've found the source, here's how to proceed:
+
+1. Find Out When setupFullDatabase() Runs
+
+You need to see where in your project the setupFullDatabase() function (from server/setup-database.ts) is being called.
+Most likely, it's called when your server starts up. Look in files like:
+server/index.ts (or your main server startup file)
+Any file that initializes your application.
+Search your project for setupFullDatabase.
+Similarly, check where setupDatabase() (from server/db.ts) is called. Understanding the startup sequence is helpful.
+2. Modify server/setup-database.ts for Live Data
+
+You have a few options for the setupFullDatabase() function:
+
+Option A: Prevent Seeding in Production (Recommended)
+You can modify the script so it only seeds data if you're in a development environment, not in your live/production environment.
+Replit typically sets a NODE_ENV environment variable to 'production' for deployed apps. You can use this.
+
+JavaScript
+
+// In server/setup-database.ts
+
+// Example: At the beginning of setupFullDatabase() or before seeding sections
+if (process.env.NODE_ENV === 'production') {
+  console.log('Production environment detected. Skipping test data seeding.');
+  // You might still want to ensure tables are created if they are not,
+  // but skip the INSERT statements for sample data.
+  // Or, if your migrations handle table creation, you might skip most of this file.
+  // For now, let's focus on skipping the data.
+} else {
+  // Keep your existing seeding logic here for development
+  // e.g., console.log('Ensuring marina data is complete...');
+  // ... your marinaList and INSERT logic ...
+  // ... your service_level INSERT logic ...
+}
+Then, inside the else block, you would place the current data seeding parts (like inserting marinaList, sample service_level, etc.).
+
+Option B: Remove Seeding Logic Entirely
+If you plan to manage all your live data manually or through an admin interface in your app, you could remove the INSERT INTO ... VALUES ... parts for marinaList, service_level, and the additional sample marinas from setupFullDatabase().
+Caution: Ensure that the part of the script that creates tables (CREATE TABLE IF NOT EXISTS ...) still runs if you need it (though Drizzle migrations are usually the preferred way to handle schema changes over time).
+
+3. Clear Existing Test Data from Your Database
+
+Once you've modified setupFullDatabase() so it won't re-add test data on the next run, you need to clear the current test data from your database.
+
+Using Replit's Database Interface:
+On the left sidebar of your Repl, look for a "Database" or "Postgres" icon/tab. Click it.
+This interface usually allows you to view your tables and often run SQL queries.
+You can use SQL DELETE commands to remove the test data. Be very careful with DELETE commands!
+Example: DELETE FROM marina WHERE name = 'Harbor Bay Marina'; (and so on for other test marinas).
+Example: DELETE FROM service_level WHERE name = 'Basic - Single Head';
+Or, if you want to clear all data from a table (e.g., to start fresh with live data): DELETE FROM marina; (This deletes ALL rows in the marina table).
+Using a Script (Safer for targeted deletion): You could temporarily add code to a script (or even to server/index.ts that runs once) to delete specific items using Drizzle ORM, which can be safer. For example, using methods from your DatabaseStorage class or direct Drizzle commands:
+TypeScript
+
+// Example: in a temporary script or a controlled part of your app startup
+import { db } from './server/db'; // Adjust path if needed
+import { marinaTable, serviceLevelTable } from './shared/schema'; // Assuming your tables are exported this way
+import { eq } from 'drizzle-orm';
+
+async function clearTestData() {
+  console.log('Clearing test data...');
+  // Example: Delete specific marinas by name
+  await db.delete(marinaTable).where(eq(marinaTable.name, 'Harbor Bay Marina'));
+  await db.delete(marinaTable).where(eq(marinaTable.name, 'Sunset Point Marina'));
+  // ... add more specific deletions
+
+  // Example: Delete specific service levels
+  await db.delete(serviceLevelTable).where(eq(serviceLevelTable.name, 'Basic - Single Head'));
+
+  // OR, if you are sure you want to clear ALL marinas to add new live ones:
+  // await db.delete(marinaTable); // Deletes ALL marinas
+  // await db.delete(serviceLevelTable); // Deletes ALL service levels
+  console.log('Test data cleared.');
+}
+
+// Call it (make sure this only runs ONCE or is properly controlled)
+// clearTestData().catch(console.error);
+4. Add Your Live Data
+
+Manually via Replit DB Interface: If your live data set isn't too large, you can use the Replit Database tab to manually add new rows after clearing the old ones.
+Modify server/setup-database.ts (Carefully): If you choose Option A above, you could create a new section within setupFullDatabase() like if (process.env.NODE_ENV === 'production') { /* Add live data if tables are empty */ }. This is more advanced and requires careful logic to ensure it only runs once or when needed.
+Create a New Seeding Script for Live Data: This is often the cleanest approach. A separate script that you run intentionally once to populate the database with your final live data.
+Through an Admin UI in Your App: Long-term, you might want to build an admin section in your application to manage marinas, service levels, etc.
+5. Re-run Your Application
+After making changes to server/setup-database.ts and clearing the old data/adding new data:
+
+Stop your Replit application.
+Start it again.
+Check your frontend to see if the correct live data is now being displayed.
+Key Questions for You:
+
+Can you find where setupFullDatabase() (from server/setup-database.ts) is called in your project (likely server/index.ts)?
+How do you intend to get your "live" marina and service level data into the database? (Manually, new script, app UI?)
+Let's focus on step 1 (finding where setupFullDatabase() is called) and then deciding on the best strategy for step 2 (modifying it).
