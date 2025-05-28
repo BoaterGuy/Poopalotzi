@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -31,13 +32,11 @@ export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Define the specific marinas we want to display
-  const marinas = [
-    { id: 1, name: "Cedar Point" },
-    { id: 2, name: "Son Rise" },
-    { id: 3, name: "Port Clinton Yacht Club" },
-    { id: 4, name: "Craft Marine" }
-  ];
+  // Fetch marinas from API for contact page
+  const { data: marinas = [] } = useQuery({
+    queryKey: ["/api/marinas"],
+    select: (data: any[]) => data.map(marina => ({ id: marina.id, name: marina.name }))
+  });
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),

@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,16 +69,11 @@ export default function AdminManualEntry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPortLocations, setSelectedPortLocations] = useState<string[]>([]);
 
-  // Define static marina options (to avoid API issues)
-  const marinaOptions = [
-    { id: 1, name: "Sunset Marina" },
-    { id: 2, name: "Harbor Point" },
-    { id: 3, name: "Bay Front" },
-    { id: 4, name: "Cedar Point Marina" },
-    { id: 5, name: "Son Rise Marina" },
-    { id: 6, name: "Port Clinton Yacht Club" },
-    { id: 7, name: "Craft Marine" }
-  ];
+  // Fetch marinas from API instead of hardcoded list
+  const { data: marinaOptions = [], isLoading: marinasLoading } = useQuery({
+    queryKey: ["/api/marinas"],
+    select: (data: any[]) => data.map(marina => ({ id: marina.id, name: marina.name }))
+  });
 
   // Port location options
   const portLocations = [
