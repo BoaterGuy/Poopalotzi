@@ -1,16 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupDatabase } from "./simple-db";
-import { setupFullDatabase } from "./setup-database-fixed";
-import { SimpleDatabaseStorage } from "./database-storage-simple";
+import { setupFullDatabase } from "./setup-database";
+import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
-import { createSupabaseClient, verifySchema } from "./supabase-db";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
 // Create a database storage instance right away
-const dbStorage = new SimpleDatabaseStorage();
+const dbStorage = new DatabaseStorage();
 // ALWAYS use the database storage, not the in-memory storage
 // This ensures all parts of the application use the same data source
 export let storage: IStorage = dbStorage;
@@ -53,7 +51,7 @@ const formatDateForRequest = (date: Date): string => {
 async function startServer() {
   try {
     // Initialize database schema first
-    const dbSuccess = await setupDatabase();
+    const dbSuccess = await setupFullDatabase();
     if (dbSuccess) {
       log("Successfully connected to the database!");
       
