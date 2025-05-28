@@ -52,13 +52,8 @@ const serviceLevelsData = [
   { name: "Premium", value: 20, color: "#F56565" }
 ];
 
-const marinaDistribution = [
-  { marina: "Sunset Marina", count: 55 },
-  { marina: "Harbor Point", count: 35 },
-  { marina: "Bay Front", count: 25 },
-  { marina: "Oceanview", count: 20 },
-  { marina: "Other", count: 15 }
-];
+// Marina distribution will be calculated from real data
+const marinaDistribution: { marina: string; count: number }[] = [];
 
 export default function AdminDashboard() {
   const { data: metrics } = useQuery({

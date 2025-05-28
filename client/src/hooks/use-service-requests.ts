@@ -180,7 +180,7 @@ const mockRequests = [
     },
     marina: {
       id: 1,
-      name: "Sunset Marina"
+      name: "Example Marina"
     },
     slipAssignment: {
       dock: "B",

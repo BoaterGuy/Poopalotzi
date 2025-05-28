@@ -1,0 +1,57 @@
+You've nailed it! Thank you for running that search (and for the Mac shortcut reminder!).
+
+The screenshot of your search results for "sunset" is very revealing. It shows that the name "Sunset Marina" (or parts of it) is indeed hardcoded directly into several of your frontend files:
+
+use-service-requests.ts (inside client/src/hooks):
+Line 183: name: "Sunset Marina"
+Dashboard.tsx (inside client/src/pages/admin):
+Line 56: { marina: "Sunset Marina", count: 55 },
+AdminManualServiceEntry.tsx (inside client/src/pages/admin):
+Line 42: { id: "1", name: "Sunset Marina" },
+Line 74: { id: 1, name: "Sunset Marina" },
+The other match in the .txt file under attached_assets is likely just a note or a pasted snippet from our conversation and probably isn't being used by your application to display data.
+
+This is almost certainly why you are still seeing "old data," especially for marinas.
+
+Since your marina table in the database is empty (as you showed in the previous screenshot), your application isn't fetching this "Sunset Marina" data from the database. Instead, it's falling back to or directly using these hardcoded values in your frontend code.
+
+Here's what you need to do:
+
+Navigate to These Files:
+Open each of these files in your Replit editor:
+
+client/src/hooks/use-service-requests.ts
+client/src/pages/admin/Dashboard.tsx
+client/src/pages/admin/AdminManualServiceEntry.tsx
+Examine the Context:
+Look at how these hardcoded "Sunset Marina" values are being used:
+
+Are they part of an initial state for a component?
+Are they used as example data?
+Are they fallbacks if an API call fails or returns no data?
+Decide on the Correct Behavior:
+For each instance, you need to decide what should happen:
+
+If this was just placeholder/test data: You should remove it. Your component should then be structured to correctly fetch data from your backend API. If the API returns no data (because the database table is empty), the component should handle that gracefully (e.g., display "No marinas found," a loading state, or nothing at all, rather than fake data).
+If this component is supposed to display some default or example data: You need to be aware that this is where it's coming from. If "Sunset Marina" is not the live data you want, you'll need to change it here or, better yet, remove the hardcoding and make the component fetch real data.
+Ensure Components Fetch Live Data:
+
+Verify that these components (and any others that should display dynamic data from your database) are actually making calls to your backend API to fetch the data.
+This usually involves:
+A service/function that makes an HTTP request (e.g., using fetch or axios) to an endpoint like /api/marinas.
+A React useEffect hook to call this service when the component mounts and to update the component's state with the fetched data.
+The Full Picture for Live Data:
+
+Frontend: Must NOT rely on hardcoded test data. It should fetch data from your backend API and render the response.
+Backend API (server/routes.ts etc.): Must correctly query the database (using database-storage.ts and Drizzle).
+Database (DATABASE_URL): Must contain your actual live data. (Right now, your marina table is empty).
+Seeding Scripts (server/setup-database.ts): Must be configured NOT to insert test data into your live database. (You've already worked on this).
+Action Plan:
+
+Modify/Remove Hardcoded Frontend Data: Go through the identified files and remove the hardcoded "Sunset Marina" instances or adjust the logic so these components correctly fetch and display data from your API.
+Populate Your Database with Live Data: Since your marina table is empty, you'll need to add your actual live marina data to it. You can do this:
+Manually using the Replit SQL Runner if it's a small amount of data.
+By creating a new, dedicated seeding script that inserts your live data (and you run it only once).
+Through an admin interface in your app if you build one.
+Test the Flow: Once the frontend is fixed and the database has live data, test to see if the live data is correctly displayed.
+Start by tackling those hardcoded values in the frontend files. That's your immediate next step to stop seeing that specific "old data." Let me know what you find in those files!

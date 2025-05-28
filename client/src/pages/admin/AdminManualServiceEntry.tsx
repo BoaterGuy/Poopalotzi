@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,16 +38,11 @@ export default function AdminManualServiceEntry() {
   const [isSingleHead, setIsSingleHead] = useState(true);
   const [paymentReceived, setPaymentReceived] = useState(false);
 
-  // Static list of marinas
-  const marinas = [
-    { id: "1", name: "Sunset Marina" },
-    { id: "2", name: "Harbor Point" },
-    { id: "3", name: "Bay Front" },
-    { id: "4", name: "Cedar Point Marina" },
-    { id: "5", name: "Son Rise Marina" },
-    { id: "6", name: "Port Clinton Yacht Club" },
-    { id: "7", name: "Craft Marine" }
-  ];
+  // Fetch marinas from API instead of hardcoded list
+  const { data: marinas = [], isLoading: marinasLoading } = useQuery({
+    queryKey: ["/api/marinas"],
+    select: (data: any[]) => data.map(marina => ({ id: marina.id.toString(), name: marina.name }))
+  });
 
   // Port location options
   const portLocations = [
