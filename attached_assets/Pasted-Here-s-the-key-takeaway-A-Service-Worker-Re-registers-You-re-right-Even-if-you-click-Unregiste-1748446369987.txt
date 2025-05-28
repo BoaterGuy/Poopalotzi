@@ -1,0 +1,46 @@
+Here's the key takeaway:
+
+A) Service Worker Re-registers: You're right. Even if you click "Unregister," your application's JavaScript code is likely calling navigator.serviceWorker.register(...) again when the page loads, so it just re-registers itself. This means it's still potentially active and influencing what you see.
+B) Network Tab Screenshot (Screenshot ...11.30.54.png):
+You have "Disable cache" checked, which is good.
+It shows your main JavaScript (index-C3ZiQQST.js) and the service-worker.js being loaded.
+Crucially, in this specific screenshot, the API call to fetch the marina data (which we saw in an earlier screenshot as marinas?activeOnly=true with type fetch) appears to be MISSING.
+Why the Missing API Call is Significant (Hypothesis):
+
+If the API call to actually fetch the list of marinas isn't happening (or isn't being logged in the Network tab under the current conditions), it could be because:
+
+The Service Worker is Intercepting and Serving from Cache: The re-registered service worker might be intercepting the request for marina data. If it has an old response for /api/marinas (or whatever the endpoint is) in its cache (perhaps containing "Sunset Marina" or an empty array that then leads to "Sunset Marina" being displayed due to some other frontend logic), it might serve that cached response without actually making a new network request to your backend. If this happens, the "Network" tab might not even show the request to the backend because it was fulfilled by the service worker.
+Frontend Logic Preventing the Call: Less likely if you were seeing the call before, but some change in the frontend logic might now be preventing this specific API call from being made.
+Let's Try to Get a Truly "Clean" Load Without the Service Worker:
+
+To be 100% sure the service worker isn't interfering for one test, the most effective way is to temporarily prevent it from registering in your code.
+
+Temporarily Comment Out Service Worker Registration:
+
+You need to find where your service worker is registered in your client-side JavaScript code. This is typically a line that looks like:
+JavaScript
+
+navigator.serviceWorker.register('/service-worker.js') 
+// or it might be in a function related to environment checks (e.g., only register in production)
+This line could be in your main frontend entry file (e.g., main.ts, index.tsx, App.tsx, or a similar file that gets compiled into index-C3ZiQQST.js).
+Action: Please find this line and temporarily comment it out (e.g., put // at the beginning of it).
+Perform the Full Clear and Hard Reload Again:
+
+With the service worker registration line commented out:
+Go to Developer Tools -> "Application" tab.
+Under "Service Workers", click "Unregister" if one is still listed for your site.
+Under "Storage", click "Clear site data".
+Go to the "Network" tab, ensure "Disable cache" is checked.
+Hard Refresh your "Marina Management page" (Cmd+Shift+R).
+Observe and Report (Critically Important):
+
+Service Worker Status: After the refresh, check the "Application" -> "Service Workers" tab again. Is it now completely clear, or does it show "Status: N/A" for your site? (It should, if the registration code is commented out).
+Console Output: Check the "Console" tab. Is the "ServiceWorker registration successful" message gone? Are there any new errors?
+Network Tab (All Requests):
+Now, very carefully examine the "Network" tab (with "All" requests shown).
+Question: Does the API request to fetch marina data (e.g., marinas or marinas?activeOnly=true) now appear in the list?
+If it DOES appear, click on it. What is in the "Response" or "Preview" tab? (Is it an empty array [] since your database is empty? Is it an error? Does it contain "Sunset Marina"?)
+If the API call is still NOT appearing even with the service worker registration commented out and caches cleared, then the issue is likely in your frontend JavaScript logic that is supposed to make this call.
+By temporarily disabling the service worker registration in your code, we can be much more certain that any network requests you see are going directly to the network and are not being served from a service worker cache.
+
+Let me know the results of these steps, especially if the API call for marinas appears in the Network tab and what its response is.
