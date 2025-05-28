@@ -54,15 +54,7 @@ async function startServer() {
     const dbSuccess = await setupFullDatabase();
     if (dbSuccess) {
       log("Successfully connected to the database!");
-      
-      // Ensure all required tables are created
-      log("Setting up all required database tables...");
-      const tablesSuccess = await setupFullDatabase();
-      if (tablesSuccess) {
-        log("All database tables set up successfully!");
-      } else {
-        log("Warning: Some database tables may not have been created properly");
-      }
+      log("All database tables set up successfully!");
     } else {
       log("Database connection error - exiting");
       process.exit(1);

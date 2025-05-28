@@ -1,0 +1,62 @@
+You need to control these calls to setupFullDatabase().
+
+Remove the Redundant Call: You only need to call setupFullDatabase() once during startup. You can remove the second call:
+
+TypeScript
+
+// In server/index.ts, inside startServer()
+const dbSuccess = await setupFullDatabase(); // Keep this one
+if (dbSuccess) {
+  log("Successfully connected to the database!");
+  // const tablesSuccess = await setupFullDatabase(); // REMOVE THIS SECOND CALL
+  // if (tablesSuccess) { ... } 
+} // ...
+Make Data Seeding Conditional (Most Important):
+You should prevent the sample data from being inserted if you don't want it (e.g., for your live testing or production).
+
+Option 1 (Quick Fix to Stop Seeding Now): Temporarily comment out the call entirely in server/index.ts:
+
+TypeScript
+
+// In server/index.ts, inside startServer()
+// const dbSuccess = await setupFullDatabase(); // Comment out to stop all setup/seeding
+// if (dbSuccess) { ... }
+(Use this if you want the database to remain exactly as you leave it after manual changes for now).
+
+Option 2 (Better Long-Term - Prevent Seeding in "Production"): Wrap the call in a condition that checks the environment. Replit typically sets NODE_ENV to production for deployed applications. For local development (like running in the Replit workspace usually), NODE_ENV might be development or undefined.
+
+TypeScript
+
+// In server/index.ts, inside startServer()
+if (process.env.NODE_ENV !== 'production') {
+  log("Development environment detected, running full database setup (including seeding)...");
+  const dbSuccess = await setupFullDatabase();
+  if (!dbSuccess) {
+    log("Database setup error - exiting");
+    process.exit(1);
+  }
+} else {
+  log("Production environment detected. Skipping full database setup/seeding. Assuming schema exists.");
+  // In production, you'd typically rely on migrations to manage your schema,
+  // and you wouldn't automatically seed data.
+  // For now, you might still want to ensure a basic connection or table check, 
+  // or just ensure your ORM can connect.
+  // For simplicity, we'll just skip the seeding part here.
+}
+Alternatively, and perhaps more cleanly, you could modify the setupFullDatabase function itself in server/setup-database.ts so that the data insertion parts are conditional, while table creation (CREATE TABLE IF NOT EXISTS) can still run.
+
+Recommended Immediate Action:
+
+In your server/index.ts file:
+
+Remove the second, redundant call to setupFullDatabase().
+For the remaining call to setupFullDatabase(), either:
+Comment it out completely for now to ensure no seeding happens.
+Or, wrap it with the if (process.env.NODE_ENV !== 'production') condition. (If you're running in the main Replit development environment, NODE_ENV might not be set to 'production', so it might still run. Commenting it out is the most certain way to stop it for testing).
+After making this change to server/index.ts:
+
+Go to the SQL Runner and clear your marina table again: DELETE FROM marina;
+Restart your Replit server application. (Make sure it fully stops and starts again to pick up the changes in server/index.ts).
+Check the marina table in SQL Runner. It should now stay empty.
+Test your "Marina Management page." The API call to /api/marinas should now return an empty array [], and "Sunset Marina" should be gone from the page (unless it's hardcoded elsewhere in the frontend, which we can re-check if needed, but the API was sending it).
+This should get to the root of why that data keeps reappearing! Let me know how it goes.
