@@ -61,6 +61,23 @@ const marinaDistribution = [
 ];
 
 export default function AdminDashboard() {
+  const { data: metrics } = useQuery({
+    queryKey: ['/api/analytics/metrics'],
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/metrics');
+      return res.json();
+    }
+  });
+
+  const {
+    totalCustomers = 0,
+    activeBoats = 0,
+    monthlyRevenue = 0,
+    arpu = 0,
+    churnRate = 0,
+    customerSatisfaction = 0
+  } = metrics || {};
+
   // Fetch analytics data
   const { data: usersByServiceLevel, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['/api/analytics/users-by-service-level'],
@@ -124,7 +141,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -144,7 +161,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -164,7 +181,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -373,7 +390,7 @@ export default function AdminDashboard() {
                 <p className="text-xl font-bold text-[#0B1F3A]">{formatCurrency(arpu)}</p>
                 <p className="text-xs text-gray-500 mt-1">Average Revenue Per User</p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-sm text-gray-500">Churn Rate</p>
@@ -382,7 +399,7 @@ export default function AdminDashboard() {
                 <p className="text-xl font-bold text-[#0B1F3A]">{churnRate}%</p>
                 <p className="text-xs text-gray-500 mt-1">Monthly Customer Churn</p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-sm text-gray-500">Customer Satisfaction</p>
@@ -437,7 +454,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-gray-500 mt-1">Based on Service Feedback</p>
               </div>
             </div>
-            
+
             <div className="mt-8">
               <div className="p-4 border rounded-lg">
                 <p className="text-sm text-gray-500 mb-2">Active Season Progress (May 1 - Oct 31)</p>

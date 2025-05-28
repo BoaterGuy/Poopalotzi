@@ -78,10 +78,17 @@ export default function MarinaManagement() {
     staleTime: 0, // Always consider data stale
   });
 
-  // Get boat counts for each marina (this would be a real API call in a full implementation)
+  const { data: boatCounts = {} } = useQuery({
+    queryKey: ["/api/marinas/boat-counts"],
+    queryFn: async () => {
+      const response = await fetch('/api/marinas/boat-counts');
+      if (!response.ok) throw new Error("Failed to fetch boat counts");
+      return response.json();
+    }
+  });
+
   const getBoatCount = (marinaId: number) => {
-    // For now we'll return a random count between 0 and 50
-    return Math.floor(Math.random() * 51);
+    return boatCounts[marinaId] || 0;
   };
 
   const toggleStatusMutation = useMutation({
