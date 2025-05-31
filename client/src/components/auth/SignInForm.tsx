@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -30,6 +31,7 @@ interface SignInFormProps {
 export default function SignInForm({ onSuccess }: SignInFormProps) {
   const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -42,7 +44,7 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
   const onSubmit = async (values: SignInFormValues) => {
     setIsLoading(true);
     try {
-      await login(values.email, values.password, { credentials: 'include' });
+      await login(values.email, values.password);
       onSuccess();
     } catch (error: any) {
       console.error("Login error:", error);

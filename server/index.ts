@@ -52,15 +52,15 @@ async function startServer() {
   try {
     // Initialize database schema conditionally
     if (process.env.NODE_ENV !== 'production') {
-      log("Development environment detected, TEMPORARILY SKIPPING full database setup for testing...");
-      // const dbSuccess = await setupFullDatabase();
-      // if (dbSuccess) {
-      //   log("Successfully connected to the database!");
-      //   log("All database tables set up successfully!");
-      // } else {
-      //   log("Database connection error - exiting");
-      //   process.exit(1);
-      // }
+      log("Development environment detected, running database setup to fix schema...");
+      const dbSuccess = await setupFullDatabase();
+      if (dbSuccess) {
+        log("Successfully connected to the database!");
+        log("All database tables set up successfully!");
+      } else {
+        log("Database connection error - exiting");
+        process.exit(1);
+      }
     } else {
       log("Production environment detected. Skipping automatic database setup/seeding.");
     }
