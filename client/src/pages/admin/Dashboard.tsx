@@ -52,15 +52,7 @@ const serviceLevelsData = [
   { name: "Premium", value: 20, color: "#F56565" }
 ];
 
-// Revenue data placeholder
-const revenueData = [
-  { month: "Jan", revenue: 2400 },
-  { month: "Feb", revenue: 1398 },
-  { month: "Mar", revenue: 9800 },
-  { month: "Apr", revenue: 3908 },
-  { month: "May", revenue: 4800 },
-  { month: "Jun", revenue: 3800 }
-];
+// This will be replaced with real data from the API
 
 // Marina distribution will be calculated from real data
 const marinaDistribution: { marina: string; count: number }[] = [];
@@ -108,7 +100,16 @@ export default function AdminDashboard() {
     }
   });
 
-  const isLoading = isLoadingUsers || isLoadingCounts || isLoadingArpu;
+  // Fetch real pump-out data grouped by week
+  const { data: revenueData = [], isLoading: isLoadingRevenue } = useQuery({
+    queryKey: ['/api/analytics/pump-out-weekly'],
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/pump-out-weekly');
+      return res.json();
+    }
+  });
+
+  const isLoading = isLoadingUsers || isLoadingCounts || isLoadingArpu || isLoadingRevenue;
 
   return (
     <>

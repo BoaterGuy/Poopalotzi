@@ -96,11 +96,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marinas/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid marina ID" });
+      }
       const marina = await storage.getMarina(id);
       if (!marina) {
         return res.status(404).json({ message: "Marina not found" });
       }
       res.json(marina);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get boat counts for all marinas
+  app.get("/api/marinas/boat-counts", async (req, res, next) => {
+    try {
+      // Since database is empty, return empty object for now
+      // This will be populated as boats are added to marinas
+      res.json({});
     } catch (err) {
       next(err);
     }
@@ -802,10 +816,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pump-out data grouped by week for dashboard
+  app.get("/api/analytics/pump-out-weekly", isAuthenticated, async (req, res, next) => {
+    try {
+      const weeklyData = await storage.getPumpOutRequestsByWeek(new Date());
+      
+      // Group by week and count completed requests
+      const weekCounts = new Map();
+      const now = new Date();
+      
+      // Initialize last 12 weeks
+      for (let i = 11; i >= 0; i--) {
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - (i * 7));
+        const weekKey = `Week ${12 - i}`;
+        weekCounts.set(weekKey, 0);
+      }
+      
+      // Count completed requests by week
+      weeklyData.forEach(request => {
+        if (request.status === 'Completed' && request.createdAt) {
+          const requestWeek = Math.floor((now.getTime() - new Date(request.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000));
+          if (requestWeek < 12) {
+            const weekKey = `Week ${12 - requestWeek}`;
+            weekCounts.set(weekKey, (weekCounts.get(weekKey) || 0) + 1);
+          }
+        }
+      });
+
+      const result = Array.from(weekCounts.entries()).map(([name, value]) => ({
+        name,
+        value
+      }));
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {
       const data = await storage.countActiveUsersByServiceLevel();
+      
+      // Check if data is array before using map
+      if (!Array.isArray(data)) {
+        return res.json([]);
+      }
       
       // Enrich with service level information
       const enrichedData = await Promise.all(data.map(async (item) => {
