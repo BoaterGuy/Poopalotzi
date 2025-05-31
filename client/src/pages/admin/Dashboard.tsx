@@ -244,10 +244,10 @@ export default function AdminDashboard() {
 
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Revenue Trend */}
+          {/* Pump-out Activity Trend */}
           <Card>
             <CardHeader className="bg-[#F4EBD0]">
-              <CardTitle>Revenue Trend</CardTitle>
+              <CardTitle>Weekly Pump-out Activity</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="h-64">
@@ -257,15 +257,15 @@ export default function AdminDashboard() {
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => [formatCurrency(value), "Revenue"]} 
+                      formatter={(value) => [value, "Completed Pump-outs"]} 
                       contentStyle={{ borderRadius: "8px" }}
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="revenue" 
+                      dataKey="value" 
                       stroke="#38B2AC" 
                       strokeWidth={3}
                       dot={{ stroke: '#38B2AC', strokeWidth: 2, r: 4 }}
