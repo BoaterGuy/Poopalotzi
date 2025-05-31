@@ -37,7 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
@@ -314,6 +315,37 @@ export default function CustomerManagement() {
       });
     },
   });
+
+  // Function to determine boat status based on creation date and mock logic
+  const getBoatStatus = (boat: any) => {
+    const now = new Date();
+    const createdAt = new Date(boat.createdAt);
+    const daysSinceCreated = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Mock logic for status determination
+    if (daysSinceCreated <= 3) {
+      return {
+        label: "Newly Added",
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-blue-600"
+      };
+    } else if (daysSinceCreated >= 7) {
+      return {
+        label: "Needs Pump-Out",
+        variant: "destructive" as const,
+        icon: AlertCircle,
+        color: "text-red-600"
+      };
+    } else {
+      return {
+        label: "Up-to-Date",
+        variant: "default" as const,
+        icon: CheckCircle,
+        color: "text-green-600"
+      };
+    }
+  };
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -786,56 +818,66 @@ export default function CustomerManagement() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {customerBoats.map((boat: any) => (
-                      <div key={boat.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
-                            <h3 className="font-semibold text-lg">{boat.name}</h3>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Make/Model:</span>
-                                <span className="ml-2">{boat.make} {boat.model}</span>
+                    {customerBoats.map((boat: any) => {
+                      const status = getBoatStatus(boat);
+                      const StatusIcon = status.icon;
+                      return (
+                        <div key={boat.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-semibold text-lg">{boat.name}</h3>
+                                <Badge variant={status.variant} className="flex items-center gap-1">
+                                  <StatusIcon className="h-3 w-3" />
+                                  {status.label}
+                                </Badge>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Year:</span>
-                                <span className="ml-2">{boat.year || "N/A"}</span>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Make/Model:</span>
+                                  <span className="ml-2">{boat.make} {boat.model}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Year:</span>
+                                  <span className="ml-2">{boat.year || "N/A"}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Location:</span>
+                                  <span className="ml-2">Dock {boat.dock}, Slip {boat.slip}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Length:</span>
+                                  <span className="ml-2">{boat.length ? `${boat.length} ft` : "N/A"}</span>
+                                </div>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Location:</span>
-                                <span className="ml-2">Dock {boat.dock}, Slip {boat.slip}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Length:</span>
-                                <span className="ml-2">{boat.length ? `${boat.length} ft` : "N/A"}</span>
-                              </div>
+                              {boat.notes && (
+                                <div className="text-sm">
+                                  <span className="text-muted-foreground">Notes:</span>
+                                  <span className="ml-2">{boat.notes}</span>
+                                </div>
+                              )}
                             </div>
-                            {boat.notes && (
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">Notes:</span>
-                                <span className="ml-2">{boat.notes}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditBoat(boat)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                              onClick={() => handleDeleteBoat(boat.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditBoat(boat)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => handleDeleteBoat(boat.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
