@@ -215,17 +215,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Boat not found" });
       }
 
-      // Verify ownership
-      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
-      if (!boatOwner || boat.ownerId !== boatOwner.id) {
-        return res.status(403).json({ message: "Not authorized to modify this boat" });
+      // Verify ownership (allow both members and admins)
+      if (req.user.role === 'member') {
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to modify this boat" });
+        }
       }
 
-      const boatData = insertBoatSchema.partial().parse(req.body);
+      // Extract marina-related fields from the request
+      const { marinaId, ...boatFields } = req.body;
+      
+      // Parse and update boat data (exclude marinaId as it's not a boat field)
+      const boatData = insertBoatSchema.partial().parse(boatFields);
       const updatedBoat = await storage.updateBoat(boatId, boatData);
+      
+      // Handle marina assignment via slip assignment if marinaId is provided
+      if (marinaId && boatData.dock && boatData.slip) {
+        try {
+          await storage.createSlipAssignment({
+            boatId: boatId,
+            marinaId: parseInt(marinaId),
+            dock: boatData.dock,
+            slip: boatData.slip
+          });
+        } catch (slipError) {
+          console.warn("Could not create slip assignment:", slipError);
+        }
+      }
       
       res.json(updatedBoat);
     } catch (err) {
+      console.error("Boat update error:", err);
       next(err);
     }
   });

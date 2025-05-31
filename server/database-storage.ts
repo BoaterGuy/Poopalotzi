@@ -206,25 +206,14 @@ export class DatabaseStorage implements IStorage {
   async getSlipAssignmentByBoatId(boatId: number): Promise<SlipAssignment | undefined> {
     const results = await db.select()
       .from(schema.slipAssignment)
-      .where(
-        and(
-          eq(schema.slipAssignment.boatId, boatId),
-          eq(schema.slipAssignment.isActive, true)
-        )
-      );
+      .where(eq(schema.slipAssignment.boatId, boatId));
     return results[0];
   }
 
   async createSlipAssignment(slipAssignmentData: InsertSlipAssignment): Promise<SlipAssignment> {
-    // Deactivate any existing active slip assignments for this boat
-    await db.update(schema.slipAssignment)
-      .set({ isActive: false })
-      .where(
-        and(
-          eq(schema.slipAssignment.boatId, slipAssignmentData.boatId),
-          eq(schema.slipAssignment.isActive, true)
-        )
-      );
+    // Delete any existing slip assignments for this boat (since we don't have isActive field)
+    await db.delete(schema.slipAssignment)
+      .where(eq(schema.slipAssignment.boatId, slipAssignmentData.boatId));
 
     const result = await db.insert(schema.slipAssignment).values(slipAssignmentData).returning();
     return result[0];
