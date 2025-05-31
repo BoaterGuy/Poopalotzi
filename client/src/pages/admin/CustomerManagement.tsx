@@ -45,6 +45,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhone } from "@/lib/phoneUtils";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
@@ -568,7 +569,7 @@ export default function CustomerManagement() {
         firstName: editingCustomer.firstName,
         lastName: editingCustomer.lastName,
         email: editingCustomer.email,
-        phone: editingCustomer.phone,
+        phone: cleanPhoneForStorage(editingCustomer.phone),
         serviceLevelId: editingCustomer.serviceLevelId,
       }
     });
@@ -661,8 +662,12 @@ export default function CustomerManagement() {
                         id="phone"
                         type="tel"
                         value={newCustomer.phone}
-                        onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                        onChange={(e) => {
+                          const formatted = formatPhoneInput(e.target.value);
+                          setNewCustomer({...newCustomer, phone: formatted});
+                        }}
                         placeholder="(555) 123-4567"
+                        maxLength={14}
                       />
                     </div>
                     <div className="grid gap-2">
@@ -1139,8 +1144,12 @@ export default function CustomerManagement() {
                         id="edit-phone"
                         type="tel"
                         value={editingCustomer.phone}
-                        onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})}
+                        onChange={(e) => {
+                          const formatted = formatPhoneInput(e.target.value);
+                          setEditingCustomer({...editingCustomer, phone: formatted});
+                        }}
                         placeholder="(555) 123-4567"
+                        maxLength={14}
                       />
                     </div>
                     <div className="grid gap-2">
@@ -1225,7 +1234,7 @@ export default function CustomerManagement() {
                             {customer.firstName} {customer.lastName}
                           </TableCell>
                           <TableCell>{customer.email}</TableCell>
-                          <TableCell>{customer.phone || "Not provided"}</TableCell>
+                          <TableCell>{formatPhoneDisplay(customer.phone) || "Not provided"}</TableCell>
                           <TableCell>
                             {(() => {
                               const serviceDisplay = getServiceLevelDisplay(customer.serviceLevelId, serviceLevels);
