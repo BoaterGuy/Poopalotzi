@@ -95,17 +95,27 @@ async function startServer() {
       console.error(err);
     });
 
-    // Serve static files from client/dist for production or client for development
-    const clientDistPath = path.join(process.cwd(), 'client', 'dist');
-    const clientSrcPath = path.join(process.cwd(), 'client');
+    // Configure proper MIME types for modules
+    express.static.mime.define({'application/javascript': ['js', 'jsx', 'ts', 'tsx']});
     
-    if (fs.existsSync(clientDistPath)) {
-      // Production mode - serve built files
-      app.use(express.static(clientDistPath));
-    } else {
-      // Development mode - serve client directory
-      app.use(express.static(clientSrcPath));
+    // Serve client static files - prioritize public folder, then client directory
+    const clientPublicPath = path.join(process.cwd(), 'client', 'public');
+    const clientPath = path.join(process.cwd(), 'client');
+    
+    // Serve public assets (favicon, manifest, etc.)
+    if (fs.existsSync(clientPublicPath)) {
+      app.use(express.static(clientPublicPath));
     }
+    
+    // Serve client source files in development with proper headers
+    app.use('/src', (req, res, next) => {
+      if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+      next();
+    }, express.static(path.join(clientPath, 'src')));
+    
+    app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
     
     // Serve uploads directory for images
     const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -119,9 +129,8 @@ async function startServer() {
       if (req.path.startsWith('/api/')) {
         res.status(404).json({ message: 'API endpoint not found' });
       } else {
-        const indexPath = fs.existsSync(clientDistPath) 
-          ? path.join(clientDistPath, 'index.html')
-          : path.join(clientSrcPath, 'index.html');
+        // Always serve the client index.html for SPA routing
+        const indexPath = path.join(process.cwd(), 'client', 'index.html');
         
         if (fs.existsSync(indexPath)) {
           res.sendFile(indexPath);
