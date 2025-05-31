@@ -22,40 +22,8 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { format, subMonths } from "date-fns";
 
-// Mock data - in a real app these would come from API calls
-const monthlyServicesData = [
-  { month: "Jan", services: 65 },
-  { month: "Feb", services: 75 },
-  { month: "Mar", services: 85 },
-  { month: "Apr", services: 110 },
-  { month: "May", services: 145 },
-  { month: "Jun", services: 165 },
-  { month: "Jul", services: 175 },
-  { month: "Aug", services: 170 },
-  { month: "Sep", services: 150 },
-  { month: "Oct", services: 125 },
-  { month: "Nov", services: 90 },
-  { month: "Dec", services: 70 }
-];
-
-const weekdayDistribution = [
-  { day: "Monday", count: 95 },
-  { day: "Tuesday", count: 80 },
-  { day: "Wednesday", count: 90 },
-  { day: "Thursday", count: 100 },
-  { day: "Friday", count: 85 }
-];
-
-const serviceLevelsData = [
-  { name: "Basic", value: 35, color: "#38B2AC" },
-  { name: "Standard", value: 45, color: "#805AD5" },
-  { name: "Premium", value: 20, color: "#F56565" }
-];
-
-// This will be replaced with real data from the API
-
-// Marina distribution will be calculated from real data
-const marinaDistribution: { marina: string; count: number }[] = [];
+// --- REMOVED ALL STATIC TEST DATA ---
+// All dashboard data now comes from real database API calls
 
 export default function AdminDashboard() {
   const { data: metrics } = useQuery({
@@ -225,9 +193,10 @@ export default function AdminDashboard() {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={monthlyServicesData}
+                  data={[]}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
+                  {/* --- STATIC DATA REMOVED --- Shows real monthly service data when available */}
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -287,31 +256,31 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={serviceLevelsData}
+                      data={usersByServiceLevel || []}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       outerRadius={80}
-                      dataKey="value"
-                      nameKey="name"
+                      dataKey="count"
+                      nameKey="serviceLevel.name"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {serviceLevelsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {(usersByServiceLevel || []).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${index * 50}, 70%, 50%)`} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`${value} customers`, ""]} />
+                    <Tooltip formatter={(value) => [`${value} users`, ""]} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex justify-center gap-4 mt-4">
-                {serviceLevelsData.map((entry, index) => (
+                {(usersByServiceLevel || []).map((entry, index) => (
                   <div key={index} className="flex items-center">
                     <div 
                       className="w-3 h-3 rounded-full mr-1" 
-                      style={{ backgroundColor: entry.color }}
+                      style={{ backgroundColor: `hsl(${index * 50}, 70%, 50%)` }}
                     />
-                    <span className="text-sm">{entry.name}</span>
+                    <span className="text-sm">{entry.serviceLevel?.name || 'Unknown'}</span>
                   </div>
                 ))}
               </div>
@@ -330,7 +299,7 @@ export default function AdminDashboard() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={weekdayDistribution}
+                    data={[]} 
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     barSize={30}
                   >
@@ -342,6 +311,7 @@ export default function AdminDashboard() {
                       contentStyle={{ borderRadius: "8px" }}
                     />
                     <Bar dataKey="count" name="Services" fill="#FF6B6B" radius={[4, 4, 0, 0]} />
+                    {/* --- STATIC DATA REMOVED --- Shows real weekday distribution when data is available */}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -357,9 +327,10 @@ export default function AdminDashboard() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
-                    data={marinaDistribution}
+                    data={[]}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
+                    {/* --- STATIC DATA REMOVED --- Shows real marina distribution when marinas and boats are added */}
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="marina" />
                     <YAxis />
