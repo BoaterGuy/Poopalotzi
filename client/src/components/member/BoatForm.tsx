@@ -166,18 +166,44 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       // First save the boat information
       let savedBoat;
       if (boat) {
-        // Update existing boat
-        const response = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
-        savedBoat = await response.json();
+        // Update existing boat - use FormData if there's an image
+        if (data.photoUrl && data.photoUrl.startsWith('data:')) {
+          // Convert base64 to file for upload
+          const formData = new FormData();
+          
+          // Convert base64 to blob
+          const base64Data = data.photoUrl.split(',')[1];
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+          
+          formData.append('image', blob, 'boat-image.jpg');
+          
+          // Append other form fields
+          Object.keys(data).forEach(key => {
+            if (key !== 'photoUrl' && data[key] !== undefined && data[key] !== null) {
+              formData.append(key, String(data[key]));
+            }
+          });
+          
+          const response = await fetch(`/api/boats/${boat.id}`, {
+            method: 'PUT',
+            body: formData,
+            credentials: 'include'
+          });
+          savedBoat = await response.json();
+        } else {
+          // No image upload needed
+          const response = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+          savedBoat = await response.json();
+        }
       } else {
-        // For testing, we'll use a simplified approach with a hardcoded owner ID
-        // In the real app, we would need to fetch the current user's boat owner ID
-        
-        // Now create the boat with the fixed owner ID (using 2 for the sample data)
-        const response = await apiRequest("POST", "/api/boats", {
-          ...data,
-          ownerId: 2
-        });
+        // Create new boat
+        const response = await apiRequest("POST", "/api/boats", data);
         savedBoat = await response.json();
       }
       
