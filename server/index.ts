@@ -95,7 +95,17 @@ async function startServer() {
       console.error(err);
     });
 
-    // Backend only serves API routes - frontend is served by Vite on port 3000
+    // Serve static files from client/dist for production or client for development
+    const clientDistPath = path.join(process.cwd(), 'client', 'dist');
+    const clientSrcPath = path.join(process.cwd(), 'client');
+    
+    if (fs.existsSync(clientDistPath)) {
+      // Production mode - serve built files
+      app.use(express.static(clientDistPath));
+    } else {
+      // Development mode - serve client directory
+      app.use(express.static(clientSrcPath));
+    }
     
     // Serve uploads directory for images
     const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -104,8 +114,22 @@ async function startServer() {
     }
     app.use('/uploads', express.static(uploadsDir));
     
-    // Only handle API routes - let frontend handle all other routing
-    // Remove catch-all route that causes redirect loops
+    // Handle frontend routing - serve index.html for non-API routes
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        res.status(404).json({ message: 'API endpoint not found' });
+      } else {
+        const indexPath = fs.existsSync(clientDistPath) 
+          ? path.join(clientDistPath, 'index.html')
+          : path.join(clientSrcPath, 'index.html');
+        
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send('Frontend not found');
+        }
+      }
+    });
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
