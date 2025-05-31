@@ -91,11 +91,17 @@ if (fs.existsSync(clientDistPath)) {
   app.use('/src', (req, res, next) => {
     if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
       res.setHeader('Content-Type', 'application/javascript');
+    } else if (req.path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
     }
     next();
   }, express.static(clientSrcPath));
   
+  // Serve node_modules for development
   app.use('/node_modules', express.static(path.resolve(__dirname, '../node_modules')));
+  
+  // Handle CSS imports and assets
+  app.use('/client', express.static(path.resolve(__dirname, '../client')));
 }
 
 // Authentication middleware
