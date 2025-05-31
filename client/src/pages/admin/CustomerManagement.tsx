@@ -78,7 +78,9 @@ export default function CustomerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddBoatDialogOpen, setIsAddBoatDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [selectedCustomerForBoat, setSelectedCustomerForBoat] = useState<any>(null);
   const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -87,12 +89,33 @@ export default function CustomerManagement() {
     password: "",
     serviceLevelId: "",
   });
+  const [newBoat, setNewBoat] = useState({
+    name: "",
+    make: "",
+    model: "",
+    year: "",
+    length: "",
+    color: "",
+    dock: "",
+    slip: "",
+    marinaId: "",
+    notes: "",
+  });
 
   // Fetch service levels for the dropdown
   const { data: serviceLevels = [] } = useQuery({
     queryKey: ["/api/service-levels"],
     queryFn: async () => {
       const res = await fetch('/api/service-levels');
+      return res.json();
+    },
+  });
+
+  // Fetch marinas for boat creation
+  const { data: marinas = [] } = useQuery({
+    queryKey: ["/api/marinas"],
+    queryFn: async () => {
+      const res = await fetch('/api/marinas');
       return res.json();
     },
   });

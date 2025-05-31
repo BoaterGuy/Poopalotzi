@@ -124,36 +124,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       console.log("Boat creation request received:", req.body);
-      console.log("User ID:", req.user.id);
+      console.log("User ID:", req.user.id, "Role:", req.user.role);
       
-      const boatData = insertBoatSchema.parse(req.body);
-      console.log("Parsed boat data:", boatData);
+      const { userId, ...boatData } = req.body;
+      const parsedBoatData = insertBoatSchema.parse(boatData);
+      console.log("Parsed boat data:", parsedBoatData);
       
-      // Get boat owner ID from user ID
-      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      let targetUserId = req.user.id;
+      
+      // Admin can create boats for other users
+      if (req.user.role === 'admin' && userId) {
+        const targetUser = await storage.getUser(userId);
+        if (!targetUser) {
+          return res.status(404).json({ message: "Target user not found" });
+        }
+        targetUserId = userId;
+        console.log("Admin creating boat for user:", targetUserId);
+      }
+      
+      // Get or create boat owner record
+      let boatOwner = await storage.getBoatOwnerByUserId(targetUserId);
       console.log("Found boat owner:", boatOwner);
       
       if (!boatOwner) {
-        // Auto-create boat owner record if it doesn't exist
-        console.log("Creating boat owner record for user:", req.user.id);
-        const newBoatOwner = await storage.createBoatOwner({
-          userId: req.user.id
+        console.log("Creating boat owner record for user:", targetUserId);
+        boatOwner = await storage.createBoatOwner({
+          userId: targetUserId
         });
-        console.log("Created boat owner:", newBoatOwner);
-        
-        // Create the boat with the new owner ID
-        const boat = await storage.createBoat({
-          ...boatData,
-          ownerId: newBoatOwner.id
-        });
-        
-        console.log("Created boat:", boat);
-        return res.status(201).json(boat);
+        console.log("Created boat owner:", boatOwner);
       }
 
-      // Create the boat with the existing owner ID
+      // Create the boat
       const boat = await storage.createBoat({
-        ...boatData,
+        ...parsedBoatData,
         ownerId: boatOwner.id
       });
       
@@ -167,20 +170,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
+      const { userId } = req.query;
+      
+      // Admin can view boats for specific user or all boats
+      if (req.user.role === 'admin') {
+        if (userId) {
+          // Get boats for specific user
+          const boatOwner = await storage.getBoatOwnerByUserId(Number(userId));
+          if (!boatOwner) {
+            return res.json([]);
+          }
+          const boats = await storage.getBoatsByOwnerId(boatOwner.id);
+          return res.json(boats);
+        }
+        // Admin without userId gets all boats - we'll implement this if needed
+        // For now, fallback to admin's own boats
+      }
+      
       // Get boat owner ID from user ID
       const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
       
       if (!boatOwner) {
-        // For testing purposes, if a boat owner record doesn't exist
-        // Let's get any boats in the system to ensure the form works
-        const allBoats = [];
-        for (let i = 1; i <= 5; i++) {
-          const boat = await storage.getBoat(i);
-          if (boat) allBoats.push(boat);
-        }
-        if (allBoats.length > 0) {
-          return res.json(allBoats);
-        }
         return res.json([]);
       }
 
