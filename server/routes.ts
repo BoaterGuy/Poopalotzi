@@ -889,6 +889,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/customers", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const { firstName, lastName, email, phone, serviceLevelId, password } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+
+      // Hash the password
+      const bcrypt = require('bcryptjs');
+      const passwordHash = await bcrypt.hash(password, 10);
+      
+      // Prepare user data
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        phone: phone || null,
+        serviceLevelId: serviceLevelId && serviceLevelId !== "" ? parseInt(serviceLevelId) : null,
+        role: 'member' as const
+      };
+      
+      // Create the user
+      const user = await storage.createUser(userData, passwordHash);
+      
+      // Create a boat owner record for the member
+      await storage.createBoatOwner({ userId: user.id });
+
+      // Remove sensitive data before sending response
+      const { passwordHash: _, ...safeUser } = user;
+      res.status(201).json(safeUser);
+    } catch (err) {
+      console.error("Error creating customer:", err);
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {

@@ -108,13 +108,10 @@ export default function CustomerManagement() {
   // Add customer mutation
   const addCustomerMutation = useMutation({
     mutationFn: async (customerData: any) => {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...customerData,
-          role: 'member'
-        }),
+        body: JSON.stringify(customerData),
       });
       if (!res.ok) {
         const errorData = await res.json();
