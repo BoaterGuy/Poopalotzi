@@ -113,8 +113,14 @@ export function setupAuth(app: Express) {
 
       const passwordHash = await hashPassword(req.body.password);
       
+      // Prepare user data, converting empty serviceLevelId to null
+      const userData = {
+        ...req.body,
+        serviceLevelId: req.body.serviceLevelId && req.body.serviceLevelId !== "" ? parseInt(req.body.serviceLevelId) : null
+      };
+      
       // Create the user
-      const user = await storage.createUser(req.body, passwordHash);
+      const user = await storage.createUser(userData, passwordHash);
       
       // If user role is member, create a boat owner record
       if (user.role === "member") {
