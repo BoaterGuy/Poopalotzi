@@ -7,7 +7,7 @@ import bcryptjs from 'bcryptjs';
 import { Pool } from 'pg';
 
 const app = express();
-const port = parseInt(process.env.PORT || '5000', 10);
+const port = process.env.PORT || 5000;
 
 // Create uploads directory
 const uploadsDir = path.join(process.cwd(), 'uploads');
