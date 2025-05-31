@@ -162,11 +162,7 @@ async function startServer() {
 
     // Start server on port 5000 (as expected by workflow)
     const port = Number(process.env.PORT) || 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
+    server.listen(port, "0.0.0.0", () => {
       log(`Server running on port ${port}`);
       log(`Frontend with styling: http://localhost:${port}`);
       log(`API endpoints: http://localhost:${port}/api`);
