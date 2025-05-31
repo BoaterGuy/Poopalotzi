@@ -127,8 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("User ID:", req.user.id, "Role:", req.user.role);
       
       const { userId, ...boatData } = req.body;
-      const parsedBoatData = insertBoatSchema.parse(boatData);
-      console.log("Parsed boat data:", parsedBoatData);
+      console.log("Raw boat data:", boatData);
       
       let targetUserId = req.user.id;
       
@@ -154,11 +153,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Created boat owner:", boatOwner);
       }
 
-      // Create the boat
-      const boat = await storage.createBoat({
-        ...parsedBoatData,
+      // Add ownerId to boat data and validate
+      const completeBoatData = {
+        ...boatData,
         ownerId: boatOwner.id
-      });
+      };
+      
+      const parsedBoatData = insertBoatSchema.parse(completeBoatData);
+      console.log("Parsed boat data:", parsedBoatData);
+
+      // Create the boat
+      const boat = await storage.createBoat(parsedBoatData);
       
       console.log("Created boat:", boat);
       res.status(201).json(boat);
