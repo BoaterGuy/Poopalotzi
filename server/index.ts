@@ -71,8 +71,14 @@ if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
 }
 
-// In development, serve source files
-app.use('/src', express.static(clientSrcPath));
+// In development, serve source files with proper MIME types
+app.use('/src', (req, res, next) => {
+  if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  }
+  next();
+}, express.static(clientSrcPath));
+
 app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
 
 // Authentication middleware
