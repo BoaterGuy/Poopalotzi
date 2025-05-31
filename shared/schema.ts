@@ -68,7 +68,7 @@ export const boat = pgTable('boat', {
   photoUrl: text('photo_url'),
   dockingDirection: dockingDirectionEnum('docking_direction'),
   tieUpSide: tieUpSideEnum('tie_up_side'),
-  pumpPortLocations: json('pump_port_locations').$type<string[]>(),
+  pumpPortLocations: text('pump_port_locations').array(),
   dock: text('dock'),
   slip: integer('slip'),
   notes: text('notes'),
