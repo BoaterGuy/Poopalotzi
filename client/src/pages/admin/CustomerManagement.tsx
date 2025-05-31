@@ -38,6 +38,12 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
 
 // Mock data until connected to API
@@ -316,6 +322,57 @@ export default function CustomerManagement() {
     },
   });
 
+  // Function to get short service level label with color coding
+  const getServiceLevelDisplay = (serviceLevelId: number | null, serviceLevels: any[]) => {
+    if (!serviceLevelId) {
+      return {
+        shortLabel: "No Service",
+        fullLabel: "No service level assigned",
+        variant: "outline" as const,
+        color: "text-gray-500"
+      };
+    }
+    
+    const level = serviceLevels.find(l => l.id === serviceLevelId);
+    if (!level) {
+      return {
+        shortLabel: "Unknown",
+        fullLabel: "Unknown service level",
+        variant: "outline" as const,
+        color: "text-gray-500"
+      };
+    }
+    
+    // Determine service type and head count
+    const isMultiHead = level.name.toLowerCase().includes("multi");
+    const type = level.type;
+    
+    let shortLabel = "";
+    let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+    let color = "";
+    
+    if (type === "one-time") {
+      shortLabel = isMultiHead ? "Single Multi" : "Single";
+      variant = "outline";
+      color = "text-gray-600";
+    } else if (type === "monthly") {
+      shortLabel = isMultiHead ? "Monthly Multi" : "Monthly";
+      variant = "default";
+      color = "text-blue-600";
+    } else if (type === "seasonal") {
+      shortLabel = isMultiHead ? "Seasonal Multi" : "Seasonal";
+      variant = "secondary";
+      color = "text-green-600";
+    }
+    
+    return {
+      shortLabel,
+      fullLabel: level.name,
+      variant,
+      color
+    };
+  };
+
   // Function to determine boat status based on creation date and mock logic
   const getBoatStatus = (boat: any) => {
     const now = new Date();
@@ -534,7 +591,7 @@ export default function CustomerManagement() {
   };
 
   return (
-    <>
+    <TooltipProvider>
       <Helmet>
         <title>Customer Management | Poopalotzi</title>
         <meta name="description" content="Manage boat owners and their service subscriptions" />
@@ -1170,9 +1227,21 @@ export default function CustomerManagement() {
                           <TableCell>{customer.email}</TableCell>
                           <TableCell>{customer.phone || "Not provided"}</TableCell>
                           <TableCell>
-                            {customer.serviceLevelId ? 
-                              serviceLevels.find(level => level.id === customer.serviceLevelId)?.name || "Unknown" 
-                              : "No service level"}
+                            {(() => {
+                              const serviceDisplay = getServiceLevelDisplay(customer.serviceLevelId, serviceLevels);
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant={serviceDisplay.variant} className="cursor-help">
+                                      {serviceDisplay.shortLabel}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{serviceDisplay.fullLabel}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })()}
                           </TableCell>
                           <TableCell>
                             <Button
@@ -1223,6 +1292,6 @@ export default function CustomerManagement() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
