@@ -56,30 +56,33 @@ app.use(session({
 // Serve static files
 app.use('/uploads', express.static(uploadsDir));
 
-// Serve client files from multiple possible locations
+// Serve static files - prioritize built files, then client files
+const distPath = path.join(process.cwd(), 'dist');
 const clientPublicPath = path.join(process.cwd(), 'client', 'public');
-const clientDistPath = path.join(process.cwd(), 'client', 'dist');
 const clientSrcPath = path.join(process.cwd(), 'client', 'src');
 
-// Serve public assets first (favicon, manifest, etc.)
-if (fs.existsSync(clientPublicPath)) {
-  app.use(express.static(clientPublicPath));
-}
-
-// Serve built files if they exist
-if (fs.existsSync(clientDistPath)) {
-  app.use(express.static(clientDistPath));
-}
-
-// In development, serve source files with proper MIME types
-app.use('/src', (req, res, next) => {
-  if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
-    res.setHeader('Content-Type', 'application/javascript');
+// Check if we have built files first
+if (fs.existsSync(distPath)) {
+  console.log('Serving built frontend from /dist');
+  app.use(express.static(distPath));
+} else {
+  console.log('Serving development files from /client');
+  
+  // Serve public assets (favicon, manifest, etc.)
+  if (fs.existsSync(clientPublicPath)) {
+    app.use(express.static(clientPublicPath));
   }
-  next();
-}, express.static(clientSrcPath));
-
-app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
+  
+  // In development, serve source files with proper MIME types
+  app.use('/src', (req, res, next) => {
+    if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+    next();
+  }, express.static(clientSrcPath));
+  
+  app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
+}
 
 // Authentication middleware
 const requireAuth = (req: any, res: any, next: any) => {
@@ -332,9 +335,9 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     res.status(404).json({ message: 'API endpoint not found' });
   } else {
-    // Try multiple possible locations for index.html
+    // Try to serve built index.html first, then development version
     const possiblePaths = [
-      path.join(process.cwd(), 'client', 'dist', 'index.html'),
+      path.join(process.cwd(), 'dist', 'index.html'),
       path.join(process.cwd(), 'client', 'index.html')
     ];
     
