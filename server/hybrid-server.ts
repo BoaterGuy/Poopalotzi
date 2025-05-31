@@ -96,20 +96,7 @@ app.use((req, res, next) => {
 
 async function startServer() {
   try {
-    // Initialize database schema conditionally
-    if (process.env.NODE_ENV !== 'production') {
-      log("Development environment detected, running database setup...");
-      const dbSuccess = await setupFullDatabase();
-      if (dbSuccess) {
-        log("Successfully connected to the database!");
-        log("All database tables set up successfully!");
-      } else {
-        log("Database connection error - exiting");
-        process.exit(1);
-      }
-    } else {
-      log("Production environment detected. Skipping automatic database setup.");
-    }
+    log("Starting Poopalotzi with frontend styling and image upload support...");
     
     // Set up authentication with the proper storage
     setupAuth(app);

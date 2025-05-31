@@ -1,12 +1,13 @@
 import fs from 'fs';
+import path from 'path';
 
-// Read package.json
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const packageJsonPath = path.join(process.cwd(), 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-// Update the dev script to use the clean server
-packageJson.scripts.dev = "NODE_ENV=development npx tsx server/clean-index.ts";
+// Restore original development setup that includes Vite for frontend styling
+packageJson.scripts.dev = "NODE_ENV=development npx tsx server/index.ts";
 
-// Write back to package.json
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2) + '\n');
+fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-console.log('Updated dev script to use clean server without vite dependencies');
+console.log('✅ Restored development server for frontend styling');
+console.log('🔄 Ready to restart with proper CSS and layout support');
