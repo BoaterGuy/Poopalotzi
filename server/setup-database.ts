@@ -1,5 +1,15 @@
 import { Pool } from 'pg';
-import { log } from './vite';
+
+// Simple logging function
+function log(message: string) {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit", 
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [database] ${message}`);
+}
 
 // Function to set up all required tables
 export async function setupFullDatabase() {

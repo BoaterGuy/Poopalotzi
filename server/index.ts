@@ -1,11 +1,23 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import { setupFullDatabase } from "./setup-database";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
+import path from "path";
+import fs from "fs";
+
+// Simple logging function
+function log(message: string) {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit", 
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [server] ${message}`);
+}
 
 // Create a database storage instance right away
 const dbStorage = new DatabaseStorage();
@@ -83,13 +95,28 @@ async function startServer() {
       console.error(err);
     });
 
-    // Setup Vite AFTER registering all API routes
-    // so the catch-all route doesn't interfere with the API
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
+    // Serve static files from dist (if it exists)
+    const distPath = path.join(process.cwd(), 'dist');
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
     }
+    
+    // Serve uploads directory for images
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    app.use('/uploads', express.static(uploadsDir));
+    
+    // Simple fallback for SPA routing
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        res.status(404).json({ message: 'API endpoint not found' });
+      } else {
+        // Redirect to the standalone server homepage
+        res.redirect('/');
+      }
+    });
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
