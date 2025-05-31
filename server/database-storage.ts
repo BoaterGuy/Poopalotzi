@@ -395,10 +395,10 @@ export class DatabaseStorage implements IStorage {
   // Analytics operations
   async countActiveUsersByServiceLevel(): Promise<{ serviceLevelId: number, count: number }[]> {
     const result = await db.execute(sql`
-      SELECT "serviceLevelId", COUNT(*) as count 
+      SELECT "service_level_id" as "serviceLevelId", COUNT(*) as count 
       FROM users 
-      WHERE "serviceLevelId" IS NOT NULL 
-      GROUP BY "serviceLevelId"
+      WHERE "service_level_id" IS NOT NULL 
+      GROUP BY "service_level_id"
     `);
     return result as any;
   }
@@ -415,11 +415,11 @@ export class DatabaseStorage implements IStorage {
       SELECT COUNT(*) as count 
       FROM pump_out_request 
       WHERE status = 'Completed' 
-      AND "updatedAt" >= ${startOfWeek} 
-      AND "updatedAt" < ${endOfWeek}
+      AND "updated_at" >= ${startOfWeek} 
+      AND "updated_at" < ${endOfWeek}
     `);
     
-    return result[0]?.count || 0;
+    return Number(result.rows[0]?.count) || 0;
   }
 
   async countUpcomingServices(): Promise<number> {
@@ -431,20 +431,20 @@ export class DatabaseStorage implements IStorage {
       SELECT COUNT(*) as count 
       FROM pump_out_request 
       WHERE status IN ('Requested', 'Scheduled') 
-      AND "createdAt" <= ${endOfWeek}
+      AND "created_at" <= ${endOfWeek}
     `);
     
-    return result[0]?.count || 0;
+    return Number(result.rows[0]?.count) || 0;
   }
 
   async calculateAverageRevenuePerUser(): Promise<number> {
     const result = await db.execute(sql`
       SELECT AVG(sl.price) as avg_revenue
       FROM users u
-      JOIN service_level sl ON u."serviceLevelId" = sl.id
-      WHERE u."serviceLevelId" IS NOT NULL
+      JOIN service_level sl ON u."service_level_id" = sl.id
+      WHERE u."service_level_id" IS NOT NULL
     `);
     
-    return result[0]?.avg_revenue || 0;
+    return Number(result.rows[0]?.avg_revenue) || 0;
   }
 }
