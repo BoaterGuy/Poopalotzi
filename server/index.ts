@@ -5,6 +5,10 @@ import multer from 'multer';
 import session from 'express-session';
 import bcryptjs from 'bcryptjs';
 import { Pool } from 'pg';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = parseInt(process.env.PORT || '5000', 10);
@@ -57,14 +61,24 @@ app.use(session({
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve static files - prioritize built files, then client files
-const clientDistPath = path.join(process.cwd(), 'client', 'dist');
-const clientPublicPath = path.join(process.cwd(), 'client', 'public');
-const clientSrcPath = path.join(process.cwd(), 'client', 'src');
+const clientDistPath = path.resolve(__dirname, '../client/dist');
+const clientPublicPath = path.resolve(__dirname, '../client/public');
+const clientSrcPath = path.resolve(__dirname, '../client/src');
 
 // Check if we have built files first
 if (fs.existsSync(clientDistPath)) {
   console.log('Serving built frontend from /client/dist');
-  app.use(express.static(clientDistPath));
+  app.use(express.static(clientDistPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html');
+      }
+    }
+  }));
 } else {
   console.log('Serving development files from /client');
   
@@ -81,7 +95,7 @@ if (fs.existsSync(clientDistPath)) {
     next();
   }, express.static(clientSrcPath));
   
-  app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
+  app.use('/node_modules', express.static(path.resolve(__dirname, '../node_modules')));
 }
 
 // Authentication middleware
@@ -337,8 +351,8 @@ app.get('*', (req, res) => {
   } else {
     // Try to serve built index.html first, then development version
     const possiblePaths = [
-      path.join(process.cwd(), 'client', 'dist', 'index.html'),
-      path.join(process.cwd(), 'client', 'index.html')
+      path.resolve(__dirname, '../client/dist/index.html'),
+      path.resolve(__dirname, '../client/index.html')
     ];
     
     for (const indexPath of possiblePaths) {
