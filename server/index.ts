@@ -57,14 +57,14 @@ app.use(session({
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve static files - prioritize built files, then client files
-const distPath = path.join(process.cwd(), 'dist');
+const clientDistPath = path.join(process.cwd(), 'client', 'dist');
 const clientPublicPath = path.join(process.cwd(), 'client', 'public');
 const clientSrcPath = path.join(process.cwd(), 'client', 'src');
 
 // Check if we have built files first
-if (fs.existsSync(distPath)) {
-  console.log('Serving built frontend from /dist');
-  app.use(express.static(distPath));
+if (fs.existsSync(clientDistPath)) {
+  console.log('Serving built frontend from /client/dist');
+  app.use(express.static(clientDistPath));
 } else {
   console.log('Serving development files from /client');
   
@@ -337,7 +337,7 @@ app.get('*', (req, res) => {
   } else {
     // Try to serve built index.html first, then development version
     const possiblePaths = [
-      path.join(process.cwd(), 'dist', 'index.html'),
+      path.join(process.cwd(), 'client', 'dist', 'index.html'),
       path.join(process.cwd(), 'client', 'index.html')
     ];
     
