@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { setupFullDatabase } from "./setup-database";
 import { DatabaseStorage } from "./database-storage";
 import type { IStorage } from "./storage";
-import { setupVite, serveStatic } from "./vite";
+import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -133,9 +133,43 @@ async function startServer() {
     // Setup frontend with Vite in development, static files in production
     if (process.env.NODE_ENV === 'development') {
       log("Setting up Vite for frontend styling...");
-      await setupVite(app, server);
+      
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'custom',
+        configFile: path.resolve(process.cwd(), 'vite.config.ts'),
+        root: path.resolve(process.cwd(), 'client'),
+      });
+
+      app.use(vite.middlewares);
+
+      app.use('*', async (req, res, next) => {
+        const url = req.originalUrl;
+
+        if (url.startsWith('/api/') || url.startsWith('/auth/') || url.startsWith('/uploads/')) {
+          return next();
+        }
+
+        try {
+          const template = await fs.promises.readFile(
+            path.resolve(process.cwd(), 'client/index.html'),
+            'utf-8'
+          );
+          const html = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+        } catch (e) {
+          vite.ssrFixStacktrace(e as Error);
+          next(e);
+        }
+      });
     } else {
-      serveStatic(app);
+      const distPath = path.join(process.cwd(), 'dist/public');
+      if (fs.existsSync(distPath)) {
+        app.use(express.static(distPath));
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(distPath, 'index.html'));
+        });
+      }
     }
 
     const port = Number(process.env.PORT) || 5000;

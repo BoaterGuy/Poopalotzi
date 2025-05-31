@@ -4,7 +4,7 @@ import path from 'path';
 const packageJsonPath = path.join(process.cwd(), 'package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-// Restore original development setup that includes Vite for frontend styling
+// Use original server configuration that includes proper Vite setup
 packageJson.scripts.dev = "NODE_ENV=development npx tsx server/index.ts";
 
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));

@@ -1,85 +1,68 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupFullDatabase } from "./setup-database";
-import { DatabaseStorage } from "./database-storage";
-import { IStorage } from "./storage";
 import { setupAuth } from "./auth";
+import { DatabaseStorage } from "./database-storage";
+import type { IStorage } from "./storage";
+import path from "path";
+import fs from "fs";
 
-// Create a database storage instance
+const app = express();
+
+// Create database storage instance
 const dbStorage = new DatabaseStorage();
 export let storage: IStorage = dbStorage;
 
-const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+// Create uploads directory
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: any = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      console.log(logLine);
-    }
-  });
-
-  next();
-});
+// Basic middleware with file upload support
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+app.use('/uploads', express.static(uploadsDir));
 
 const formatDateForRequest = (date: Date): string => {
-  return date.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 async function startServer() {
-  const port = Number(process.env.PORT || 3000);
-
   try {
-    // Set up the database first
-    console.log("Setting up database...");
-    await setupFullDatabase();
-    console.log("Database setup complete");
-
+    console.log("Starting Poopalotzi server...");
+    
     // Set up authentication
     setupAuth(app);
     
-    // Register all routes
+    // Register API routes
     const server = await registerRoutes(app);
 
-    // Start the server
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`Server running on port ${port}`);
-    });
-
-    // Global error handler
+    // Error handling
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      console.error(err);
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      res.status(status).json({ message });
+      console.error("Server error:", err.message);
+      if (res.headersSent) return;
+      res.status(500).json({
+        error: "Internal server error",
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+      });
     });
 
-  } catch (error) {
-    console.error("Failed to start server:", error);
+    const port = Number(process.env.PORT) || 5000;
+    
+    server.listen(port, "0.0.0.0", () => {
+      console.log(`Server running on port ${port}`);
+      console.log(`Frontend: http://localhost:${port}`);
+      console.log(`API: http://localhost:${port}/api`);
+      console.log(`Image uploads: Ready (${uploadsDir})`);
+    });
+
+  } catch (error: any) {
+    console.error(`Failed to start server: ${error.message}`);
     process.exit(1);
   }
 }
 
-// Only start the server if this file is run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startServer();
-}
+startServer();
