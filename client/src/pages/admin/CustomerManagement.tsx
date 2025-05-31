@@ -77,6 +77,8 @@ export default function CustomerManagement() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -144,6 +146,38 @@ export default function CustomerManagement() {
     },
   });
 
+  // Edit customer mutation
+  const editCustomerMutation = useMutation({
+    mutationFn: async ({ id, customerData }: { id: number, customerData: any }) => {
+      const res = await fetch(`/api/customers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customerData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to update customer');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Customer updated successfully",
+      });
+      setIsEditDialogOpen(false);
+      setEditingCustomer(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/users/members"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update customer",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -152,11 +186,18 @@ export default function CustomerManagement() {
   );
 
   const handleEditCustomer = (id: number) => {
-    toast({
-      title: "Edit Customer",
-      description: `Editing customer with ID: ${id}`,
-    });
-    // Open edit modal/form
+    const customer = customers.find(c => c.id === id);
+    if (customer) {
+      setEditingCustomer({
+        id: customer.id,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email,
+        phone: customer.phone || "",
+        serviceLevelId: customer.serviceLevelId ? customer.serviceLevelId.toString() : "",
+      });
+      setIsEditDialogOpen(true);
+    }
   };
 
   const handleDeleteCustomer = (id: number) => {
@@ -170,6 +211,33 @@ export default function CustomerManagement() {
 
   const handleAddCustomer = () => {
     setIsAddDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingCustomer) return;
+    
+    // Basic validation
+    if (!editingCustomer.firstName || !editingCustomer.lastName || !editingCustomer.email) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    editCustomerMutation.mutate({
+      id: editingCustomer.id,
+      customerData: {
+        firstName: editingCustomer.firstName,
+        lastName: editingCustomer.lastName,
+        email: editingCustomer.email,
+        phone: editingCustomer.phone,
+        serviceLevelId: editingCustomer.serviceLevelId,
+      }
+    });
   };
 
   const handleSubmitCustomer = (e: React.FormEvent) => {
@@ -312,6 +380,101 @@ export default function CustomerManagement() {
               </DialogContent>
             </Dialog>
           </CardHeader>
+
+          {/* Edit Customer Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Customer</DialogTitle>
+                <DialogDescription>
+                  Update customer information and service subscription.
+                </DialogDescription>
+              </DialogHeader>
+              {editingCustomer && (
+                <form onSubmit={handleEditSubmit}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-firstName">First Name *</Label>
+                        <Input
+                          id="edit-firstName"
+                          value={editingCustomer.firstName}
+                          onChange={(e) => setEditingCustomer({...editingCustomer, firstName: e.target.value})}
+                          placeholder="John"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-lastName">Last Name *</Label>
+                        <Input
+                          id="edit-lastName"
+                          value={editingCustomer.lastName}
+                          onChange={(e) => setEditingCustomer({...editingCustomer, lastName: e.target.value})}
+                          placeholder="Doe"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-email">Email *</Label>
+                      <Input
+                        id="edit-email"
+                        type="email"
+                        value={editingCustomer.email}
+                        onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})}
+                        placeholder="john.doe@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-phone">Phone</Label>
+                      <Input
+                        id="edit-phone"
+                        type="tel"
+                        value={editingCustomer.phone}
+                        onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-serviceLevel">Service Level</Label>
+                      <Select 
+                        value={editingCustomer.serviceLevelId} 
+                        onValueChange={(value) => setEditingCustomer({...editingCustomer, serviceLevelId: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No service level</SelectItem>
+                          {serviceLevels.map((level: any) => (
+                            <SelectItem key={level.id} value={level.id.toString()}>
+                              {level.name} - ${level.price}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEditDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={editCustomerMutation.isPending}
+                    >
+                      {editCustomerMutation.isPending ? "Updating..." : "Update Customer"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
           <CardContent>
             <div className="mb-4 flex items-center space-x-2">
               <div className="relative flex-1">

@@ -928,6 +928,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/customers/:id", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const { firstName, lastName, email, phone, serviceLevelId } = req.body;
+      
+      // Check if customer exists
+      const existingCustomer = await storage.getUser(customerId);
+      if (!existingCustomer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+
+      // Check if email is being changed and if it already exists
+      if (email !== existingCustomer.email) {
+        const userWithEmail = await storage.getUserByEmail(email);
+        if (userWithEmail && userWithEmail.id !== customerId) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+      }
+      
+      // Prepare update data
+      const updateData = {
+        firstName,
+        lastName,
+        email,
+        phone: phone || null,
+        serviceLevelId: serviceLevelId && serviceLevelId !== "" ? parseInt(serviceLevelId) : null
+      };
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(customerId, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+
+      // Remove sensitive data before sending response
+      const { passwordHash, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (err) {
+      console.error("Error updating customer:", err);
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {
