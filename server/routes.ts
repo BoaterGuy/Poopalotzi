@@ -230,6 +230,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/boats/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const boatId = parseInt(req.params.id);
+      const boat = await storage.getBoat(boatId);
+      
+      if (!boat) {
+        return res.status(404).json({ message: "Boat not found" });
+      }
+
+      // Admin can delete any boat, regular users can only delete their own boats
+      if (req.user.role !== 'admin') {
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+        if (!boatOwner || boat.ownerId !== boatOwner.id) {
+          return res.status(403).json({ message: "Not authorized to delete this boat" });
+        }
+      }
+
+      const deleted = await storage.deleteBoat(boatId);
+      
+      if (deleted) {
+        res.json({ message: "Boat deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Boat not found" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Main marina route - this is the single source of truth for marina data
   app.get("/api/marinas", async (req, res, next) => {
     try {

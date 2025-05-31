@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Plus, Trash2, UserPlus, Search, Anchor } from "lucide-react";
+import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship } from "lucide-react";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
@@ -79,8 +79,13 @@ export default function CustomerManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddBoatDialogOpen, setIsAddBoatDialogOpen] = useState(false);
+  const [isEditBoatDialogOpen, setIsEditBoatDialogOpen] = useState(false);
+  const [isViewBoatsDialogOpen, setIsViewBoatsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomerForBoat, setSelectedCustomerForBoat] = useState<any>(null);
+  const [editingBoat, setEditingBoat] = useState<any>(null);
+  const [customerBoats, setCustomerBoats] = useState<any[]>([]);
+  const [selectedCustomerForBoats, setSelectedCustomerForBoats] = useState<any>(null);
   const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -244,6 +249,72 @@ export default function CustomerManagement() {
     },
   });
 
+  // Edit boat mutation
+  const editBoatMutation = useMutation({
+    mutationFn: async ({ id, boatData }: { id: number, boatData: any }) => {
+      const res = await fetch(`/api/boats/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boatData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to update boat');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Boat updated successfully",
+      });
+      setIsEditBoatDialogOpen(false);
+      setEditingBoat(null);
+      // Refresh boats for current customer
+      if (selectedCustomerForBoats) {
+        fetchCustomerBoats(selectedCustomerForBoats.id);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update boat",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete boat mutation
+  const deleteBoatMutation = useMutation({
+    mutationFn: async (boatId: number) => {
+      const res = await fetch(`/api/boats/${boatId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to delete boat');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Boat deleted successfully",
+      });
+      // Refresh boats for current customer
+      if (selectedCustomerForBoats) {
+        fetchCustomerBoats(selectedCustomerForBoats.id);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete boat",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -314,6 +385,77 @@ export default function CustomerManagement() {
     };
     
     addBoatMutation.mutate(boatData);
+  };
+
+  const fetchCustomerBoats = async (userId: number) => {
+    try {
+      const res = await fetch(`/api/boats?userId=${userId}`);
+      if (res.ok) {
+        const boats = await res.json();
+        setCustomerBoats(boats);
+      } else {
+        setCustomerBoats([]);
+      }
+    } catch (error) {
+      setCustomerBoats([]);
+    }
+  };
+
+  const handleViewBoats = async (customer: any) => {
+    setSelectedCustomerForBoats(customer);
+    await fetchCustomerBoats(customer.id);
+    setIsViewBoatsDialogOpen(true);
+  };
+
+  const handleEditBoat = (boat: any) => {
+    setEditingBoat({
+      id: boat.id,
+      name: boat.name,
+      make: boat.make || "",
+      model: boat.model || "",
+      year: boat.year ? boat.year.toString() : "",
+      length: boat.length ? boat.length.toString() : "",
+      color: boat.color || "",
+      dock: boat.dock || "",
+      slip: boat.slip ? boat.slip.toString() : "",
+      notes: boat.notes || "",
+    });
+    setIsEditBoatDialogOpen(true);
+  };
+
+  const handleDeleteBoat = (boatId: number) => {
+    if (confirm("Are you sure you want to delete this boat?")) {
+      deleteBoatMutation.mutate(boatId);
+    }
+  };
+
+  const handleEditBoatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingBoat) return;
+    
+    if (!editingBoat.name) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a boat name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const boatData = {
+      name: editingBoat.name,
+      make: editingBoat.make || null,
+      model: editingBoat.model || null,
+      year: editingBoat.year ? parseInt(editingBoat.year) : null,
+      length: editingBoat.length ? parseInt(editingBoat.length) : null,
+      color: editingBoat.color || null,
+      dock: editingBoat.dock || null,
+      slip: editingBoat.slip ? parseInt(editingBoat.slip) : null,
+      notes: editingBoat.notes || null,
+    };
+    
+    editBoatMutation.mutate({ id: editingBoat.id, boatData });
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -628,6 +770,225 @@ export default function CustomerManagement() {
             </DialogContent>
           </Dialog>
 
+          {/* View Boats Dialog */}
+          <Dialog open={isViewBoatsDialogOpen} onOpenChange={setIsViewBoatsDialogOpen}>
+            <DialogContent className="sm:max-w-[800px]">
+              <DialogHeader>
+                <DialogTitle>Boats for {selectedCustomerForBoats?.firstName} {selectedCustomerForBoats?.lastName}</DialogTitle>
+                <DialogDescription>
+                  Manage all boats owned by this customer.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                {customerBoats.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No boats found for this customer.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {customerBoats.map((boat: any) => (
+                      <div key={boat.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <h3 className="font-semibold text-lg">{boat.name}</h3>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Make/Model:</span>
+                                <span className="ml-2">{boat.make} {boat.model}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Year:</span>
+                                <span className="ml-2">{boat.year || "N/A"}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Location:</span>
+                                <span className="ml-2">Dock {boat.dock}, Slip {boat.slip}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Length:</span>
+                                <span className="ml-2">{boat.length ? `${boat.length} ft` : "N/A"}</span>
+                              </div>
+                            </div>
+                            {boat.notes && (
+                              <div className="text-sm">
+                                <span className="text-muted-foreground">Notes:</span>
+                                <span className="ml-2">{boat.notes}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditBoat(boat)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => handleDeleteBoat(boat.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewBoatsDialogOpen(false)}
+                >
+                  Close
+                </Button>
+                {selectedCustomerForBoats && (
+                  <Button
+                    onClick={() => {
+                      handleAddBoatForCustomer(selectedCustomerForBoats);
+                      setIsViewBoatsDialogOpen(false);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Another Boat
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Boat Dialog */}
+          <Dialog open={isEditBoatDialogOpen} onOpenChange={setIsEditBoatDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Edit Boat</DialogTitle>
+                <DialogDescription>
+                  Update boat information.
+                </DialogDescription>
+              </DialogHeader>
+              {editingBoat && (
+                <form onSubmit={handleEditBoatSubmit}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-name">Boat Name *</Label>
+                        <Input
+                          id="edit-boat-name"
+                          value={editingBoat.name}
+                          onChange={(e) => setEditingBoat({...editingBoat, name: e.target.value})}
+                          placeholder="My Boat"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-make">Make</Label>
+                        <Input
+                          id="edit-boat-make"
+                          value={editingBoat.make}
+                          onChange={(e) => setEditingBoat({...editingBoat, make: e.target.value})}
+                          placeholder="Beneteau"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-model">Model</Label>
+                        <Input
+                          id="edit-boat-model"
+                          value={editingBoat.model}
+                          onChange={(e) => setEditingBoat({...editingBoat, model: e.target.value})}
+                          placeholder="Oceanis 40"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-year">Year</Label>
+                        <Input
+                          id="edit-boat-year"
+                          type="number"
+                          value={editingBoat.year}
+                          onChange={(e) => setEditingBoat({...editingBoat, year: e.target.value})}
+                          placeholder="2020"
+                          min="1900"
+                          max="2030"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-length">Length (ft)</Label>
+                        <Input
+                          id="edit-boat-length"
+                          type="number"
+                          step="0.1"
+                          value={editingBoat.length}
+                          onChange={(e) => setEditingBoat({...editingBoat, length: e.target.value})}
+                          placeholder="40"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-color">Color</Label>
+                        <Input
+                          id="edit-boat-color"
+                          value={editingBoat.color}
+                          onChange={(e) => setEditingBoat({...editingBoat, color: e.target.value})}
+                          placeholder="White"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-dock">Dock</Label>
+                        <Input
+                          id="edit-boat-dock"
+                          value={editingBoat.dock}
+                          onChange={(e) => setEditingBoat({...editingBoat, dock: e.target.value})}
+                          placeholder="A"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-boat-slip">Slip</Label>
+                        <Input
+                          id="edit-boat-slip"
+                          value={editingBoat.slip}
+                          onChange={(e) => setEditingBoat({...editingBoat, slip: e.target.value})}
+                          placeholder="15"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-boat-notes">Notes</Label>
+                      <Input
+                        id="edit-boat-notes"
+                        value={editingBoat.notes}
+                        onChange={(e) => setEditingBoat({...editingBoat, notes: e.target.value})}
+                        placeholder="Additional notes about the boat"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEditBoatDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={editBoatMutation.isPending}
+                    >
+                      {editBoatMutation.isPending ? "Updating..." : "Update Boat"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
+
           {/* Edit Customer Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
@@ -771,7 +1132,17 @@ export default function CustomerManagement() {
                               serviceLevels.find(level => level.id === customer.serviceLevelId)?.name || "Unknown" 
                               : "No service level"}
                           </TableCell>
-                          <TableCell>0</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewBoats(customer)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <Ship className="h-4 w-4 mr-1" />
+                              View Boats
+                            </Button>
+                          </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
                               <Button
