@@ -1232,12 +1232,17 @@ export default function CustomerManagement() {
                               return (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Badge variant={serviceDisplay.variant} className="cursor-help">
-                                      {serviceDisplay.shortLabel}
-                                    </Badge>
+                                    <div className="inline-block">
+                                      <Badge 
+                                        variant={serviceDisplay.variant} 
+                                        className="cursor-help hover:opacity-80 transition-opacity"
+                                      >
+                                        {serviceDisplay.shortLabel}
+                                      </Badge>
+                                    </div>
                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{serviceDisplay.fullLabel}</p>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p className="text-sm">{serviceDisplay.fullLabel}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               );
