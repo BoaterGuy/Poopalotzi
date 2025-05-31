@@ -201,6 +201,49 @@ export default function CustomerManagement() {
     },
   });
 
+  // Add boat mutation
+  const addBoatMutation = useMutation({
+    mutationFn: async (boatData: any) => {
+      const res = await fetch('/api/boats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boatData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to add boat');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Boat added successfully",
+      });
+      setIsAddBoatDialogOpen(false);
+      setSelectedCustomerForBoat(null);
+      setNewBoat({
+        name: "",
+        make: "",
+        model: "",
+        year: "",
+        length: "",
+        color: "",
+        dock: "",
+        slip: "",
+        marinaId: "",
+        notes: "",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add boat",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -234,6 +277,38 @@ export default function CustomerManagement() {
 
   const handleAddCustomer = () => {
     setIsAddDialogOpen(true);
+  };
+
+  const handleAddBoatForCustomer = (customer: any) => {
+    setSelectedCustomerForBoat(customer);
+    setIsAddBoatDialogOpen(true);
+  };
+
+  const handleBoatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedCustomerForBoat) return;
+    
+    // Basic validation
+    if (!newBoat.name) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a boat name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Prepare boat data with user ID for admin assignment
+    const boatData = {
+      ...newBoat,
+      userId: selectedCustomerForBoat.id,
+      year: newBoat.year ? parseInt(newBoat.year) : null,
+      length: newBoat.length ? parseFloat(newBoat.length) : null,
+      marinaId: newBoat.marinaId ? parseInt(newBoat.marinaId) : null,
+    };
+    
+    addBoatMutation.mutate(boatData);
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -404,6 +479,150 @@ export default function CustomerManagement() {
             </Dialog>
           </CardHeader>
 
+          {/* Add Boat Dialog */}
+          <Dialog open={isAddBoatDialogOpen} onOpenChange={setIsAddBoatDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add Boat for {selectedCustomerForBoat?.firstName} {selectedCustomerForBoat?.lastName}</DialogTitle>
+                <DialogDescription>
+                  Create a new boat record for this customer.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleBoatSubmit}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-name">Boat Name *</Label>
+                      <Input
+                        id="boat-name"
+                        value={newBoat.name}
+                        onChange={(e) => setNewBoat({...newBoat, name: e.target.value})}
+                        placeholder="My Boat"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-marina">Marina</Label>
+                      <Select 
+                        value={newBoat.marinaId} 
+                        onValueChange={(value) => setNewBoat({...newBoat, marinaId: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select marina" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {marinas.map((marina: any) => (
+                            <SelectItem key={marina.id} value={marina.id.toString()}>
+                              {marina.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-make">Make</Label>
+                      <Input
+                        id="boat-make"
+                        value={newBoat.make}
+                        onChange={(e) => setNewBoat({...newBoat, make: e.target.value})}
+                        placeholder="Beneteau"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-model">Model</Label>
+                      <Input
+                        id="boat-model"
+                        value={newBoat.model}
+                        onChange={(e) => setNewBoat({...newBoat, model: e.target.value})}
+                        placeholder="Oceanis 40"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-year">Year</Label>
+                      <Input
+                        id="boat-year"
+                        type="number"
+                        value={newBoat.year}
+                        onChange={(e) => setNewBoat({...newBoat, year: e.target.value})}
+                        placeholder="2020"
+                        min="1900"
+                        max="2030"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-length">Length (ft)</Label>
+                      <Input
+                        id="boat-length"
+                        type="number"
+                        step="0.1"
+                        value={newBoat.length}
+                        onChange={(e) => setNewBoat({...newBoat, length: e.target.value})}
+                        placeholder="40"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-color">Color</Label>
+                      <Input
+                        id="boat-color"
+                        value={newBoat.color}
+                        onChange={(e) => setNewBoat({...newBoat, color: e.target.value})}
+                        placeholder="White"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-dock">Dock</Label>
+                      <Input
+                        id="boat-dock"
+                        value={newBoat.dock}
+                        onChange={(e) => setNewBoat({...newBoat, dock: e.target.value})}
+                        placeholder="A"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="boat-slip">Slip</Label>
+                      <Input
+                        id="boat-slip"
+                        value={newBoat.slip}
+                        onChange={(e) => setNewBoat({...newBoat, slip: e.target.value})}
+                        placeholder="15"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="boat-notes">Notes</Label>
+                    <Input
+                      id="boat-notes"
+                      value={newBoat.notes}
+                      onChange={(e) => setNewBoat({...newBoat, notes: e.target.value})}
+                      placeholder="Additional notes about the boat"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddBoatDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={addBoatMutation.isPending}
+                  >
+                    {addBoatMutation.isPending ? "Adding..." : "Add Boat"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
           {/* Edit Customer Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
@@ -556,6 +775,13 @@ export default function CustomerManagement() {
                                 onClick={() => handleEditCustomer(customer.id)}
                               >
                                 <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddBoatForCustomer(customer)}
+                              >
+                                <Plus className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
