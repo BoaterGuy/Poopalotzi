@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -18,6 +19,23 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, UserPlus, Search } from "lucide-react";
 
@@ -58,6 +76,24 @@ const MOCK_CUSTOMERS = [
 export default function CustomerManagement() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    serviceLevelId: "",
+  });
+
+  // Fetch service levels for the dropdown
+  const { data: serviceLevels = [] } = useQuery({
+    queryKey: ["/api/service-levels"],
+    queryFn: async () => {
+      const res = await fetch('/api/service-levels');
+      return res.json();
+    },
+  });
 
   // This will be replaced with actual API call
   const { data: customers = [], isLoading } = useQuery({
@@ -66,6 +102,45 @@ export default function CustomerManagement() {
       // This will be replaced with actual API call
       // For now return mock data
       return MOCK_CUSTOMERS;
+    },
+  });
+
+  // Add customer mutation
+  const addCustomerMutation = useMutation({
+    mutationFn: async (customerData: any) => {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...customerData,
+          role: 'member'
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to add customer');
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Customer added successfully",
+      });
+      setIsAddDialogOpen(false);
+      setNewCustomer({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        password: "",
+        serviceLevelId: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/members"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add customer",
+        variant: "destructive",
+      });
     },
   });
 
@@ -94,11 +169,23 @@ export default function CustomerManagement() {
   };
 
   const handleAddCustomer = () => {
-    toast({
-      title: "Add Customer",
-      description: "Opening form to add a new customer",
-    });
-    // Open add customer modal/form
+    setIsAddDialogOpen(true);
+  };
+
+  const handleSubmitCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!newCustomer.firstName || !newCustomer.lastName || !newCustomer.email || !newCustomer.password) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addCustomerMutation.mutate(newCustomer);
   };
 
   return (
@@ -117,10 +204,113 @@ export default function CustomerManagement() {
                 Manage boat owners and their service subscriptions
               </CardDescription>
             </div>
-            <Button onClick={handleAddCustomer} className="flex items-center">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Customer
-            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleAddCustomer} className="flex items-center">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Customer
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Customer</DialogTitle>
+                  <DialogDescription>
+                    Create a new customer account with service subscription.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmitCustomer}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="firstName">First Name *</Label>
+                        <Input
+                          id="firstName"
+                          value={newCustomer.firstName}
+                          onChange={(e) => setNewCustomer({...newCustomer, firstName: e.target.value})}
+                          placeholder="John"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Input
+                          id="lastName"
+                          value={newCustomer.lastName}
+                          onChange={(e) => setNewCustomer({...newCustomer, lastName: e.target.value})}
+                          placeholder="Doe"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newCustomer.email}
+                        onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                        placeholder="john.doe@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={newCustomer.phone}
+                        onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Password *</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={newCustomer.password}
+                        onChange={(e) => setNewCustomer({...newCustomer, password: e.target.value})}
+                        placeholder="Enter secure password"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="serviceLevel">Service Level</Label>
+                      <Select 
+                        value={newCustomer.serviceLevelId} 
+                        onValueChange={(value) => setNewCustomer({...newCustomer, serviceLevelId: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {serviceLevels.map((level: any) => (
+                            <SelectItem key={level.id} value={level.id.toString()}>
+                              {level.name} - ${level.price}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={addCustomerMutation.isPending}
+                    >
+                      {addCustomerMutation.isPending ? "Adding..." : "Add Customer"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex items-center space-x-2">
