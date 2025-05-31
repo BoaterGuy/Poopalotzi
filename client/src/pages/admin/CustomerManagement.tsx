@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Plus, Trash2, UserPlus, Search } from "lucide-react";
+import { Pencil, Plus, Trash2, UserPlus, Search, Anchor } from "lucide-react";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
@@ -301,11 +301,16 @@ export default function CustomerManagement() {
     
     // Prepare boat data with user ID for admin assignment
     const boatData = {
-      ...newBoat,
-      userId: selectedCustomerForBoat.id,
+      name: newBoat.name,
+      make: newBoat.make || null,
+      model: newBoat.model || null,
       year: newBoat.year ? parseInt(newBoat.year) : null,
-      length: newBoat.length ? parseFloat(newBoat.length) : null,
-      marinaId: newBoat.marinaId ? parseInt(newBoat.marinaId) : null,
+      length: newBoat.length ? parseInt(newBoat.length) : null,
+      color: newBoat.color || null,
+      dock: newBoat.dock || null,
+      slip: newBoat.slip ? parseInt(newBoat.slip) : null,
+      notes: newBoat.notes || null,
+      userId: selectedCustomerForBoat.id,
     };
     
     addBoatMutation.mutate(boatData);
@@ -743,7 +748,7 @@ export default function CustomerManagement() {
                       <TableHead>Phone</TableHead>
                       <TableHead>Service Level</TableHead>
                       <TableHead>Boats</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="w-[200px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -780,8 +785,10 @@ export default function CustomerManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleAddBoatForCustomer(customer)}
+                                title="Add Boat for this Owner"
                               >
-                                <Plus className="h-4 w-4" />
+                                <Anchor className="h-4 w-4 mr-1" />
+                                Add Boat
                               </Button>
                               <Button
                                 variant="outline"
