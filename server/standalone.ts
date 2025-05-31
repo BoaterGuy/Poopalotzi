@@ -50,6 +50,10 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
 
+// Startup guard to prevent multiple server instances
+let serverStarted = false;
+let serverInstance: any = null;
+
 // Simple logging function
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -336,21 +340,56 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 async function startServer() {
-  const port = Number(process.env.PORT) || 3000;
+  // Prevent multiple server instances
+  if (serverStarted) {
+    log("Server already running, skipping startup");
+    return serverInstance;
+  }
+
+  const port = Number(process.env.PORT) || 5000;
 
   try {
     log("Starting Poopalotzi server...");
     log("Image upload improvements loaded");
 
-    app.listen(port, "0.0.0.0", () => {
-      log(`Server running on port ${port}`);
-      log(`Uploads directory: ${uploadsDir}`);
-      log(`Fixed: Request Entity Too Large error`);
-      log(`Ready: Boat image uploads up to 10MB`);
+    serverInstance = app.listen(port, "0.0.0.0", () => {
+      if (!serverStarted) {
+        serverStarted = true;
+        log(`Server running on port ${port}`);
+        log(`Uploads directory: ${uploadsDir}`);
+        log(`Fixed: Request Entity Too Large error`);
+        log(`Ready: Boat image uploads up to 10MB`);
+      }
     });
+
+    // Handle server shutdown gracefully
+    process.on('SIGTERM', () => {
+      log('SIGTERM received, shutting down gracefully');
+      serverStarted = false;
+      if (serverInstance) {
+        serverInstance.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
+      }
+    });
+
+    process.on('SIGINT', () => {
+      log('SIGINT received, shutting down gracefully');
+      serverStarted = false;
+      if (serverInstance) {
+        serverInstance.close(() => {
+          log('Server closed');
+          process.exit(0);
+        });
+      }
+    });
+
+    return serverInstance;
 
   } catch (error: any) {
     log(`Failed to start server: ${error.message}`);
+    serverStarted = false;
     process.exit(1);
   }
 }
