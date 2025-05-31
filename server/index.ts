@@ -108,15 +108,8 @@ async function startServer() {
     }
     app.use('/uploads', express.static(uploadsDir));
     
-    // Simple fallback for SPA routing
-    app.get('*', (req, res) => {
-      if (req.path.startsWith('/api/')) {
-        res.status(404).json({ message: 'API endpoint not found' });
-      } else {
-        // Redirect to the standalone server homepage
-        res.redirect('/');
-      }
-    });
+    // Only handle API routes - let frontend handle all other routing
+    // Remove catch-all route that causes redirect loops
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.

@@ -16,7 +16,7 @@ export let storage: IStorage = dbStorage;
 
 // Enable CORS for frontend connection
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
   credentials: true
 }));
 
@@ -32,6 +32,11 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend API server running' });
+});
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -100,8 +105,11 @@ async function startBackendServer() {
     // Set up authentication
     setupAuth(app);
     
-    // Register API routes
+    // Register API routes only - no frontend route handling
     const server = await registerRoutes(app);
+    
+    // Prevent any catch-all routes that might interfere with frontend
+    // Only handle API endpoints, let frontend handle all other routes
 
     const port = 5000;
     
