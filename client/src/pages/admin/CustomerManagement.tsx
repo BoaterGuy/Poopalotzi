@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, UserPlus, Search } from "lucide-react";
+import { Pencil, Plus, Trash2, UserPlus, Search } from "lucide-react";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
