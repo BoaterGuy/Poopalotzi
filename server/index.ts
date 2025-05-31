@@ -95,11 +95,7 @@ async function startServer() {
       console.error(err);
     });
 
-    // Serve static files from dist (if it exists)
-    const distPath = path.join(process.cwd(), 'dist');
-    if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
-    }
+    // Backend only serves API routes - frontend is served by Vite on port 3000
     
     // Serve uploads directory for images
     const uploadsDir = path.join(process.cwd(), 'uploads');

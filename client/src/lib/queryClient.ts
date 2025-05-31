@@ -12,9 +12,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // In development, proxy API calls to backend server on port 5000
+  // In development, proxy API calls to backend server
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const apiUrl = import.meta.env.DEV && url.startsWith('/') 
-    ? `http://localhost:5000${url}` 
+    ? `${baseUrl}${url}` 
     : url;
     
   const res = await fetch(apiUrl, {
