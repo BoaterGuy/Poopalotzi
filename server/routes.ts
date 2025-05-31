@@ -123,22 +123,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Boat routes
   app.post("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
+      console.log("Boat creation request received:", req.body);
+      console.log("User ID:", req.user.id);
+      
       const boatData = insertBoatSchema.parse(req.body);
+      console.log("Parsed boat data:", boatData);
       
       // Get boat owner ID from user ID
       const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      console.log("Found boat owner:", boatOwner);
+      
       if (!boatOwner) {
-        return res.status(400).json({ message: "Boat owner record not found" });
+        // Auto-create boat owner record if it doesn't exist
+        console.log("Creating boat owner record for user:", req.user.id);
+        const newBoatOwner = await storage.createBoatOwner({
+          userId: req.user.id
+        });
+        console.log("Created boat owner:", newBoatOwner);
+        
+        // Create the boat with the new owner ID
+        const boat = await storage.createBoat({
+          ...boatData,
+          ownerId: newBoatOwner.id
+        });
+        
+        console.log("Created boat:", boat);
+        return res.status(201).json(boat);
       }
 
-      // Create the boat with the owner ID
+      // Create the boat with the existing owner ID
       const boat = await storage.createBoat({
         ...boatData,
         ownerId: boatOwner.id
       });
       
+      console.log("Created boat:", boat);
       res.status(201).json(boat);
     } catch (err) {
+      console.error("Boat creation error:", err);
       next(err);
     }
   });
