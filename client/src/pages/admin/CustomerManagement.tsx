@@ -116,7 +116,10 @@ export default function CustomerManagement() {
           role: 'member'
         }),
       });
-      if (!res.ok) throw new Error('Failed to add customer');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to add customer');
+      }
       return res.json();
     },
     onSuccess: () => {
