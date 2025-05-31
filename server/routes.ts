@@ -11,11 +11,40 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { format, addDays } from "date-fns";
 import { setupAuth } from "./auth";
+import multer from "multer";
+import path from "path";
 
 // Extended Request type with user information
 interface AuthRequest extends Request {
   user?: any;
 }
+
+// Configure multer for file uploads
+const storage_config = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'boat-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage_config,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
 
 // Error handler middleware
 const handleError = (err: any, req: Request, res: Response, next: NextFunction) => {
@@ -206,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/boats/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.put("/api/boats/:id", isAuthenticated, upload.single('image'), async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.id);
       const boat = await storage.getBoat(boatId);
@@ -225,6 +254,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract marina-related fields from the request
       const { marinaId, ...boatFields } = req.body;
+      
+      // Handle uploaded image if present
+      if (req.file) {
+        boatFields.photoUrl = `/uploads/${req.file.filename}`;
+      }
       
       // Parse and update boat data (exclude marinaId as it's not a boat field)
       const boatData = insertBoatSchema.partial().parse(boatFields);
