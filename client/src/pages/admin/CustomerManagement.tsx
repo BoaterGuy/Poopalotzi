@@ -420,7 +420,7 @@ export default function CustomerManagement() {
         firstName: customer.firstName,
         lastName: customer.lastName,
         email: customer.email,
-        phone: customer.phone || "",
+        phone: formatPhoneDisplay(customer.phone) || "",
         serviceLevelId: customer.serviceLevelId ? customer.serviceLevelId.toString() : "",
       });
       setIsEditDialogOpen(true);
@@ -588,7 +588,12 @@ export default function CustomerManagement() {
       return;
     }
 
-    addCustomerMutation.mutate(newCustomer);
+    const customerData = {
+      ...newCustomer,
+      phone: cleanPhoneForStorage(newCustomer.phone)
+    };
+
+    addCustomerMutation.mutate(customerData);
   };
 
   return (
