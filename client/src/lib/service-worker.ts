@@ -4,14 +4,15 @@ export function registerSW() {
   
   if ('serviceWorker' in navigator && !isSafari) {
     window.addEventListener('load', () => {
-      // navigator.serviceWorker.register('/service-worker.js')
-      //   .then(registration => {
-      //     console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      //   })
-      //   .catch(error => {
-      //     console.error('ServiceWorker registration failed: ', error);
-      //   });
-      console.log('Service worker registration DISABLED for testing');
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          // Force update to get the new network-first strategy
+          registration.update();
+        })
+        .catch(error => {
+          console.error('ServiceWorker registration failed: ', error);
+        });
     });
   } else if (isSafari) {
     console.log('Service worker registration skipped for Safari browser');

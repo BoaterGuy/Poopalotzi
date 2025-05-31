@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { registerSW } from "./lib/service-worker";
 import { Helmet } from "react-helmet";
 
-// Register service worker for PWA functionality - TEMPORARILY DISABLED FOR TESTING
-// registerSW();
+// Register service worker for PWA functionality - NETWORK-FIRST STRATEGY
+registerSW();
 
 createRoot(document.getElementById("root")!).render(
   <>
