@@ -439,14 +439,14 @@ export default function CustomerManagement() {
                     <div className="grid gap-2">
                       <Label htmlFor="edit-serviceLevel">Service Level</Label>
                       <Select 
-                        value={editingCustomer.serviceLevelId} 
-                        onValueChange={(value) => setEditingCustomer({...editingCustomer, serviceLevelId: value})}
+                        value={editingCustomer.serviceLevelId || "none"} 
+                        onValueChange={(value) => setEditingCustomer({...editingCustomer, serviceLevelId: value === "none" ? "" : value})}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select service level" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No service level</SelectItem>
+                          <SelectItem value="none">No service level</SelectItem>
                           {serviceLevels.map((level: any) => (
                             <SelectItem key={level.id} value={level.id.toString()}>
                               {level.name} - ${level.price}
