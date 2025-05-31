@@ -53,18 +53,36 @@ export function setupAuth(app: Express) {
       { usernameField: "email" },
       async (email, password, done) => {
         try {
+          console.log(`--- LOGIN ATTEMPT ---`);
+          console.log(`Email: ${email}`);
+          console.log(`Password provided: ${password ? 'YES' : 'NO'}`);
+          
           const user = await storage.getUserByEmail(email);
+          console.log(`User found in database: ${user ? 'YES' : 'NO'}`);
+          
+          if (user) {
+            console.log(`User ID: ${user.id}`);
+            console.log(`User role: ${user.role}`);
+            console.log(`Password hash exists: ${user.passwordHash ? 'YES' : 'NO'}`);
+          }
+          
           if (!user || !user.passwordHash) {
+            console.log(`Login failed: User not found or no password hash`);
             return done(null, false, { message: "Incorrect email or password" });
           }
 
           const isMatch = await comparePasswords(password, user.passwordHash);
+          console.log(`Password comparison result: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
+          
           if (!isMatch) {
+            console.log(`Login failed: Password mismatch`);
             return done(null, false, { message: "Incorrect email or password" });
           }
 
+          console.log(`Login successful for user: ${user.email}`);
           return done(null, user);
         } catch (err) {
+          console.error(`Login error:`, err);
           return done(err);
         }
       }
