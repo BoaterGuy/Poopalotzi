@@ -124,10 +124,8 @@ async function startServer() {
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: 'custom',
+        configFile: path.resolve(process.cwd(), 'vite.config.ts'),
         root: path.resolve(process.cwd(), 'client'),
-        build: {
-          outDir: path.resolve(process.cwd(), 'dist/public'),
-        },
       });
 
       // Use vite's middleware for frontend processing
@@ -176,7 +174,7 @@ async function startServer() {
     });
 
     // Start server on port 5000 (as expected by workflow)
-    const port = 5000;
+    const port = Number(process.env.PORT) || 5000;
     server.listen({
       port,
       host: "0.0.0.0",

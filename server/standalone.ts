@@ -346,7 +346,7 @@ async function startServer() {
     return serverInstance;
   }
 
-  const port = Number(process.env.PORT) || 3000;
+  const port = Number(process.env.PORT) || 5000;
 
   try {
     log("Starting Poopalotzi server...");

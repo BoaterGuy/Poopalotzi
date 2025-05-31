@@ -1,12 +1,16 @@
+#!/usr/bin/env node
+
+// Temporary script to update package.json dev command to restore frontend styling
 import fs from 'fs';
+import path from 'path';
 
-// Read package.json
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const packageJsonPath = path.join(process.cwd(), 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-// Update the dev script to use npx tsx
-packageJson.scripts.dev = "NODE_ENV=development npx tsx server/index.ts";
+// Update the dev script to use hybrid server with Vite integration
+packageJson.scripts.dev = "NODE_ENV=development npx tsx server/hybrid-server.ts";
 
-// Write back to package.json
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2) + '\n');
+fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-console.log('Updated dev script to use npx tsx');
+console.log('✅ Updated dev script to restore frontend styling with image upload support');
+console.log('🔄 Restarting workflow...');
