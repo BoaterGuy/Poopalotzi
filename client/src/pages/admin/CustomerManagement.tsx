@@ -46,7 +46,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
 import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhone } from "@/lib/phoneUtils";
-import { PhoneInput } from "@/components/ui/phone-input";
 
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
@@ -664,10 +663,16 @@ export default function CustomerManagement() {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="phone">Phone</Label>
-                      <PhoneInput
+                      <Input
                         id="phone"
+                        type="tel"
                         value={newCustomer.phone}
-                        onChange={(value) => setNewCustomer({...newCustomer, phone: value})}
+                        onChange={(e) => {
+                          const formatted = formatPhoneInput(e.target.value);
+                          setNewCustomer({...newCustomer, phone: formatted});
+                        }}
+                        placeholder="(555) 123-4567"
+                        maxLength={14}
                       />
                     </div>
                     <div className="grid gap-2">
@@ -1140,10 +1145,16 @@ export default function CustomerManagement() {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="edit-phone">Phone</Label>
-                      <PhoneInput
+                      <Input
                         id="edit-phone"
+                        type="tel"
                         value={editingCustomer.phone}
-                        onChange={(value) => setEditingCustomer({...editingCustomer, phone: value})}
+                        onChange={(e) => {
+                          const formatted = formatPhoneInput(e.target.value);
+                          setEditingCustomer({...editingCustomer, phone: formatted});
+                        }}
+                        placeholder="(555) 123-4567"
+                        maxLength={14}
                       />
                     </div>
                     <div className="grid gap-2">

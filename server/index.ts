@@ -1,396 +1,109 @@
-import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import multer from 'multer';
-import session from 'express-session';
-import bcryptjs from 'bcryptjs';
-import { Pool } from 'pg';
-import { fileURLToPath } from 'url';
+import express, { type Request, Response, NextFunction } from "express";
+import { registerRoutes } from "./routes";
+import { setupVite, serveStatic, log } from "./vite";
+import { setupFullDatabase } from "./setup-database";
+import { DatabaseStorage } from "./database-storage";
+import { storage as memStorage, IStorage } from "./storage";
+import bcrypt from "bcryptjs";
+import { setupAuth } from "./auth";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Create a database storage instance right away
+const dbStorage = new DatabaseStorage();
+// ALWAYS use the database storage, not the in-memory storage
+// This ensures all parts of the application use the same data source
+export let storage: IStorage = dbStorage;
 
 const app = express();
-const port = parseInt(process.env.PORT || '5000', 10);
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// Create uploads directory
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
 
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
-});
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'poopalotzi-secret-key-2024',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: false,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
-
-// Serve static files
-app.use('/uploads', express.static(uploadsDir));
-
-// Serve static files - prioritize built files, then client files
-const clientDistPath = path.resolve(__dirname, '../client/dist');
-const clientPublicPath = path.resolve(__dirname, '../client/public');
-const clientSrcPath = path.resolve(__dirname, '../client/src');
-
-// Check if we have built files first
-if (fs.existsSync(clientDistPath)) {
-  console.log('Serving built frontend from /client/dist');
-  app.use(express.static(clientDistPath, {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.html')) {
-        res.setHeader('Content-Type', 'text/html');
-      }
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    const status = res.statusCode;
+    
+    if (path.startsWith("/api") || path.startsWith("/auth")) {
+      log(`${req.method} ${path} ${status} in ${duration}ms :: ${
+        capturedJsonResponse ? JSON.stringify(capturedJsonResponse) : ""
+      }`);
     }
-  }));
-} else {
-  console.log('Serving development files from /client');
-  
-  // Serve public assets (favicon, manifest, etc.)
-  if (fs.existsSync(clientPublicPath)) {
-    app.use(express.static(clientPublicPath));
-  }
-  
-  // In development, serve source files with proper MIME types
-  app.use('/src', (req, res, next) => {
-    if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    } else if (req.path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-    next();
-  }, express.static(clientSrcPath));
-  
-  // Serve node_modules for development
-  app.use('/node_modules', express.static(path.resolve(__dirname, '../node_modules')));
-  
-  // Handle CSS imports and assets
-  app.use('/client', express.static(path.resolve(__dirname, '../client')));
-}
+  });
 
-// Authentication middleware
-const requireAuth = (req: any, res: any, next: any) => {
-  if (req.session && req.session.userId) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Authentication required' });
-  }
+  next();
+});
+
+// Format dates as ISO strings (YYYY-MM-DD)
+const formatDateForRequest = (date: Date): string => {
+  return date.toISOString().split('T')[0];
 };
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'Server running', 
-    timestamp: new Date().toISOString(),
-    authenticated: !!(req as any).session?.userId
-  });
-});
-
-// Authentication routes
-app.post('/api/auth/login', async (req, res) => {
+// Main function to start the server
+async function startServer() {
   try {
-    const { email, password } = req.body;
-    
-    const result = await pool.query(
-      'SELECT id, email, password_hash, role FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    const user = result.rows[0];
-    const isValid = await bcryptjs.compare(password, user.password_hash);
-    
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    (req as any).session.userId = user.id;
-    (req as any).session.userEmail = user.email;
-    (req as any).session.userRole = user.role;
-    
-    res.json({
-      id: user.id,
-      email: user.email,
-      role: user.role
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
-
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, firstName, lastName, phone } = req.body;
-    
-    // Check if user already exists
-    const existingUser = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-    
-    // Hash password
-    const passwordHash = await bcryptjs.hash(password, 10);
-    
-    // Create user
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, role',
-      [email, passwordHash, firstName, lastName, phone, 'member']
-    );
-    
-    const user = result.rows[0];
-    
-    // Create boat owner record
-    await pool.query(
-      'INSERT INTO boat_owner (user_id) VALUES ($1)',
-      [user.id]
-    );
-    
-    // Set session
-    (req as any).session.userId = user.id;
-    (req as any).session.userEmail = user.email;
-    (req as any).session.userRole = user.role;
-    
-    res.status(201).json({
-      id: user.id,
-      email: user.email,
-      role: user.role
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  (req as any).session.destroy();
-  res.json({ message: 'Logged out successfully' });
-});
-
-app.get('/api/auth/me', requireAuth, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT id, email, role, phone, first_name, last_name FROM users WHERE id = $1',
-      [(req as any).session.userId]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
-  }
-});
-
-// Boat routes with image upload
-app.post('/api/boats', requireAuth, upload.single('image'), async (req, res) => {
-  try {
-    const { name, length, year, make, model, color, marina_id } = req.body;
-    
-    // Get boat owner for this user
-    const ownerResult = await pool.query(
-      'SELECT id FROM boat_owner WHERE user_id = $1',
-      [(req as any).session.userId]
-    );
-    
-    if (ownerResult.rows.length === 0) {
-      return res.status(400).json({ error: 'User is not a boat owner' });
-    }
-    
-    const ownerId = ownerResult.rows[0].id;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-    
-    const result = await pool.query(
-      'INSERT INTO boat (name, length, year, make, model, color, photo_url, owner_id, marina_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-      [name, parseFloat(length) || null, parseInt(year) || null, make, model, color, imageUrl, ownerId, parseInt(marina_id) || null]
-    );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Create boat error:', error);
-    res.status(500).json({ error: 'Failed to create boat' });
-  }
-});
-
-app.get('/api/boats', requireAuth, async (req, res) => {
-  try {
-    const ownerResult = await pool.query(
-      'SELECT id FROM boat_owner WHERE user_id = $1',
-      [(req as any).session.userId]
-    );
-    
-    if (ownerResult.rows.length === 0) {
-      return res.json([]);
-    }
-    
-    const result = await pool.query(
-      'SELECT * FROM boat WHERE owner_id = $1 ORDER BY created_at DESC',
-      [ownerResult.rows[0].id]
-    );
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Get boats error:', error);
-    res.status(500).json({ error: 'Failed to get boats' });
-  }
-});
-
-// Marina routes
-app.get('/api/marinas', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM marina WHERE is_active = true ORDER BY name');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Get marinas error:', error);
-    res.status(500).json({ error: 'Failed to get marinas' });
-  }
-});
-
-// Service levels
-app.get('/api/service-levels', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM service_level ORDER BY price ASC');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Get service levels error:', error);
-    res.status(500).json({ error: 'Failed to get service levels' });
-  }
-});
-
-// Pump out requests
-app.post('/api/pump-out-requests', requireAuth, async (req, res) => {
-  try {
-    const { boat_id, preferred_date, service_level_id, notes } = req.body;
-    
-    const result = await pool.query(
-      'INSERT INTO pump_out_request (boat_id, preferred_date, service_level_id, notes, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [parseInt(boat_id), preferred_date, parseInt(service_level_id), notes, 'pending']
-    );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Create pump out request error:', error);
-    res.status(500).json({ error: 'Failed to create pump out request' });
-  }
-});
-
-app.get('/api/pump-out-requests/boat/:boatId', requireAuth, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM pump_out_request WHERE boat_id = $1 ORDER BY created_at DESC',
-      [parseInt(req.params.boatId)]
-    );
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Get pump out requests error:', error);
-    res.status(500).json({ error: 'Failed to get pump out requests' });
-  }
-});
-
-// Database test
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW() as current_time');
-    res.json({ 
-      status: 'Database connected successfully', 
-      timestamp: result.rows[0].current_time 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      status: 'Database connection failed', 
-      error: (error as Error).message 
-    });
-  }
-});
-
-// Serve React app for all unmatched routes
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    res.status(404).json({ message: 'API endpoint not found' });
-  } else {
-    // Try to serve built index.html first, then development version
-    const possiblePaths = [
-      path.resolve(__dirname, '../client/dist/index.html'),
-      path.resolve(__dirname, '../client/index.html')
-    ];
-    
-    for (const indexPath of possiblePaths) {
-      if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
+    // Initialize database schema conditionally
+    if (process.env.NODE_ENV !== 'production') {
+      log("Development environment detected, running database setup to fix schema...");
+      const dbSuccess = await setupFullDatabase();
+      if (dbSuccess) {
+        log("Successfully connected to the database!");
+        log("All database tables set up successfully!");
+      } else {
+        log("Database connection error - exiting");
+        process.exit(1);
       }
+    } else {
+      log("Production environment detected. Skipping automatic database setup/seeding.");
     }
     
-    // Fallback if no index.html found
-    res.send(`
-      <html>
-        <head>
-          <title>Poopalotzi - Marina Management</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
-        <body>
-          <h1>Poopalotzi Server Running</h1>
-          <p>Server is running on port ${port}</p>
-          <p>Marina management system is ready!</p>
-          <ul>
-            <li><a href="/api/health">Health Check</a></li>
-            <li><a href="/api/db-test">Database Test</a></li>
-            <li><a href="/api/marinas">View Marinas</a></li>
-          </ul>
-        </body>
-      </html>
-    `);
-  }
-});
+    // Set up authentication with the proper storage
+    setupAuth(app);
+    
+    // Register API routes before setting up Vite
+    const server = await registerRoutes(app);
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Poopalotzi server running on port ${port}`);
-  console.log(`Uploads directory: ${uploadsDir}`);
-  console.log(`Marina management system ready`);
-});
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+
+      res.status(status).json({ message });
+      console.error(err);
+    });
+
+    // Setup Vite AFTER registering all API routes
+    // so the catch-all route doesn't interfere with the API
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // ALWAYS serve the app on port 5000
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
