@@ -146,127 +146,182 @@ app.get('/api/uploads', (req, res) => {
   }
 });
 
-// Serve static files from client/dist
-const clientDistPath = path.join(process.cwd(), 'client', 'dist');
-if (fs.existsSync(clientDistPath)) {
-  app.use(express.static(clientDistPath));
+// Serve static files from dist (if it exists)
+const distPath = path.join(process.cwd(), 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
 }
 
-// Catch-all handler for SPA
+// Simple frontend fallback
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Poopalotzi - Boat Pump Out Management</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+          .container { max-width: 1200px; margin: 0 auto; }
+          .header { background: linear-gradient(135deg, #0066cc, #004499); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+          .login-form { background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; max-width: 400px; margin: 20px auto; }
+          .form-group { margin-bottom: 15px; }
+          label { display: block; margin-bottom: 5px; font-weight: bold; }
+          input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+          button { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+          button:hover { background: #0052a3; }
+          .upload-test { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .api-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0; }
+          .api-link { background: #f0f8ff; padding: 15px; border-radius: 8px; text-decoration: none; color: #0066cc; border: 1px solid #e0e0e0; }
+          .api-link:hover { background: #e6f3ff; }
+          .status-badge { background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🚤 Poopalotzi Marina Management</h1>
+            <p>Boat Pump-Out Service Management System</p>
+            <span class="status-badge">Server Running</span>
+          </div>
+          
+          <div class="login-form">
+            <h3>Login to Poopalotzi</h3>
+            <form id="loginForm">
+              <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" placeholder="admin@poopalotzi.com or member@poopalotzi.com" required>
+              </div>
+              <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" placeholder="admin123 or member1234" required>
+              </div>
+              <button type="submit">Login</button>
+            </form>
+            <div id="loginResult"></div>
+          </div>
+          
+          <div class="upload-test">
+            <h3>Test Boat Image Upload (Fixed!)</h3>
+            <p>Upload large boat images - the "Request Entity Too Large" error has been resolved.</p>
+            <form id="uploadForm" enctype="multipart/form-data">
+              <input type="file" id="imageFile" name="image" accept="image/*" required style="margin: 10px 0;">
+              <button type="submit">Upload Boat Image</button>
+            </form>
+            <div id="uploadResult"></div>
+          </div>
+          
+          <div class="api-links">
+            <a href="/api/health" class="api-link">
+              <strong>Server Health</strong><br>
+              Check server status
+            </a>
+            <a href="/api/db-test" class="api-link">
+              <strong>Database Test</strong><br>
+              Verify database connection
+            </a>
+            <a href="/api/marinas" class="api-link">
+              <strong>Marina Data</strong><br>
+              View marina information
+            </a>
+            <a href="/api/uploads" class="api-link">
+              <strong>Uploaded Files</strong><br>
+              See uploaded boat images
+            </a>
+          </div>
+        </div>
+        
+        <script>
+          // Login form handler
+          document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+              resultDiv.innerHTML = '<p style="color: blue;">Logging in...</p>';
+              
+              const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              
+              const result = await response.json();
+              
+              if (response.ok) {
+                resultDiv.innerHTML = '<p style="color: green;">Login successful! Redirecting...</p>';
+                setTimeout(() => {
+                  window.location.href = result.redirectTo || '/';
+                }, 1000);
+              } else {
+                resultDiv.innerHTML = '<p style="color: red;">Login failed: ' + result.message + '</p>';
+              }
+            } catch (error) {
+              resultDiv.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+          });
+          
+          // Image upload form handler
+          document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageFile');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            if (!fileInput.files[0]) {
+              resultDiv.innerHTML = '<div style="color: red; margin-top: 10px;">Please select a file</div>';
+              return;
+            }
+            
+            formData.append('image', fileInput.files[0]);
+            
+            try {
+              resultDiv.innerHTML = '<div style="color: blue; margin-top: 10px;">Uploading...</div>';
+              
+              const response = await fetch('/api/test-upload', {
+                method: 'POST',
+                body: formData
+              });
+              
+              const result = await response.json();
+              
+              if (response.ok) {
+                resultDiv.innerHTML = \`
+                  <div style="color: green; margin-top: 10px;">
+                    <h4>Upload Successful!</h4>
+                    <p><strong>File:</strong> \${result.filename}</p>
+                    <p><strong>Size:</strong> \${result.sizeKB} KB</p>
+                    <p><a href="\${result.path}" target="_blank">View Image</a></p>
+                    <img src="\${result.path}" style="max-width: 200px; margin-top: 10px;" alt="Uploaded boat image">
+                  </div>
+                \`;
+              } else {
+                resultDiv.innerHTML = \`<div style="color: red; margin-top: 10px;">Upload failed: \${result.error}</div>\`;
+              }
+            } catch (error) {
+              resultDiv.innerHTML = \`<div style="color: red; margin-top: 10px;">Error: \${error.message}</div>\`;
+            }
+          });
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+// Catch-all handler for other routes
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     res.status(404).json({ message: 'API endpoint not found' });
   } else {
-    const indexPath = path.join(clientDistPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Poopalotzi - Boat Pump Out Management</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 40px; }
-              .container { max-width: 800px; margin: 0 auto; }
-              .status { background: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-              .upload-test { background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
-              input[type="file"] { margin: 10px 0; }
-              button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-              button:hover { background: #005a8b; }
-              .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
-              .success { background: #d4edda; color: #155724; }
-              .error { background: #f8d7da; color: #721c24; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>Poopalotzi Server</h1>
-              <div class="status">
-                <h3>Server Status: Running</h3>
-                <p><strong>Image Upload System Ready!</strong></p>
-                <p>The "Request Entity Too Large" error has been fixed.</p>
-                <p>Uploads Directory: ${uploadsDir}</p>
-              </div>
-              
-              <div class="upload-test">
-                <h3>Test Boat Image Upload</h3>
-                <p>Upload large boat images to verify the fix works correctly.</p>
-                
-                <form id="uploadForm" enctype="multipart/form-data">
-                  <input type="file" id="imageFile" name="image" accept="image/*" required>
-                  <br>
-                  <button type="submit">Upload Boat Image</button>
-                </form>
-                
-                <div id="uploadResult"></div>
-              </div>
-              
-              <h3>API Endpoints</h3>
-              <ul>
-                <li><a href="/api/health">Health Check</a></li>
-                <li><a href="/api/db-test">Database Test</a></li>
-                <li><a href="/api/marinas">View Marinas</a></li>
-                <li><a href="/api/uploads">View Uploaded Files</a></li>
-              </ul>
-              
-              <h3>Image Upload Improvements</h3>
-              <ul>
-                <li>✅ Fixed "Request Entity Too Large" error</li>
-                <li>✅ Converted from base64 to FormData with multer</li>
-                <li>✅ Added static file serving for /uploads</li>
-                <li>✅ Increased file size limits to 10MB</li>
-                <li>✅ Added proper file validation for images</li>
-              </ul>
-            </div>
-            
-            <script>
-              document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const formData = new FormData();
-                const fileInput = document.getElementById('imageFile');
-                const resultDiv = document.getElementById('uploadResult');
-                
-                if (!fileInput.files[0]) {
-                  resultDiv.innerHTML = '<div class="result error">Please select a file</div>';
-                  return;
-                }
-                
-                formData.append('image', fileInput.files[0]);
-                
-                try {
-                  resultDiv.innerHTML = '<div class="result">Uploading...</div>';
-                  
-                  const response = await fetch('/api/test-upload', {
-                    method: 'POST',
-                    body: formData
-                  });
-                  
-                  const result = await response.json();
-                  
-                  if (response.ok) {
-                    resultDiv.innerHTML = \`
-                      <div class="result success">
-                        <h4>Upload Successful!</h4>
-                        <p><strong>File:</strong> \${result.filename}</p>
-                        <p><strong>Size:</strong> \${result.sizeKB} KB</p>
-                        <p><strong>URL:</strong> <a href="\${result.path}" target="_blank">\${result.path}</a></p>
-                        <img src="\${result.path}" style="max-width: 300px; margin-top: 10px;" alt="Uploaded boat image">
-                      </div>
-                    \`;
-                  } else {
-                    resultDiv.innerHTML = \`<div class="result error">Upload failed: \${result.error}</div>\`;
-                  }
-                } catch (error) {
-                  resultDiv.innerHTML = \`<div class="result error">Error: \${error.message}</div>\`;
-                }
-              });
-            </script>
-          </body>
-        </html>
-      `);
-    }
+    // Redirect to home page
+    res.redirect('/');
   }
 });
 
