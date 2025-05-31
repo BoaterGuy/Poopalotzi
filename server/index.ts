@@ -95,27 +95,33 @@ async function startServer() {
       console.error(err);
     });
 
-    // Configure proper MIME types for modules
-    express.static.mime.define({'application/javascript': ['js', 'jsx', 'ts', 'tsx']});
-    
-    // Serve client static files - prioritize public folder, then client directory
+    // Serve static files from dist/public for production build
+    const distPublicPath = path.join(process.cwd(), 'dist', 'public');
     const clientPublicPath = path.join(process.cwd(), 'client', 'public');
-    const clientPath = path.join(process.cwd(), 'client');
     
-    // Serve public assets (favicon, manifest, etc.)
-    if (fs.existsSync(clientPublicPath)) {
-      app.use(express.static(clientPublicPath));
-    }
+    // Configure proper MIME types
+    express.static.mime.define({
+      'application/javascript': ['js', 'mjs'],
+      'text/css': ['css'],
+      'text/html': ['html']
+    });
     
-    // Serve client source files in development with proper headers
-    app.use('/src', (req, res, next) => {
-      if (req.path.endsWith('.tsx') || req.path.endsWith('.ts') || req.path.endsWith('.jsx')) {
-        res.setHeader('Content-Type', 'application/javascript');
+    // Serve built files if they exist, otherwise serve development files
+    if (fs.existsSync(distPublicPath)) {
+      log('Serving production build from dist/public');
+      app.use(express.static(distPublicPath));
+    } else {
+      log('Serving development files from client directory');
+      // Serve public assets (favicon, manifest, etc.)
+      if (fs.existsSync(clientPublicPath)) {
+        app.use(express.static(clientPublicPath));
       }
-      next();
-    }, express.static(path.join(clientPath, 'src')));
-    
-    app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
+      
+      // Serve client source files in development
+      const clientPath = path.join(process.cwd(), 'client');
+      app.use('/src', express.static(path.join(clientPath, 'src')));
+      app.use('/node_modules', express.static(path.join(process.cwd(), 'node_modules')));
+    }
     
     // Serve uploads directory for images
     const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -129,11 +135,14 @@ async function startServer() {
       if (req.path.startsWith('/api/')) {
         res.status(404).json({ message: 'API endpoint not found' });
       } else {
-        // Always serve the client index.html for SPA routing
-        const indexPath = path.join(process.cwd(), 'client', 'index.html');
+        // Check for production build first, then fallback to development
+        const distIndexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
+        const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
         
-        if (fs.existsSync(indexPath)) {
-          res.sendFile(indexPath);
+        if (fs.existsSync(distIndexPath)) {
+          res.sendFile(distIndexPath);
+        } else if (fs.existsSync(clientIndexPath)) {
+          res.sendFile(clientIndexPath);
         } else {
           res.status(404).send('Frontend not found');
         }
