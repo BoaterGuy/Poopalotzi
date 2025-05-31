@@ -18,6 +18,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser, passwordHash: string): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
+  getAllMembers(): Promise<User[]>;
   
   // Boat Owner operations
   getBoatOwner(id: number): Promise<BoatOwner | undefined>;

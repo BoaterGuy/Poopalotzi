@@ -105,10 +105,13 @@ export function setupAuth(app: Express) {
   // Auth routes
   app.post("/api/auth/register", async (req, res, next) => {
     try {
+      console.log("Registration request received:", req.body);
+      
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
-        return res.status(400).send("Email already exists");
+        console.log("User already exists:", req.body.email);
+        return res.status(400).json({ message: "Email already exists" });
       }
 
       const passwordHash = await hashPassword(req.body.password);
@@ -119,23 +122,32 @@ export function setupAuth(app: Express) {
         serviceLevelId: req.body.serviceLevelId && req.body.serviceLevelId !== "" ? parseInt(req.body.serviceLevelId) : null
       };
       
+      console.log("Creating user with data:", { ...userData, password: "[REDACTED]" });
+      
       // Create the user
       const user = await storage.createUser(userData, passwordHash);
+      console.log("User created successfully:", user.id, user.email);
       
       // If user role is member, create a boat owner record
       if (user.role === "member") {
+        console.log("Creating boat owner record for user:", user.id);
         await storage.createBoatOwner({ userId: user.id });
       }
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error after registration:", err);
+          return next(err);
+        }
         
         // Remove sensitive data
         const { passwordHash: _, ...safeUser } = user;
+        console.log("Registration completed successfully for:", safeUser.email);
         res.status(201).json(safeUser);
       });
     } catch (err) {
-      next(err);
+      console.error("Registration error:", err);
+      res.status(500).json({ message: err.message || "Registration failed" });
     }
   });
 

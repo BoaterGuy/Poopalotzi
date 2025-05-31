@@ -877,6 +877,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer management routes
+  app.get("/api/users/members", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      // Get all users with role 'member'
+      const members = await storage.getAllMembers();
+      res.json(members);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {

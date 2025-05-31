@@ -95,13 +95,13 @@ export default function CustomerManagement() {
     },
   });
 
-  // This will be replaced with actual API call
+  // Fetch real customers from database
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["/api/users/members"],
     queryFn: async () => {
-      // This will be replaced with actual API call
-      // For now return mock data
-      return MOCK_CUSTOMERS;
+      const res = await fetch('/api/users/members');
+      if (!res.ok) throw new Error('Failed to fetch customers');
+      return res.json();
     },
   });
 
@@ -355,9 +355,13 @@ export default function CustomerManagement() {
                             {customer.firstName} {customer.lastName}
                           </TableCell>
                           <TableCell>{customer.email}</TableCell>
-                          <TableCell>{customer.phone}</TableCell>
-                          <TableCell>{customer.serviceLevel}</TableCell>
-                          <TableCell>{customer.boatCount}</TableCell>
+                          <TableCell>{customer.phone || "Not provided"}</TableCell>
+                          <TableCell>
+                            {customer.serviceLevelId ? 
+                              serviceLevels.find(level => level.id === customer.serviceLevelId)?.name || "Unknown" 
+                              : "No service level"}
+                          </TableCell>
+                          <TableCell>0</TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
                               <Button

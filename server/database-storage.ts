@@ -100,6 +100,10 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getAllMembers(): Promise<User[]> {
+    return await db.select().from(schema.users).where(eq(schema.users.role, 'member'));
+  }
+
   // Boat Owner operations
   async getBoatOwner(id: number): Promise<BoatOwner | undefined> {
     const results = await db.select().from(schema.boatOwner).where(eq(schema.boatOwner.id, id));
