@@ -1,16 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import path from "path";
 import { registerRoutes } from "./routes";
-// import { setupVite, serveStatic, log } from "./vite";
-export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit", 
-    second: "2-digit",
-    hour12: true,
-  });
-  console.log(`${formattedTime} [${source}] ${message}`);
-}
+import { setupVite, serveStatic, log } from "./vite";
 import { setupFullDatabase } from "./setup-database";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
@@ -90,16 +80,13 @@ async function startServer() {
       console.error(err);
     });
 
-    // Serve static files from client directory
-    const clientPath = path.join(process.cwd(), 'client');
-    app.use(express.static(clientPath));
-    
-    // Serve index.html for all non-API routes
-    app.get('*', (req, res) => {
-      if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(clientPath, 'index.html'));
-      }
-    });
+    // Setup Vite AFTER registering all API routes
+    // so the catch-all route doesn't interfere with the API
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
