@@ -91,12 +91,13 @@ async function startServer() {
     });
 
     // Serve static files from client directory
-    app.use(express.static(path.join(__dirname, '../client')));
+    const clientPath = path.join(process.cwd(), 'client');
+    app.use(express.static(clientPath));
     
     // Serve index.html for all non-API routes
     app.get('*', (req, res) => {
       if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(__dirname, '../client/index.html'));
+        res.sendFile(path.join(clientPath, 'index.html'));
       }
     });
 
