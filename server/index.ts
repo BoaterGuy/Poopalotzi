@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 // import { setupVite, serveStatic, log } from "./vite";
 export function log(message: string, source = "express") {
@@ -89,8 +90,15 @@ async function startServer() {
       console.error(err);
     });
 
-    // Frontend serving temporarily disabled due to dependency issues
-    // API routes are available at /api/*
+    // Serve static files from client directory
+    app.use(express.static(path.join(__dirname, '../client')));
+    
+    // Serve index.html for all non-API routes
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(__dirname, '../client/index.html'));
+      }
+    });
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
