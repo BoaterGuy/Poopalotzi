@@ -231,16 +231,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedBoat = await storage.updateBoat(boatId, boatData);
       
       // Handle marina assignment via slip assignment if marinaId is provided
-      if (marinaId && boatData.dock && boatData.slip) {
+      if (marinaId) {
         try {
-          await storage.createSlipAssignment({
-            boatId: boatId,
-            marinaId: parseInt(marinaId),
-            dock: boatData.dock,
-            slip: boatData.slip
-          });
+          // Check if slip assignment already exists for this boat
+          const existingAssignment = await storage.getSlipAssignmentByBoatId(boatId);
+          
+          if (existingAssignment) {
+            // Update existing slip assignment
+            await storage.updateSlipAssignment(existingAssignment.id, {
+              marinaId: parseInt(marinaId),
+              dock: boatData.dock || existingAssignment.dock,
+              slip: boatData.slip || existingAssignment.slip
+            });
+          } else {
+            // Create new slip assignment with default values if dock/slip not provided
+            await storage.createSlipAssignment({
+              boatId: boatId,
+              marinaId: parseInt(marinaId),
+              dock: boatData.dock || "TBD",
+              slip: boatData.slip || "TBD"
+            });
+          }
         } catch (slipError) {
-          console.warn("Could not create slip assignment:", slipError);
+          console.warn("Could not create/update slip assignment:", slipError);
         }
       }
       
