@@ -7,8 +7,24 @@ import { setupAuth } from "./auth";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Handle both ESM and CommonJS environments
+let __currentFilename: string;
+let __currentDirname: string;
+
+try {
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
+    __currentFilename = fileURLToPath(import.meta.url);
+    __currentDirname = path.dirname(__currentFilename);
+  } else {
+    // CommonJS fallback
+    __currentFilename = __filename;
+    __currentDirname = __dirname;
+  }
+} catch (e) {
+  // Fallback for bundled environments
+  __currentFilename = '';
+  __currentDirname = process.cwd();
+}
 
 // Create a database storage instance
 const dbStorage = new DatabaseStorage();
@@ -85,7 +101,7 @@ async function startServer() {
 export { startServer };
 
 // Only run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (typeof import.meta !== 'undefined' && import.meta.url === `file://${process.argv[1]}`) {
   startServer().catch(error => {
     console.error("Failed to start server:", error);
     process.exit(1);
