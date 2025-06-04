@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import express from "express";
-import apiRouter from "./routes"; // keep this if your routes file is at server/routes.ts
+import apiRouter from "./routes"; // adjust path if needed
 
 const app = express();
 const PORT = process.env.PORT || 5000;
