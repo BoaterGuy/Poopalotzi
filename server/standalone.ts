@@ -82,7 +82,12 @@ async function startServer() {
   });
 }
 
-startServer().catch(error => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
+export { startServer };
+
+// Only run if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer().catch(error => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  });
+}

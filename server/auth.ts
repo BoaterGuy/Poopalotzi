@@ -4,7 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { promisify } from "util";
-import { storage } from "./index.js";
+import { storage } from "./standalone.js";
 import { User as SelectUser } from "../shared/schema.js";
 
 declare global {
