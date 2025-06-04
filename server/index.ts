@@ -1,3 +1,3 @@
 
-// Import and start the simple server for React frontend
-import "./simple-start";
+// Import and start the production server with full functionality
+import "./index-production";

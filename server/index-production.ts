@@ -7,8 +7,24 @@ import { setupAuth } from "./auth";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Handle both ESM and CommonJS environments
+let __currentFilename: string;
+let __currentDirname: string;
+
+try {
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
+    __currentFilename = fileURLToPath(import.meta.url);
+    __currentDirname = path.dirname(__currentFilename);
+  } else {
+    // CommonJS fallback
+    __currentFilename = __filename;
+    __currentDirname = __dirname;
+  }
+} catch (e) {
+  // Fallback for bundled environments
+  __currentFilename = '';
+  __currentDirname = process.cwd();
+}
 
 // Create a database storage instance
 const dbStorage = new DatabaseStorage();
@@ -45,8 +61,8 @@ async function startServer() {
   const server = await registerRoutes(app);
   
   // Serve static files from client/public as fallback
-  const clientPublicPath = path.join(__dirname, '../client/public');
-  const clientDistPath = path.join(__dirname, '../client/dist');
+  const clientPublicPath = path.resolve(process.cwd(), 'client/public');
+  const clientDistPath = path.resolve(process.cwd(), 'client/dist');
   
   // Try to serve from dist first, fallback to public
   try {
