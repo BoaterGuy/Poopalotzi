@@ -4,9 +4,9 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "node dist/index.js",
-    "build": "cd client && npm install && npm run build && cd .. && npx tsc server/index.ts --target es2022 --module es2022 --moduleResolution node --outDir dist --allowSyntheticDefaultImports --esModuleInterop",
-    "start": "node dist/index.js",
+    "dev": "npx tsx server/index.ts",
+    "build": "cd client && npm install && npm run build",
+    "start": "npx tsx server/index.ts",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },

@@ -1,4 +1,6 @@
 
+<old_str>
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -55,3 +57,8 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚤 Poopalotzi server running on port ${PORT}`);
 });
+</old_str>
+<new_str>
+// Use the working standalone server
+import './standalone.js';
+</new_str>
