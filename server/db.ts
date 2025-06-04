@@ -12,12 +12,16 @@ let pool: pg.Pool;
 console.log('Setting up database connection...');
 
 try {
-  // Connect to database
+  // Connect to database with timeout and connection limits
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? {
       rejectUnauthorized: false
-    } : false
+    } : false,
+    max: 10, // Maximum number of connections
+    idleTimeoutMillis: 10000, // Close idle connections after 10 seconds
+    connectionTimeoutMillis: 5000, // Connection timeout of 5 seconds
+    query_timeout: 10000, // Query timeout of 10 seconds
   });
   
   // Add error handler
@@ -28,7 +32,9 @@ try {
   console.error("Error creating database pool:", error);
   // Create minimal pool as absolute last resort
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres'
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres',
+    max: 5,
+    connectionTimeoutMillis: 5000
   });
 }
 

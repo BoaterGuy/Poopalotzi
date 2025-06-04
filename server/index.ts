@@ -1,2 +1,2 @@
-// Import and start the standalone server which has all functionality
-import "./standalone";
+// Import and start the simple server for React frontend
+import "./simple-start";
