@@ -17,3 +17,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd client && npm install && npm run build && cd .. && npm run start"
+
+[nix]
+channel = "stable-24_05"
