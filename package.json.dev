@@ -1,0 +1,13 @@
+{
+  "name": "rest-express-dev",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/standalone.ts",
+    "start": "tsx server/standalone.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "tsx": "^4.19.4"
+  }
+}
