@@ -45,12 +45,27 @@ async function startServer() {
   const server = await registerRoutes(app);
   
   // Serve static files for the client
-  const clientPath = path.join(__dirname, '../client/dist');
+  const clientPath = path.resolve(process.cwd(), 'client/dist');
   app.use(express.static(clientPath));
   
   // Catch-all handler for SPA
   app.get('*', (req, res) => {
-    res.sendFile(path.join(clientPath, 'index.html'));
+    const indexPath = path.join(clientPath, 'index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(404).send(`
+          <html>
+            <head><title>Marina Management System</title></head>
+            <body>
+              <h1>🚤 Marina Management System</h1>
+              <p>Application is running but client files not found.</p>
+              <p>Expected path: ${indexPath}</p>
+            </body>
+          </html>
+        `);
+      }
+    });
   });
   
   // Error handler
