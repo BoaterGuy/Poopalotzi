@@ -126,8 +126,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Boat creation request received:", req.body);
       console.log("User ID:", req.user.id, "Role:", req.user.role);
       
-      const { userId, ...boatData } = req.body;
+      const { userId, marinaId, ...boatData } = req.body;
       console.log("Raw boat data:", boatData);
+      console.log("Marina ID:", marinaId);
       
       let targetUserId = req.user.id;
       
@@ -164,8 +165,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create the boat
       const boat = await storage.createBoat(parsedBoatData);
-      
       console.log("Created boat:", boat);
+      
+      // Handle marina assignment during boat creation
+      if (marinaId) {
+        try {
+          await storage.createSlipAssignment({
+            boatId: boat.id,
+            marinaId: parseInt(marinaId),
+            dock: boatData.dock || "TBD",
+            slip: boatData.slip || 1
+          });
+          console.log("Created slip assignment for boat:", boat.id, "at marina:", marinaId);
+        } catch (slipError) {
+          console.warn("Could not create slip assignment during boat creation:", slipError);
+        }
+      }
+      
       res.status(201).json(boat);
     } catch (err) {
       console.error("Boat creation error:", err);
