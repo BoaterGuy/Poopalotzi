@@ -728,8 +728,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Boat not found" });
       }
 
-      if (req.user.role !== "admin" && req.user.role !== "employee") {
-        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      if (req.user?.role !== "admin" && req.user?.role !== "employee") {
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user?.id);
         if (!boatOwner || boat.ownerId !== boatOwner.id) {
           return res.status(403).json({ message: "Not authorized to view requests for this boat" });
         }

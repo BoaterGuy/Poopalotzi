@@ -242,7 +242,7 @@ export default function ServiceHistory() {
 
   // Fetch service history for all boats owned by the member
   const { data: requests, isLoading } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests/member'],
+    queryKey: ['/api/pump-out-requests/boat', boats?.map(b => b.id).join(',')],
     queryFn: async () => {
       if (!boats || boats.length === 0) return [];
       
@@ -250,7 +250,9 @@ export default function ServiceHistory() {
       const allRequests: PumpOutRequest[] = [];
       
       for (const boat of boats) {
-        const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`);
+        const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+          credentials: 'include'
+        });
         if (response.ok) {
           const boatRequests = await response.json();
           allRequests.push(...boatRequests);
@@ -561,7 +563,7 @@ export default function ServiceHistory() {
                 setSelectedRequest(null);
               }}
               onSave={() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/boat'] });
                 setShowEditModal(false);
                 setSelectedRequest(null);
               }}
