@@ -268,17 +268,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const boatData = insertBoatSchema.partial().parse(boatFields);
       const updatedBoat = await storage.updateBoat(boatId, boatData);
       
-      // Handle marina assignment via slip assignment if marinaId is provided
-      if (marinaId && boatData.dock && boatData.slip) {
+      // Handle marina assignment via dock assignment if marinaId is provided
+      if (marinaId && boatData.pier && boatData.dock) {
         try {
-          await storage.createSlipAssignment({
+          await storage.createDockAssignment({
             boatId: boatId,
             marinaId: parseInt(marinaId),
-            dock: boatData.dock,
-            slip: boatData.slip
+            pier: boatData.pier,
+            dock: boatData.dock
           });
-        } catch (slipError) {
-          console.warn("Could not create slip assignment:", slipError);
+        } catch (dockError) {
+          console.warn("Could not create dock assignment:", dockError);
         }
       }
       
@@ -408,66 +408,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Slip Assignment routes
-  app.post("/api/slip-assignments", isAuthenticated, async (req: AuthRequest, res, next) => {
+  // Dock Assignment routes
+  app.post("/api/dock-assignments", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const slipData = insertSlipAssignmentSchema.parse(req.body);
+      const dockData = insertDockAssignmentSchema.parse(req.body);
       
       // Verify boat ownership
-      const boat = await storage.getBoat(slipData.boatId);
+      const boat = await storage.getBoat(dockData.boatId);
       if (!boat) {
         return res.status(404).json({ message: "Boat not found" });
       }
 
       const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
       if (!boatOwner || boat.ownerId !== boatOwner.id) {
-        return res.status(403).json({ message: "Not authorized to assign slip for this boat" });
+        return res.status(403).json({ message: "Not authorized to assign dock for this boat" });
       }
 
       // Check if marina exists
-      const marina = await storage.getMarina(slipData.marinaId);
+      const marina = await storage.getMarina(dockData.marinaId);
       if (!marina) {
         return res.status(404).json({ message: "Marina not found" });
       }
 
-      // Check if slip assignment already exists for this boat
-      const existingSlip = await storage.getSlipAssignmentByBoatId(slipData.boatId);
-      if (existingSlip) {
-        // Update existing slip assignment
-        const updatedSlip = await storage.updateSlipAssignment(existingSlip.id, slipData);
-        return res.json(updatedSlip);
+      // Check if dock assignment already exists for this boat
+      const existingDock = await storage.getDockAssignmentByBoatId(dockData.boatId);
+      if (existingDock) {
+        // Update existing dock assignment
+        const updatedDock = await storage.updateDockAssignment(existingDock.id, dockData);
+        return res.json(updatedDock);
       }
 
-      // Create new slip assignment
-      const slipAssignment = await storage.createSlipAssignment(slipData);
-      res.status(201).json(slipAssignment);
+      // Create new dock assignment
+      const dockAssignment = await storage.createDockAssignment(dockData);
+      res.status(201).json(dockAssignment);
     } catch (err) {
       next(err);
     }
   });
   
-  // PUT route to update slip assignment
-  app.put("/api/slip-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+  // PUT route to update dock assignment
+  app.put("/api/dock-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const slipId = parseInt(req.params.id);
+      const dockId = parseInt(req.params.id);
       
       // Force certain data types to match schema
       const rawData = req.body;
-      const slipData = {
+      const dockData = {
         ...rawData,
         marinaId: rawData.marinaId ? Number(rawData.marinaId) : undefined,
-        dock: rawData.dock, // Leave as string
-        slip: rawData.slip ? Number(rawData.slip) : undefined
+        pier: rawData.pier, // Leave as string
+        dock: rawData.dock ? Number(rawData.dock) : undefined
       };
       
-      // Get the slip assignment
-      const existingSlip = await storage.getSlipAssignment(slipId);
-      if (!existingSlip) {
-        return res.status(404).json({ message: "Slip assignment not found" });
+      // Get the dock assignment
+      const existingDock = await storage.getDockAssignment(dockId);
+      if (!existingDock) {
+        return res.status(404).json({ message: "Dock assignment not found" });
       }
       
       // Get the boat to verify ownership
-      const boat = await storage.getBoat(existingSlip.boatId);
+      const boat = await storage.getBoat(existingDock.boatId);
       if (!boat) {
         return res.status(404).json({ message: "Boat not found" });
       }
@@ -476,20 +476,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user.role !== "admin" && req.user.role !== "employee") {
         const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
         if (!boatOwner || boat.ownerId !== boatOwner.id) {
-          return res.status(403).json({ message: "Not authorized to update slip assignment for this boat" });
+          return res.status(403).json({ message: "Not authorized to update dock assignment for this boat" });
         }
       }
       
       // Check if marina exists if marinaId is being updated
-      if (slipData.marinaId) {
-        const marina = await storage.getMarina(slipData.marinaId);
+      if (dockData.marinaId) {
+        const marina = await storage.getMarina(dockData.marinaId);
         if (!marina) {
           return res.status(404).json({ message: "Marina not found" });
         }
       }
       
-      // Update the slip assignment
-      const updatedSlip = await storage.updateSlipAssignment(slipId, slipData);
+      // Update the dock assignment
+      const updatedDock = await storage.updateDockAssignment(dockId, dockData);
       
       res.status(200).send(); // Send a simple success response
     } catch (err) {
@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/slip-assignments/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/api/dock-assignments/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.boatId);
       
@@ -510,16 +510,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user.role !== "admin" && req.user.role !== "employee") {
         const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
         if (!boatOwner || boat.ownerId !== boatOwner.id) {
-          return res.status(403).json({ message: "Not authorized to view slip assignments for this boat" });
+          return res.status(403).json({ message: "Not authorized to view dock assignments for this boat" });
         }
       }
 
-      const slipAssignment = await storage.getSlipAssignmentByBoatId(boatId);
-      if (!slipAssignment) {
-        return res.status(404).json({ message: "Slip assignment not found" });
+      const dockAssignment = await storage.getDockAssignmentByBoatId(boatId);
+      if (!dockAssignment) {
+        return res.status(404).json({ message: "Dock assignment not found" });
       }
       
-      res.json(slipAssignment);
+      res.json(dockAssignment);
     } catch (err) {
       next(err);
     }
@@ -709,11 +709,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const weekStartDate = new Date(req.params.date);
       const requests = await storage.getPumpOutRequestsByWeek(weekStartDate);
       
-      // Join with boat and slip assignment data
+      // Join with boat and dock assignment data
       const enrichedRequests = await Promise.all(requests.map(async (request) => {
         const boat = await storage.getBoat(request.boatId);
-        const slipAssignment = await storage.getSlipAssignmentByBoatId(request.boatId);
-        const marina = slipAssignment ? await storage.getMarina(slipAssignment.marinaId) : null;
+        const dockAssignment = await storage.getDockAssignmentByBoatId(request.boatId);
+        const marina = dockAssignment ? await storage.getMarina(dockAssignment.marinaId) : null;
         
         return {
           ...request,

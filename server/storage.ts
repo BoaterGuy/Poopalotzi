@@ -1,7 +1,7 @@
-import { users, boat, marina, slipAssignment, serviceLevel, pumpOutRequest, pumpOutLog, boatOwner, employeeAssignment } from "@shared/schema";
+import { users, boat, marina, dockAssignment, serviceLevel, pumpOutRequest, pumpOutLog, boatOwner, employeeAssignment } from "@shared/schema";
 import type { 
   User, InsertUser, Boat, InsertBoat, Marina, InsertMarina, 
-  SlipAssignment, InsertSlipAssignment, ServiceLevel, InsertServiceLevel,
+  DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
   BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment
 } from "@shared/schema";
@@ -39,11 +39,11 @@ export interface IStorage {
   updateMarina(id: number, marinaData: Partial<Marina>): Promise<Marina | undefined>;
   deleteMarina(id: number): Promise<boolean>;
   
-  // Slip Assignment operations
-  getSlipAssignment(id: number): Promise<SlipAssignment | undefined>;
-  getSlipAssignmentByBoatId(boatId: number): Promise<SlipAssignment | undefined>;
-  createSlipAssignment(slipAssignment: InsertSlipAssignment): Promise<SlipAssignment>;
-  updateSlipAssignment(id: number, slipData: Partial<SlipAssignment>): Promise<SlipAssignment | undefined>;
+  // Dock Assignment operations
+  getDockAssignment(id: number): Promise<DockAssignment | undefined>;
+  getDockAssignmentByBoatId(boatId: number): Promise<DockAssignment | undefined>;
+  createDockAssignment(dockAssignment: InsertDockAssignment): Promise<DockAssignment>;
+  updateDockAssignment(id: number, dockData: Partial<DockAssignment>): Promise<DockAssignment | undefined>;
   
   // Service Level operations
   getServiceLevel(id: number): Promise<ServiceLevel | undefined>;
