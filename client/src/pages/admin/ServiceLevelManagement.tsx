@@ -61,12 +61,24 @@ const serviceLevelFormSchema = insertServiceLevelSchema
     price: z.coerce.number().min(0, {
       message: "Price must be a positive number.",
     }),
-    type: z.enum(["one-time", "monthly", "seasonal"], {
+    type: z.enum(["one-time", "monthly", "seasonal", "bulk"], {
       required_error: "Please select a service type.",
     }),
     description: z.string().min(5, {
       message: "Description must be at least 5 characters.",
     }),
+    basePrice: z.coerce.number().min(0).optional(),
+    pricePerAdditional: z.coerce.number().min(0).optional(),
+    baseQuantity: z.coerce.number().min(1).optional(),
+  })
+  .refine((data) => {
+    if (data.type === "bulk") {
+      return data.basePrice !== undefined && data.pricePerAdditional !== undefined && data.baseQuantity !== undefined;
+    }
+    return true;
+  }, {
+    message: "Base price, price per additional, and base quantity are required for bulk service types.",
+    path: ["basePrice"],
   });
 
 type ServiceLevelFormValues = z.infer<typeof serviceLevelFormSchema>;
@@ -110,6 +122,9 @@ export default function ServiceLevelManagement() {
       description: level?.description || "",
       monthlyQuota: level?.monthlyQuota || null,
       onDemandQuota: level?.onDemandQuota || null,
+      basePrice: level?.basePrice || 0,
+      pricePerAdditional: level?.pricePerAdditional || 0,
+      baseQuantity: level?.baseQuantity || 1,
       isActive: level?.isActive === false ? false : true, // Default to true if undefined/null
     };
     
@@ -211,6 +226,7 @@ export default function ServiceLevelManagement() {
                       <SelectItem value="one-time">One-time</SelectItem>
                       <SelectItem value="monthly">Monthly</SelectItem>
                       <SelectItem value="seasonal">Seasonal</SelectItem>
+                      <SelectItem value="bulk">Bulk</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -291,6 +307,95 @@ export default function ServiceLevelManagement() {
             )}
           </div>
           
+          {/* Bulk Pricing Fields - only show when service type is "bulk" */}
+          {serviceType === "bulk" && (
+            <div className="space-y-4 rounded-lg border p-4 bg-blue-50">
+              <h4 className="font-semibold text-blue-900">Bulk Pricing Configuration</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="basePrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Base Price ($) *</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            placeholder="200.00"
+                            className="pl-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Fixed cost for base quantity
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="baseQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Base # of Pump Outs *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="5"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Minimum pump outs included
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="pricePerAdditional"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price per Additional ($) *</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            placeholder="35.00"
+                            className="pl-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Cost per pump out above base
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="text-sm text-blue-700 bg-blue-100 p-3 rounded">
+                <strong>Example:</strong> Base Price: $200 (includes 5 pump outs), Price per Additional: $35
+                <br />
+                If customer wants 8 pump outs: $200 + ($35 × 3) = $305
+              </div>
+            </div>
+          )}
+          
           <FormField
             control={form.control}
             name="isActive"
@@ -350,6 +455,7 @@ export default function ServiceLevelManagement() {
       case 'one-time': return 'One-time';
       case 'monthly': return 'Monthly';
       case 'seasonal': return 'Seasonal';
+      case 'bulk': return 'Bulk';
       default: return type;
     }
   };
@@ -359,6 +465,7 @@ export default function ServiceLevelManagement() {
       case 'one-time': return 'bg-blue-500';
       case 'monthly': return 'bg-green-500';
       case 'seasonal': return 'bg-purple-500';
+      case 'bulk': return 'bg-orange-500';
       default: return 'bg-gray-500';
     }
   };
@@ -419,7 +526,16 @@ export default function ServiceLevelManagement() {
                               {getTypeLabel(level.type)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold">${level.price.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {level.type === 'bulk' ? (
+                              <div className="text-sm">
+                                <div>${(level.basePrice || 0).toFixed(2)} base</div>
+                                <div className="text-xs text-gray-500">+${(level.pricePerAdditional || 0).toFixed(2)}/add'l</div>
+                              </div>
+                            ) : (
+                              `$${level.price.toFixed(2)}`
+                            )}
+                          </TableCell>
                           <TableCell className="max-w-xs truncate">{level.description}</TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${level.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
