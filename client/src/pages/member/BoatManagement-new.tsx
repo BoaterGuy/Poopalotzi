@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Boat, Marina, SlipAssignment } from "@shared/schema";
+import { Boat, Marina, DockAssignment } from "@shared/schema";
 import { AlertCircle, Ship, Edit, Trash, Plus, MapPin } from "lucide-react";
 import {
   Dialog,
@@ -74,10 +74,10 @@ export default function BoatManagement() {
     }
   };
 
-  // Get slip assignment for a boat
-  const getSlipAssignment = useCallback(async (boatId: number): Promise<SlipAssignment | null> => {
+  // Get dock assignment for a boat
+  const getDockAssignment = useCallback(async (boatId: number): Promise<DockAssignment | null> => {
     try {
-      const res = await fetch(`/api/slip-assignments/boat/${boatId}`, {
+      const res = await fetch(`/api/dock-assignments/boat/${boatId}`, {
         credentials: 'include',
       });
       
@@ -86,7 +86,7 @@ export default function BoatManagement() {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching slip assignment:', error);
+      console.error('Error fetching dock assignment:', error);
       return null;
     }
   }, []);
@@ -110,18 +110,18 @@ export default function BoatManagement() {
 
   // Get boat location details
   const getBoatLocation = useCallback(async (boat: Boat) => {
-    const slipAssignment = await getSlipAssignment(boat.id);
-    if (!slipAssignment) return null;
+    const dockAssignment = await getDockAssignment(boat.id);
+    if (!dockAssignment) return null;
     
-    const marina = await getMarinaInfo(slipAssignment.marinaId);
+    const marina = await getMarinaInfo(dockAssignment.marinaId);
     if (!marina) return null;
     
     return {
       marinaName: marina.name,
-      dock: slipAssignment.dock,
-      slip: slipAssignment.slip,
+      pier: dockAssignment.pier,
+      dock: dockAssignment.dock,
     };
-  }, [getSlipAssignment, getMarinaInfo]);
+  }, [getDockAssignment, getMarinaInfo]);
 
   return (
     <>
@@ -342,7 +342,7 @@ export default function BoatManagement() {
       <Dialog open={!!assigningMarina} onOpenChange={() => setAssigningMarina(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Assign Marina & Slip</DialogTitle>
+            <DialogTitle>Assign Marina & Dock</DialogTitle>
             <DialogDescription>
               Specify where your boat is docked for easier service planning.
             </DialogDescription>
@@ -352,11 +352,11 @@ export default function BoatManagement() {
               boat={assigningMarina}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/slip-assignments'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
                 setAssigningMarina(null);
                 toast({
                   title: "Marina assigned",
-                  description: "Your boat's marina and slip information has been updated.",
+                  description: "Your boat's marina and dock information has been updated.",
                 });
               }}
             />

@@ -144,11 +144,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBoat(id: number): Promise<boolean> {
-    // First check if there are any slip assignments
-    const slipAssignments = await db.select().from(schema.slipAssignment).where(eq(schema.slipAssignment.boatId, id));
-    if (slipAssignments.length > 0) {
-      // Remove all slip assignments
-      await db.delete(schema.slipAssignment).where(eq(schema.slipAssignment.boatId, id));
+    // First check if there are any dock assignments
+    const dockAssignments = await db.select().from(schema.dockAssignment).where(eq(schema.dockAssignment.boatId, id));
+    if (dockAssignments.length > 0) {
+      // Remove all dock assignments
+      await db.delete(schema.dockAssignment).where(eq(schema.dockAssignment.boatId, id));
     }
     
     // Check if there are any pump out requests
