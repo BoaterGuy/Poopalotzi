@@ -7,6 +7,17 @@ import { storage as memStorage, IStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
+// Set Clover environment variables if not already set
+if (!process.env.CLOVER_APP_ID) {
+  process.env.CLOVER_APP_ID = "31D3CVCYAW57J";
+}
+if (!process.env.CLOVER_APP_SECRET) {
+  process.env.CLOVER_APP_SECRET = "f0e16559-c836-f25b-b536-b03ed7e95ae9";
+}
+if (!process.env.CLOVER_ENVIRONMENT) {
+  process.env.CLOVER_ENVIRONMENT = "sandbox";
+}
+
 // Create a database storage instance right away
 const dbStorage = new DatabaseStorage();
 // ALWAYS use the database storage, not the in-memory storage
