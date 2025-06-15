@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Boat, Marina, SlipAssignment } from "@shared/schema";
+import { Boat, Marina, DockAssignment } from "@shared/schema";
 import { AlertCircle, Ship, Edit, Trash, Plus, MapPin } from "lucide-react";
 import {
   Dialog,
@@ -67,19 +67,19 @@ export default function BoatManagement() {
     }
   };
 
-  // Use React Query to efficiently fetch all slip assignments and marina data
-  const { data: slipAssignments = {}, isLoading: isLoadingSlips, refetch: refetchSlipAssignments } = useQuery<Record<number, SlipAssignment>>({
-    queryKey: ['/api/slip-assignments'],
+  // Use React Query to efficiently fetch all dock assignments and marina data
+  const { data: dockAssignments = {}, isLoading: isLoadingDocks, refetch: refetchDockAssignments } = useQuery<Record<number, DockAssignment>>({
+    queryKey: ['/api/dock-assignments'],
     queryFn: async () => {
       if (!boats || boats.length === 0) return {};
       
-      // Create a map of boat ID to slip assignment
-      const assignments: Record<number, SlipAssignment> = {};
+      // Create a map of boat ID to dock assignment
+      const assignments: Record<number, DockAssignment> = {};
       
       // Fetch assignments for all boats
       await Promise.all(boats.map(async (boat) => {
         try {
-          const res = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+          const res = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
             credentials: 'include',
             // Add cache-busting parameter to force fresh data
             headers: {
@@ -90,7 +90,7 @@ export default function BoatManagement() {
           
           if (!res.ok) {
             if (res.status !== 404) {
-              console.error(`Error fetching slip assignment for boat ${boat.id}: ${res.statusText}`);
+              console.error(`Error fetching dock assignment for boat ${boat.id}: ${res.statusText}`);
             }
             return;
           }
@@ -98,7 +98,7 @@ export default function BoatManagement() {
           const data = await res.json();
           assignments[boat.id] = data;
         } catch (error) {
-          console.error(`Error fetching slip assignment for boat ${boat.id}:`, error);
+          console.error(`Error fetching dock assignment for boat ${boat.id}:`, error);
         }
       }));
       
@@ -148,7 +148,7 @@ export default function BoatManagement() {
   
   // Helper function to get formatted boat location info
   const getBoatLocationInfo = (boatId: number) => {
-    const assignment = slipAssignments[boatId];
+    const assignment = dockAssignments[boatId];
     if (!assignment) return null;
     
     const marina = marinasMap[assignment.marinaId];
@@ -156,8 +156,8 @@ export default function BoatManagement() {
     
     return {
       marinaName: marina.name,
+      pier: assignment.pier,
       dock: assignment.dock,
-      slip: assignment.slip,
     };
   };
 
@@ -184,7 +184,7 @@ export default function BoatManagement() {
           </Button>
         </div>
 
-        {isLoadingBoats ? (
+        {isLoadingBoats || isLoadingDocks ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="animate-pulse">
@@ -246,13 +246,13 @@ export default function BoatManagement() {
                     <p className="flex items-center">
                       <MapPin className="mr-1 h-4 w-4 text-[#38B2AC]" />
                       <span className="text-sm">
-                        {isLoadingSlips || isLoadingMarinas ? (
+                        {isLoadingDocks || isLoadingMarinas ? (
                           "Loading marina information..."
                         ) : (() => {
                           // Force recalculation of location info on each render
                           const locationInfo = getBoatLocationInfo(boat.id);
                           return locationInfo ? 
-                            `${locationInfo.marinaName} - Dock ${locationInfo.dock}, Slip ${locationInfo.slip}` : 
+                            `${locationInfo.marinaName} - Pier ${locationInfo.pier}, Dock ${locationInfo.dock}` : 
                             'No marina assigned';
                         })()}
                       </span>
@@ -345,18 +345,18 @@ export default function BoatManagement() {
               onSuccess={() => {
                 // Refresh all data completely to ensure displays are updated
                 queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/slip-assignments'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
-                queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${editingBoat.id}`] });
+                queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${editingBoat.id}`] });
                 
                 // Reset the edit boat state to close the dialog
                 setEditingBoat(null);
                 
-                // Force a refetch of slip assignments and marinas after the dialog closes
+                // Force a refetch of dock assignments and marinas after the dialog closes
                 setTimeout(() => {
                   refetchBoats();
-                  refetchSlipAssignments();
+                  refetchDockAssignments();
                   refetchMarinas();
                 }, 100);
               }}

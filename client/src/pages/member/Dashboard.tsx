@@ -228,7 +228,7 @@ export default function MemberDashboard() {
     }
   };
 
-  const isLoading = isLoadingBoats || isLoadingRequests || isLoadingServiceLevel;
+  const isLoading = isLoadingBoats || isLoadingRequests || isLoadingServiceLevel || isLoadingDock;
 
   return (
     <>
