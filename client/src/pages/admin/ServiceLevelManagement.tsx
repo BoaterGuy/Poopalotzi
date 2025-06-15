@@ -459,7 +459,7 @@ export default function ServiceLevelManagement() {
       
       {/* Add Service Level Dialog */}
       <Dialog open={isAddingLevel} onOpenChange={setIsAddingLevel}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Service Level</DialogTitle>
             <DialogDescription>
@@ -474,7 +474,7 @@ export default function ServiceLevelManagement() {
       
       {/* Edit Service Level Dialog */}
       <Dialog open={!!editingLevel} onOpenChange={() => setEditingLevel(null)}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Service Level</DialogTitle>
             <DialogDescription>
