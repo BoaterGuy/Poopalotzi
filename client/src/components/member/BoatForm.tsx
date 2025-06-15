@@ -128,8 +128,8 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     dockingDirection: boat?.dockingDirection || "bow_in",
     tieUpSide: boat?.tieUpSide || "port",
     pumpPortLocations: boat?.pumpPortLocations || [],
-    dock: existingAssignment?.dock || boat?.dock || "",
-    slip: existingAssignment?.slip || boat?.slip || null,
+    pier: existingAssignment?.pier || boat?.pier || "",
+    dock: existingAssignment?.dock || boat?.dock || null,
     marinaId: existingAssignment?.marinaId || null,
     notes: boat?.notes || null,
     photoUrl: boat?.photoUrl || "",
@@ -144,8 +144,8 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   useEffect(() => {
     if (existingAssignment) {
       form.setValue('marinaId', existingAssignment.marinaId);
+      form.setValue('pier', existingAssignment.pier);
       form.setValue('dock', existingAssignment.dock);
-      form.setValue('slip', existingAssignment.slip);
     }
   }, [existingAssignment, form]);
 
@@ -210,44 +210,44 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       // Handle marina assignment
       if (data.marinaId) {
         try {
-          // First check if there's an existing slip assignment
+          // First check if there's an existing dock assignment
           const boatId = boat?.id || savedBoat.id;
-          let existingSlipFound = false;
+          let existingDockFound = false;
           
           if (boat?.id) {
-            // Try to get existing slip assignment for update
-            const slipResponse = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+            // Try to get existing dock assignment for update
+            const dockResponse = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
               credentials: 'include'
             });
             
-            if (slipResponse.ok) {
+            if (dockResponse.ok) {
               // Found existing assignment, update it
-              existingSlipFound = true;
-              const existingSlip = await slipResponse.json();
+              existingDockFound = true;
+              const existingDock = await dockResponse.json();
               
-              // Ensure dock is sent as a string and slip as a number
-              await apiRequest("PUT", `/api/slip-assignments/${existingSlip.id}`, {
+              // Ensure pier is sent as a string and dock as a number
+              await apiRequest("PUT", `/api/dock-assignments/${existingDock.id}`, {
                 marinaId: Number(data.marinaId),
-                dock: String(data.dock || existingSlip.dock),
-                slip: Number(data.slip || existingSlip.slip)
+                pier: String(data.pier || existingDock.pier),
+                dock: Number(data.dock || existingDock.dock)
               });
             }
           }
           
           // If no existing assignment was found, create a new one
-          if (!existingSlipFound) {
-            const slipData = {
+          if (!existingDockFound) {
+            const dockData = {
               boatId,
               marinaId: data.marinaId,
-              dock: data.dock || "A",
-              slip: data.slip || 1
+              pier: data.pier || "A",
+              dock: data.dock || 1
             };
             
-            await apiRequest("POST", "/api/slip-assignments", slipData);
+            await apiRequest("POST", "/api/dock-assignments", dockData);
           }
-        } catch (slipError) {
-          console.error("Error updating slip assignment:", slipError);
-          // Continue with success message - the boat info was saved even if slip assignment failed
+        } catch (dockError) {
+          console.error("Error updating dock assignment:", dockError);
+          // Continue with success message - the boat info was saved even if dock assignment failed
         }
       }
       
@@ -258,12 +258,12 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           "Your boat has been added successfully.",
       });
       
-      // Invalidate any caches related to boats or slip assignments 
+      // Invalidate any caches related to boats or dock assignments 
       queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
       if (boat?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${boat.id}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${boat.id}`] });
       }
-      queryClient.invalidateQueries({ queryKey: ['/api/slip-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
       // Also invalidate marinas query to make sure everything is fresh
       queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
       
@@ -338,13 +338,13 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
-          {/* Dock - moved to top */}
+          {/* Pier - moved to top */}
           <FormField
             control={form.control}
-            name="dock"
+            name="pier"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Dock</FormLabel>
+                <FormLabel>Pier</FormLabel>
                 <FormControl>
                   <Input 
                     type="text" 
@@ -354,20 +354,20 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Your dock letter or number
+                  Your pier letter or number
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          {/* Slip - moved to top */}
+          {/* Dock - moved to top */}
           <FormField
             control={form.control}
-            name="slip"
+            name="dock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Slip Number</FormLabel>
+                <FormLabel>Dock Number</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -378,7 +378,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Your assigned slip number
+                  Your assigned dock number
                 </FormDescription>
                 <FormMessage />
               </FormItem>

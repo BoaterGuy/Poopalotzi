@@ -151,7 +151,7 @@ export default function RequestService() {
       // If we have a boat ID, invalidate any queries related to that boat
       if (request.boatId) {
         queryClient.invalidateQueries({ queryKey: [`/api/boats`] });
-        queryClient.invalidateQueries({ queryKey: [`/api/slip-assignments/boat/${request.boatId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${request.boatId}`] });
       }
       
       // Redirect to dashboard after successful request with subscription
