@@ -25,7 +25,7 @@ export const tieUpSideEnum = pgEnum('tie_up_side', ['port', 'starboard', 'both']
 export const pumpPortLocationEnum = pgEnum('pump_port_location', ['port', 'starboard', 'bow', 'mid_ship', 'stern']);
 export const requestStatusEnum = pgEnum('request_status', ['Requested', 'Scheduled', 'Completed', 'Canceled', 'Waitlisted']);
 export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Failed', 'Refunded']);
-export const serviceTypeEnum = pgEnum('service_type', ['one-time', 'monthly', 'seasonal']);
+export const serviceTypeEnum = pgEnum('service_type', ['one-time', 'monthly', 'seasonal', 'bulk']);
 export const serviceLevelEnum = pgEnum('service_level', ['single-head', 'multi-head']);
 
 // Users
@@ -108,6 +108,10 @@ export const serviceLevel = pgTable('service_level', {
   seasonEnd: date('season_end'),
   monthlyQuota: integer('monthly_quota'),
   onDemandQuota: integer('on_demand_quota'),
+  // Bulk pricing fields
+  basePrice: integer('base_price'), // For bulk type - stored in cents
+  pricePerAdditional: integer('price_per_additional'), // For bulk type - stored in cents
+  baseQuantity: integer('base_quantity'), // For bulk type - minimum number of pump outs included
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
 });
