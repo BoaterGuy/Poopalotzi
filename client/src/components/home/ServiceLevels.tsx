@@ -16,11 +16,12 @@ export default function ServiceLevels() {
     queryKey: ['/api/service-levels'],
   });
 
-  const getFormattedPrice = (price: number, type: string) => {
-    if (type === "one-time") return `${formatCurrency(price)}/service`;
-    if (type === "monthly") return `${formatCurrency(price)}/month`;
-    if (type === "seasonal") return `${formatCurrency(price)}/season`;
-    return formatCurrency(price);
+  const getFormattedPrice = (plan: ServiceLevel) => {
+    if (plan.type === "one-time") return `${formatCurrency(plan.price)}/service`;
+    if (plan.type === "monthly") return `${formatCurrency(plan.price)}/month`;
+    if (plan.type === "seasonal") return `${formatCurrency(plan.price)}/season`;
+    if (plan.type === "bulk") return `From ${formatCurrency(plan.basePrice || 0)}`;
+    return formatCurrency(plan.price);
   };
 
   const handleChoosePlan = () => {
@@ -77,16 +78,23 @@ export default function ServiceLevels() {
                     <h3 className="text-xl font-bold text-[#0B1F3A] mb-2">{plan.name}</h3>
                     <p className="text-gray-600 mb-4">{plan.description}</p>
                     <div className="text-3xl font-bold text-[#0B1F3A] mb-4">
-                      {getFormattedPrice(plan.price, plan.type)}
+                      {getFormattedPrice(plan)}
                     </div>
                     <ul className="space-y-3 mb-6">
                       {[
-                        { feature: plan.type === 'one-time' ? 'Single head pump-out' : 
-                                 plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
-                                 'Unlimited pump-outs (May-Oct)', included: true },
-                        { feature: plan.headCount > 1 ? `Single or multi-head boats (up to ${plan.headCount})` : 'Single head boats only', included: true },
+                        { 
+                          feature: plan.type === 'one-time' ? 'Single pump-out service' : 
+                                 plan.type === 'monthly' ? `${plan.monthlyQuota} pump-outs per month` : 
+                                 plan.type === 'seasonal' ? 'Unlimited pump-outs (May-Oct)' :
+                                 plan.type === 'bulk' ? `${plan.baseQuantity} pump-outs included, then $${plan.pricePerAdditional}/additional` : 'Service included', 
+                          included: true 
+                        },
+                        { 
+                          feature: plan.name.toLowerCase().includes('multi') ? 'Boats with more than one head' : 'Single head boats only', 
+                          included: true 
+                        },
                         { feature: 'Service history & reporting', included: true },
-                        { feature: plan.type !== 'one-time' ? 'Priority scheduling' : 'Recurring scheduling', included: plan.type !== 'one-time' },
+                        { feature: plan.type !== 'one-time' ? 'Priority scheduling' : 'Standard scheduling', included: plan.type !== 'one-time' },
                       ].map((item, i) => (
                         <li key={i} className="flex items-start">
                           {item.included ? (

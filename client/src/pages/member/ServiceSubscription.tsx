@@ -105,12 +105,13 @@ export default function ServiceSubscription() {
     const oneTime = levels.filter(level => level.type === 'one-time');
     const monthly = levels.filter(level => level.type === 'monthly');
     const seasonal = levels.filter(level => level.type === 'seasonal');
+    const bulk = levels.filter(level => level.type === 'bulk');
     
-    return { oneTime, monthly, seasonal };
+    return { oneTime, monthly, seasonal, bulk };
   };
   
   const activeServiceLevels = filterActiveLevels(serviceLevels);
-  const { oneTime, monthly, seasonal } = groupByType(activeServiceLevels);
+  const { oneTime, monthly, seasonal, bulk } = groupByType(activeServiceLevels);
   
   const handleSelectPlan = (plan: ServiceLevel) => {
     setSelectedPlan(plan);
@@ -209,19 +210,33 @@ export default function ServiceSubscription() {
         <CardHeader className="pb-2">
           <CardTitle className="flex justify-between items-center">
             <div>{plan.name}</div>
-            <Badge variant={plan.type === 'one-time' ? "default" : plan.type === 'monthly' ? "outline" : "secondary"}>
-              {plan.type === 'one-time' ? 'One-time' : plan.type === 'monthly' ? 'Monthly' : 'Seasonal'}
+            <Badge variant={plan.type === 'one-time' ? "default" : plan.type === 'monthly' ? "outline" : plan.type === 'bulk' ? "destructive" : "secondary"}>
+              {plan.type === 'one-time' ? 'One-time' : plan.type === 'monthly' ? 'Monthly' : plan.type === 'bulk' ? 'Bulk' : 'Seasonal'}
             </Badge>
           </CardTitle>
           <CardDescription>{plan.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-center mb-6">
-            ${plan.price.toFixed(2)}
-            {plan.type !== 'one-time' && (
-              <span className="text-sm font-normal text-muted-foreground">
-                {plan.type === 'monthly' ? '/mo' : '/season'}
-              </span>
+            {plan.type === 'bulk' ? (
+              <div>
+                <div>From ${(plan.basePrice || 0).toFixed(2)}</div>
+                <div className="text-sm font-normal text-muted-foreground mt-1">
+                  {plan.baseQuantity} pump-outs included
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  +${(plan.pricePerAdditional || 0).toFixed(2)} per additional
+                </div>
+              </div>
+            ) : (
+              <div>
+                ${plan.price.toFixed(2)}
+                {plan.type !== 'one-time' && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {plan.type === 'monthly' ? '/mo' : '/season'}
+                  </span>
+                )}
+              </div>
             )}
             <div className="text-sm font-normal text-muted-foreground mt-1">Plus Tax</div>
           </div>
