@@ -190,7 +190,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Our Office</h3>
-                      <p className="text-gray-700">Available by appointment<br />Contact us for service locations</p>
+                      <p className="text-gray-700">711 W. Lakeshore Dr #402<br />Port Clinton, OH 43452-9311</p>
                     </div>
                   </div>
                   

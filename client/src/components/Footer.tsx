@@ -64,7 +64,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li className="flex items-start">
                 <FaMapMarkerAlt className="mt-1 mr-2 text-[#FF6B6B]" />
-                <span className="text-gray-300">Available by appointment</span>
+                <span className="text-gray-300">711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311</span>
               </li>
               <li className="flex items-start">
                 <FaPhoneAlt className="mt-1 mr-2 text-[#FF6B6B]" />

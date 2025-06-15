@@ -162,7 +162,7 @@ export default function About() {
                 </p>
                 <p className="flex items-center text-gray-700">
                   <span className="w-8 mr-2 text-[#0B1F3A]">📍</span>
-                  Available by appointment - Contact us for service locations
+                  711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311
                 </p>
               </div>
               <div className="mt-8">
