@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
@@ -17,6 +18,20 @@ import { db } from "./db";
 import { pumpOutRequest } from "@shared/schema";
 import { desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+
+// WebSocket connections for real-time updates
+let wss: WebSocketServer;
+const adminConnections = new Set<WebSocket>();
+
+// Helper function to broadcast updates to admin clients
+function broadcastToAdmins(type: string, data: any) {
+  const message = JSON.stringify({ type, data });
+  adminConnections.forEach(ws => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(message);
+    }
+  });
+}
 
 // Extended Request type with user information
 interface AuthRequest extends Request {
@@ -667,6 +682,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requestId: newRequest.id,
           newStatus: newRequest.status,
           changeTimestamp: new Date()
+        });
+        
+        // Broadcast to admin clients for real-time updates
+        broadcastToAdmins('pump_out_request_created', {
+          id: newRequest.id,
+          action: 'created'
         });
         
         // Return the newly created request
@@ -1481,5 +1502,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(handleError);
 
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server on distinct path
+  wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket connection established');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle admin subscription for real-time updates
+        if (data.type === 'subscribe_admin') {
+          adminConnections.add(ws);
+          console.log('Admin client subscribed for real-time updates');
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      adminConnections.delete(ws);
+      console.log('WebSocket connection closed');
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      adminConnections.delete(ws);
+    });
+  });
+  
   return httpServer;
 }
