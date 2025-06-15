@@ -22,24 +22,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DialogFooter } from "@/components/ui/dialog";
-import { insertSlipAssignmentSchema, Marina } from "@shared/schema";
+import { insertDockAssignmentSchema, Marina } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Create the form schema based on the slip assignment schema from DB
-const marinaFormSchema = insertSlipAssignmentSchema.extend({
+// Create the form schema based on the dock assignment schema from DB
+const marinaFormSchema = insertDockAssignmentSchema.extend({
   marinaId: z.coerce.number({
     required_error: "Please select a marina",
+  }),
+  pier: z.string({
+    required_error: "Please enter a pier designation",
+  }).min(1, {
+    message: "Pier designation is required",
   }),
   dock: z.coerce.number({
     required_error: "Please enter a dock number",
   }).min(1, {
     message: "Dock number must be at least 1",
-  }),
-  slip: z.coerce.number({
-    required_error: "Please enter a slip number",
-  }).min(1, {
-    message: "Slip number must be at least 1",
   }),
 });
 
@@ -54,12 +54,12 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch existing slip assignment for this boat
+  // Fetch existing dock assignment for this boat
   const { data: existingAssignment, isLoading: isLoadingAssignment } = useQuery({
-    queryKey: [`/api/slip-assignments/boat/${boat.id}`],
+    queryKey: [`/api/dock-assignments/boat/${boat.id}`],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+        const response = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
           credentials: 'include'
         });
         
@@ -67,12 +67,12 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
           if (response.status === 404) {
             return null; // No assignment exists yet
           }
-          throw new Error('Failed to fetch slip assignment');
+          throw new Error('Failed to fetch dock assignment');
         }
         
         return response.json();
       } catch (error) {
-        console.error("Error fetching slip assignment:", error);
+        console.error("Error fetching dock assignment:", error);
         return null;
       }
     },
@@ -98,8 +98,8 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
   const defaultValues: Partial<MarinaFormValues> = {
     boatId: boat.id,
     marinaId: existingAssignment?.marinaId || undefined,
+    pier: existingAssignment?.pier || undefined,
     dock: existingAssignment?.dock || undefined,
-    slip: existingAssignment?.slip || undefined,
   };
 
   const form = useForm<MarinaFormValues>({
@@ -113,8 +113,8 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
       form.reset({
         boatId: boat.id,
         marinaId: existingAssignment.marinaId,
+        pier: existingAssignment.pier,
         dock: existingAssignment.dock,
-        slip: existingAssignment.slip,
       });
     }
   });
@@ -122,8 +122,8 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
   const onSubmit = async (data: MarinaFormValues) => {
     setIsSubmitting(true);
     try {
-      // Create or update slip assignment
-      await apiRequest("POST", "/api/slip-assignments", data);
+      // Create or update dock assignment
+      await apiRequest("POST", "/api/dock-assignments", data);
       
       onSuccess();
     } catch (error) {

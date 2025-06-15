@@ -114,7 +114,7 @@ export class MemStorage implements IStorage {
     this.boatOwnersData = new Map();
     this.boatsData = new Map();
     this.marinasData = new Map();
-    this.slipAssignmentsData = new Map();
+    this.dockAssignmentsData = new Map();
     this.serviceLevelsData = new Map();
     this.pumpOutRequestsData = new Map();
     this.pumpOutLogsData = new Map();
@@ -124,7 +124,7 @@ export class MemStorage implements IStorage {
     this.currentBoatOwnerId = 1;
     this.currentBoatId = 1;
     this.currentMarinaId = 1;
-    this.currentSlipAssignmentId = 1;
+    this.currentDockAssignmentId = 1;
     this.currentServiceLevelId = 1;
     this.currentPumpOutRequestId = 1;
     this.currentPumpOutLogId = 1;
@@ -311,33 +311,33 @@ export class MemStorage implements IStorage {
     return this.marinasData.delete(id);
   }
 
-  // Slip Assignment operations
-  async getSlipAssignment(id: number): Promise<SlipAssignment | undefined> {
-    return this.slipAssignmentsData.get(id);
+  // Dock Assignment operations
+  async getDockAssignment(id: number): Promise<DockAssignment | undefined> {
+    return this.dockAssignmentsData.get(id);
   }
 
-  async getSlipAssignmentByBoatId(boatId: number): Promise<SlipAssignment | undefined> {
-    return Array.from(this.slipAssignmentsData.values()).find(slip => slip.boatId === boatId);
+  async getDockAssignmentByBoatId(boatId: number): Promise<DockAssignment | undefined> {
+    return Array.from(this.dockAssignmentsData.values()).find(dock => dock.boatId === boatId);
   }
 
-  async createSlipAssignment(slipAssignmentData: InsertSlipAssignment): Promise<SlipAssignment> {
-    const id = this.currentSlipAssignmentId++;
-    const newSlipAssignment: SlipAssignment = {
-      ...slipAssignmentData,
+  async createDockAssignment(dockAssignmentData: InsertDockAssignment): Promise<DockAssignment> {
+    const id = this.currentDockAssignmentId++;
+    const newDockAssignment: DockAssignment = {
+      ...dockAssignmentData,
       id,
       createdAt: new Date()
     };
-    this.slipAssignmentsData.set(id, newSlipAssignment);
-    return newSlipAssignment;
+    this.dockAssignmentsData.set(id, newDockAssignment);
+    return newDockAssignment;
   }
 
-  async updateSlipAssignment(id: number, slipData: Partial<SlipAssignment>): Promise<SlipAssignment | undefined> {
-    const existingSlip = this.slipAssignmentsData.get(id);
-    if (!existingSlip) return undefined;
+  async updateDockAssignment(id: number, dockData: Partial<DockAssignment>): Promise<DockAssignment | undefined> {
+    const existingDock = this.dockAssignmentsData.get(id);
+    if (!existingDock) return undefined;
     
-    const updatedSlip = { ...existingSlip, ...slipData };
-    this.slipAssignmentsData.set(id, updatedSlip);
-    return updatedSlip;
+    const updatedDock = { ...existingDock, ...dockData };
+    this.dockAssignmentsData.set(id, updatedDock);
+    return updatedDock;
   }
 
   // Service Level operations
