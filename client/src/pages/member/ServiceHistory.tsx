@@ -520,7 +520,7 @@ export default function ServiceHistory() {
                               setShowEditModal(true);
                             }}
                           >
-                            Edit Request
+                            <Edit className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
