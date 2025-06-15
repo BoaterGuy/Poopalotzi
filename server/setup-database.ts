@@ -79,15 +79,15 @@ export async function setupFullDatabase() {
     // Marina seeding disabled - add your real marina data manually through the admin interface
     console.log('Marina table created. Add real marina data through the admin interface.');
     
-    if (!existingTables.includes('slip_assignment')) {
-      console.log('Creating slip_assignment table...');
+    if (!existingTables.includes('dock_assignment')) {
+      console.log('Creating dock_assignment table...');
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS "slip_assignment" (
+        CREATE TABLE IF NOT EXISTS "dock_assignment" (
           "id" SERIAL PRIMARY KEY,
           "boat_id" INTEGER NOT NULL REFERENCES "boat"("id"),
           "marina_id" INTEGER NOT NULL REFERENCES "marina"("id"),
-          "dock" TEXT NOT NULL,
-          "slip" INTEGER NOT NULL,
+          "pier" TEXT NOT NULL,
+          "dock" INTEGER NOT NULL,
           "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);

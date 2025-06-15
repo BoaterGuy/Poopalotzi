@@ -150,12 +150,12 @@ export async function setupDatabase() {
             "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
-          `CREATE TABLE IF NOT EXISTS "slip_assignment" (
+          `CREATE TABLE IF NOT EXISTS "dock_assignment" (
             "id" SERIAL PRIMARY KEY,
             "boat_id" INTEGER NOT NULL REFERENCES "boat"("id"),
             "marina_id" INTEGER NOT NULL REFERENCES "marina"("id"),
-            "dock" TEXT NOT NULL,
-            "slip" INTEGER NOT NULL,
+            "pier" TEXT NOT NULL,
+            "dock" INTEGER NOT NULL,
             "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`,
           
