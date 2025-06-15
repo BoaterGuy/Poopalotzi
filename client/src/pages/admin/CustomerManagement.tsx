@@ -1274,7 +1274,7 @@ export default function CustomerManagement() {
                       <TableHead>Service Level</TableHead>
                       <TableHead>Credits</TableHead>
                       <TableHead>Boats</TableHead>
-                      <TableHead className="w-[200px]">Actions</TableHead>
+                      <TableHead className="w-[200px] text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1332,7 +1332,7 @@ export default function CustomerManagement() {
                             </Button>
                           </TableCell>
                           <TableCell>
-                            <div className="flex space-x-2">
+                            <div className="flex space-x-2 justify-center">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1340,15 +1340,20 @@ export default function CustomerManagement() {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleAddBoatForCustomer(customer)}
-                                title="Add Boat for this Owner"
-                              >
-                                <Anchor className="h-4 w-4 mr-1" />
-                                Add Boat
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleAddBoatForCustomer(customer)}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Add Boat</p>
+                                </TooltipContent>
+                              </Tooltip>
                               <Button
                                 variant="outline"
                                 size="sm"
