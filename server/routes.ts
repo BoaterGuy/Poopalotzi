@@ -6,7 +6,8 @@ import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail } from "./utils/sendgrid";
-import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema } from "@shared/schema";
+import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
+import { cloverService } from "./clover-service";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -1766,6 +1767,284 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('WebSocket error:', error);
       adminConnections.delete(ws);
     });
+  });
+
+  // =====================================
+  // CLOVER PAYMENT INTEGRATION ENDPOINTS
+  // =====================================
+
+  // Get Clover configuration status (admin only)
+  app.get("/api/admin/clover/status", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const status = await cloverService.getConfigurationStatus();
+      res.json(status);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Initiate Clover OAuth flow (admin only)
+  app.post("/api/admin/clover/oauth/initiate", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const { merchantId } = req.body;
+      
+      if (!merchantId) {
+        return res.status(400).json({ message: "Merchant ID is required" });
+      }
+
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      const authUrl = cloverService.getAuthorizationUrl(merchantId, redirectUri);
+      
+      res.json({ authUrl, merchantId });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Handle Clover OAuth callback (admin only)
+  app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
+    try {
+      const { code, merchant_id } = req.query;
+      
+      if (!code || !merchant_id) {
+        return res.status(400).json({ message: "Authorization code and merchant ID are required" });
+      }
+
+      // Exchange code for tokens
+      const tokenData = await cloverService.exchangeCodeForTokens(code as string, merchant_id as string);
+      
+      // Save configuration
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      await cloverService.saveConfiguration({
+        merchantId: merchant_id as string,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        tokenExpiresAt: expiresAt
+      });
+
+      // Redirect to admin settings page with success message
+      res.redirect('/admin/settings?clover=connected');
+    } catch (err) {
+      console.error('Clover OAuth callback error:', err);
+      res.redirect('/admin/settings?clover=error');
+    }
+  });
+
+  // Update Clover configuration (admin only)
+  app.put("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const configSchema = insertCloverConfigSchema.partial();
+      const result = configSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid configuration data", 
+          errors: result.error.format() 
+        });
+      }
+
+      const config = await storage.getCloverConfig();
+      if (!config) {
+        return res.status(404).json({ message: "Clover configuration not found" });
+      }
+
+      const updatedConfig = await storage.updateCloverConfig(config.id, result.data);
+      res.json({ 
+        message: "Configuration updated successfully",
+        merchantId: updatedConfig?.merchantId,
+        environment: updatedConfig?.environment
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Disconnect Clover integration (admin only)
+  app.delete("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const config = await storage.getCloverConfig();
+      if (!config) {
+        return res.status(404).json({ message: "Clover configuration not found" });
+      }
+
+      await storage.deleteCloverConfig(config.id);
+      res.json({ message: "Clover integration disconnected successfully" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Process payment using Clover
+  app.post("/api/payments/clover", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const { amount, currency, source, orderId, description, requestId } = req.body;
+      
+      if (!amount || !source) {
+        return res.status(400).json({ message: "Amount and payment source are required" });
+      }
+
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const paymentRequest = {
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency || 'USD',
+        source,
+        orderId,
+        description,
+        metadata: {
+          user_id: req.user.id.toString(),
+          request_id: requestId?.toString()
+        }
+      };
+
+      const paymentResult = await cloverService.processPayment(
+        paymentRequest, 
+        req.user.id, 
+        requestId
+      );
+
+      // Update pump-out request payment status if applicable
+      if (requestId && paymentResult.result === 'APPROVED') {
+        await storage.updatePumpOutRequest(requestId, {
+          paymentStatus: 'Paid',
+          paymentId: paymentResult.id
+        });
+      }
+
+      res.json({
+        success: true,
+        paymentId: paymentResult.id,
+        status: paymentResult.result,
+        amount: paymentResult.amount,
+        last4: paymentResult.cardTransaction?.last4,
+        cardType: paymentResult.cardTransaction?.cardType
+      });
+    } catch (err) {
+      console.error('Payment processing error:', err);
+      res.status(400).json({ 
+        success: false, 
+        message: err instanceof Error ? err.message : 'Payment processing failed' 
+      });
+    }
+  });
+
+  // Refund payment (admin only)
+  app.post("/api/admin/payments/:paymentId/refund", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const { paymentId } = req.params;
+      const { amount } = req.body;
+
+      const transaction = await storage.getPaymentTransactionByCloverPaymentId(paymentId);
+      if (!transaction) {
+        return res.status(404).json({ message: "Payment transaction not found" });
+      }
+
+      const refundResult = await cloverService.refundPayment(paymentId, amount);
+      
+      res.json({
+        success: true,
+        refundId: refundResult.id,
+        amount: refundResult.amount,
+        message: "Refund processed successfully"
+      });
+    } catch (err) {
+      console.error('Refund processing error:', err);
+      res.status(400).json({ 
+        success: false, 
+        message: err instanceof Error ? err.message : 'Refund processing failed' 
+      });
+    }
+  });
+
+  // Get payment transactions (admin only)
+  app.get("/api/admin/payments", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const { status, userId } = req.query;
+      
+      let transactions;
+      if (status) {
+        transactions = await storage.getPaymentTransactionsByStatus(status as string);
+      } else if (userId) {
+        transactions = await storage.getPaymentTransactionsByUserId(parseInt(userId as string));
+      } else {
+        transactions = await storage.getAllPaymentTransactions();
+      }
+      
+      res.json(transactions);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get user's payment history
+  app.get("/api/payments/history", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const transactions = await storage.getPaymentTransactionsByUserId(req.user.id);
+      
+      // Remove sensitive information before sending to client
+      const sanitizedTransactions = transactions.map(transaction => ({
+        id: transaction.id,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        status: transaction.status,
+        paymentMethod: transaction.paymentMethod,
+        cardLast4: transaction.cardLast4,
+        cardBrand: transaction.cardBrand,
+        createdAt: transaction.createdAt,
+        refundAmount: transaction.refundAmount,
+        refundedAt: transaction.refundedAt
+      }));
+      
+      res.json(sanitizedTransactions);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Clover webhook endpoint
+  app.post("/api/webhooks/clover", async (req, res, next) => {
+    try {
+      const signature = req.headers['clover-signature'] as string;
+      const payload = JSON.stringify(req.body);
+      
+      // Verify webhook signature
+      if (!cloverService.verifyWebhookSignature(payload, signature)) {
+        return res.status(401).json({ message: "Invalid webhook signature" });
+      }
+
+      const { type, data } = req.body;
+      await cloverService.handleWebhook(type, data);
+      
+      res.status(200).json({ received: true });
+    } catch (err) {
+      console.error('Webhook processing error:', err);
+      res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+
+  // Get payment transaction details (admin only)
+  app.get("/api/admin/payments/:id", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment transaction ID" });
+      }
+
+      const transaction = await storage.getPaymentTransaction(id);
+      if (!transaction) {
+        return res.status(404).json({ message: "Payment transaction not found" });
+      }
+
+      res.json(transaction);
+    } catch (err) {
+      next(err);
+    }
   });
   
   return httpServer;

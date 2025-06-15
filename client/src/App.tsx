@@ -33,6 +33,7 @@ import AdminRequestManagement from "@/pages/admin/RequestManagement";
 import AdminCalendar from "@/pages/admin/Calendar";
 import AdminServiceLevelManagement from "@/pages/admin/ServiceLevelManagement";
 import AdminManualServiceEntry from "@/pages/admin/AdminManualServiceEntry";
+import CloverSettings from "@/pages/admin/CloverSettings";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
