@@ -135,6 +135,9 @@ function App() {
                 <Route path="/admin/customers">
                   <AdminRoute component={AdminCustomerManagement} path="/admin/customers" />
                 </Route>
+                <Route path="/admin/customer-management">
+                  <AdminRoute component={AdminCustomerManagement} path="/admin/customer-management" />
+                </Route>
                 <Route path="/admin/marinas">
                   <AdminRoute component={AdminMarinaManagement} path="/admin/marinas" />
                 </Route>
