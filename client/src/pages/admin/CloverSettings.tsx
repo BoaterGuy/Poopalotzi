@@ -129,9 +129,7 @@ export default function CloverSettings() {
   // Disconnect Clover
   const disconnectCloverMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/admin/clover/config', {
-        method: 'DELETE'
-      });
+      return await apiRequest('/api/admin/clover/config', 'DELETE');
     },
     onSuccess: () => {
       toast({
@@ -152,10 +150,8 @@ export default function CloverSettings() {
   // Process refund
   const refundMutation = useMutation({
     mutationFn: async ({ paymentId, amount }: { paymentId: string; amount?: number }) => {
-      return await apiRequest(`/api/admin/payments/${paymentId}/refund`, {
-        method: 'POST',
-        body: amount ? { amount: Math.round(amount * 100) } : {}
-      });
+      return await apiRequest(`/api/admin/payments/${paymentId}/refund`, 'POST', 
+        amount ? { amount: Math.round(amount * 100) } : {});
     },
     onSuccess: () => {
       toast({

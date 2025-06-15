@@ -157,6 +157,9 @@ function App() {
                 <Route path="/admin/manual-service-form">
                   <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-service-form" />
                 </Route>
+                <Route path="/admin/clover-settings">
+                  <AdminRoute component={CloverSettings} path="/admin/clover-settings" />
+                </Route>
                 
                 {/* 404 Route */}
                 <Route component={NotFound} />

@@ -184,6 +184,11 @@ export default function AppNavbar() {
                           Manual Service Entry
                         </DropdownMenuItem>
                       </Link>
+                      <Link to="/admin/clover-settings">
+                        <DropdownMenuItem className="cursor-pointer">
+                          Payment Settings
+                        </DropdownMenuItem>
+                      </Link>
                     </>
                   )}
                   
