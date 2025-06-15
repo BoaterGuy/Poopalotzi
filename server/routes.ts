@@ -619,12 +619,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestData.status = "Waitlisted";
       }
 
-      // For subscription users (monthly or seasonal), mark payment as already paid
+      // For subscription users, mark payment as already paid since they have active subscription
       if (req.user && req.user.serviceLevelId) {
         const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
-        if (serviceLevel && (serviceLevel.type === 'monthly' || serviceLevel.type === 'seasonal')) {
+        if (serviceLevel) {
+          // All subscription types (one-time, monthly, seasonal) should be considered paid
+          // if user has an active subscription
           requestData.paymentStatus = 'Paid';
-          requestData.paymentId = `sub_${Date.now()}`;
+          requestData.paymentId = `sub_${serviceLevel.type}_${Date.now()}`;
         }
       }
 
