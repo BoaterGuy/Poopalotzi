@@ -200,6 +200,7 @@ export default function RequestService() {
     
     // Refresh all relevant data
     queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
     
     if (selectedRequest?.boatId) {
       // Invalidate specific boat request data to ensure dashboard shows it
@@ -330,6 +331,25 @@ export default function RequestService() {
                           <p className="text-gray-700 mt-2">
                             Your quota will reset at the beginning of next month. If you need additional services, 
                             you can purchase a one-time service.
+                          </p>
+                          <Button 
+                            className="mt-4 bg-[#0B1F3A]"
+                            onClick={() => window.location.href = '/member/subscription'}
+                          >
+                            View Service Options
+                          </Button>
+                        </div>
+                      </div>
+                    ) : creditsData && serviceLevel.type === 'one-time' && creditsData.availableCredits <= 0 ? (
+                      <div className="text-center py-8">
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                          <h3 className="text-lg font-semibold text-red-700 mb-2">No Credits Available</h3>
+                          <p className="text-gray-700">
+                            You have used all {creditsData.totalCredits} pump-out service included in your one-time plan for {creditsData.year}.
+                          </p>
+                          <p className="text-gray-700 mt-2">
+                            Your credit will reset on January 1st, {creditsData.year + 1}. If you need additional services now, 
+                            you can purchase another one-time service or upgrade to a monthly/seasonal plan.
                           </p>
                           <Button 
                             className="mt-4 bg-[#0B1F3A]"
