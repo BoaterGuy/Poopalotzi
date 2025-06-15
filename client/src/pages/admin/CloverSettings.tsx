@@ -108,10 +108,7 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      const response = await apiRequest('/api/admin/clover/oauth/initiate', {
-        method: 'POST',
-        body: { merchantId }
-      });
+      const response = await apiRequest('/api/admin/clover/oauth/initiate', 'POST', { merchantId });
       return response;
     },
     onSuccess: (data) => {

@@ -59,9 +59,10 @@ export interface CloverOAuthTokenResponse {
 
 export class CloverService {
   private config: CloverConfig | null = null;
+  private initialized = false;
 
   constructor() {
-    this.loadConfig();
+    // Don't load config in constructor to avoid initialization order issues
   }
 
   /**
@@ -69,9 +70,22 @@ export class CloverService {
    */
   private async loadConfig(): Promise<void> {
     try {
-      this.config = await storage.getCloverConfig();
+      // Lazy import to avoid circular dependency
+      const { storage } = await import('./index');
+      this.config = await storage.getCloverConfig() || null;
+      this.initialized = true;
     } catch (error) {
       console.error('Failed to load Clover configuration:', error);
+      this.initialized = true;
+    }
+  }
+
+  /**
+   * Ensure configuration is loaded
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.loadConfig();
     }
   }
 
@@ -142,6 +156,7 @@ export class CloverService {
     tokenExpiresAt?: Date;
     webhookSecret?: string;
   }): Promise<CloverConfig> {
+    const { storage } = await import('./index');
     const environment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
     const appId = process.env.CLOVER_APP_ID;
     const appSecret = process.env.CLOVER_APP_SECRET;
@@ -170,6 +185,9 @@ export class CloverService {
    * Refresh access token using refresh token
    */
   async refreshAccessToken(): Promise<void> {
+    await this.ensureInitialized();
+    const { storage } = await import('./index');
+    
     if (!this.config || !this.config.refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -227,6 +245,7 @@ export class CloverService {
    */
   async processPayment(paymentRequest: CloverPaymentRequest, userId: number, requestId?: number): Promise<CloverPaymentResponse> {
     await this.ensureValidToken();
+    const { storage } = await import('./index');
     
     if (!this.config) {
       throw new Error('Clover not configured');
@@ -309,6 +328,7 @@ export class CloverService {
    */
   async refundPayment(cloverPaymentId: string, amount?: number): Promise<any> {
     await this.ensureValidToken();
+    const { storage } = await import('./index');
     
     if (!this.config) {
       throw new Error('Clover not configured');
@@ -417,7 +437,7 @@ export class CloverService {
     environment?: string;
     tokenExpiry?: Date;
   }> {
-    await this.loadConfig();
+    await this.ensureInitialized();
     
     return {
       isConfigured: !!this.config,
