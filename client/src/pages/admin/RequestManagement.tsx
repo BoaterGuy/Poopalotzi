@@ -56,8 +56,8 @@ interface RequestType {
   ownerName: string;
   marinaId: number;
   marinaName: string;
+  pier: string;
   dock: string;
-  slip: string;
   status: StatusType;
   weekStartDate: string;
   paymentStatus: PaymentStatusType;
