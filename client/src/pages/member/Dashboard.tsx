@@ -123,13 +123,15 @@ export default function MemberDashboard() {
       return { availableCredits: 0, totalCredits: 0, usedCredits: 0 };
     },
     enabled: !!serviceLevel && serviceLevel.type === 'one-time',
+    refetchInterval: 5000, // Refresh credits when status changes
+    refetchIntervalInBackground: true,
   });
 
   // Get the first boat's ID to fetch its requests
   const primaryBoatId = boats && boats.length > 0 ? boats[0].id : undefined;
 
   const { data: requests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
-    queryKey: [`/api/pump-out-requests/boat/${primaryBoatId}`],
+    queryKey: ['/api/pump-out-requests/boat', primaryBoatId],
     queryFn: async () => {
       try {
         if (!primaryBoatId) {
@@ -151,6 +153,8 @@ export default function MemberDashboard() {
       }
     },
     enabled: !!primaryBoatId,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch status changes
+    refetchIntervalInBackground: true,
   });
 
   // Get dock assignment for the primary boat
