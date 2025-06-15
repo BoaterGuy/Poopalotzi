@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
-import { Boat, PumpOutRequest, ServiceLevel, SlipAssignment, Marina } from "@shared/schema";
+import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
 import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -138,42 +138,42 @@ export default function MemberDashboard() {
     enabled: !!primaryBoatId,
   });
 
-  // Get slip assignment for the primary boat
-  const { data: slipAssignment, isLoading: isLoadingSlip } = useQuery<SlipAssignment>({
-    queryKey: [`/api/slip-assignments/boat/${primaryBoatId}`],
+  // Get dock assignment for the primary boat
+  const { data: dockAssignment, isLoading: isLoadingDock } = useQuery<DockAssignment>({
+    queryKey: [`/api/dock-assignments/boat/${primaryBoatId}`],
     queryFn: async () => {
       try {
         if (!primaryBoatId) {
           throw new Error('No boat ID available');
         }
         
-        const response = await fetch(`/api/slip-assignments/boat/${primaryBoatId}`, {
+        const response = await fetch(`/api/dock-assignments/boat/${primaryBoatId}`, {
           credentials: 'include'
         });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch slip assignment');
+          throw new Error('Failed to fetch dock assignment');
         }
         
         return response.json();
       } catch (error) {
-        console.error("Error fetching slip assignment:", error);
+        console.error("Error fetching dock assignment:", error);
         return null;
       }
     },
     enabled: !!primaryBoatId,
   });
 
-  // Get marina details if we have a slip assignment
+  // Get marina details if we have a dock assignment
   const { data: marina, isLoading: isLoadingMarina } = useQuery<Marina>({
-    queryKey: ['/api/marinas', slipAssignment?.marinaId],
+    queryKey: ['/api/marinas', dockAssignment?.marinaId],
     queryFn: async () => {
       try {
-        if (!slipAssignment?.marinaId) {
+        if (!dockAssignment?.marinaId) {
           throw new Error('No marina ID available');
         }
         
-        const response = await fetch(`/api/marinas/${slipAssignment.marinaId}`, {
+        const response = await fetch(`/api/marinas/${dockAssignment.marinaId}`, {
           credentials: 'include'
         });
         
@@ -187,7 +187,7 @@ export default function MemberDashboard() {
         return null;
       }
     },
-    enabled: !!slipAssignment?.marinaId,
+    enabled: !!dockAssignment?.marinaId,
   });
 
   const upcomingRequests = requests?.filter(
@@ -315,8 +315,8 @@ export default function MemberDashboard() {
                               </h5>
                               {marina && (
                                 <p className="text-sm text-gray-600">
-                                  {marina.name} - Dock {slipAssignment?.dock}, 
-                                  Slip {slipAssignment?.slip}
+                                  {marina.name} - Pier {dockAssignment?.pier}, 
+                                  Dock {dockAssignment?.dock}
                                 </p>
                               )}
                               {request.ownerNotes && (

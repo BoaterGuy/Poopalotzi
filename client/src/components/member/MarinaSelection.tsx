@@ -46,7 +46,7 @@ const marinaFormSchema = insertDockAssignmentSchema.extend({
 type MarinaFormValues = z.infer<typeof marinaFormSchema>;
 
 interface MarinaSelectionProps {
-  boat: any; // The boat we're assigning a marina/slip to
+  boat: any; // The boat we're assigning a marina/dock to
   onSuccess: () => void; // Callback when form is successfully submitted
 }
 
@@ -179,6 +179,21 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
           />
 
           <div className="grid grid-cols-2 gap-6">
+            {/* Pier Designation */}
+            <FormField
+              control={form.control}
+              name="pier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pier *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. A, B, C" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Dock Number */}
             <FormField
               control={form.control}
@@ -186,21 +201,6 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Dock Number *</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g. 3" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Slip Number */}
-            <FormField
-              control={form.control}
-              name="slip"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Slip Number *</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="e.g. 42" {...field} />
                   </FormControl>
