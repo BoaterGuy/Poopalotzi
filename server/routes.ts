@@ -619,14 +619,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestData.status = "Waitlisted";
       }
 
-      // For subscription users, mark payment as already paid since they have active subscription
+      // For subscription users, handle payment based on subscription type
       if (req.user && req.user.serviceLevelId) {
         const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
         if (serviceLevel) {
-          // All subscription types (one-time, monthly, seasonal) should be considered paid
-          // if user has an active subscription
-          requestData.paymentStatus = 'Paid';
-          requestData.paymentId = `sub_${serviceLevel.type}_${Date.now()}`;
+          if (serviceLevel.type === 'one-time') {
+            // For one-time services, check if they've already used their service
+            const existingRequests = await storage.getPumpOutRequestsByBoatId(requestData.boatId);
+            const usedServices = existingRequests.filter(req => 
+              req.paymentStatus === 'Paid' && 
+              req.paymentId && 
+              req.paymentId.startsWith('sub_one-time')
+            ).length;
+            
+            if (usedServices === 0) {
+              // User hasn't used their one-time service yet, mark as paid
+              requestData.paymentStatus = 'Paid';
+              requestData.paymentId = `sub_one-time_${Date.now()}`;
+            } else {
+              // User has already used their one-time service, requires new payment
+              requestData.paymentStatus = 'Pending';
+            }
+          } else {
+            // Monthly and seasonal subscriptions are always paid while active
+            requestData.paymentStatus = 'Paid';
+            requestData.paymentId = `sub_${serviceLevel.type}_${Date.now()}`;
+          }
         }
       }
 
