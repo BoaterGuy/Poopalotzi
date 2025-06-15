@@ -76,28 +76,21 @@ const handleError = (err: any, req: Request, res: Response, next: NextFunction) 
 
 // Auth middleware
 const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) => {
-  // For development, temporarily allow API access without authentication
-  // This helps us test the admin interface before setting up full auth
-  return next();
-  
-  // In production, uncomment this code to enforce authentication
-  /*
-  if (req.isAuthenticated()) {
+  if (req.isAuthenticated() && req.user) {
     return next();
   }
   res.status(401).json({ message: "Unauthorized" });
-  */
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && req.user.role === "admin") {
+  if (req.isAuthenticated() && req.user?.role === "admin") {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
 };
 
 const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && (req.user.role === "employee" || req.user.role === "admin")) {
+  if (req.isAuthenticated() && (req.user?.role === "employee" || req.user?.role === "admin")) {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
@@ -226,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.query;
       
       // Admin can view boats for specific user or all boats
-      if (req.user.role === 'admin') {
+      if (req.user?.role === 'admin') {
         if (userId) {
           // Get boats for specific user
           const boatOwner = await storage.getBoatOwnerByUserId(Number(userId));
@@ -241,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get boat owner ID from user ID
-      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      const boatOwner = await storage.getBoatOwnerByUserId(req.user?.id);
       
       if (!boatOwner) {
         return res.json([]);
@@ -264,8 +257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify ownership (allow both members and admins)
-      if (req.user.role === 'member') {
-        const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      if (req.user?.role === 'member') {
+        const boatOwner = await storage.getBoatOwnerByUserId(req.user?.id);
         if (!boatOwner || boat.ownerId !== boatOwner.id) {
           return res.status(403).json({ message: "Not authorized to modify this boat" });
         }
