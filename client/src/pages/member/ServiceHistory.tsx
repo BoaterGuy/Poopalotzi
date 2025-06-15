@@ -6,6 +6,8 @@ import { PumpOutRequest, Boat } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Table, 
   TableBody, 
@@ -33,158 +35,190 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Search, Calendar, Ship, FileText, AlertCircle } from "lucide-react";
+import { Search, Calendar, Ship, FileText, AlertCircle, Edit } from "lucide-react";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import PaymentForm from "@/components/member/PaymentForm";
 import { useToast } from "@/hooks/use-toast";
 
-interface RequestDetailProps {
+interface EditRequestFormProps {
   request: PumpOutRequest;
   boat?: Boat;
   onClose: () => void;
-  onCancel?: (requestId: number) => void;
+  onSave: (updatedRequest: Partial<PumpOutRequest>) => void;
 }
 
-const RequestDetail = ({ request, boat, onClose, onCancel }: RequestDetailProps) => {
+const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProps) => {
   const { toast } = useToast();
-  const [isCanceling, setIsCanceling] = useState(false);
-  // This would fetch additional details about the request
-  const { data: logs } = useQuery({
-    queryKey: [`/api/pump-out-logs/${request.id}`],
-    queryFn: undefined,
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    weekStartDate: request.weekStartDate,
+    ownerNotes: request.ownerNotes || '',
   });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/pump-out-requests/${request.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update request');
+      }
+
+      const updatedRequest = await response.json();
+      onSave(updatedRequest);
+      
+      toast({
+        title: "Request Updated",
+        description: "Your pump-out service request has been successfully updated.",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Error updating request:', error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "There was a problem updating your request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const statusColor = {
+    'Requested': 'bg-yellow-100 text-yellow-800',
+    'Scheduled': 'bg-blue-100 text-blue-800',
+    'Completed': 'bg-green-100 text-green-800',
+    'Canceled': 'bg-red-100 text-red-800',
+    'Waitlisted': 'bg-orange-100 text-orange-800'
+  }[request.status] || 'bg-gray-100 text-gray-800';
+
+  const paymentStatusColor = {
+    'Pending': 'bg-yellow-100 text-yellow-800',
+    'Paid': 'bg-green-100 text-green-800',
+    'Failed': 'bg-red-100 text-red-800',
+    'Refunded': 'bg-blue-100 text-blue-800'
+  }[request.paymentStatus] || 'bg-gray-100 text-gray-800';
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Request Details</h3>
-          <p className="text-lg font-semibold text-[#0B1F3A]">Week of {formatDate(request.weekStartDate)}</p>
-          <p className="text-gray-600">{formatWeekRange(request.weekStartDate)}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Boat</h3>
-          <p className="text-lg font-semibold text-[#0B1F3A]">{boat?.name || 'Unknown Boat'}</p>
-          <p className="text-gray-600">{boat?.make} {boat?.model}</p>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-medium text-gray-500 mb-2">Status</h3>
-        <div className="flex flex-wrap gap-2">
-          <Badge className={
-            request.status === 'Completed' ? 'bg-green-600' :
-            request.status === 'Scheduled' ? 'bg-yellow-500' :
-            request.status === 'Requested' ? 'bg-blue-500' :
-            request.status === 'Canceled' ? 'bg-red-500' :
-            request.status === 'Waitlisted' ? 'bg-orange-500' : ''
-          }>{request.status}</Badge>
-          
-          <Badge variant={request.paymentStatus === 'Paid' ? 'default' : 'outline'} className={
-            request.paymentStatus === 'Paid' ? 'bg-green-600' :
-            request.paymentStatus === 'Pending' ? 'border-yellow-500 text-yellow-700' :
-            request.paymentStatus === 'Failed' ? 'bg-red-500' :
-            request.paymentStatus === 'Refunded' ? 'bg-purple-500' : ''
-          }>{request.paymentStatus}</Badge>
+    <div className="space-y-6 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Edit className="h-5 w-5" />
+          Edit Pump-out Request
+        </h3>
+        <div className="flex items-center gap-2">
+          <Badge className={statusColor}>
+            {request.status}
+          </Badge>
+          <Badge className={paymentStatusColor}>
+            {request.paymentStatus}
+          </Badge>
         </div>
       </div>
 
-      {request.ownerNotes && (
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Your Notes</h3>
-          <p className="text-gray-700 bg-gray-50 p-3 rounded">{request.ownerNotes}</p>
-        </div>
-      )}
-
-      {request.adminNotes && (
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Service Notes</h3>
-          <p className="text-gray-700 bg-gray-50 p-3 rounded">{request.adminNotes}</p>
-        </div>
-      )}
-
-      {logs && logs.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Service Log</h3>
-          <div className="border rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Change</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {logs.map((log: any) => (
-                  <tr key={log.id}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(log.changeTimestamp).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span className="inline-flex items-center">
-                        {log.prevStatus && (
-                          <>
-                            <Badge variant="outline" className="mr-2">
-                              {log.prevStatus}
-                            </Badge>
-                            <span className="text-gray-500 mx-1">→</span>
-                          </>
-                        )}
-                        <Badge>
-                          {log.newStatus}
-                        </Badge>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="requestId">Request ID</Label>
+            <Input
+              id="requestId"
+              value={request.id}
+              disabled
+              className="bg-gray-50"
+            />
+          </div>
+          <div>
+            <Label htmlFor="createdDate">Created Date</Label>
+            <Input
+              id="createdDate"
+              value={request.createdAt ? formatDate(new Date(request.createdAt)) : 'Unknown'}
+              disabled
+              className="bg-gray-50"
+            />
           </div>
         </div>
-      )}
 
-      {/* Service Photos */}
-      {(request.status === 'Completed' && (logs?.some((log: any) => log.beforeUrl || log.duringUrl || log.afterUrl))) ? (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Service Photos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {logs?.find((log: any) => log.beforeUrl) && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Before</p>
-                <img 
-                  src={logs.find((log: any) => log.beforeUrl).beforeUrl} 
-                  alt="Before service" 
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-            )}
-            {logs?.find((log: any) => log.duringUrl) && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">During</p>
-                <img 
-                  src={logs.find((log: any) => log.duringUrl).duringUrl} 
-                  alt="During service" 
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-            )}
-            {logs?.find((log: any) => log.afterUrl) && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">After</p>
-                <img 
-                  src={logs.find((log: any) => log.afterUrl).afterUrl} 
-                  alt="After service" 
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-            )}
-          </div>
+          <Label htmlFor="weekStartDate">Service Week Starting *</Label>
+          <Input
+            id="weekStartDate"
+            type="date"
+            value={formData.weekStartDate}
+            onChange={(e) => setFormData(prev => ({ ...prev, weekStartDate: e.target.value }))}
+            required
+            min={new Date().toISOString().split('T')[0]}
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            Current: {formatWeekRange(request.weekStartDate)}
+          </p>
         </div>
-      ) : null}
 
-      <div className="flex justify-end pt-4">
-        <Button variant="outline" onClick={onClose}>Close Details</Button>
-      </div>
+        <div>
+          <Label htmlFor="ownerNotes">Your Notes</Label>
+          <Textarea
+            id="ownerNotes"
+            value={formData.ownerNotes}
+            onChange={(e) => setFormData(prev => ({ ...prev, ownerNotes: e.target.value }))}
+            placeholder="Add any special instructions or notes for the service team..."
+            rows={3}
+          />
+        </div>
+
+        {boat && (
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Ship className="h-4 w-4" />
+              Boat Information
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Boat Name</Label>
+                <Input value={boat.name} disabled className="bg-gray-50" />
+              </div>
+              <div>
+                <Label>Make & Model</Label>
+                <Input value={`${boat.make} ${boat.model}`} disabled className="bg-gray-50" />
+              </div>
+              <div>
+                <Label>Year</Label>
+                <Input value={boat.year.toString()} disabled className="bg-gray-50" />
+              </div>
+              <div>
+                <Label>Length</Label>
+                <Input value={`${boat.length} ft`} disabled className="bg-gray-50" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {request.adminNotes && (
+          <div className="border-t pt-4">
+            <Label>Admin Notes</Label>
+            <div className="text-base bg-blue-50 p-3 rounded-md border">
+              {request.adminNotes}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Updating...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
@@ -194,6 +228,7 @@ export default function ServiceHistory() {
   const queryClient = useQueryClient();
   const [selectedRequest, setSelectedRequest] = useState<PumpOutRequest | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
@@ -482,7 +517,7 @@ export default function ServiceHistory() {
                             variant="outline"
                             onClick={() => setSelectedRequest(request)}
                           >
-                            <FileText className="h-4 w-4" />
+                            Edit Request
                           </Button>
                         </div>
                       </TableCell>
