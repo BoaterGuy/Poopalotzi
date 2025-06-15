@@ -110,6 +110,21 @@ export default function MemberDashboard() {
     enabled: true, // Always try to get service level
   });
 
+  // Fetch user's available credits for one-time services
+  const { data: creditInfo } = useQuery({
+    queryKey: ['/api/users/me/credits'],
+    queryFn: async () => {
+      const response = await fetch('/api/users/me/credits', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        return response.json();
+      }
+      return { availableCredits: 0, totalCredits: 0, usedCredits: 0 };
+    },
+    enabled: !!serviceLevel && serviceLevel.type === 'one-time',
+  });
+
   // Get the first boat's ID to fetch its requests
   const primaryBoatId = boats && boats.length > 0 ? boats[0].id : undefined;
 
@@ -455,6 +470,24 @@ export default function MemberDashboard() {
                         {serviceLevel.type === 'seasonal' && (
                           <p className="text-xs text-gray-500 mt-1">
                             Valid: May 1, 2025 - October 31, 2025
+                          </p>
+                        )}
+                        
+                        {/* Display credit information for one-time services */}
+                        {serviceLevel.type === 'one-time' && creditInfo && (
+                          <div className="flex items-center mt-2 text-sm">
+                            <Badge variant="outline" className={`${
+                              creditInfo.availableCredits > 0 
+                                ? 'bg-green-50 text-green-700 border-green-200' 
+                                : 'bg-red-50 text-red-700 border-red-200'
+                            } font-normal`}>
+                              {creditInfo.availableCredits} of {creditInfo.totalCredits} credits available
+                            </Badge>
+                          </div>
+                        )}
+                        {serviceLevel.type === 'one-time' && creditInfo && creditInfo.usedCredits > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Credits reset annually on January 1st
                           </p>
                         )}
                       </>
