@@ -20,7 +20,7 @@ export const sessions = pgTable(
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['member', 'employee', 'admin']);
-export const dockingDirectionEnum = pgEnum('docking_direction', ['bow_in', 'stern_in', 'side_to']);
+export const pieringDirectionEnum = pgEnum('piering_direction', ['bow_in', 'stern_in', 'side_to']);
 export const tieUpSideEnum = pgEnum('tie_up_side', ['port', 'starboard', 'both']);
 export const pumpPortLocationEnum = pgEnum('pump_port_location', ['port', 'starboard', 'bow', 'mid_ship', 'stern']);
 export const requestStatusEnum = pgEnum('request_status', ['Requested', 'Scheduled', 'Completed', 'Canceled', 'Waitlisted']);
@@ -66,11 +66,11 @@ export const boat = pgTable('boat', {
   length: integer('length'),
   color: text('color'),
   photoUrl: text('photo_url'),
-  dockingDirection: dockingDirectionEnum('docking_direction'),
+  pieringDirection: pieringDirectionEnum('piering_direction'),
   tieUpSide: tieUpSideEnum('tie_up_side'),
   pumpPortLocations: text('pump_port_locations').array(),
-  dock: text('dock'),
-  slip: integer('slip'),
+  pier: text('pier'),
+  dock: integer('dock'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -85,13 +85,13 @@ export const marina = pgTable('marina', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Slip Assignments
-export const slipAssignment = pgTable('slip_assignment', {
+// Dock Assignments
+export const dockAssignment = pgTable('dock_assignment', {
   id: serial('id').primaryKey(),
   boatId: integer('boat_id').notNull().references(() => boat.id),
   marinaId: integer('marina_id').notNull().references(() => marina.id),
-  dock: text('dock').notNull(), // Changed from integer to text
-  slip: integer('slip').notNull(),
+  pier: text('pier').notNull(), // Changed from dock to pier
+  dock: integer('dock').notNull(), // Changed from slip to dock
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -162,7 +162,7 @@ export const insertBoatSchema = createInsertSchema(boat)
 export const insertMarinaSchema = createInsertSchema(marina)
   .omit({ id: true, createdAt: true });
 
-export const insertSlipAssignmentSchema = createInsertSchema(slipAssignment)
+export const insertDockAssignmentSchema = createInsertSchema(dockAssignment)
   .omit({ id: true, createdAt: true });
 
 export const insertServiceLevelSchema = createInsertSchema(serviceLevel)
@@ -193,8 +193,8 @@ export type Boat = typeof boat.$inferSelect;
 export type InsertMarina = z.infer<typeof insertMarinaSchema>;
 export type Marina = typeof marina.$inferSelect;
 
-export type InsertSlipAssignment = z.infer<typeof insertSlipAssignmentSchema>;
-export type SlipAssignment = typeof slipAssignment.$inferSelect;
+export type InsertDockAssignment = z.infer<typeof insertDockAssignmentSchema>;
+export type DockAssignment = typeof dockAssignment.$inferSelect;
 
 export type InsertServiceLevel = z.infer<typeof insertServiceLevelSchema>;
 export type ServiceLevel = typeof serviceLevel.$inferSelect;
