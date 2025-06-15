@@ -348,7 +348,7 @@ export default function RequestManagement() {
                       <TableHead>
                         <div className="flex items-center">
                           <MapPin className="mr-2 h-4 w-4" />
-                          Dock/Slip
+                          Pier/Dock
                         </div>
                       </TableHead>
                       <TableHead>
@@ -377,7 +377,7 @@ export default function RequestManagement() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">{request.marinaName}</span>
-                              <span>Dock {request.dock}, Slip {request.slip}</span>
+                              <span>Pier {request.pier}, Dock {request.dock}</span>
                             </div>
                           </TableCell>
                           <TableCell>{formatWeekDate(request.weekStartDate)}</TableCell>
@@ -547,8 +547,8 @@ export default function RequestManagement() {
                     <h3 className="text-lg font-semibold">Location</h3>
                     <div className="border rounded-lg p-4 mt-2 space-y-2">
                       <p><span className="font-medium">Marina:</span> {selectedRequest.marinaName}</p>
+                      <p><span className="font-medium">Pier:</span> {selectedRequest.pier}</p>
                       <p><span className="font-medium">Dock:</span> {selectedRequest.dock}</p>
-                      <p><span className="font-medium">Slip:</span> {selectedRequest.slip}</p>
                     </div>
                   </div>
                 </div>
