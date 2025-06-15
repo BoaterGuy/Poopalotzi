@@ -793,6 +793,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentStatus: request.paymentStatus,
           createdAt: request.createdAt,
           notes: request.ownerNotes || '',
+          dockingDirection: boat?.pieringDirection || null,
+          tieUpSide: boat?.tieUpSide || null,
+          pumpPortLocations: boat?.pumpPortLocations || [],
           beforeImageUrl: null,
           duringImageUrl: null,
           afterImageUrl: null

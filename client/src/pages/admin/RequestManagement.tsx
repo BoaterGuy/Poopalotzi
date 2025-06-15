@@ -400,43 +400,26 @@ export default function RequestManagement() {
                               {request.paymentStatus}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {request.dockingDirection || "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {request.tieUpSide || "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {request.pumpPortLocations && request.pumpPortLocations.length > 0 
+                                ? request.pumpPortLocations.join(", ") 
+                                : "N/A"}
+                            </div>
+                          </TableCell>
                           <TableCell className="max-w-xs">
                             <div className="truncate" title={request.notes || ""}>
                               {request.notes || "No notes"}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-center space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewImage(request.beforeImageUrl, "Before")}
-                                className={!request.beforeImageUrl ? "opacity-50" : ""}
-                                title="Before image"
-                              >
-                                <Camera className="h-4 w-4 mr-1" />
-                                B
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewImage(request.duringImageUrl, "During")}
-                                className={!request.duringImageUrl ? "opacity-50" : ""}
-                                title="During image"
-                              >
-                                <Camera className="h-4 w-4 mr-1" />
-                                D
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewImage(request.afterImageUrl, "After")}
-                                className={!request.afterImageUrl ? "opacity-50" : ""}
-                                title="After image"
-                              >
-                                <Camera className="h-4 w-4 mr-1" />
-                                A
-                              </Button>
                             </div>
                           </TableCell>
                           <TableCell>
