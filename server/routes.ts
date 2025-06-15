@@ -1021,6 +1021,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update pump-out request details
+  app.patch("/api/pump-out-requests/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const { weekStartDate, ownerNotes } = req.body;
+      
+      // Get the existing request to verify ownership
+      const existingRequest = await storage.getPumpOutRequest(requestId);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      // Verify the user owns this request
+      const boat = await storage.getBoat(existingRequest.boatId);
+      if (!boat) {
+        return res.status(404).json({ message: "Boat not found" });
+      }
+
+      const boatOwner = await storage.getBoatOwner(boat.ownerId);
+      if (!boatOwner || boatOwner.userId !== req.user?.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Only allow editing if request is not completed or canceled
+      if (existingRequest.status === 'Completed' || existingRequest.status === 'Canceled') {
+        return res.status(400).json({ message: "Cannot edit completed or canceled requests" });
+      }
+
+      // Prepare update data
+      const updateData: Partial<typeof existingRequest> = {};
+      
+      if (weekStartDate && weekStartDate !== existingRequest.weekStartDate) {
+        // Validate the new date
+        const newDate = new Date(weekStartDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (newDate < today) {
+          return res.status(400).json({ message: "Cannot schedule service for past dates" });
+        }
+        
+        updateData.weekStartDate = weekStartDate;
+      }
+      
+      if (ownerNotes !== undefined) {
+        updateData.ownerNotes = ownerNotes;
+      }
+
+      // Update the request
+      const updatedRequest = await storage.updatePumpOutRequest(requestId, updateData);
+      if (!updatedRequest) {
+        return res.status(500).json({ message: "Failed to update request" });
+      }
+
+      // Broadcast to admin clients for real-time updates
+      broadcastToAdmins('pump_out_request_updated', {
+        id: requestId,
+        action: 'details_updated',
+        weekStartDate: updateData.weekStartDate,
+        ownerNotes: updateData.ownerNotes
+      });
+
+      res.json(updatedRequest);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Get pump-out data grouped by week for dashboard
   app.get("/api/analytics/pump-out-weekly", isAuthenticated, async (req, res, next) => {
     try {

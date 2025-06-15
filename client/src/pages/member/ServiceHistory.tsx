@@ -515,7 +515,10 @@ export default function ServiceHistory() {
                           <Button 
                             size="sm"
                             variant="outline"
-                            onClick={() => setSelectedRequest(request)}
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setShowEditModal(true);
+                            }}
                           >
                             Edit Request
                           </Button>
@@ -539,21 +542,29 @@ export default function ServiceHistory() {
         </Card>
       </div>
 
-      {/* Request Detail Dialog */}
-      <Dialog open={!!selectedRequest && !showPaymentModal} onOpenChange={(open) => !open && setSelectedRequest(null)}>
-        <DialogContent className="max-w-3xl">
+      {/* Edit Request Dialog */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Service Details</DialogTitle>
+            <DialogTitle>Edit Request</DialogTitle>
             <DialogDescription>
-              Details for your pump-out service request
+              Modify your pump-out service request details
             </DialogDescription>
           </DialogHeader>
           
           {selectedRequest && (
-            <RequestDetail 
+            <EditRequestForm 
               request={selectedRequest} 
               boat={getBoatById(selectedRequest.boatId)}
-              onClose={() => setSelectedRequest(null)}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedRequest(null);
+              }}
+              onSave={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
+                setShowEditModal(false);
+                setSelectedRequest(null);
+              }}
             />
           )}
         </DialogContent>
