@@ -241,7 +241,7 @@ export default function RequestManagement() {
   return (
     <>
       <Helmet>
-        <title>Request Management | Poopalotzi</title>
+        <title>Pump-Out Request List | Poopalotzi</title>
         <meta name="description" content="Manage pump-out service requests and their status" />
       </Helmet>
       
@@ -249,7 +249,7 @@ export default function RequestManagement() {
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
             <div>
-              <CardTitle className="text-2xl font-bold">Service Request Management</CardTitle>
+              <CardTitle className="text-2xl font-bold">Pump-Out Request List</CardTitle>
               <CardDescription>
                 Manage pump-out service requests and their status
               </CardDescription>
@@ -359,14 +359,17 @@ export default function RequestManagement() {
                       </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
-                      <TableHead className="text-center">Images</TableHead>
+                      <TableHead>Docking Direction</TableHead>
+                      <TableHead>Tie Up Side</TableHead>
+                      <TableHead>Pump-Out Ports</TableHead>
+                      <TableHead>Notes</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRequests.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={9} className="h-24 text-center">
                           No requests found.
                         </TableCell>
                       </TableRow>
@@ -396,6 +399,11 @@ export default function RequestManagement() {
                             >
                               {request.paymentStatus}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={request.notes || ""}>
+                              {request.notes || "No notes"}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex justify-center space-x-2">
