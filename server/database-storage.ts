@@ -3,7 +3,7 @@ import { eq, and, gte, lte, sql, desc, asc, isNull, ne } from 'drizzle-orm';
 import * as schema from '@shared/schema';
 import type { 
   User, InsertUser, Boat, InsertBoat, Marina, InsertMarina, 
-  SlipAssignment, InsertSlipAssignment, ServiceLevel, InsertServiceLevel,
+  DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
   BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment
 } from '@shared/schema';
@@ -197,32 +197,32 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  // Slip Assignment operations
-  async getSlipAssignment(id: number): Promise<SlipAssignment | undefined> {
-    const results = await db.select().from(schema.slipAssignment).where(eq(schema.slipAssignment.id, id));
+  // Dock Assignment operations
+  async getDockAssignment(id: number): Promise<DockAssignment | undefined> {
+    const results = await db.select().from(schema.dockAssignment).where(eq(schema.dockAssignment.id, id));
     return results[0];
   }
 
-  async getSlipAssignmentByBoatId(boatId: number): Promise<SlipAssignment | undefined> {
+  async getDockAssignmentByBoatId(boatId: number): Promise<DockAssignment | undefined> {
     const results = await db.select()
-      .from(schema.slipAssignment)
-      .where(eq(schema.slipAssignment.boatId, boatId));
+      .from(schema.dockAssignment)
+      .where(eq(schema.dockAssignment.boatId, boatId));
     return results[0];
   }
 
-  async createSlipAssignment(slipAssignmentData: InsertSlipAssignment): Promise<SlipAssignment> {
-    // Delete any existing slip assignments for this boat (since we don't have isActive field)
-    await db.delete(schema.slipAssignment)
-      .where(eq(schema.slipAssignment.boatId, slipAssignmentData.boatId));
+  async createDockAssignment(dockAssignmentData: InsertDockAssignment): Promise<DockAssignment> {
+    // Delete any existing dock assignments for this boat (since we don't have isActive field)
+    await db.delete(schema.dockAssignment)
+      .where(eq(schema.dockAssignment.boatId, dockAssignmentData.boatId));
 
-    const result = await db.insert(schema.slipAssignment).values(slipAssignmentData).returning();
+    const result = await db.insert(schema.dockAssignment).values(dockAssignmentData).returning();
     return result[0];
   }
 
-  async updateSlipAssignment(id: number, slipData: Partial<SlipAssignment>): Promise<SlipAssignment | undefined> {
-    const result = await db.update(schema.slipAssignment)
-      .set(slipData)
-      .where(eq(schema.slipAssignment.id, id))
+  async updateDockAssignment(id: number, dockData: Partial<DockAssignment>): Promise<DockAssignment | undefined> {
+    const result = await db.update(schema.dockAssignment)
+      .set(dockData)
+      .where(eq(schema.dockAssignment.id, id))
       .returning();
     return result[0];
   }

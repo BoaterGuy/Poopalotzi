@@ -5,7 +5,7 @@ import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail } from "./utils/sendgrid";
-import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertSlipAssignmentSchema, insertPumpOutRequestSchema } from "@shared/schema";
+import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema } from "@shared/schema";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
