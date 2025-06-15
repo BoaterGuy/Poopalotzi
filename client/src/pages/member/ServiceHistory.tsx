@@ -182,64 +182,7 @@ const RequestDetail = ({ request, boat, onClose, onCancel }: RequestDetailProps)
         </div>
       ) : null}
 
-      <div className="flex justify-between pt-4">
-        {['Requested', 'Scheduled', 'Waitlisted'].includes(request.status) && (
-          <Button 
-            variant="outline" 
-            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-            onClick={() => {
-              // First close the detail view
-              onClose();
-              
-              // Then confirm with user before canceling
-              if (confirm("Are you sure you want to cancel this pump-out service request?")) {
-                // Show user we're processing
-                setIsCanceling(true);
-                
-                // Make the API call to cancel the request
-                fetch(`/api/pump-out-requests/${request.id}/status`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ status: 'Canceled' }),
-                  credentials: 'include'
-                })
-                .then(async response => {
-                  const data = await response.json();
-                  
-                  if (!response.ok) {
-                    console.error("Server error:", data);
-                    throw new Error(data.message || 'Failed to cancel request');
-                  }
-                  
-                  // Success! Show toast and reload
-                  toast({
-                    title: "Request Canceled",
-                    description: "Your pump-out service request has been successfully canceled.",
-                    variant: "default",
-                  });
-                  
-                  // Reload the page to show the updated status
-                  setTimeout(() => window.location.reload(), 1000);
-                })
-                .catch(err => {
-                  console.error("Error canceling request:", err);
-                  toast({
-                    title: "Cancellation Failed",
-                    description: err.message || "There was a problem canceling your request. Please try again.",
-                    variant: "destructive",
-                  });
-                })
-                .finally(() => {
-                  setIsCanceling(false);
-                });
-              }
-            }}
-          >
-            Cancel Request
-          </Button>
-        )}
+      <div className="flex justify-end pt-4">
         <Button variant="outline" onClick={onClose}>Close Details</Button>
       </div>
     </div>
@@ -248,12 +191,13 @@ const RequestDetail = ({ request, boat, onClose, onCancel }: RequestDetailProps)
 
 export default function ServiceHistory() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedRequest, setSelectedRequest] = useState<PumpOutRequest | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
-  // Add these to the RequestDetail component to fix the undefined errors
+  const [cancelRequestId, setCancelRequestId] = useState<number | null>(null);
 
   // Fetch boats first
   const { data: boats } = useQuery<Boat[]>({
@@ -312,6 +256,46 @@ export default function ServiceHistory() {
 
   const getBoatById = (boatId?: number) => {
     return boats?.find(boat => boat.id === boatId);
+  };
+
+  const handleCancelRequest = async (requestId: number) => {
+    setIsCanceling(true);
+    try {
+      const response = await fetch(`/api/pump-out-requests/${requestId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'Canceled' }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to cancel request');
+      }
+      
+      toast({
+        title: "Request Canceled",
+        description: "Your pump-out service request has been successfully canceled.",
+      });
+      
+      // Refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
+      
+    } catch (err: any) {
+      toast({
+        title: "Cancellation Failed",
+        description: err.message || "There was a problem canceling your request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCanceling(false);
+      setCancelRequestId(null);
+    }
   };
 
   return (
@@ -458,13 +442,39 @@ export default function ServiceHistory() {
                           )}
                           
                           {['Requested', 'Scheduled', 'Waitlisted'].includes(request.status) && (
-                            <Button 
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              Cancel
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  disabled={isCanceling}
+                                >
+                                  {isCanceling && cancelRequestId === request.id ? 'Canceling...' : 'Cancel'}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Cancel Pump-Out Request</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to cancel this pump-out service request for {getBoatById(request.boatId)?.name}? 
+                                    {request.paymentStatus === 'Paid' && ' Your payment will be refunded as credits to your account.'}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep Request</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      setCancelRequestId(request.id);
+                                      handleCancelRequest(request.id);
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Cancel Request
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
                           
                           <Button 
