@@ -58,27 +58,27 @@ export default function RequestService() {
   // Use the subscription hook to get the user's current service level
   const { currentServiceLevel, isLoading: isLoadingSubscription } = useServiceSubscription();
 
-  // Get the service level from various sources (API, subscription hook, or local storage)
+  // Get the service level from various sources (API, subscription hook, or user data)
   const serviceLevel = useMemo(() => {
     // First check if we have a service level from the subscription hook
     if (currentServiceLevel) return currentServiceLevel;
     
+    // Check if user has serviceLevelId in their profile (from API response)
+    if (user?.serviceLevelId && allServiceLevels && Array.isArray(allServiceLevels)) {
+      const userServiceLevel = allServiceLevels.find(level => level.id === user.serviceLevelId);
+      if (userServiceLevel) return userServiceLevel;
+    }
+    
     // Otherwise check service levels and local storage
     if (allServiceLevels && Array.isArray(allServiceLevels)) {
-      // If we have a local subscription, use that first
+      // If we have a local subscription, use that
       if (localSubscription && localSubscription.serviceLevelId) {
         const found = allServiceLevels.find(level => level.id === localSubscription.serviceLevelId);
         if (found) return found;
       }
-      
-      // Fallback to finding Monthly Plan
-      return allServiceLevels.find(level => 
-        level.id === 5 || 
-        (level.name && level.name.includes("Monthly Plan"))
-      );
     }
     return null;
-  }, [allServiceLevels, localSubscription, currentServiceLevel]);
+  }, [allServiceLevels, localSubscription, currentServiceLevel, user?.serviceLevelId]);
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 
@@ -130,14 +130,15 @@ export default function RequestService() {
   const handleServiceRequested = (request: PumpOutRequest) => {
     setSelectedRequest(request);
     
-    // If it's a one-time service or requires payment, go to payment step
-    if (
-      (serviceLevel?.type === "one-time") ||
-      (request.paymentStatus === "Pending")
-    ) {
+    // Check if user has a valid subscription and doesn't need to pay per request
+    const hasValidSubscription = serviceLevel && currentServiceLevel;
+    const needsPayment = !hasValidSubscription || request.paymentStatus === "Pending";
+    
+    // Only go to payment if user doesn't have a subscription or payment is actually pending
+    if (needsPayment) {
       setStep("payment");
     } else {
-      // Otherwise, just show confirmation
+      // User has valid subscription, proceed with service request
       toast({
         title: "Service Requested",
         description: "Your pump-out service has been scheduled. You can view it in your dashboard.",
