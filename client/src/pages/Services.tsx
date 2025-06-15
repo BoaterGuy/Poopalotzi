@@ -108,20 +108,16 @@ export default function Services() {
                             <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
                             <span className="text-black">
                               {plan.type === 'one-time' ? 'Single service pump-out' : 
-                               plan.type === 'monthly' ? `Up to ${plan.monthlyQuota} pump-outs per month` : 
-                               'Unlimited pump-outs (May-Oct)'}
+                               plan.type === 'monthly' ? `${plan.monthlyQuota} pump-outs per month` : 
+                               plan.type === 'seasonal' ? 'Seasonal pump-outs (May-Oct)' :
+                               plan.type === 'bulk' ? `${plan.baseQuantity} pump-outs included, then $${plan.pricePerAdditional}/additional` : 'Service included'}
                             </span>
                           </li>
                           <li className="flex items-start">
                             <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
                             <span className="text-black">
-                              {plan.headCount === 1 ? 'Single head vessels only' : 
-                               `Multi-head vessels (up to ${plan.headCount})`}
+                              {plan.name.toLowerCase().includes('multi') ? 'Boats with multiple heads' : 'Single head boats only'}
                             </span>
-                          </li>
-                          <li className="flex items-start">
-                            <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
-                            <span className="text-black">Email notifications</span>
                           </li>
                           <li className="flex items-start">
                             <Check className="text-[#0B1F3A] h-5 w-5 mt-1 mr-2" />
