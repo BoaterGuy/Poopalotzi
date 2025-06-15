@@ -117,6 +117,20 @@ export default function RequestManagement() {
               title: "New Service Request",
               description: "A new pump-out request has been submitted and requires attention.",
             });
+          } else if (data.type === 'pump_out_request_updated') {
+            // Invalidate queries to refetch fresh data
+            queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
+            
+            // Show notification for status changes
+            const statusMessage = data.status === 'Canceled' ? 'A service request has been canceled.' :
+                                 data.status === 'Completed' ? 'A service request has been completed.' :
+                                 data.status === 'Scheduled' ? 'A service request has been scheduled.' :
+                                 'A service request status has been updated.';
+            
+            toast({
+              title: "Request Updated",
+              description: statusMessage,
+            });
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);

@@ -977,6 +977,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Broadcast to admin clients for real-time updates
+      broadcastToAdmins('pump_out_request_updated', {
+        id: requestId,
+        action: 'status_changed',
+        status: status,
+        previousStatus: prevStatus
+      });
+      
       res.json(updatedRequest);
     } catch (err) {
       next(err);
