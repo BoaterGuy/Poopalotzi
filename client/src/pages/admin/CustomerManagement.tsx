@@ -1048,22 +1048,22 @@ export default function CustomerManagement() {
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="edit-boat-dock">Dock</Label>
+                        <Label htmlFor="edit-boat-pier">Pier</Label>
                         <Input
-                          id="edit-boat-dock"
-                          value={editingBoat.dock}
-                          onChange={(e) => setEditingBoat({...editingBoat, dock: e.target.value})}
+                          id="edit-boat-pier"
+                          value={editingBoat.pier}
+                          onChange={(e) => setEditingBoat({...editingBoat, pier: e.target.value})}
                           placeholder="A"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="edit-boat-slip">Slip</Label>
+                        <Label htmlFor="edit-boat-dock">Dock</Label>
                         <Input
-                          id="edit-boat-slip"
-                          value={editingBoat.slip}
-                          onChange={(e) => setEditingBoat({...editingBoat, slip: e.target.value})}
+                          id="edit-boat-dock"
+                          value={editingBoat.dock}
+                          onChange={(e) => setEditingBoat({...editingBoat, dock: e.target.value})}
                           placeholder="15"
                         />
                       </div>
