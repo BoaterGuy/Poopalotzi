@@ -86,6 +86,63 @@ export default function RequestManagement() {
   // State for request details dialog
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestType | null>(null);
+  
+  // WebSocket connection for real-time updates
+  const wsRef = useRef<WebSocket | null>(null);
+  
+  // Set up WebSocket connection for real-time updates
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    const connectWebSocket = () => {
+      wsRef.current = new WebSocket(wsUrl);
+      
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connected for admin updates');
+        // Subscribe to admin updates
+        wsRef.current?.send(JSON.stringify({ type: 'subscribe_admin' }));
+      };
+      
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'pump_out_request_created') {
+            // Invalidate queries to refetch fresh data
+            queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
+            
+            // Show notification
+            toast({
+              title: "New Service Request",
+              description: "A new pump-out request has been submitted and requires attention.",
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+      
+      wsRef.current.onclose = () => {
+        console.log('WebSocket connection closed, attempting to reconnect...');
+        // Attempt to reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+      };
+      
+      wsRef.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    };
+    
+    connectWebSocket();
+    
+    // Cleanup on unmount
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [queryClient, toast]);
 
   // Fetch marinas from the database
   const { data: marinasData, isLoading: marinasLoading } = useQuery({
