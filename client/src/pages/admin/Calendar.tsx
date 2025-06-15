@@ -25,54 +25,31 @@ import { Calendar } from "@/components/ui/calendar";
 
 const ScheduleCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [employees, setEmployees] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [weeks, setWeeks] = useState([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Fetch employees
-    fetch('/api/employees')
-      .then(res => res.json())
-      .then(data => setEmployees(data))
-      .catch(err => {
-        console.error('Error fetching employees:', err);
-        toast({
-          title: "Error",
-          description: "Failed to load employees",
-          variant: "destructive"
-        });
-      });
-
-    // Fetch service requests
-    fetch('/api/pump-out-requests')
-      .then(res => res.json())
-      .then(data => setRequests(data))
-      .catch(err => {
-        console.error('Error fetching requests:', err);
-        toast({
-          title: "Error",
-          description: "Failed to load service requests",
-          variant: "destructive"
-        });
-      });
-
-    // Generate weeks dynamically
-    const generateWeeks = () => {
-      const currentDate = new Date();
-      const weeks = [];
-      for (let i = 0; i < 4; i++) {
-        const weekStart = new Date(currentDate);
-        weekStart.setDate(currentDate.getDate() + (i * 7));
-        weeks.push({
-          start: weekStart.toISOString().split('T')[0]
-        });
+  // Use React Query for fetching pump-out requests
+  const { data: requests = [], isLoading, error } = useQuery({
+    queryKey: ['/api/pump-out-requests'],
+    queryFn: async () => {
+      const response = await fetch('/api/pump-out-requests');
+      if (!response.ok) {
+        throw new Error('Failed to fetch requests');
       }
-      setWeeks(weeks);
-    };
+      return response.json();
+    }
+  });
 
-    generateWeeks();
-  }, []);
+  // Show error toast if requests fail to load
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching requests:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load service requests",
+        variant: "destructive"
+      });
+    }
+  }, [error, toast]);
 
   return (
     <div className="container mx-auto p-4">
@@ -89,16 +66,26 @@ const ScheduleCalendar = () => {
         <div>
           <Card className="p-4">
             <h2 className="text-xl font-semibold mb-2">Schedule for {selectedDate?.toLocaleDateString()}</h2>
-            {requests
-              .filter(request => request.scheduledDate?.split('T')[0] === selectedDate?.toISOString().split('T')[0])
-              .map(request => (
-                <div key={request.id} className="mb-2 p-2 border rounded">
-                  <p>Boat: {request.boatName}</p>
-                  <p>Time: {new Date(request.scheduledTime).toLocaleTimeString()}</p>
-                  <p>Marina: {request.marinaName}</p>
-                  <p>Status: {request.status}</p>
-                </div>
-              ))}
+            {isLoading ? (
+              <div className="text-center py-4">Loading schedule...</div>
+            ) : (
+              <>
+                {Array.isArray(requests) && requests.length > 0 ? (
+                  requests
+                    .filter(request => request.scheduledDate?.split('T')[0] === selectedDate?.toISOString().split('T')[0])
+                    .map(request => (
+                      <div key={request.id} className="mb-2 p-2 border rounded">
+                        <p>Boat: {request.boatName}</p>
+                        <p>Time: {new Date(request.scheduledTime).toLocaleTimeString()}</p>
+                        <p>Marina: {request.marinaName}</p>
+                        <p>Status: {request.status}</p>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">No services scheduled for this date</div>
+                )}
+              </>
+            )}
           </Card>
         </div>
       </div>

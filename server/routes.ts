@@ -13,6 +13,10 @@ import { format, addDays } from "date-fns";
 import { setupAuth } from "./auth";
 import multer from "multer";
 import path from "path";
+import { db } from "./db";
+import { pumpOutRequest } from "@shared/schema";
+import { desc } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 // Extended Request type with user information
 interface AuthRequest extends Request {
@@ -733,10 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log that this is being called
       console.log("Fetching all pump-out requests for admin view - DATABASE ONLY");
       
-      // Get database instance directly
-      const { db } = require('./db');
-      const { pumpOutRequest } = require('@shared/schema');
-      const { desc } = require('drizzle-orm');
+      // Get database instance directly (already imported at top)
       
       // Fetch directly from the database to ensure no cached or mock data
       const allRequests = await db.select().from(pumpOutRequest).orderBy(desc(pumpOutRequest.createdAt));
@@ -999,7 +1000,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash the password
-      const bcrypt = require('bcryptjs');
       const passwordHash = await bcrypt.hash(password, 10);
       
       // Prepare user data
