@@ -354,6 +354,17 @@ export default function ServiceSubscription() {
               </div>
             )}
             
+            {bulk.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Bulk Plans</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {bulk.map((plan: ServiceLevel) => (
+                    <ServicePlanCard key={plan.id} plan={plan} />
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {seasonal.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Seasonal Plans</h2>
