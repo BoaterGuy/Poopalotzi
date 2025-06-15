@@ -29,7 +29,7 @@ export default function HeroSection() {
               className="rounded-lg shadow-xl w-2/3 h-auto mb-4"
             />
             <div className="bg-white rounded-lg shadow-md p-4 text-center">
-              <p className="text-lg text-[#0B1F3A] font-semibold">Professional Marine Services</p>
+              <p className="text-lg text-[#0B1F3A] font-semibold">We are #1 in the #2 business</p>
             </div>
           </div>
         </div>
