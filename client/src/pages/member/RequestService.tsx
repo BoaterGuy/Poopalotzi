@@ -95,6 +95,21 @@ export default function RequestService() {
     enabled: !!boats && boats.length > 0,
   });
 
+  // Get available credits for one-time service users
+  const { data: creditsData, isLoading: isLoadingCredits } = useQuery({
+    queryKey: ['/api/users/me/credits'],
+    queryFn: async () => {
+      const response = await fetch('/api/users/me/credits', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch credits');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!serviceLevel && serviceLevel.type === 'one-time',
+  });
+
   const hasPendingPayments = pendingPaymentRequests && pendingPaymentRequests.length > 0;
   
   // Calculate remaining quota for monthly plans
@@ -359,6 +374,20 @@ export default function RequestService() {
                         </span>
                       </div>
                       
+                      {serviceLevel.type === 'one-time' && creditsData && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-medium">Available Credits:</span>
+                          <div>
+                            <span className={creditsData.availableCredits > 0 ? "text-green-600" : "text-red-600"}>
+                              <strong>{creditsData.availableCredits}</strong> of {creditsData.totalCredits}
+                            </span>
+                            <div className="text-sm text-gray-500 mt-1">
+                              Valid until Dec 31, {creditsData.year}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {serviceLevel.type === 'monthly' && serviceLevel.monthlyQuota && (
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-medium">Monthly Quota:</span>

@@ -639,20 +639,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
         if (serviceLevel) {
           if (serviceLevel.type === 'one-time') {
-            // For one-time services, check if they've already used their service
-            const existingRequests = await storage.getPumpOutRequestsByBoatId(requestData.boatId);
-            const usedServices = existingRequests.filter(req => 
-              req.paymentStatus === 'Paid' && 
-              req.paymentId && 
-              req.paymentId.startsWith('sub_one-time')
-            ).length;
+            // For one-time services, check available credits for current calendar year
+            const currentYear = new Date().getFullYear();
+            const yearStart = new Date(currentYear, 0, 1);
+            const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
             
-            if (usedServices === 0) {
-              // User hasn't used their one-time service yet, mark as paid
+            // Get all user's requests for this calendar year
+            const userBoats = await storage.getBoatsByOwnerId((await storage.getBoatOwnerByUserId(req.user.id))?.id || 0);
+            const userBoatIds = userBoats.map(b => b.id);
+            
+            let usedCreditsThisYear = 0;
+            for (const boatId of userBoatIds) {
+              const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
+              usedCreditsThisYear += boatRequests.filter(req => {
+                const reqDate = new Date(req.createdAt);
+                return req.paymentStatus === 'Paid' && 
+                       req.paymentId && 
+                       req.paymentId.startsWith('sub_one-time') &&
+                       req.status !== 'Canceled' &&
+                       reqDate >= yearStart && reqDate <= yearEnd;
+              }).length;
+            }
+            
+            // One-time service gives 1 credit per calendar year
+            const availableCredits = 1 - usedCreditsThisYear;
+            
+            if (availableCredits > 0) {
+              // User has available credits, mark as paid
               requestData.paymentStatus = 'Paid';
-              requestData.paymentId = `sub_one-time_${Date.now()}`;
+              requestData.paymentId = `sub_one-time_${currentYear}_${Date.now()}`;
             } else {
-              // User has already used their one-time service, requires new payment
+              // No credits available, requires new payment
               requestData.paymentStatus = 'Pending';
             }
           } else {
@@ -902,6 +919,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update status
       const prevStatus = request.status;
       const updatedRequest = await storage.updatePumpOutRequestStatus(requestId, status);
+      
+      // Handle credit restoration for one-time service cancellations
+      if (status === "Canceled" && prevStatus !== "Canceled" && prevStatus !== "Completed") {
+        // Check if this was a paid one-time service request
+        if (request.paymentStatus === 'Paid' && 
+            request.paymentId && 
+            request.paymentId.startsWith('sub_one-time')) {
+          
+          // Credit is automatically restored since we check for non-canceled requests 
+          // when calculating available credits in the request creation logic
+          console.log(`One-time service credit restored for canceled request ${requestId}`);
+        }
+      }
       
       // If status changed from Waitlisted to Scheduled, check waitlist
       if (prevStatus === "Waitlisted" && status === "Scheduled") {
@@ -1294,6 +1324,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update user subscription
+  // Get available credits for one-time service users
+  app.get("/api/users/me/credits", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      if (!req.user?.serviceLevelId) {
+        return res.json({ availableCredits: 0, totalCredits: 0, usedCredits: 0 });
+      }
+
+      const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
+      if (!serviceLevel || serviceLevel.type !== 'one-time') {
+        return res.json({ availableCredits: 0, totalCredits: 0, usedCredits: 0 });
+      }
+
+      // Calculate used credits for current calendar year
+      const currentYear = new Date().getFullYear();
+      const yearStart = new Date(currentYear, 0, 1);
+      const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
+      
+      // Get all user's boats and requests for this calendar year
+      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
+      if (!boatOwner) {
+        return res.json({ availableCredits: 1, totalCredits: 1, usedCredits: 0 });
+      }
+
+      const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
+      const userBoatIds = userBoats.map(b => b.id);
+      
+      let usedCreditsThisYear = 0;
+      for (const boatId of userBoatIds) {
+        const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
+        usedCreditsThisYear += boatRequests.filter(req => {
+          const reqDate = new Date(req.createdAt);
+          return req.paymentStatus === 'Paid' && 
+                 req.paymentId && 
+                 req.paymentId.startsWith('sub_one-time') &&
+                 req.status !== 'Canceled' &&
+                 reqDate >= yearStart && reqDate <= yearEnd;
+        }).length;
+      }
+      
+      const totalCredits = 1; // One-time service gives 1 credit per calendar year
+      const availableCredits = Math.max(0, totalCredits - usedCreditsThisYear);
+      
+      res.json({
+        availableCredits,
+        totalCredits,
+        usedCredits: usedCreditsThisYear,
+        year: currentYear
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.post("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       if (!req.user || !req.user.id) {
