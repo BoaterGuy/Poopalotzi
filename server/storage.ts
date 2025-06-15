@@ -89,7 +89,7 @@ export class MemStorage implements IStorage {
   private boatOwnersData: Map<number, BoatOwner>;
   private boatsData: Map<number, Boat>;
   private marinasData: Map<number, Marina>;
-  private slipAssignmentsData: Map<number, SlipAssignment>;
+  private dockAssignmentsData: Map<number, DockAssignment>;
   private serviceLevelsData: Map<number, ServiceLevel>;
   private pumpOutRequestsData: Map<number, PumpOutRequest>;
   private pumpOutLogsData: Map<number, PumpOutLog>;
@@ -99,7 +99,7 @@ export class MemStorage implements IStorage {
   private currentBoatOwnerId: number;
   private currentBoatId: number;
   private currentMarinaId: number;
-  private currentSlipAssignmentId: number;
+  private currentDockAssignmentId: number;
   private currentServiceLevelId: number;
   private currentPumpOutRequestId: number;
   private currentPumpOutLogId: number;

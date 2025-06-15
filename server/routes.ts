@@ -718,7 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           ...request,
           boat,
-          slipAssignment,
+          dockAssignment,
           marina
         };
       }));
@@ -733,13 +733,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const marinaCompare = a.marina!.name.localeCompare(b.marina!.name);
         if (marinaCompare !== 0) return marinaCompare;
         
-        // Sort by dock
-        if (a.slipAssignment && b.slipAssignment) {
-          const dockCompare = a.slipAssignment.dock - b.slipAssignment.dock;
-          if (dockCompare !== 0) return dockCompare;
+        // Sort by pier and dock
+        if (a.dockAssignment && b.dockAssignment) {
+          const pierCompare = a.dockAssignment.pier.localeCompare(b.dockAssignment.pier);
+          if (pierCompare !== 0) return pierCompare;
           
-          // Sort by slip
-          return a.slipAssignment.slip - b.slipAssignment.slip;
+          // Sort by dock number
+          return a.dockAssignment.dock - b.dockAssignment.dock;
         }
         
         return 0;
@@ -773,8 +773,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const boat = await storage.getBoat(request.boatId);
         const boatOwner = boat ? await storage.getBoatOwner(boat.ownerId) : null;
         const user = boatOwner ? await storage.getUser(boatOwner.userId) : null;
-        const slipAssignment = await storage.getSlipAssignmentByBoatId(request.boatId);
-        const marina = slipAssignment ? await storage.getMarina(slipAssignment.marinaId) : null;
+        const dockAssignment = await storage.getDockAssignmentByBoatId(request.boatId);
+        const marina = dockAssignment ? await storage.getMarina(dockAssignment.marinaId) : null;
         
         // Format the week start date for filtering
         const weekStartDate = request.weekStartDate ? new Date(request.weekStartDate).toISOString().split('T')[0] : '';
@@ -786,8 +786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ownerName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Unknown Owner',
           marinaId: marina?.id || 0,
           marinaName: marina?.name || 'Unassigned',
-          dock: slipAssignment?.dock || '-',
-          slip: slipAssignment?.slip?.toString() || '-',
+          pier: dockAssignment?.pier || '-',
+          dock: dockAssignment?.dock?.toString() || '-',
           status: request.status,
           weekStartDate: weekStartDate,
           paymentStatus: request.paymentStatus,
