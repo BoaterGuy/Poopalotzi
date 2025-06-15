@@ -70,7 +70,7 @@ export default function Contact() {
         <title>Contact Us - Poopalotzi LLC</title>
         <meta 
           name="description" 
-          content="Get in touch with the Poopalotzi LLC team for questions about our boat pump-out services, partnership opportunities, or customer support in the Port Clinton and Sandusky area." 
+          content="Get in touch with the Poopalotzi LLC team for questions about our boat pump-out services, partnership opportunities, or customer support." 
         />
       </Helmet>
 
@@ -190,7 +190,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-bold text-[#0B1F3A] mb-1">Our Office</h3>
-                      <p className="text-gray-700">711 W. Lakeshore Dr #402<br />Port Clinton, OH 43452-9311</p>
+                      <p className="text-gray-700">Available by appointment<br />Contact us for service locations</p>
                     </div>
                   </div>
                   
@@ -253,7 +253,7 @@ export default function Contact() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Service Areas</h2>
             <p className="text-gray-700 mb-8">
-              Currently serving marinas in the Port Clinton and Sandusky area:
+              Currently serving marinas throughout the region:
             </p>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

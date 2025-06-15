@@ -18,7 +18,7 @@ export default function Footer() {
               <span className="font-montserrat font-bold text-xl">Poopalotzi LLC</span>
             </div>
             <p className="text-gray-300 mb-4">
-              The modern solution for boat pump-out management. Serving marinas and boat owners in the Port Clinton and Sandusky area.
+              The modern solution for boat pump-out management. Serving marinas and boat owners with professional marine services.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-300 hover:text-white transition duration-150">
@@ -64,7 +64,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li className="flex items-start">
                 <FaMapMarkerAlt className="mt-1 mr-2 text-[#FF6B6B]" />
-                <span className="text-gray-300">711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311</span>
+                <span className="text-gray-300">Available by appointment</span>
               </li>
               <li className="flex items-start">
                 <FaPhoneAlt className="mt-1 mr-2 text-[#FF6B6B]" />

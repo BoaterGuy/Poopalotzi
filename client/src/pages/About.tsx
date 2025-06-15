@@ -47,7 +47,7 @@ export default function About() {
         <title>About Us - Poopalotzi LLC</title>
         <meta 
           name="description" 
-          content="Poopalotzi LLC is a boat blackwater pump out service founded by Brian and Pam Griebel. We provide convenient, professional pump-out services to boaters in the Port Clinton and Sandusky area." 
+          content="Poopalotzi LLC is a boat blackwater pump out service founded by Brian and Pam Griebel. We provide convenient, professional pump-out services to boaters throughout the region." 
         />
       </Helmet>
 
@@ -162,7 +162,7 @@ export default function About() {
                 </p>
                 <p className="flex items-center text-gray-700">
                   <span className="w-8 mr-2 text-[#0B1F3A]">📍</span>
-                  711 W. Lakeshore Dr #402, Port Clinton, OH 43452-9311
+                  Available by appointment - Contact us for service locations
                 </p>
               </div>
               <div className="mt-8">
@@ -177,7 +177,7 @@ export default function About() {
               <ul className="space-y-4">
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>
-                  <span>Serving the Port Clinton and Sandusky area</span>
+                  <span>Serving marinas throughout the region</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>
