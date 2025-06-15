@@ -36,9 +36,9 @@ interface ScheduleItem {
     id: number;
     name: string;
   };
-  slipAssignment: {
-    dock: string | number;
-    slip: number;
+  dockAssignment: {
+    pier: string | number;
+    dock: number;
   };
   ownerNotes?: string;
   requestedDate?: string;
@@ -207,25 +207,25 @@ export default function EmployeeSchedule() {
         groups[marinaId].requests.push(item);
       });
     
-    // Sort requests by dock and slip
+    // Sort requests by pier and dock
     Object.values(groups).forEach(group => {
       group.requests.sort((a, b) => {
-        // Convert dock letters to numbers for proper comparison
-        const dockA = typeof a.slipAssignment.dock === 'string' 
-          ? a.slipAssignment.dock.toUpperCase().charCodeAt(0) 
-          : Number(a.slipAssignment.dock);
+        // Convert pier letters to numbers for proper comparison
+        const pierA = typeof a.dockAssignment.pier === 'string' 
+          ? a.dockAssignment.pier.toUpperCase().charCodeAt(0) 
+          : Number(a.dockAssignment.pier);
           
-        const dockB = typeof b.slipAssignment.dock === 'string' 
-          ? b.slipAssignment.dock.toUpperCase().charCodeAt(0) 
-          : Number(b.slipAssignment.dock);
+        const pierB = typeof b.dockAssignment.pier === 'string' 
+          ? b.dockAssignment.pier.toUpperCase().charCodeAt(0) 
+          : Number(b.dockAssignment.pier);
         
-        // First sort by dock (ascending)
-        if (dockA !== dockB) {
-          return dockA - dockB;
+        // First sort by pier (ascending)
+        if (pierA !== pierB) {
+          return pierA - pierB;
         }
         
-        // Then sort by slip number (ascending)
-        return a.slipAssignment.slip - b.slipAssignment.slip;
+        // Then sort by dock number (ascending)
+        return a.dockAssignment.dock - b.dockAssignment.dock;
       });
     });
     
@@ -349,13 +349,13 @@ export default function EmployeeSchedule() {
                             <div className="flex justify-between items-start">
                               <div className="flex items-start space-x-4">
                                 <div className="bg-[#0B1F3A] text-white rounded-full w-8 h-8 flex items-center justify-center font-semibold text-xs">
-                                  {request.slipAssignment.dock}{request.slipAssignment.slip}
+                                  {request.dockAssignment.pier}{request.dockAssignment.dock}
                                 </div>
                                 <div>
                                   <h3 className="font-semibold text-[#0B1F3A]">{request.boat.name}</h3>
                                   <p className="text-sm text-gray-600">{request.boat.make} {request.boat.model}, {request.boat.color}</p>
                                   <p className="text-sm">
-                                    <span className="font-medium">Location:</span> Dock {request.slipAssignment.dock}, Slip {request.slipAssignment.slip}
+                                    <span className="font-medium">Location:</span> Pier {request.dockAssignment.pier}, Dock {request.dockAssignment.dock}
                                   </p>
                                   {request.ownerNotes && (
                                     <p className="text-sm mt-1 text-gray-700">
@@ -429,7 +429,7 @@ export default function EmployeeSchedule() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Location</h3>
                   <p className="font-semibold">{selectedRequest.marina.name}</p>
-                  <p className="text-sm text-gray-600">Dock {selectedRequest.slipAssignment.dock}, Slip {selectedRequest.slipAssignment.slip}</p>
+                  <p className="text-sm text-gray-600">Pier {selectedRequest.dockAssignment.pier}, Dock {selectedRequest.dockAssignment.dock}</p>
                 </div>
               </div>
 

@@ -55,8 +55,8 @@ const boatFormSchema = insertBoatSchema
     }).nullable(),
     color: z.string().nullable(),
     pumpPortLocations: z.array(z.string()).optional().nullable(),
-    dock: z.string().optional().nullable(),
-    slip: z.coerce.number().optional().nullable(),
+    pier: z.string().optional().nullable(),
+    dock: z.coerce.number().optional().nullable(),
     notes: z.string().optional().nullable(),
     photoUrl: z.string().optional(),
     marinaId: z.coerce.number().optional().nullable(),
@@ -74,14 +74,14 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   
-  // Fetch existing slip assignment for this boat
+  // Fetch existing dock assignment for this boat
   const { data: existingAssignment } = useQuery({
-    queryKey: [`/api/slip-assignments/boat/${boat?.id}`],
+    queryKey: [`/api/dock-assignments/boat/${boat?.id}`],
     queryFn: async () => {
       if (!boat?.id) return null;
       
       try {
-        const response = await fetch(`/api/slip-assignments/boat/${boat.id}`, {
+        const response = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
           credentials: 'include'
         });
         
@@ -89,12 +89,12 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           if (response.status === 404) {
             return null; // No assignment exists yet
           }
-          throw new Error('Failed to fetch slip assignment');
+          throw new Error('Failed to fetch dock assignment');
         }
         
         return response.json();
       } catch (error) {
-        console.error("Error fetching slip assignment:", error);
+        console.error("Error fetching dock assignment:", error);
         return null;
       }
     },
