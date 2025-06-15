@@ -362,14 +362,15 @@ export default function RequestManagement() {
                       <TableHead>Docking Direction</TableHead>
                       <TableHead>Tie Up Side</TableHead>
                       <TableHead>Pump-Out Ports</TableHead>
-                      <TableHead>Notes</TableHead>
+                      <TableHead>Request Notes</TableHead>
+                      <TableHead>Boat Notes</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRequests.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="h-24 text-center">
+                        <TableCell colSpan={10} className="h-24 text-center">
                           No requests found.
                         </TableCell>
                       </TableRow>
@@ -420,6 +421,11 @@ export default function RequestManagement() {
                           <TableCell className="max-w-xs">
                             <div className="truncate" title={request.notes || ""}>
                               {request.notes || "No notes"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={request.boatNotes || ""}>
+                              {request.boatNotes || "No notes"}
                             </div>
                           </TableCell>
                           <TableCell>

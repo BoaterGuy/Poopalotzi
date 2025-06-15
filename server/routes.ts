@@ -793,9 +793,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentStatus: request.paymentStatus,
           createdAt: request.createdAt,
           notes: request.ownerNotes || '',
-          dockingDirection: boat?.pieringDirection || null,
+          dockingDirection: boat?.dockingDirection || null,
           tieUpSide: boat?.tieUpSide || null,
           pumpPortLocations: boat?.pumpPortLocations || [],
+          boatNotes: boat?.notes || '',
           beforeImageUrl: null,
           duringImageUrl: null,
           afterImageUrl: null
