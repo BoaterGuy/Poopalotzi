@@ -47,6 +47,48 @@ import {
 import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
 import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhone } from "@/lib/phoneUtils";
 
+// Credit Display Component for One-Time Service Users
+function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: number, serviceLevelId: number | null }) {
+  const { data: creditInfo, isLoading } = useQuery({
+    queryKey: ['/api/admin/credits', customerId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/users/${customerId}/credits`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        return response.json();
+      }
+      return null;
+    },
+    enabled: !!serviceLevelId,
+    refetchInterval: 10000, // Refresh every 10 seconds for live data
+    refetchIntervalInBackground: true,
+  });
+
+  // Only show credits for one-time service users
+  if (!serviceLevelId || !creditInfo) {
+    return <span className="text-gray-400 text-sm">-</span>;
+  }
+
+  if (isLoading) {
+    return <span className="text-gray-400 text-sm">Loading...</span>;
+  }
+
+  // Show credit information
+  return (
+    <Badge 
+      variant="outline" 
+      className={`${
+        creditInfo.availableCredits > 0 
+          ? 'bg-green-50 text-green-700 border-green-200' 
+          : 'bg-red-50 text-red-700 border-red-200'
+      } font-normal`}
+    >
+      {creditInfo.availableCredits}/{creditInfo.totalCredits}
+    </Badge>
+  );
+}
+
 // Mock data until connected to API
 const MOCK_CUSTOMERS = [
   {
@@ -1230,6 +1272,7 @@ export default function CustomerManagement() {
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Service Level</TableHead>
+                      <TableHead>Credits</TableHead>
                       <TableHead>Boats</TableHead>
                       <TableHead className="w-[200px]">Actions</TableHead>
                     </TableRow>
@@ -1237,7 +1280,7 @@ export default function CustomerManagement() {
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                           No customers found.
                         </TableCell>
                       </TableRow>
@@ -1270,6 +1313,12 @@ export default function CustomerManagement() {
                                 </Tooltip>
                               );
                             })()}
+                          </TableCell>
+                          <TableCell>
+                            <CustomerCreditDisplay 
+                              customerId={customer.id} 
+                              serviceLevelId={customer.serviceLevelId} 
+                            />
                           </TableCell>
                           <TableCell>
                             <Button

@@ -1215,6 +1215,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to get credit information for any customer
+  app.get("/api/admin/users/:userId/credits", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get the user and their service level
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only show credits for users with service levels (members)
+      if (!user.serviceLevelId) {
+        return res.json({ availableCredits: 0, totalCredits: 0 });
+      }
+
+      const serviceLevel = await storage.getServiceLevel(user.serviceLevelId);
+      if (!serviceLevel) {
+        return res.json({ availableCredits: 0, totalCredits: 0 });
+      }
+
+      // Only calculate credits for one-time service types
+      if (serviceLevel.type !== 'one-time') {
+        return res.json({ availableCredits: 0, totalCredits: 0 });
+      }
+
+      // Calculate credits based on subscription date and current year
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const subscriptionDate = user.subscriptionStartDate ? new Date(user.subscriptionStartDate) : null;
+
+      if (!subscriptionDate) {
+        return res.json({ availableCredits: 0, totalCredits: 0 });
+      }
+
+      const subscriptionYear = subscriptionDate.getFullYear();
+      
+      // Credits are only valid for the current calendar year
+      if (subscriptionYear !== currentYear) {
+        return res.json({ availableCredits: 0, totalCredits: 1 });
+      }
+
+      // Get user's boats to find their pump-out requests
+      const boatOwner = await storage.getBoatOwnerByUserId(userId);
+      if (!boatOwner) {
+        return res.json({ availableCredits: 1, totalCredits: 1 });
+      }
+
+      const boats = await storage.getBoatsByOwnerId(boatOwner.id);
+      const boatIds = boats.map(boat => boat.id);
+
+      // Count completed requests for this year (excluding canceled ones)
+      let usedCredits = 0;
+      for (const boatId of boatIds) {
+        const requests = await storage.getPumpOutRequestsByBoatId(boatId);
+        const thisYearRequests = requests.filter(request => {
+          const requestDate = request.createdAt ? new Date(request.createdAt) : null;
+          return requestDate && 
+                 requestDate.getFullYear() === currentYear && 
+                 request.status === 'Completed';
+        });
+        usedCredits += thisYearRequests.length;
+      }
+
+      const totalCredits = 1; // One-time services get 1 credit per year
+      const availableCredits = Math.max(0, totalCredits - usedCredits);
+
+      res.json({
+        availableCredits,
+        totalCredits,
+        usedCredits,
+        subscriptionYear,
+        currentYear
+      });
+    } catch (err) {
+      console.error("Error fetching admin user credits:", err);
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {
