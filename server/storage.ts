@@ -3,7 +3,8 @@ import type {
   User, InsertUser, Boat, InsertBoat, Marina, InsertMarina, 
   DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
-  BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment
+  BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment,
+  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction
 } from "@shared/schema";
 import { requestStatusEnum, paymentStatusEnum } from "@shared/schema";
 import { eq, and, gte, lte, sql, desc, asc } from "drizzle-orm";
@@ -77,6 +78,23 @@ export interface IStorage {
   countCompletedServicesThisWeek(): Promise<number>;
   countUpcomingServices(): Promise<number>;
   calculateAverageRevenuePerUser(): Promise<number>;
+  
+  // Clover Configuration operations
+  getCloverConfig(): Promise<CloverConfig | undefined>;
+  createCloverConfig(config: InsertCloverConfig): Promise<CloverConfig>;
+  updateCloverConfig(id: number, configData: Partial<CloverConfig>): Promise<CloverConfig | undefined>;
+  deleteCloverConfig(id: number): Promise<boolean>;
+  
+  // Payment Transaction operations
+  getPaymentTransaction(id: number): Promise<PaymentTransaction | undefined>;
+  getPaymentTransactionByCloverPaymentId(cloverPaymentId: string): Promise<PaymentTransaction | undefined>;
+  getPaymentTransactionsByUserId(userId: number): Promise<PaymentTransaction[]>;
+  getPaymentTransactionsByRequestId(requestId: number): Promise<PaymentTransaction[]>;
+  createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction>;
+  updatePaymentTransaction(id: number, transactionData: Partial<PaymentTransaction>): Promise<PaymentTransaction | undefined>;
+  updatePaymentTransactionStatus(cloverPaymentId: string, status: string, errorMessage?: string): Promise<PaymentTransaction | undefined>;
+  getAllPaymentTransactions(): Promise<PaymentTransaction[]>;
+  getPaymentTransactionsByStatus(status: string): Promise<PaymentTransaction[]>;
 }
 
 // In-memory storage implementation

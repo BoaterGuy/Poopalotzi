@@ -5,7 +5,8 @@ import type {
   User, InsertUser, Boat, InsertBoat, Marina, InsertMarina, 
   DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
-  BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment
+  BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment,
+  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction
 } from '@shared/schema';
 import { IStorage } from './storage';
 import connectPg from "connect-pg-simple";
@@ -439,5 +440,114 @@ export class DatabaseStorage implements IStorage {
     `);
     
     return Number(result.rows[0]?.avg_revenue) || 0;
+  }
+
+  // Clover Configuration Methods
+  async getCloverConfig(): Promise<CloverConfig | undefined> {
+    const configs = await db.select().from(schema.cloverConfig)
+      .where(eq(schema.cloverConfig.isActive, true))
+      .orderBy(desc(schema.cloverConfig.createdAt))
+      .limit(1);
+    
+    return configs[0];
+  }
+
+  async createCloverConfig(configData: InsertCloverConfig): Promise<CloverConfig> {
+    // Deactivate existing configs first
+    await db.update(schema.cloverConfig)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(schema.cloverConfig.isActive, true));
+
+    const [config] = await db.insert(schema.cloverConfig)
+      .values({ ...configData, updatedAt: new Date() })
+      .returning();
+    
+    return config;
+  }
+
+  async updateCloverConfig(id: number, configData: Partial<CloverConfig>): Promise<CloverConfig | undefined> {
+    const [updated] = await db.update(schema.cloverConfig)
+      .set({ ...configData, updatedAt: new Date() })
+      .where(eq(schema.cloverConfig.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async deleteCloverConfig(id: number): Promise<boolean> {
+    const result = await db.update(schema.cloverConfig)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(schema.cloverConfig.id, id));
+    
+    return result.rowCount > 0;
+  }
+
+  // Payment Transaction Methods
+  async getPaymentTransaction(id: number): Promise<PaymentTransaction | undefined> {
+    const [transaction] = await db.select().from(schema.paymentTransaction)
+      .where(eq(schema.paymentTransaction.id, id));
+    
+    return transaction;
+  }
+
+  async getPaymentTransactionByCloverPaymentId(cloverPaymentId: string): Promise<PaymentTransaction | undefined> {
+    const [transaction] = await db.select().from(schema.paymentTransaction)
+      .where(eq(schema.paymentTransaction.cloverPaymentId, cloverPaymentId));
+    
+    return transaction;
+  }
+
+  async getPaymentTransactionsByUserId(userId: number): Promise<PaymentTransaction[]> {
+    return await db.select().from(schema.paymentTransaction)
+      .where(eq(schema.paymentTransaction.userId, userId))
+      .orderBy(desc(schema.paymentTransaction.createdAt));
+  }
+
+  async getPaymentTransactionsByRequestId(requestId: number): Promise<PaymentTransaction[]> {
+    return await db.select().from(schema.paymentTransaction)
+      .where(eq(schema.paymentTransaction.requestId, requestId))
+      .orderBy(desc(schema.paymentTransaction.createdAt));
+  }
+
+  async createPaymentTransaction(transactionData: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const [transaction] = await db.insert(schema.paymentTransaction)
+      .values({ ...transactionData, updatedAt: new Date() })
+      .returning();
+    
+    return transaction;
+  }
+
+  async updatePaymentTransaction(id: number, transactionData: Partial<PaymentTransaction>): Promise<PaymentTransaction | undefined> {
+    const [updated] = await db.update(schema.paymentTransaction)
+      .set({ ...transactionData, updatedAt: new Date() })
+      .where(eq(schema.paymentTransaction.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async updatePaymentTransactionStatus(cloverPaymentId: string, status: string, errorMessage?: string): Promise<PaymentTransaction | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (errorMessage) {
+      updateData.errorMessage = errorMessage;
+    }
+
+    const [updated] = await db.update(schema.paymentTransaction)
+      .set(updateData)
+      .where(eq(schema.paymentTransaction.cloverPaymentId, cloverPaymentId))
+      .returning();
+    
+    return updated;
+  }
+
+  async getAllPaymentTransactions(): Promise<PaymentTransaction[]> {
+    return await db.select().from(schema.paymentTransaction)
+      .orderBy(desc(schema.paymentTransaction.createdAt));
+  }
+
+  async getPaymentTransactionsByStatus(status: string): Promise<PaymentTransaction[]> {
+    return await db.select().from(schema.paymentTransaction)
+      .where(eq(schema.paymentTransaction.status, status))
+      .orderBy(desc(schema.paymentTransaction.createdAt));
   }
 }

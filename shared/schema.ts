@@ -151,6 +151,43 @@ export const employeeAssignment = pgTable('employee_assignment', {
   assignedAt: timestamp('assigned_at').defaultNow(),
 });
 
+// Clover Configuration
+export const cloverConfig = pgTable('clover_config', {
+  id: serial('id').primaryKey(),
+  merchantId: text('merchant_id').notNull(),
+  appId: text('app_id').notNull(),
+  appSecret: text('app_secret').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  tokenExpiresAt: timestamp('token_expires_at'),
+  environment: text('environment').notNull().default('sandbox'), // 'sandbox' or 'production'
+  isActive: boolean('is_active').default(true),
+  webhookSecret: text('webhook_secret'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Payment Transactions
+export const paymentTransaction = pgTable('payment_transaction', {
+  id: serial('id').primaryKey(),
+  cloverPaymentId: text('clover_payment_id').notNull().unique(),
+  orderId: text('order_id'),
+  requestId: integer('request_id').references(() => pumpOutRequest.id),
+  userId: integer('user_id').notNull().references(() => users.id),
+  amount: integer('amount').notNull(), // Amount in cents
+  currency: text('currency').notNull().default('USD'),
+  status: text('status').notNull(), // 'pending', 'completed', 'failed', 'refunded'
+  paymentMethod: text('payment_method'), // Card type or payment method
+  cardLast4: text('card_last4'),
+  cardBrand: text('card_brand'),
+  cloverResponse: json('clover_response'), // Store full Clover response for debugging
+  errorMessage: text('error_message'),
+  refundAmount: integer('refund_amount').default(0),
+  refundedAt: timestamp('refunded_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, passwordHash: true, createdAt: true })
@@ -185,6 +222,12 @@ export const insertPumpOutLogSchema = createInsertSchema(pumpOutLog)
 export const insertEmployeeAssignmentSchema = createInsertSchema(employeeAssignment)
   .omit({ id: true, assignedAt: true });
 
+export const insertCloverConfigSchema = createInsertSchema(cloverConfig)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransaction)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
 // Types for insert and select
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -212,3 +255,9 @@ export type PumpOutLog = typeof pumpOutLog.$inferSelect;
 
 export type InsertEmployeeAssignment = z.infer<typeof insertEmployeeAssignmentSchema>;
 export type EmployeeAssignment = typeof employeeAssignment.$inferSelect;
+
+export type InsertCloverConfig = z.infer<typeof insertCloverConfigSchema>;
+export type CloverConfig = typeof cloverConfig.$inferSelect;
+
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type PaymentTransaction = typeof paymentTransaction.$inferSelect;
