@@ -99,53 +99,17 @@ export default function RequestManagement() {
   
   const marinas: MarinaType[] = marinasData || [];
   
-  // Fetch pump-out requests from the database with filters
+  // Fetch pump-out requests from the database
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/pump-out-requests", { status: statusFilter, week: weekFilter, marina: marinaFilter, timestamp: Date.now() }],
-    queryFn: async () => {
-      let url = '/api/pump-out-requests';
-      const params = new URLSearchParams();
-      
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (weekFilter !== 'all') params.append('week', weekFilter);
-      if (marinaFilter !== 'all') params.append('marina', marinaFilter);
-      
-      // Add timestamp to prevent caching
-      params.append('t', Date.now().toString());
-      
-      // Always include params now
-      url += `?${params.toString()}`;
-      
-      console.log("Fetching from URL:", url);
-      
-      const response = await fetch(url, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch requests');
-      const result = await response.json();
-      console.log("Fetched requests:", result.length);
-      return result;
-    },
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    staleTime: 0
+    queryKey: ["/api/pump-out-requests"]
   });
   
   // Get unique weeks for the filter from the actual data
   const uniqueWeeks = Array.from(new Set((data || []).map(r => r.weekStartDate))).sort();
 
-  // IMPORTANT: Apply filters starting with an empty array to ensure no mock data
+  // Apply filters starting with an empty array to ensure no mock data
   // Create a reference to our database data only
   let filteredRequests = data ? [...data] : [];
-  
-  // Log raw data counts before filtering for debugging
-  console.log("Raw data from API:", filteredRequests.length, "records");
   
   // Apply status filter
   if (statusFilter !== "all") {
@@ -170,9 +134,6 @@ export default function RequestManagement() {
       request.marinaName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       `${request.dock || ''}-${request.slip || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
-  // Log filtered results count
-  console.log("Filtered results:", filteredRequests.length, "records");
 
   const getStatusColor = (status: StatusType) => {
     switch (status) {
