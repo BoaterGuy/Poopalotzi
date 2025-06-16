@@ -101,38 +101,13 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Serve a simple development page
+      // Development: Serve static files from client directory
+      app.use(express.static(path.resolve("client/public")));
+      
+      // For SPA routing, serve index.html for non-API routes
       app.get("*", (req, res) => {
         if (!req.path.startsWith("/api")) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Marina Management System</title>
-              <script src="https://cdn.tailwindcss.com"></script>
-            </head>
-            <body class="bg-gray-100">
-              <div class="min-h-screen flex items-center justify-center">
-                <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-                  <div class="text-center">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-4">Marina Management System</h1>
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                      <strong>Server Status:</strong> Running on port ${PORT}
-                    </div>
-                    <p class="text-gray-600 mb-4">Backend server is running successfully!</p>
-                    <div class="space-y-2">
-                      <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Check API Health
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </body>
-            </html>
-          `);
+          res.sendFile(path.resolve("client/index.html"));
         }
       });
     }
