@@ -108,9 +108,17 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      console.log('Making OAuth request with merchantId:', merchantId);
       try {
-        // Direct fetch call to bypass any potential apiRequest issues
+        // First verify we're authenticated
+        const authCheck = await fetch('/api/auth/me', {
+          credentials: 'include',
+        });
+
+        if (!authCheck.ok) {
+          throw new Error('Authentication required. Please refresh the page and log in again.');
+        }
+
+        // Now make the OAuth request
         const response = await fetch('/api/admin/clover/oauth/initiate', {
           method: 'POST',
           headers: {
@@ -122,11 +130,13 @@ export default function CloverSettings() {
 
         if (!response.ok) {
           const errorText = await response.text();
+          if (response.status === 401) {
+            throw new Error('Session expired. Please refresh the page and log in again.');
+          }
           throw new Error(`${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('OAuth data:', data);
         return data;
       } catch (error) {
         console.error('OAuth error:', error);

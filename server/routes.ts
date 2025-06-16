@@ -1910,8 +1910,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiate Clover OAuth flow (admin only)
   app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
+
+      
       // Additional admin check for safety
       if (req.user?.role !== "admin") {
+        console.log("User is not admin, denying access");
         return res.status(403).json({ message: "Admin privileges required" });
       }
       
