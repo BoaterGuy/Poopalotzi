@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Sailboat, CheckCircle, ArrowRight, Clock, DollarSign, CalendarClock, Repeat } from "lucide-react";
 import PaymentForm from "@/components/member/PaymentForm";
+import BulkPlanPurchaseForm from "@/components/member/BulkPlanPurchaseForm";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,8 @@ export default function ServiceSubscription() {
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showBulkPlanForm, setShowBulkPlanForm] = useState(false);
+  const [bulkPlanDetails, setBulkPlanDetails] = useState<{additionalPumpOuts: number; totalCost: number} | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
@@ -115,7 +118,25 @@ export default function ServiceSubscription() {
   
   const handleSelectPlan = (plan: ServiceLevel) => {
     setSelectedPlan(plan);
+    
+    // For bulk plans, show the purchase form instead of immediate subscription
+    if (plan.type === 'bulk') {
+      setShowBulkPlanForm(true);
+    } else {
+      setIsSubscribing(true);
+    }
+  };
+
+  const handleBulkPlanPurchase = (additionalPumpOuts: number, totalCost: number) => {
+    setBulkPlanDetails({ additionalPumpOuts, totalCost });
+    setShowBulkPlanForm(false);
     setIsSubscribing(true);
+  };
+
+  const handleBulkPlanCancel = () => {
+    setShowBulkPlanForm(false);
+    setSelectedPlan(null);
+    setBulkPlanDetails(null);
   };
   
   const handleConfirmSubscription = async () => {

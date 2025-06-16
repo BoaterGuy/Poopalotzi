@@ -44,6 +44,10 @@ export const users = pgTable('users', {
   subscriptionEndDate: timestamp('subscription_end_date'),
   activeMonth: text('active_month'), // Stored as "MM" format
   autoRenew: boolean('auto_renew').default(false),
+  // Bulk plan specific fields
+  bulkPlanYear: integer('bulk_plan_year'), // Year the bulk plan is valid for
+  additionalPumpOuts: integer('additional_pump_outs').default(0), // Additional pump-outs purchased beyond base
+  totalPumpOuts: integer('total_pump_outs').default(0), // Total pump-outs available (base + additional)
   emailVerified: boolean('email_verified').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
