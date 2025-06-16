@@ -93,14 +93,21 @@ export class CloverService {
    * Get the Clover OAuth authorization URL
    */
   getAuthorizationUrl(merchantId: string, redirectUri: string): string {
-    const environment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
+    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
+    // Clean the environment variable and default to sandbox
+    const environment = rawEnvironment.toLowerCase().includes('production') ? 'production' : 'sandbox';
     const appId = process.env.CLOVER_APP_ID;
     
     if (!appId) {
       throw new Error('CLOVER_APP_ID environment variable is required');
     }
 
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].oauth;
+    const endpoints = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS];
+    if (!endpoints) {
+      throw new Error(`Invalid Clover environment: ${environment}`);
+    }
+    
+    const baseUrl = endpoints.oauth;
     const params = new URLSearchParams({
       client_id: appId,
       merchant_id: merchantId,
@@ -115,7 +122,8 @@ export class CloverService {
    * Exchange authorization code for access tokens
    */
   async exchangeCodeForTokens(code: string, merchantId: string): Promise<CloverOAuthTokenResponse> {
-    const environment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
+    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
+    const environment = rawEnvironment.toLowerCase().includes('production') ? 'production' : 'sandbox';
     const appId = process.env.CLOVER_APP_ID;
     const appSecret = process.env.CLOVER_APP_SECRET;
 
@@ -123,7 +131,8 @@ export class CloverService {
       throw new Error('CLOVER_APP_ID and CLOVER_APP_SECRET environment variables are required');
     }
 
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].oauth;
+    const endpoints = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS];
+    const baseUrl = endpoints.oauth;
     
     const response = await fetch(`${baseUrl}/token`, {
       method: 'POST',
