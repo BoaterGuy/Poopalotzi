@@ -95,7 +95,7 @@ export default function RequestService() {
     enabled: !!boats && boats.length > 0,
   });
 
-  // Get available credits for one-time service users
+  // Get available credits for users (check regardless of service level)
   const { data: creditsData, isLoading: isLoadingCredits } = useQuery({
     queryKey: ['/api/users/me/credits'],
     queryFn: async () => {
@@ -107,7 +107,7 @@ export default function RequestService() {
       }
       return response.json();
     },
-    enabled: !!user && !!serviceLevel && serviceLevel.type === 'one-time',
+    enabled: !!user,
   });
 
   const hasPendingPayments = pendingPaymentRequests && pendingPaymentRequests.length > 0;
@@ -215,7 +215,7 @@ export default function RequestService() {
     window.location.href = '/member/dashboard';
   };
 
-  if (isLoadingBoats || isLoadingServiceLevel) {
+  if (isLoadingBoats || isLoadingServiceLevel || isLoadingCredits) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
@@ -253,8 +253,8 @@ export default function RequestService() {
     );
   }
 
-  // Check if user has a service plan
-  if (!serviceLevel) {
+  // Check if user has a service plan or available credits
+  if (!serviceLevel && (!creditsData || creditsData.availableCredits === 0)) {
     return (
       <>
         <Helmet>
