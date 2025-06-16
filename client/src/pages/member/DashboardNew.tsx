@@ -15,8 +15,7 @@ import BulkPlanStatus from "@/components/member/BulkPlanStatus";
 export default function MemberDashboardNew() {
   const { user } = useAuth();
 
-  // FORCE CACHE BREAK - This is the NEW v2.2 Dashboard
-  console.log('LOADING NEW DASHBOARD v2.2 - CACHE BROKEN!');
+
 
   const { data: boats, isLoading: isLoadingBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
@@ -140,21 +139,15 @@ export default function MemberDashboardNew() {
   return (
     <>
       <Helmet>
-        <title>Member Dashboard - Poopalotzi v2.2 NEW</title>
+        <title>Member Dashboard - Poopalotzi</title>
         <meta name="description" content="Manage your boat pump-out services and monitor upcoming appointments." />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
-        {/* HIGHLY VISIBLE VERSION BANNER */}
-        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white text-center py-4 shadow-lg">
-          <div className="text-xl font-bold">🚀 POOPALOTZI v2.2 FRESH LOADED - NEW UI ACTIVE 🚀</div>
-          <div className="text-sm mt-1">Cache successfully broken - New features active</div>
-        </div>
-
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-[#0B1F3A]">Welcome, {user?.firstName}! (v2.2)</h1>
+              <h1 className="text-3xl font-bold text-[#0B1F3A]">Welcome, {user?.firstName}!</h1>
               <p className="text-gray-600">
                 Manage your boat services and monitor upcoming appointments.
               </p>
@@ -271,7 +264,6 @@ export default function MemberDashboardNew() {
                             serviceLevel.type === 'monthly' ? 'Monthly Plan' : 
                             serviceLevel.type === 'seasonal' ? 'Seasonal Plan' : 'Service Plan'}</p>
 
-                          {/* NEW CREDIT DISPLAY - v2.2 */}
                           {serviceLevel.type === 'one-time' && creditInfo && (
                             <div className="flex items-center mt-2 text-sm">
                               <Badge variant="outline" className={`${
@@ -279,7 +271,7 @@ export default function MemberDashboardNew() {
                                   ? 'bg-green-50 text-green-700 border-green-200' 
                                   : 'bg-red-50 text-red-700 border-red-200'
                               } font-normal`}>
-                                🎯 NEW UI: {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available v2.2
+                                {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available
                               </Badge>
                             </div>
                           )}
