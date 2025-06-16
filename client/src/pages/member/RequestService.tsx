@@ -39,7 +39,15 @@ export default function RequestService() {
   // Fetch all service levels to find the one for this subscription
   const { data: allServiceLevels, isLoading: isLoadingAllLevels } = useQuery<ServiceLevel[]>({
     queryKey: ['/api/service-levels'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/service-levels', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch service levels');
+      }
+      return response.json();
+    },
   });
 
   // Get subscription from local storage
@@ -85,13 +93,30 @@ export default function RequestService() {
   // Get pending payment requests
   const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments } = useQuery<PumpOutRequest[]>({
     queryKey: ['/api/pump-out-requests/payment/pending'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/pump-out-requests', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch pump-out requests');
+      }
+      const allRequests = await response.json();
+      return allRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+    },
   });
   
   // Get all pump-out requests for quota checking (for when user has boats)
   const { data: allRequests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
     queryKey: ['/api/pump-out-requests'],
-    queryFn: undefined,
+    queryFn: async () => {
+      const response = await fetch('/api/pump-out-requests', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch pump-out requests');
+      }
+      return response.json();
+    },
     enabled: !!boats && boats.length > 0,
   });
 

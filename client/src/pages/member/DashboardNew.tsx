@@ -237,11 +237,19 @@ export default function MemberDashboardNew() {
                       <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-700 mb-2">No Upcoming Services</h3>
                       <p className="text-gray-500 mb-4">You don't have any pump-out services scheduled.</p>
-                      <Link href="/member/request-service">
-                        <Button className="bg-[#38B2AC] hover:bg-opacity-90">
-                          Schedule a Pump-Out
-                        </Button>
-                      </Link>
+                      {creditInfo && creditInfo.availableCredits > 0 ? (
+                        <Link href="/member/request-service">
+                          <Button className="bg-[#38B2AC] hover:bg-opacity-90">
+                            Schedule a Pump-Out
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link href="/member/service-plans">
+                          <Button className="bg-[#0B1F3A] hover:bg-opacity-90">
+                            Select a Service Level
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>
