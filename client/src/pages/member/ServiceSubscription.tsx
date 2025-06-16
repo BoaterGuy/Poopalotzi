@@ -114,16 +114,23 @@ export default function ServiceSubscription() {
   };
   
   const activeServiceLevels = filterActiveLevels(serviceLevels);
+  console.log('All service levels:', serviceLevels);
+  console.log('Active service levels:', activeServiceLevels);
   const { oneTime, monthly, seasonal, bulk } = groupByType(activeServiceLevels);
+  console.log('Grouped levels - bulk:', bulk);
   
   const handleSelectPlan = (plan: ServiceLevel) => {
+    console.log('Selected plan:', plan.name, 'Type:', plan.type);
     setSelectedPlan(plan);
     
     // For bulk plans, show the purchase form instead of immediate subscription
     if (plan.type === 'bulk') {
+      console.log('Opening bulk plan form for:', plan.name);
       setShowBulkPlanForm(true);
+      setIsSubscribing(false); // Ensure subscription dialog doesn't show
     } else {
       setIsSubscribing(true);
+      setShowBulkPlanForm(false); // Ensure bulk form doesn't show
     }
   };
 
