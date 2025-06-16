@@ -14,10 +14,10 @@ export default function HeroSection() {
         <div className="flex flex-col md:flex-row items-center md:space-x-12">
           <div className="md:w-1/2 mb-10 md:mb-0">
             <h1 className="text-4xl md:text-5xl font-bold text-[#0B1F3A] mb-4">
-              Simplify Your Boat Maintenance
+              Simplify Your Boating Lifestyle
             </h1>
             <p className="text-lg md:text-xl text-gray-700 mb-8">
-              Schedule pump-outs, track services, and maintain your vessel with ease. The modern solution for boat owners.
+              Schedule pump-outs, track services, and maintain your vessel with ease. The intelligent solution for the savvy boater.
             </p>
             {/* Buttons moved to below "How It Works" section for better mobile experience */}
             
