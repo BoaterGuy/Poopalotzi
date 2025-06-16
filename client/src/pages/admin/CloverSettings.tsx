@@ -108,13 +108,14 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      // Create a new window for OAuth flow to avoid session conflicts
-      const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
-      
-      return {
-        authUrl,
-        merchantId
-      };
+      try {
+        const response = await apiRequest('POST', '/api/admin/clover/oauth/initiate', { merchantId });
+        return response.json();
+      } catch (error) {
+        // Fallback to direct OAuth if session issues persist
+        const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
+        return { authUrl, merchantId };
+      }
     },
     onSuccess: (data) => {
       setIsConnecting(true);
