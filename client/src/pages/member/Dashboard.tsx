@@ -494,7 +494,7 @@ export default function MemberDashboard() {
                                 ? 'bg-green-50 text-green-700 border-green-200' 
                                 : 'bg-red-50 text-red-700 border-red-200'
                             } font-normal`}>
-                              {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available
+                              {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available v2.1
                             </Badge>
                           </div>
                         )}

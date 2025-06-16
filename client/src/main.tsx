@@ -5,11 +5,31 @@ import { Toaster } from "@/components/ui/toaster";
 import { registerSW, addCacheDebugPanel } from "./lib/service-worker";
 import { Helmet } from "react-helmet";
 
-// Register service worker for PWA functionality - NETWORK-FIRST STRATEGY
-registerSW();
+// TEMPORARILY DISABLE SERVICE WORKER TO FIX CACHING ISSUES
+// registerSW();
 
 // Force cache invalidation v2.1.0
 console.log('Poopalotzi Loading - Build:', '2025-06-16-v2.1.0');
+
+// Aggressive cache clearing
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.unregister();
+      console.log('Service worker unregistered');
+    });
+  });
+}
+
+// Clear all caches
+if ('caches' in window) {
+  caches.keys().then(cacheNames => {
+    cacheNames.forEach(cacheName => {
+      caches.delete(cacheName);
+      console.log('Cache deleted:', cacheName);
+    });
+  });
+}
 
 // Add cache debug panel in development
 setTimeout(() => {
