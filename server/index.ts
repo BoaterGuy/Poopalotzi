@@ -24,7 +24,7 @@ if (!process.env.CLOVER_ENVIRONMENT) {
 }
 
 const app = express();
-const PORT = process.env.REPL_ID ? 3000 : (process.env.PORT || 5000);
+const PORT = process.env.REPL_ID ? 3000 : parseInt(process.env.PORT || "5000");
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -84,13 +84,19 @@ async function startServer() {
     // Register API routes
     registerRoutes(app);
 
-    // Serve static files in production
-    if (process.env.NODE_ENV === "production") {
+    // Import and setup Vite for development
+    if (process.env.NODE_ENV !== "production") {
+      const { setupVite } = await import("./vite");
+      await setupVite(app);
+    } else {
       const path = await import("path");
       app.use(express.static(path.resolve("dist/public")));
-
+      
+      // Serve React app for all non-API routes
       app.get("*", (req, res) => {
-        res.sendFile(path.resolve("dist/public/index.html"));
+        if (!req.path.startsWith("/api")) {
+          res.sendFile(path.resolve("dist/public/index.html"));
+        }
       });
     }
 
