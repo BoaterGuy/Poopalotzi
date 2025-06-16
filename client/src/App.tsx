@@ -18,7 +18,7 @@ import MemberDashboard from "@/pages/member/Dashboard";
 import MemberDashboardNew from "@/pages/member/DashboardNew";
 import MemberProfile from "@/pages/member/Profile";
 import MemberBoatManagement from "@/pages/member/BoatManagement";
-import MemberRequestService from "@/pages/member/RequestServiceSimple";
+import MemberRequestService from "@/pages/member/RequestServiceMinimal";
 import MemberServiceHistory from "@/pages/member/ServiceHistory";
 import MemberServiceSubscription from "@/pages/member/ServiceSubscription";
 import MemberServicePlans from "@/pages/member/ServicePlans";
