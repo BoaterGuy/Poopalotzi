@@ -108,51 +108,13 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      console.log('=== FRONTEND: Starting OAuth request ===');
-      console.log('Merchant ID:', merchantId);
+      // Create a new window for OAuth flow to avoid session conflicts
+      const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
       
-      try {
-        // First verify we're authenticated
-        console.log('Checking authentication...');
-        const authCheck = await fetch('/api/auth/me', {
-          credentials: 'include',
-        });
-        console.log('Auth check status:', authCheck.status);
-
-        if (!authCheck.ok) {
-          throw new Error('Authentication required. Please refresh the page and log in again.');
-        }
-
-        // Now make the OAuth request
-        console.log('Making OAuth request...');
-        const response = await fetch('/api/admin/clover/oauth/initiate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ merchantId }),
-          credentials: 'include',
-        });
-
-        console.log('OAuth response status:', response.status);
-        console.log('OAuth response headers:', Object.fromEntries(response.headers.entries()));
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('OAuth error response:', errorText);
-          if (response.status === 401) {
-            throw new Error('Session expired. Please refresh the page and log in again.');
-          }
-          throw new Error(`${response.status}: ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log('OAuth success data:', data);
-        return data;
-      } catch (error) {
-        console.error('OAuth error:', error);
-        throw error;
-      }
+      return {
+        authUrl,
+        merchantId
+      };
     },
     onSuccess: (data) => {
       setIsConnecting(true);
