@@ -1910,7 +1910,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiate Clover OAuth flow (admin only)
   app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-
+      console.log("=== CLOVER OAUTH REQUEST ===");
+      console.log("User authenticated:", req.isAuthenticated());
+      console.log("User data:", req.user);
+      console.log("Request body:", req.body);
+      console.log("Request headers:", req.headers);
       
       // Additional admin check for safety
       if (req.user?.role !== "admin") {
