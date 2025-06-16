@@ -107,77 +107,119 @@ export default function BulkPlanPurchaseForm({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Season Information */}
+        {/* Plan Overview */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
+          <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
             <Clock className="h-4 w-4 mr-2" />
-            Season Information
+            Plan Overview
           </h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-blue-700 font-medium">Available Weeks:</span>
-              <p className="text-blue-800">{calculation.totalAvailableWeeks} weeks until Oct 31st</p>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="text-center">
+              <span className="text-blue-700 font-medium block">Base Plan</span>
+              <p className="text-2xl font-bold text-blue-800">{serviceLevel.baseQuantity}</p>
+              <p className="text-blue-600 text-xs">pump-outs included</p>
             </div>
-            <div>
-              <span className="text-blue-700 font-medium">Base Pump-outs:</span>
-              <p className="text-blue-800">{serviceLevel.baseQuantity} included</p>
+            <div className="text-center">
+              <span className="text-blue-700 font-medium block">Available Weeks</span>
+              <p className="text-2xl font-bold text-blue-800">{calculation.totalAvailableWeeks}</p>
+              <p className="text-blue-600 text-xs">until Oct 31st</p>
+            </div>
+            <div className="text-center">
+              <span className="text-blue-700 font-medium block">Max Additional</span>
+              <p className="text-2xl font-bold text-blue-800">{calculation.maxAdditionalPumpOuts}</p>
+              <p className="text-blue-600 text-xs">can be added</p>
             </div>
           </div>
         </div>
 
         {/* Additional Pump-outs Selection */}
-        <div className="space-y-4">
+        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
           <div>
-            <Label htmlFor="additionalPumpOuts" className="text-base font-semibold">
-              Additional Pump-outs
+            <Label htmlFor="additionalPumpOuts" className="text-lg font-semibold text-gray-900">
+              Add Extra Pump-outs to Your Plan
             </Label>
             <p className="text-sm text-gray-600 mt-1">
-              {calculation.message}
+              Beyond your {serviceLevel.baseQuantity} base pump-outs, you can add more to your bucket
             </p>
           </div>
 
           {calculation.maxAdditionalPumpOuts > 0 ? (
-            <div className="space-y-3">
-              <div className="flex items-center space-x-4">
-                <Input
-                  id="additionalPumpOuts"
-                  type="number"
-                  min={0}
-                  max={calculation.maxAdditionalPumpOuts}
-                  value={additionalPumpOuts}
-                  onChange={(e) => handleAdditionalChange(e.target.value)}
-                  className="w-24"
-                />
-                <span className="text-sm text-gray-600">
-                  (Maximum: {calculation.maxAdditionalPumpOuts})
-                </span>
+            <div className="space-y-4">
+              {/* Visual Calculator */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-5 gap-4 items-center text-center">
+                  <div>
+                    <div className="text-sm text-gray-600">Base Plan</div>
+                    <div className="text-2xl font-bold text-blue-600">{serviceLevel.baseQuantity}</div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-400">+</div>
+                  <div>
+                    <div className="text-sm text-gray-600">Additional</div>
+                    <div className="text-2xl font-bold text-green-600">{additionalPumpOuts}</div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-400">=</div>
+                  <div>
+                    <div className="text-sm text-gray-600">Total</div>
+                    <div className="text-2xl font-bold text-purple-600">{(serviceLevel.baseQuantity || 0) + additionalPumpOuts}</div>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAdditionalPumpOuts(0)}
-                  className={additionalPumpOuts === 0 ? "bg-blue-50 border-blue-300" : ""}
-                >
-                  None (0)
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAdditionalPumpOuts(Math.ceil(calculation.maxAdditionalPumpOuts / 2))}
-                  className={additionalPumpOuts === Math.ceil(calculation.maxAdditionalPumpOuts / 2) ? "bg-blue-50 border-blue-300" : ""}
-                >
-                  Half ({Math.ceil(calculation.maxAdditionalPumpOuts / 2)})
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAdditionalPumpOuts(calculation.maxAdditionalPumpOuts)}
-                  className={additionalPumpOuts === calculation.maxAdditionalPumpOuts ? "bg-blue-50 border-blue-300" : ""}
-                >
-                  Max ({calculation.maxAdditionalPumpOuts})
-                </Button>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="additionalPumpOuts" className="text-sm font-medium">
+                    How many additional pump-outs would you like to add?
+                  </Label>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <Input
+                      id="additionalPumpOuts"
+                      type="number"
+                      min={0}
+                      max={calculation.maxAdditionalPumpOuts}
+                      value={additionalPumpOuts}
+                      onChange={(e) => handleAdditionalChange(e.target.value)}
+                      className="w-20 text-center text-lg font-semibold"
+                    />
+                    <span className="text-sm text-gray-600">
+                      (Max: {calculation.maxAdditionalPumpOuts} additional)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAdditionalPumpOuts(0)}
+                    className={additionalPumpOuts === 0 ? "bg-green-50 border-green-300 text-green-700" : ""}
+                  >
+                    None
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAdditionalPumpOuts(Math.ceil(calculation.maxAdditionalPumpOuts / 3))}
+                    className={additionalPumpOuts === Math.ceil(calculation.maxAdditionalPumpOuts / 3) ? "bg-green-50 border-green-300 text-green-700" : ""}
+                  >
+                    +{Math.ceil(calculation.maxAdditionalPumpOuts / 3)}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAdditionalPumpOuts(Math.ceil(calculation.maxAdditionalPumpOuts / 2))}
+                    className={additionalPumpOuts === Math.ceil(calculation.maxAdditionalPumpOuts / 2) ? "bg-green-50 border-green-300 text-green-700" : ""}
+                  >
+                    +{Math.ceil(calculation.maxAdditionalPumpOuts / 2)}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAdditionalPumpOuts(calculation.maxAdditionalPumpOuts)}
+                    className={additionalPumpOuts === calculation.maxAdditionalPumpOuts ? "bg-green-50 border-green-300 text-green-700" : ""}
+                  >
+                    Max (+{calculation.maxAdditionalPumpOuts})
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
@@ -191,29 +233,60 @@ export default function BulkPlanPurchaseForm({
         </div>
 
         {/* Cost Breakdown */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
             <DollarSign className="h-4 w-4 mr-2" />
-            Cost Breakdown
+            Your Plan Summary
           </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Base Plan ({serviceLevel.baseQuantity} pump-outs):</span>
-              <span>{formatCurrency(serviceLevel.basePrice || 0)}</span>
-            </div>
-            {additionalPumpOuts > 0 && (
-              <div className="flex justify-between">
-                <span>Additional ({additionalPumpOuts} × {formatCurrency(serviceLevel.pricePerAdditional || 0)}):</span>
-                <span>{formatCurrency((serviceLevel.pricePerAdditional || 0) * additionalPumpOuts)}</span>
+          <div className="space-y-3">
+            {/* Service Breakdown */}
+            <div className="grid grid-cols-3 gap-4 text-center text-sm">
+              <div className="bg-white rounded-lg p-3 border">
+                <div className="text-blue-600 font-semibold">Base Plan</div>
+                <div className="text-lg font-bold">{serviceLevel.baseQuantity}</div>
+                <div className="text-xs text-gray-500">pump-outs</div>
+                <div className="text-sm font-semibold text-blue-600 mt-1">
+                  {formatCurrency(serviceLevel.basePrice || 0)}
+                </div>
               </div>
-            )}
-            <hr className="my-2" />
-            <div className="flex justify-between font-semibold text-lg">
-              <span>Total:</span>
-              <span>{formatCurrency(totalCost)}</span>
+              <div className="bg-white rounded-lg p-3 border">
+                <div className="text-green-600 font-semibold">Additional</div>
+                <div className="text-lg font-bold">{additionalPumpOuts}</div>
+                <div className="text-xs text-gray-500">pump-outs</div>
+                <div className="text-sm font-semibold text-green-600 mt-1">
+                  {additionalPumpOuts > 0 ? formatCurrency((serviceLevel.pricePerAdditional || 0) * additionalPumpOuts) : '$0.00'}
+                </div>
+              </div>
+              <div className="bg-purple-100 rounded-lg p-3 border-2 border-purple-300">
+                <div className="text-purple-700 font-semibold">Total Plan</div>
+                <div className="text-xl font-bold text-purple-800">{(serviceLevel.baseQuantity || 0) + additionalPumpOuts}</div>
+                <div className="text-xs text-purple-600">pump-outs</div>
+                <div className="text-lg font-bold text-purple-700 mt-1">
+                  {formatCurrency(totalCost)}
+                </div>
+              </div>
             </div>
-            <div className="text-xs text-gray-600">
-              Total Services: {(serviceLevel.baseQuantity || 0) + additionalPumpOuts} pump-outs
+            
+            {/* Detailed Breakdown */}
+            <div className="bg-white rounded-lg p-3 border space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Base Plan ({serviceLevel.baseQuantity} pump-outs):</span>
+                <span className="font-semibold">{formatCurrency(serviceLevel.basePrice || 0)}</span>
+              </div>
+              {additionalPumpOuts > 0 && (
+                <div className="flex justify-between text-green-700">
+                  <span>Additional ({additionalPumpOuts} × {formatCurrency(serviceLevel.pricePerAdditional || 0)}):</span>
+                  <span className="font-semibold">{formatCurrency((serviceLevel.pricePerAdditional || 0) * additionalPumpOuts)}</span>
+                </div>
+              )}
+              <hr className="my-2" />
+              <div className="flex justify-between font-bold text-lg text-purple-700">
+                <span>Total Cost:</span>
+                <span>{formatCurrency(totalCost)}</span>
+              </div>
+              <div className="text-xs text-gray-600 text-center mt-2 pt-2 border-t">
+                You'll have <strong>{(serviceLevel.baseQuantity || 0) + additionalPumpOuts} pump-outs</strong> in your bucket until October 31st
+              </div>
             </div>
           </div>
         </div>
