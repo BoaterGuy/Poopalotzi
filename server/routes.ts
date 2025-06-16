@@ -1527,7 +1527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const { serviceLevelId, activeMonth, autoRenew } = req.body;
+      const { serviceLevelId, activeMonth, autoRenew, additionalPumpOuts, totalPumpOuts, bulkPlanYear } = req.body;
       if (!serviceLevelId) {
         return res.status(400).json({ message: "Service level ID is required" });
       }
@@ -1567,6 +1567,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const year = now.getFullYear();
         startDate = new Date(year, 4, 1); // May 1
         endDate = new Date(year, 9, 31); // October 31
+      } else if (serviceLevel.type === 'bulk') {
+        // For bulk plans (valid until Oct 31 of current year)
+        const year = now.getFullYear();
+        startDate = now;
+        endDate = new Date(year, 9, 31); // October 31
       }
       
       // Update user's subscription information
@@ -1574,7 +1579,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceLevelId: id,
         subscriptionStartDate: startDate,
         subscriptionEndDate: endDate,
-        autoRenew: serviceLevel.type === 'monthly' ? !!autoRenew : false
+        autoRenew: serviceLevel.type === 'monthly' ? !!autoRenew : false,
+        // Add bulk plan specific fields
+        ...(serviceLevel.type === 'bulk' && {
+          additionalPumpOuts: additionalPumpOuts || 0,
+          totalPumpOuts: totalPumpOuts || serviceLevel.baseQuantity || 0,
+          bulkPlanYear: bulkPlanYear || now.getFullYear()
+        })
       };
       
       const updatedUser = await storage.updateUser(req.user.id, subscriptionData);
@@ -1588,7 +1599,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceLevelId: updatedUser.serviceLevelId,
         subscriptionStartDate: startDate,
         subscriptionEndDate: endDate,
-        autoRenew: subscriptionData.autoRenew
+        autoRenew: subscriptionData.autoRenew,
+        ...(serviceLevel.type === 'bulk' && {
+          additionalPumpOuts: updatedUser.additionalPumpOuts,
+          totalPumpOuts: updatedUser.totalPumpOuts,
+          bulkPlanYear: updatedUser.bulkPlanYear
+        })
       });
     } catch (err) {
       next(err);

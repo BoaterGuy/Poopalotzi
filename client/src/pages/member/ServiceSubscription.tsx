@@ -148,13 +148,19 @@ export default function ServiceSubscription() {
   
   const handlePaymentSuccess = async () => {
     try {
-      // Create subscription object with additional properties for monthly subscriptions
+      // Create subscription object with additional properties for different subscription types
       const subscriptionRequest = {
         serviceLevelId: selectedPlan.id,
         // Only include these fields for monthly subscriptions
         ...(selectedPlan.type === 'monthly' && {
           activeMonth: selectedMonth,
           autoRenew: autoRenew
+        }),
+        // Include bulk plan details
+        ...(selectedPlan.type === 'bulk' && bulkPlanDetails && {
+          additionalPumpOuts: bulkPlanDetails.additionalPumpOuts,
+          totalPumpOuts: (selectedPlan.baseQuantity || 0) + bulkPlanDetails.additionalPumpOuts,
+          bulkPlanYear: new Date().getFullYear()
         })
       };
       
@@ -554,8 +560,29 @@ export default function ServiceSubscription() {
           {selectedPlan && (
             <PaymentForm
               requestId={0} // Not tied to a specific request for service subscription
-              amount={selectedPlan.price}
+              amount={selectedPlan.type === 'bulk' && bulkPlanDetails ? bulkPlanDetails.totalCost : selectedPlan.price}
               onSuccess={handlePaymentSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Bulk Plan Purchase Form Dialog */}
+      <Dialog open={showBulkPlanForm} onOpenChange={(open) => !open && handleBulkPlanCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Customize Bulk Plan</DialogTitle>
+            <DialogDescription>
+              Choose how many additional pump-outs you'd like for this season
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedPlan && (
+            <BulkPlanPurchaseForm
+              serviceLevel={selectedPlan}
+              onPurchase={handleBulkPlanPurchase}
+              onCancel={handleBulkPlanCancel}
+              isLoading={false}
             />
           )}
         </DialogContent>
