@@ -84,10 +84,6 @@ const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) =>
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  console.log("Admin check - isAuthenticated:", req.isAuthenticated());
-  console.log("Admin check - user:", req.user ? { id: req.user.id, role: req.user.role } : null);
-  console.log("Admin check - session:", req.session ? { id: req.session.id } : null);
-  
   if (req.isAuthenticated() && req.user?.role === "admin") {
     return next();
   }
@@ -1912,8 +1908,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initiate Clover OAuth flow (admin only)
-  app.post("/api/admin/clover/oauth/initiate", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
+      // Additional admin check for safety
+      if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
       const { merchantId } = req.body;
       
       if (!merchantId) {
