@@ -15,6 +15,7 @@ import AuthPage from "@/pages/auth-page";
 
 // Member Pages
 import MemberDashboard from "@/pages/member/Dashboard";
+import MemberDashboardNew from "@/pages/member/DashboardNew";
 import MemberProfile from "@/pages/member/Profile";
 import MemberBoatManagement from "@/pages/member/BoatManagement";
 import MemberRequestService from "@/pages/member/RequestService";
@@ -100,7 +101,10 @@ function App() {
                 
                 {/* Member Routes */}
                 <Route path="/member/dashboard">
-                  <MemberRoute component={MemberDashboard} path="/member/dashboard" />
+                  <MemberRoute component={MemberDashboardNew} path="/member/dashboard" />
+                </Route>
+                <Route path="/member/dashboard-new">
+                  <MemberRoute component={MemberDashboardNew} path="/member/dashboard-new" />
                 </Route>
                 <Route path="/member/profile">
                   <MemberRoute component={MemberProfile} path="/member/profile" />
