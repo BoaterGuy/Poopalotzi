@@ -26,11 +26,6 @@ if (!process.env.CLOVER_ENVIRONMENT) {
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: "ok" });
-});
-
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -82,6 +77,11 @@ async function setupDatabaseConnection() {
 async function startServer() {
   try {
     await setupDatabaseConnection();
+
+    // Health check endpoint - must be before other routes
+    app.get('/api/health', (req: Request, res: Response) => {
+      res.json({ status: "ok", timestamp: new Date().toISOString(), port: PORT });
+    });
 
     // Set up authentication
     setupAuth(app);
