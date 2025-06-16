@@ -346,7 +346,7 @@ export default function RequestService() {
                     <CardTitle>Schedule a Pump-Out</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
-                    {quotaInfo && quotaInfo.remaining <= 0 && serviceLevel.type === 'monthly' ? (
+                    {quotaInfo && quotaInfo.remaining <= 0 && serviceLevel?.type === 'monthly' ? (
                       <div className="text-center py-8">
                         <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
                           <h3 className="text-lg font-semibold text-red-700 mb-2">Monthly Quota Reached</h3>
@@ -365,7 +365,7 @@ export default function RequestService() {
                           </Button>
                         </div>
                       </div>
-                    ) : creditsData && serviceLevel.type === 'one-time' && creditsData.availableCredits <= 0 ? (
+                    ) : creditsData && serviceLevel?.type === 'one-time' && creditsData.availableCredits <= 0 ? (
                       <div className="text-center py-8">
                         <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
                           <h3 className="text-lg font-semibold text-red-700 mb-2">No Credits Available</h3>
