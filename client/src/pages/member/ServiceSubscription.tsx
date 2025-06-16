@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,6 +44,15 @@ export default function ServiceSubscription() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showBulkPlanForm, setShowBulkPlanForm] = useState(false);
+  
+  // Debug state changes
+  useEffect(() => {
+    console.log('showBulkPlanForm changed to:', showBulkPlanForm);
+  }, [showBulkPlanForm]);
+  
+  useEffect(() => {
+    console.log('isSubscribing changed to:', isSubscribing);
+  }, [isSubscribing]);
   const [bulkPlanDetails, setBulkPlanDetails] = useState<{additionalPumpOuts: number; totalCost: number} | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const currentDate = new Date();
@@ -609,12 +618,15 @@ export default function ServiceSubscription() {
           </DialogHeader>
           
           {selectedPlan && (
-            <BulkPlanPurchaseForm
-              serviceLevel={selectedPlan}
-              onPurchase={handleBulkPlanPurchase}
-              onCancel={handleBulkPlanCancel}
-              isLoading={false}
-            />
+            <>
+              {console.log('Rendering BulkPlanPurchaseForm with plan:', selectedPlan.name, 'Type:', selectedPlan.type)}
+              <BulkPlanPurchaseForm
+                serviceLevel={selectedPlan}
+                onPurchase={handleBulkPlanPurchase}
+                onCancel={handleBulkPlanCancel}
+                isLoading={false}
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>
