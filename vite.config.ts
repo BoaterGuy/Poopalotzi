@@ -30,5 +30,11 @@ export default defineConfig(async () => {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
     },
+    server: {
+      proxy: {
+        // Update this if your backend runs at a different host/port
+        '/api': 'http://localhost:3000',
+      },
+    },
   };
 });

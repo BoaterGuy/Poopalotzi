@@ -24,7 +24,12 @@ if (!process.env.CLOVER_ENVIRONMENT) {
 }
 
 const app = express();
-const PORT = process.env.REPL_ID ? 3000 : parseInt(process.env.PORT || "5000");
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+
+// Health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: "ok" });
+});
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
