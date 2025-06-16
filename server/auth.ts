@@ -34,7 +34,8 @@ export function setupAuth(app: Express) {
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+    },
+    name: 'connect.sid'
   };
 
   if (storage.sessionStore) {

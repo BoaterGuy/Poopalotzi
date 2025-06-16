@@ -84,6 +84,10 @@ const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) =>
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  console.log("Admin check - isAuthenticated:", req.isAuthenticated());
+  console.log("Admin check - user:", req.user ? { id: req.user.id, role: req.user.role } : null);
+  console.log("Admin check - session:", req.session ? { id: req.session.id } : null);
+  
   if (req.isAuthenticated() && req.user?.role === "admin") {
     return next();
   }
