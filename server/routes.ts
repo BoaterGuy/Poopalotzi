@@ -1341,6 +1341,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin credit adjustment endpoint
+  app.post("/api/admin/users/:userId/credits/adjust", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { amount, reason, type } = req.body;
+
+      // Validate input
+      if (!amount || !reason || !type) {
+        return res.status(400).json({ message: "Amount, reason, and type are required" });
+      }
+
+      if (!["add", "set"].includes(type)) {
+        return res.status(400).json({ message: "Type must be 'add' or 'set'" });
+      }
+
+      const adjustmentAmount = parseInt(amount);
+      if (isNaN(adjustmentAmount) || adjustmentAmount <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive integer" });
+      }
+
+      // Get user information
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get current total pump-outs
+      const currentTotal = user.totalPumpOuts || 0;
+      let newTotal: number;
+
+      if (type === "add") {
+        newTotal = currentTotal + adjustmentAmount;
+      } else { // type === "set"
+        newTotal = adjustmentAmount;
+      }
+
+      // Update user's totalPumpOuts field
+      const updatedUser = await storage.updateUser(userId, { 
+        totalPumpOuts: newTotal 
+      });
+
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update user credits" });
+      }
+
+      // Log the adjustment for audit purposes
+      console.log(`Admin credit adjustment: User ${userId} (${user.firstName} ${user.lastName}) - ${type === "add" ? "Added" : "Set to"} ${adjustmentAmount} credits. Reason: ${reason}. Admin: ${req.user?.firstName} ${req.user?.lastName} (ID: ${req.user?.id})`);
+
+      res.json({
+        success: true,
+        message: `Credits ${type === "add" ? "added" : "set"} successfully`,
+        previousTotal: currentTotal,
+        newTotal: newTotal,
+        adjustment: type === "add" ? adjustmentAmount : newTotal - currentTotal,
+        reason: reason
+      });
+    } catch (err) {
+      console.error("Error adjusting user credits:", err);
+      next(err);
+    }
+  });
+
   // Analytics routes
   app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {

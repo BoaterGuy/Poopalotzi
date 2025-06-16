@@ -1440,6 +1440,21 @@ export default function CustomerManagement() {
                                   <p>Add Boat</p>
                                 </TooltipContent>
                               </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleAdjustCredits(customer)}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    <CreditCard className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Adjust Credits</p>
+                                </TooltipContent>
+                              </Tooltip>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1459,6 +1474,83 @@ export default function CustomerManagement() {
             )}
           </CardContent>
         </Card>
+
+        {/* Credit Adjustment Dialog */}
+        <Dialog open={isCreditAdjustDialogOpen} onOpenChange={setIsCreditAdjustDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Adjust Pump-Out Credits</DialogTitle>
+              <DialogDescription>
+                Manually adjust pump-out credits for {selectedCustomerForCredit?.firstName} {selectedCustomerForCredit?.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedCustomerForCredit && (
+              <form onSubmit={handleCreditAdjustmentSubmit}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
+                    <Select 
+                      value={creditAdjustment.type} 
+                      onValueChange={(value: "add" | "set") => setCreditAdjustment({...creditAdjustment, type: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select adjustment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="add">Add Credits</SelectItem>
+                        <SelectItem value="set">Set Total Credits</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="credit-amount">
+                      {creditAdjustment.type === "add" ? "Credits to Add" : "New Total Credits"} *
+                    </Label>
+                    <Input
+                      id="credit-amount"
+                      type="number"
+                      min="1"
+                      value={creditAdjustment.amount}
+                      onChange={(e) => setCreditAdjustment({...creditAdjustment, amount: e.target.value})}
+                      placeholder={creditAdjustment.type === "add" ? "5" : "10"}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="adjustment-reason">Reason for Adjustment *</Label>
+                    <Input
+                      id="adjustment-reason"
+                      value={creditAdjustment.reason}
+                      onChange={(e) => setCreditAdjustment({...creditAdjustment, reason: e.target.value})}
+                      placeholder="e.g., Customer service compensation, billing error correction"
+                      required
+                    />
+                  </div>
+                  <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                    <p className="text-sm text-blue-800">
+                      <strong>Current Action:</strong> {creditAdjustment.type === "add" ? "Adding" : "Setting to"} {creditAdjustment.amount || "0"} pump-out credits
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreditAdjustDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={creditAdjustmentMutation.isPending}
+                  >
+                    {creditAdjustmentMutation.isPending ? "Adjusting..." : "Adjust Credits"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
