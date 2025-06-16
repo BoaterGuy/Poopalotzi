@@ -253,7 +253,7 @@ export default function MemberDashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard - Poopalotzi</title>
+        <title>Dashboard v2 - Poopalotzi</title>
         <meta name="description" content="Manage your boat pump-out services and view upcoming appointments." />
       </Helmet>
 
