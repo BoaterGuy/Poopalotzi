@@ -108,8 +108,30 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      const response = await apiRequest('POST', '/api/admin/clover/oauth/initiate', { merchantId });
-      return response.json();
+      console.log('Making OAuth request with merchantId:', merchantId);
+      try {
+        // Direct fetch call to bypass any potential apiRequest issues
+        const response = await fetch('/api/admin/clover/oauth/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ merchantId }),
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('OAuth data:', data);
+        return data;
+      } catch (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       setIsConnecting(true);
