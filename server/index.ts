@@ -84,9 +84,10 @@ async function startServer() {
     // Register API routes
     registerRoutes(app);
 
-    // Setup development server with proper Vite integration
+    // Handle static file serving and SPA routing
+    const path = await import("path");
+    
     if (process.env.NODE_ENV === "production") {
-      const path = await import("path");
       app.use(express.static(path.resolve("dist/public")));
       
       app.get("*", (req, res) => {
@@ -95,16 +96,22 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Setup Vite dev server
-      const { createServer } = await import("vite");
-      const vite = await createServer({
-        server: { middlewareMode: true },
-        appType: 'spa',
-        root: './client'
-      });
+      // Development: Set up proxy to Vite dev server
+      const { createProxyMiddleware } = await import('http-proxy-middleware');
       
-      app.use(vite.ssrFixStacktrace);
-      app.use(vite.middlewares);
+      // Proxy API calls to this server, everything else to Vite
+      app.use('/', createProxyMiddleware({
+        target: 'http://0.0.0.0:5173',
+        changeOrigin: true,
+        ws: true,
+        pathFilter: (pathname) => {
+          return !pathname.startsWith('/api');
+        },
+        onError: (err, req, res) => {
+          console.log('Proxy error:', err.message);
+          res.status(500).send('Vite dev server not available');
+        }
+      }));
     }
 
     // Try to start server, with port fallback
