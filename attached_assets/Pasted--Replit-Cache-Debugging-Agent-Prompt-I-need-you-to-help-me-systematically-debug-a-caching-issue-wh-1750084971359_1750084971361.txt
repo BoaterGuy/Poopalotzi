@@ -1,0 +1,47 @@
+# Replit Cache Debugging Agent Prompt
+
+I need you to help me systematically debug a caching issue where my development environment isn't showing recent changes, but production is working correctly. Please perform these steps **one at a time** and report the results of each before moving to the next:
+
+## Step 1: Environment Analysis
+- Check what type of project this is (examine package.json, main files, etc.)
+- List all running processes in the console
+- Check if there are any build scripts or automation running
+- Report your findings before proceeding
+
+## Step 2: File Verification
+- Check the timestamps of my recently modified files
+- Verify the actual content of my main CSS/JS files matches my recent changes
+- Look for any compiled/built versions of files (dist/, build/, public/ folders)
+- Report what you find
+
+## Step 3: Server Configuration Check
+- Examine server code for cache-related headers (Cache-Control, ETag, Last-Modified)
+- Look for express.static() middleware or similar caching mechanisms
+- Check for any CDN or proxy configurations
+- Report any caching configurations found
+
+## Step 4: Build Process Investigation
+- Check if there's a build step that needs to run (webpack, vite, gulp, etc.)
+- Look for package.json scripts that might need execution
+- Verify if any bundlers or preprocessors are involved
+- Run any necessary build commands if found
+
+## Step 5: Process Restart
+- Stop the current running process completely
+- Clear any temporary files if safe to do so
+- Restart the development server
+- Test if changes now appear
+
+## Step 6: Network Analysis
+- Check the browser's Network tab for 304 responses
+- Verify files are being served with correct timestamps
+- Look for any service workers or caching strategies
+- Report the response codes and headers
+
+## Step 7: Test Change Implementation
+- Add a very obvious visual change (like bright red background)
+- Verify this change appears in the file system
+- Test if the change shows in development
+- Compare with production behavior
+
+Please work through these steps systematically and tell me the results of each step before moving to the next. This will help us identify exactly what's causing the caching issue and what specific action resolves it.

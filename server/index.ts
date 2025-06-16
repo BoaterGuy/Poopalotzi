@@ -101,62 +101,47 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Build and serve the client app
-      try {
-        const { execSync } = await import('child_process');
-        
-        // Build the client app if it doesn't exist
-        const distPath = path.resolve("dist/public");
-        const fs = await import('fs');
-        
-        if (!fs.existsSync(distPath)) {
-          log("Building client application...");
-          execSync('npm run build', { stdio: 'inherit' });
-        }
-        
-        // Serve built files
-        app.use(express.static(distPath));
-        
-        // SPA fallback
-        app.get("*", (req, res) => {
-          if (!req.path.startsWith("/api")) {
-            res.sendFile(path.resolve(distPath, "index.html"));
-          }
-        });
-      } catch (error) {
-        log("Client build failed, serving basic HTML");
-        // Fallback to basic HTML if build fails
-        app.get("*", (req, res) => {
-          if (!req.path.startsWith("/api")) {
-            res.send(`
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <title>Marina Management System</title>
-                  <script src="https://cdn.tailwindcss.com"></script>
-                </head>
-                <body class="bg-gray-50">
-                  <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
-                      <h1 class="text-3xl font-bold text-gray-900 mb-6">Marina Management System</h1>
-                      <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-                        <strong>Server Status:</strong> Running on port ${PORT}
-                      </div>
-                      <p class="text-gray-600 mb-6">Your backend is running successfully!</p>
-                      <div class="space-y-3">
-                        <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition">
-                          API Health Check
-                        </a>
-                        <p class="text-sm text-gray-500">The React frontend will be available once built.</p>
-                      </div>
+      // Development: Remove stale builds and serve fresh content
+      const distPath = path.resolve("dist/public");
+      const fs = await import('fs');
+      
+      // Remove stale build to ensure fresh development
+      if (fs.existsSync(distPath)) {
+        log("Removing stale build directory for fresh development...");
+        fs.rmSync(distPath, { recursive: true, force: true });
+      }
+      
+      // Fallback HTML for development without build
+      app.get("*", (req, res) => {
+        if (!req.path.startsWith("/api")) {
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>Marina Management System</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+              </head>
+              <body class="bg-gray-50">
+                <div class="min-h-screen flex items-center justify-center p-4">
+                  <div class="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-6">Marina Management System</h1>
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                      <strong>Server Status:</strong> Running on port ${PORT}
+                    </div>
+                    <p class="text-gray-600 mb-6">Your backend is running successfully!</p>
+                    <div class="space-y-3">
+                      <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition">
+                        API Health Check
+                      </a>
+                      <p class="text-sm text-gray-500">The React frontend will be available once built.</p>
                     </div>
                   </div>
-                </body>
-              </html>
-            `);
-          }
-        });
-      }
+                </div>
+              </body>
+            </html>
+          `);
+        }
+      });
     }
 
     // Try to start server, with port fallback
