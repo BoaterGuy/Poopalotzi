@@ -1,11 +1,16 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import { setupFullDatabase } from "./setup-database";
 import { DatabaseStorage } from "./database-storage";
 import { storage as memStorage, IStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
+
+// Export storage for other modules
+export const storage = memStorage;
+
+// Simple logging function
+const log = console.log;
 
 // Set Clover environment variables if not already set
 if (!process.env.CLOVER_APP_ID) {
@@ -18,106 +23,96 @@ if (!process.env.CLOVER_ENVIRONMENT) {
   process.env.CLOVER_ENVIRONMENT = "sandbox";
 }
 
-// Create a database storage instance right away
-const dbStorage = new DatabaseStorage();
-// ALWAYS use the database storage, not the in-memory storage
-// This ensures all parts of the application use the same data source
-export let storage: IStorage = dbStorage;
-
 const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+const PORT = process.env.REPL_ID ? 3000 : (process.env.PORT || 5000);
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+// Middleware for parsing JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
+// Enhanced logging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  const originalSend = res.send;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
+  res.send = function (body) {
     const duration = Date.now() - start;
     const status = res.statusCode;
-    
-    if (path.startsWith("/api") || path.startsWith("/auth")) {
+    const path = req.path;
+
+    // Only log API routes to reduce noise
+    if (path.startsWith('/api')) {
       log(`${req.method} ${path} ${status} in ${duration}ms :: ${
-        capturedJsonResponse ? JSON.stringify(capturedJsonResponse) : ""
+        typeof body === 'string' ? body.slice(0, 100) : '[Object]'
       }`);
     }
-  });
+
+    return originalSend.call(this, body);
+  };
 
   next();
 });
 
-// Format dates as ISO strings (YYYY-MM-DD)
-const formatDateForRequest = (date: Date): string => {
-  return date.toISOString().split('T')[0];
-};
-
-// Main function to start the server
-async function startServer() {
+async function setupDatabaseConnection() {
   try {
-    // Initialize database schema conditionally
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV === "development") {
       log("Development environment detected, running database setup to fix schema...");
-      const dbSuccess = await setupFullDatabase();
-      if (dbSuccess) {
+      await setupFullDatabase();
+      try {
         log("Successfully connected to the database!");
         log("All database tables set up successfully!");
-      } else {
+      } catch (error) {
         log("Database connection error - exiting");
         process.exit(1);
       }
     } else {
       log("Production environment detected. Skipping automatic database setup/seeding.");
     }
-    
-    // Set up authentication with the proper storage
-    setupAuth(app);
-    
-    // Register API routes before setting up Vite
-    const server = await registerRoutes(app);
-
-    // Error handling middleware
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      console.error(err);
-    });
-
-    // Setup Vite AFTER registering all API routes
-    // so the catch-all route doesn't interfere with the API
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    // ALWAYS serve the app on port 5000
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
-    });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Database setup failed:", error);
     process.exit(1);
   }
 }
 
-// Start the server
+async function startServer() {
+  try {
+    await setupDatabaseConnection();
+
+    // Set up authentication
+    setupAuth(app);
+
+    // Register API routes
+    registerRoutes(app);
+
+    // Serve static files in production
+    if (process.env.NODE_ENV === "production") {
+      const path = await import("path");
+      app.use(express.static(path.resolve("dist/public")));
+
+      app.get("*", (req, res) => {
+        res.sendFile(path.resolve("dist/public/index.html"));
+      });
+    }
+
+    // Try to start server, with port fallback
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      log(`serving on port ${PORT}`);
+    });
+
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is in use. Try: PORT=3000 npm run dev`);
+        process.exit(1);
+      } else {
+        console.error("Server error:", err);
+        process.exit(1);
+      }
+    });
+
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  }
+}
+
 startServer();
