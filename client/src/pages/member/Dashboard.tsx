@@ -10,6 +10,7 @@ import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import BulkPlanStatus from "@/components/member/BulkPlanStatus";
 
 export default function MemberDashboard() {
   const { user } = useAuth();
@@ -406,6 +407,7 @@ export default function MemberDashboard() {
                         <p className="text-sm text-gray-600">
                           {serviceLevel.type === 'one-time' ? 'Single Service' :
                             serviceLevel.type === 'monthly' ? `Monthly (${serviceLevel.monthlyQuota} services)` :
+                            serviceLevel.type === 'bulk' ? `Bulk Plan (${user?.totalPumpOuts || serviceLevel.baseQuantity || 0} services)` :
                             'Seasonal (Unlimited)'}
                         </p>
                         
@@ -475,6 +477,13 @@ export default function MemberDashboard() {
                           <p className="text-xs text-gray-500 mt-1">
                             Valid: May 1, 2025 - October 31, 2025
                           </p>
+                        )}
+                        
+                        {/* Display bulk plan details */}
+                        {serviceLevel.type === 'bulk' && user && (
+                          <div className="mt-2">
+                            <BulkPlanStatus user={user} serviceLevel={serviceLevel} />
+                          </div>
                         )}
                         
                         {/* Display credit information for one-time services */}

@@ -584,8 +584,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const serviceLevel = await storage.getServiceLevel(user.serviceLevelId);
           
           if (serviceLevel) {
+            // For bulk plans, check weekly limits and seasonal validity
+            if (serviceLevel.type === "bulk") {
+              const { validateBulkPlanRequest, isSameWeek, getOctoberCutoff } = await import("../shared/bulk-plan-utils");
+              
+              // Get user's bulk plan end date (October 31st of bulk plan year)
+              const bulkPlanYear = user.bulkPlanYear || new Date().getFullYear();
+              const bulkPlanEndDate = getOctoberCutoff(bulkPlanYear);
+              
+              // Get all existing pump-out requests for this user's boats
+              const boatOwner = await storage.getBoatOwnerByUserId(user.id);
+              if (boatOwner) {
+                const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
+                const existingRequestDates: Date[] = [];
+                
+                for (const boat of userBoats) {
+                  const requests = await storage.getPumpOutRequestsByBoatId(boat.id);
+                  requests
+                    .filter(r => r.status !== 'Canceled' && r.createdAt)
+                    .forEach(r => existingRequestDates.push(new Date(r.createdAt!)));
+                }
+                
+                // Validate the request
+                const requestDate = new Date(requestData.weekStartDate);
+                const validation = validateBulkPlanRequest(requestDate, existingRequestDates, bulkPlanEndDate);
+                
+                if (!validation.isValid) {
+                  return res.status(400).json({ message: validation.message });
+                }
+                
+                // Check if user has exceeded their total pump-out allowance
+                const usedPumpOuts = existingRequestDates.length;
+                const totalAllowed = user.totalPumpOuts || serviceLevel.baseQuantity || 0;
+                
+                if (usedPumpOuts >= totalAllowed) {
+                  return res.status(400).json({ 
+                    message: `You have used all ${totalAllowed} pump-outs included in your bulk plan for this season.`
+                  });
+                }
+              }
+            }
+            
             // For monthly service level, check monthly quota
-            if (serviceLevel.type === "monthly" && serviceLevel.monthlyQuota) {
+            else if (serviceLevel.type === "monthly" && serviceLevel.monthlyQuota) {
               const now = new Date();
               const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
               const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -604,7 +645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // For on-demand service, check quota
-            if (serviceLevel.type === "one-time" && serviceLevel.onDemandQuota) {
+            else if (serviceLevel.type === "one-time" && serviceLevel.onDemandQuota) {
               // Count active requests
               const activeRequests = (await storage.getPumpOutRequestsByBoatId(requestData.boatId))
                 .filter(r => ["Requested", "Scheduled"].includes(r.status));
@@ -667,6 +708,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // No credits available, requires new payment
               requestData.paymentStatus = 'Pending';
             }
+          } else if (serviceLevel.type === 'bulk') {
+            // Bulk plans are paid while active and within season
+            requestData.paymentStatus = 'Paid';
+            requestData.paymentId = `sub_bulk_${Date.now()}`;
           } else {
             // Monthly and seasonal subscriptions are always paid while active
             requestData.paymentStatus = 'Paid';
