@@ -729,7 +729,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           weekStartDate: requestData.weekStartDate,
           status: requestData.status || 'Requested',
           ownerNotes: requestData.ownerNotes || '',
-          paymentStatus: requestData.paymentStatus || 'Pending'
+          paymentStatus: requestData.paymentStatus || 'Pending',
+          paymentId: requestData.paymentId
         });
         
         console.log("Successfully created pump-out request with ID:", newRequest.id);
