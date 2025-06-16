@@ -648,9 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               usedCreditsThisYear += boatRequests.filter(req => {
                 if (!req.createdAt) return false;
                 const reqDate = new Date(req.createdAt);
-                return req.paymentStatus === 'Paid' && 
-                       req.paymentId && 
-                       req.paymentId.startsWith('sub_one-time') &&
+                return (req.paymentStatus === 'Paid' || req.status === 'Completed') && 
                        req.status !== 'Canceled' && // Don't count canceled services
                        reqDate >= yearStart && reqDate <= yearEnd;
               }).length;
@@ -1499,9 +1497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usedCreditsThisYear += boatRequests.filter(req => {
           if (!req.createdAt) return false;
           const reqDate = new Date(req.createdAt);
-          return req.paymentStatus === 'Paid' && 
-                 req.paymentId && 
-                 req.paymentId.startsWith('sub_one-time') &&
+          return (req.paymentStatus === 'Paid' || req.status === 'Completed') && 
                  req.status !== 'Canceled' && // Don't count canceled services
                  reqDate >= yearStart && reqDate <= yearEnd;
         }).length;
