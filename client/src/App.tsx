@@ -20,6 +20,7 @@ import MemberBoatManagement from "@/pages/member/BoatManagement";
 import MemberRequestService from "@/pages/member/RequestService";
 import MemberServiceHistory from "@/pages/member/ServiceHistory";
 import MemberServiceSubscription from "@/pages/member/ServiceSubscription";
+import MemberServicePlans from "@/pages/member/ServicePlans";
 
 // Employee Pages
 import EmployeeSchedule from "@/pages/employee/Schedule";
@@ -119,6 +120,9 @@ function App() {
                 </Route>
                 <Route path="/member/subscription">
                   <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
+                </Route>
+                <Route path="/member/service-plans">
+                  <MemberRoute component={MemberServicePlans} path="/member/service-plans" />
                 </Route>
                 
                 {/* Employee Routes */}
