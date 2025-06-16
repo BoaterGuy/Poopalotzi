@@ -108,8 +108,8 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      const response = await apiRequest('/api/admin/clover/oauth/initiate', 'POST', { merchantId });
-      return response;
+      const response = await apiRequest('POST', '/api/admin/clover/oauth/initiate', { merchantId });
+      return response.json();
     },
     onSuccess: (data) => {
       setIsConnecting(true);
@@ -129,7 +129,8 @@ export default function CloverSettings() {
   // Disconnect Clover
   const disconnectCloverMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/admin/clover/config', 'DELETE');
+      const response = await apiRequest('DELETE', '/api/admin/clover/config');
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -150,8 +151,9 @@ export default function CloverSettings() {
   // Process refund
   const refundMutation = useMutation({
     mutationFn: async ({ paymentId, amount }: { paymentId: string; amount?: number }) => {
-      return await apiRequest(`/api/admin/payments/${paymentId}/refund`, 'POST', 
+      const response = await apiRequest('POST', `/api/admin/payments/${paymentId}/refund`, 
         amount ? { amount: Math.round(amount * 100) } : {});
+      return response.json();
     },
     onSuccess: () => {
       toast({
