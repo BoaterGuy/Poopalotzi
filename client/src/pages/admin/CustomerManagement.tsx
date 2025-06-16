@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Helmet } from "react-helmet";
 import {
@@ -49,6 +49,10 @@ import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhon
 
 // Credit Display Component for One-Time Service Users
 function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: number, serviceLevelId: number | null }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const queryClient = useQueryClient();
+  
   const { data: creditInfo, isLoading } = useQuery({
     queryKey: ['/api/admin/credits', customerId],
     queryFn: async () => {
@@ -65,6 +69,55 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
     refetchIntervalInBackground: true,
   });
 
+  const creditAdjustmentMutation = useMutation({
+    mutationFn: async ({ amount, type }: { amount: number, type: "add" | "set" }) => {
+      const res = await fetch(`/api/admin/users/${customerId}/credits/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: amount,
+          reason: `Quick ${type === "add" ? "addition" : "adjustment"} from customer management`,
+          type: type
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to adjust credits');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/credits', customerId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
+      setIsEditing(false);
+      setEditValue("");
+    },
+  });
+
+  const handleQuickAdjust = (action: "add" | "subtract") => {
+    if (!creditInfo) return;
+    
+    if (action === "add") {
+      creditAdjustmentMutation.mutate({ amount: 1, type: "add" });
+    } else if (action === "subtract" && creditInfo.totalCredits > 0) {
+      const newTotal = Math.max(0, creditInfo.totalCredits - 1);
+      creditAdjustmentMutation.mutate({ amount: newTotal, type: "set" });
+    }
+  };
+
+  const handleSetValue = () => {
+    const value = parseInt(editValue);
+    if (!isNaN(value) && value >= 0) {
+      creditAdjustmentMutation.mutate({ amount: value, type: "set" });
+    }
+  };
+
+  const handleCreditClick = () => {
+    setIsEditing(true);
+    setEditValue(creditInfo?.totalCredits?.toString() || "0");
+  };
+
   // Only show credits for one-time service users
   if (!serviceLevelId || !creditInfo) {
     return <span className="text-gray-400 text-sm">-</span>;
@@ -74,18 +127,77 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
     return <span className="text-gray-400 text-sm">Loading...</span>;
   }
 
-  // Show credit information
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-1">
+        <Input
+          type="number"
+          min="0"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="w-16 h-6 text-xs"
+          onKeyPress={(e) => e.key === 'Enter' && handleSetValue()}
+          autoFocus
+        />
+        <Button
+          size="sm"
+          onClick={handleSetValue}
+          disabled={creditAdjustmentMutation.isPending}
+          className="h-6 px-2 text-xs"
+        >
+          ✓
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setIsEditing(false);
+            setEditValue("");
+          }}
+          className="h-6 px-2 text-xs"
+        >
+          ✕
+        </Button>
+      </div>
+    );
+  }
+
+  // Show credit information with interactive controls
   return (
-    <Badge 
-      variant="outline" 
-      className={`${
-        creditInfo.availableCredits > 0 
-          ? 'bg-green-50 text-green-700 border-green-200' 
-          : 'bg-red-50 text-red-700 border-red-200'
-      } font-normal`}
-    >
-      {creditInfo.availableCredits}/{creditInfo.totalCredits}
-    </Badge>
+    <div className="flex items-center space-x-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleQuickAdjust("subtract")}
+        disabled={creditInfo.totalCredits === 0 || creditAdjustmentMutation.isPending}
+        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+        title="Remove 1 credit"
+      >
+        −
+      </Button>
+      <Badge 
+        variant="outline" 
+        className={`cursor-pointer hover:bg-gray-50 ${
+          creditInfo.availableCredits > 0 
+            ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
+            : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+        } font-normal`}
+        onClick={handleCreditClick}
+        title="Click to edit total credits"
+      >
+        {creditInfo.availableCredits}/{creditInfo.totalCredits}
+      </Badge>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleQuickAdjust("add")}
+        disabled={creditAdjustmentMutation.isPending}
+        className="h-6 w-6 p-0 text-gray-400 hover:text-green-600 hover:bg-green-50"
+        title="Add 1 credit"
+      >
+        +
+      </Button>
+    </div>
   );
 }
 
@@ -131,18 +243,11 @@ export default function CustomerManagement() {
   const [isAddBoatDialogOpen, setIsAddBoatDialogOpen] = useState(false);
   const [isEditBoatDialogOpen, setIsEditBoatDialogOpen] = useState(false);
   const [isViewBoatsDialogOpen, setIsViewBoatsDialogOpen] = useState(false);
-  const [isCreditAdjustDialogOpen, setIsCreditAdjustDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomerForBoat, setSelectedCustomerForBoat] = useState<any>(null);
   const [editingBoat, setEditingBoat] = useState<any>(null);
   const [customerBoats, setCustomerBoats] = useState<any[]>([]);
   const [selectedCustomerForBoats, setSelectedCustomerForBoats] = useState<any>(null);
-  const [selectedCustomerForCredit, setSelectedCustomerForCredit] = useState<any>(null);
-  const [creditAdjustment, setCreditAdjustment] = useState({
-    amount: "",
-    reason: "",
-    type: "add" as "add" | "set"
-  });
   const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -372,44 +477,7 @@ export default function CustomerManagement() {
     },
   });
 
-  // Credit adjustment mutation
-  const creditAdjustmentMutation = useMutation({
-    mutationFn: async (adjustmentData: any) => {
-      const res = await fetch(`/api/admin/users/${adjustmentData.userId}/credits/adjust`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          amount: parseInt(adjustmentData.amount),
-          reason: adjustmentData.reason,
-          type: adjustmentData.type
-        }),
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to adjust credits');
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Pump-out credits adjusted successfully",
-      });
-      setIsCreditAdjustDialogOpen(false);
-      setSelectedCustomerForCredit(null);
-      setCreditAdjustment({ amount: "", reason: "", type: "add" });
-      queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/credits'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to adjust credits",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   // Function to get short service level label with color coding
   const getServiceLevelDisplay = (serviceLevelId: number | null, serviceLevels: any[]) => {
@@ -533,45 +601,7 @@ export default function CustomerManagement() {
     setIsAddBoatDialogOpen(true);
   };
 
-  const handleAdjustCredits = (customer: any) => {
-    setSelectedCustomerForCredit(customer);
-    setCreditAdjustment({
-      amount: "",
-      reason: "",
-      type: "add"
-    });
-    setIsCreditAdjustDialogOpen(true);
-  };
 
-  const handleCreditAdjustmentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedCustomerForCredit || !creditAdjustment.amount || !creditAdjustment.reason) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const amount = parseInt(creditAdjustment.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a valid positive number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    creditAdjustmentMutation.mutate({
-      userId: selectedCustomerForCredit.id,
-      amount: creditAdjustment.amount,
-      reason: creditAdjustment.reason,
-      type: creditAdjustment.type
-    });
-  };
 
   const handleBoatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1440,21 +1470,7 @@ export default function CustomerManagement() {
                                   <p>Add Boat</p>
                                 </TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleAdjustCredits(customer)}
-                                    className="text-blue-600 hover:text-blue-800"
-                                  >
-                                    <CreditCard className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Adjust Credits</p>
-                                </TooltipContent>
-                              </Tooltip>
+
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1475,82 +1491,7 @@ export default function CustomerManagement() {
           </CardContent>
         </Card>
 
-        {/* Credit Adjustment Dialog */}
-        <Dialog open={isCreditAdjustDialogOpen} onOpenChange={setIsCreditAdjustDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adjust Pump-Out Credits</DialogTitle>
-              <DialogDescription>
-                Manually adjust pump-out credits for {selectedCustomerForCredit?.firstName} {selectedCustomerForCredit?.lastName}
-              </DialogDescription>
-            </DialogHeader>
-            {selectedCustomerForCredit && (
-              <form onSubmit={handleCreditAdjustmentSubmit}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
-                    <Select 
-                      value={creditAdjustment.type} 
-                      onValueChange={(value: "add" | "set") => setCreditAdjustment({...creditAdjustment, type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select adjustment type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="add">Add Credits</SelectItem>
-                        <SelectItem value="set">Set Total Credits</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="credit-amount">
-                      {creditAdjustment.type === "add" ? "Credits to Add" : "New Total Credits"} *
-                    </Label>
-                    <Input
-                      id="credit-amount"
-                      type="number"
-                      min="1"
-                      value={creditAdjustment.amount}
-                      onChange={(e) => setCreditAdjustment({...creditAdjustment, amount: e.target.value})}
-                      placeholder={creditAdjustment.type === "add" ? "5" : "10"}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="adjustment-reason">Reason for Adjustment *</Label>
-                    <Input
-                      id="adjustment-reason"
-                      value={creditAdjustment.reason}
-                      onChange={(e) => setCreditAdjustment({...creditAdjustment, reason: e.target.value})}
-                      placeholder="e.g., Customer service compensation, billing error correction"
-                      required
-                    />
-                  </div>
-                  <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                    <p className="text-sm text-blue-800">
-                      <strong>Current Action:</strong> {creditAdjustment.type === "add" ? "Adding" : "Setting to"} {creditAdjustment.amount || "0"} pump-out credits
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsCreditAdjustDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={creditAdjustmentMutation.isPending}
-                  >
-                    {creditAdjustmentMutation.isPending ? "Adjusting..." : "Adjust Credits"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            )}
-          </DialogContent>
-        </Dialog>
+
       </div>
     </TooltipProvider>
   );
