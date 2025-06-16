@@ -37,6 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export default function ServiceSubscription() {
+  console.log('🔥 ServiceSubscription component loaded - UPDATED VERSION 2.0');
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
