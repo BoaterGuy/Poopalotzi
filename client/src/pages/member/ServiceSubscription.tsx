@@ -37,7 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export default function ServiceSubscription() {
-  console.log('🔥 ServiceSubscription component loaded - UPDATED VERSION 2.0');
+
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -46,14 +46,7 @@ export default function ServiceSubscription() {
   const [showPayment, setShowPayment] = useState(false);
   const [showBulkPlanForm, setShowBulkPlanForm] = useState(false);
   
-  // Debug state changes
-  useEffect(() => {
-    console.log('showBulkPlanForm changed to:', showBulkPlanForm);
-  }, [showBulkPlanForm]);
-  
-  useEffect(() => {
-    console.log('isSubscribing changed to:', isSubscribing);
-  }, [isSubscribing]);
+
   const [bulkPlanDetails, setBulkPlanDetails] = useState<{additionalPumpOuts: number; totalCost: number} | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const currentDate = new Date();
@@ -245,7 +238,7 @@ export default function ServiceSubscription() {
     const isCurrentPlan = currentServiceLevel?.id === plan.id;
     
     return (
-      <Card className={`overflow-hidden ${isCurrentPlan ? 'border-primary border-2' : ''}`}>
+      <Card className={`overflow-hidden flex flex-col h-full ${isCurrentPlan ? 'border-primary border-2' : ''}`}>
         {isCurrentPlan && (
           <div className="bg-primary text-white text-center py-1 text-xs font-semibold">
             Current Plan
@@ -260,7 +253,7 @@ export default function ServiceSubscription() {
           </CardTitle>
           <CardDescription>{plan.description}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col">
           <div className="text-3xl font-bold text-center mb-6">
             {plan.type === 'bulk' ? (
               <div>
@@ -284,7 +277,7 @@ export default function ServiceSubscription() {
             )}
             <div className="text-sm font-normal text-muted-foreground mt-1">Plus Tax</div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             {(plan.monthlyQuota && plan.monthlyQuota > 0) && (
               <div className="flex items-center">
                 <CalendarClock className="h-4 w-4 mr-2 text-primary" />
@@ -299,7 +292,7 @@ export default function ServiceSubscription() {
             )}
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="mt-auto">
           <Button 
             className="w-full" 
             variant={isCurrentPlan ? "outline" : "default"}
@@ -619,15 +612,12 @@ export default function ServiceSubscription() {
           </DialogHeader>
           
           {selectedPlan && (
-            <>
-              {console.log('Rendering BulkPlanPurchaseForm with plan:', selectedPlan.name, 'Type:', selectedPlan.type)}
-              <BulkPlanPurchaseForm
-                serviceLevel={selectedPlan}
-                onPurchase={handleBulkPlanPurchase}
-                onCancel={handleBulkPlanCancel}
-                isLoading={false}
-              />
-            </>
+            <BulkPlanPurchaseForm
+              serviceLevel={selectedPlan}
+              onPurchase={handleBulkPlanPurchase}
+              onCancel={handleBulkPlanCancel}
+              isLoading={false}
+            />
           )}
         </DialogContent>
       </Dialog>
