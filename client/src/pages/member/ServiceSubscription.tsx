@@ -421,19 +421,33 @@ export default function ServiceSubscription() {
               <div className="bg-muted rounded-md p-4 mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">{selectedPlan.name}</span>
-                  <Badge variant={selectedPlan.type === 'one-time' ? "default" : selectedPlan.type === 'monthly' ? "outline" : "secondary"}>
-                    {selectedPlan.type === 'one-time' ? 'One-time' : selectedPlan.type === 'monthly' ? 'Monthly' : 'Seasonal'}
+                  <Badge variant={selectedPlan.type === 'one-time' ? "default" : selectedPlan.type === 'monthly' ? "outline" : selectedPlan.type === 'bulk' ? "destructive" : "secondary"}>
+                    {selectedPlan.type === 'one-time' ? 'One-time' : selectedPlan.type === 'monthly' ? 'Monthly' : selectedPlan.type === 'bulk' ? 'Bulk' : 'Seasonal'}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">{selectedPlan.description}</p>
                 <div className="flex justify-between items-center">
                   <span>Price:</span>
                   <span className="font-bold">
-                    ${selectedPlan.price.toFixed(2)}
-                    {selectedPlan.type !== 'one-time' && (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        {selectedPlan.type === 'monthly' ? '/mo' : '/season'}
-                      </span>
+                    {selectedPlan.type === 'bulk' ? (
+                      <div>
+                        <div>From ${(selectedPlan.basePrice || 0).toFixed(2)}</div>
+                        <div className="text-sm font-normal text-muted-foreground">
+                          {selectedPlan.baseQuantity} pump-outs included
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          +${(selectedPlan.pricePerAdditional || 0).toFixed(2)} per additional
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        ${selectedPlan.price.toFixed(2)}
+                        {selectedPlan.type !== 'one-time' && (
+                          <span className="text-sm font-normal text-muted-foreground">
+                            {selectedPlan.type === 'monthly' ? '/mo' : '/season'}
+                          </span>
+                        )}
+                      </div>
                     )}
                     <span className="text-sm font-normal text-muted-foreground ml-1">Plus Tax</span>
                   </span>
@@ -445,6 +459,8 @@ export default function ServiceSubscription() {
                   "This is a one-time purchase. You will be prompted to enter payment information."
                 ) : selectedPlan.type === 'monthly' ? (
                   "This is a monthly subscription valid for one month from the start date."
+                ) : selectedPlan.type === 'bulk' ? (
+                  "This is a bulk plan with base pump-outs included. You can customize by adding additional pump-outs for the season (May 1 - October 31)."
                 ) : (
                   "This is a seasonal subscription covering May 1 through October 31."
                 )}
@@ -503,10 +519,18 @@ export default function ServiceSubscription() {
               Cancel
             </Button>
             <Button 
-              onClick={handleConfirmSubscription} 
+              onClick={() => {
+                if (selectedPlan?.type === 'bulk') {
+                  setIsSubscribing(false);
+                  setShowBulkPlanForm(true);
+                } else {
+                  handleConfirmSubscription();
+                }
+              }} 
               className="bg-[#0B1F3A] hover:bg-opacity-90"
             >
-              {selectedPlan?.type === 'one-time' ? "Proceed to Payment" : "Confirm Subscription"}
+              {selectedPlan?.type === 'one-time' ? "Proceed to Payment" : 
+               selectedPlan?.type === 'bulk' ? "Customize Plan" : "Confirm Subscription"}
             </Button>
             
             {/* Development Test Option - Remove in Production */}
