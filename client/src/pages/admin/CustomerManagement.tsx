@@ -44,7 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertCircle, Clock, CheckCircle, CreditCard } from "lucide-react";
 import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhone } from "@/lib/phoneUtils";
 
 // Credit Display Component for One-Time Service Users
@@ -131,11 +131,18 @@ export default function CustomerManagement() {
   const [isAddBoatDialogOpen, setIsAddBoatDialogOpen] = useState(false);
   const [isEditBoatDialogOpen, setIsEditBoatDialogOpen] = useState(false);
   const [isViewBoatsDialogOpen, setIsViewBoatsDialogOpen] = useState(false);
+  const [isCreditAdjustDialogOpen, setIsCreditAdjustDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomerForBoat, setSelectedCustomerForBoat] = useState<any>(null);
   const [editingBoat, setEditingBoat] = useState<any>(null);
   const [customerBoats, setCustomerBoats] = useState<any[]>([]);
   const [selectedCustomerForBoats, setSelectedCustomerForBoats] = useState<any>(null);
+  const [selectedCustomerForCredit, setSelectedCustomerForCredit] = useState<any>(null);
+  const [creditAdjustment, setCreditAdjustment] = useState({
+    amount: "",
+    reason: "",
+    type: "add" as "add" | "set"
+  });
   const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
@@ -365,6 +372,45 @@ export default function CustomerManagement() {
     },
   });
 
+  // Credit adjustment mutation
+  const creditAdjustmentMutation = useMutation({
+    mutationFn: async (adjustmentData: any) => {
+      const res = await fetch(`/api/admin/users/${adjustmentData.userId}/credits/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: parseInt(adjustmentData.amount),
+          reason: adjustmentData.reason,
+          type: adjustmentData.type
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to adjust credits');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Pump-out credits adjusted successfully",
+      });
+      setIsCreditAdjustDialogOpen(false);
+      setSelectedCustomerForCredit(null);
+      setCreditAdjustment({ amount: "", reason: "", type: "add" });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/credits'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to adjust credits",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Function to get short service level label with color coding
   const getServiceLevelDisplay = (serviceLevelId: number | null, serviceLevels: any[]) => {
     if (!serviceLevelId) {
@@ -485,6 +531,46 @@ export default function CustomerManagement() {
   const handleAddBoatForCustomer = (customer: any) => {
     setSelectedCustomerForBoat(customer);
     setIsAddBoatDialogOpen(true);
+  };
+
+  const handleAdjustCredits = (customer: any) => {
+    setSelectedCustomerForCredit(customer);
+    setCreditAdjustment({
+      amount: "",
+      reason: "",
+      type: "add"
+    });
+    setIsCreditAdjustDialogOpen(true);
+  };
+
+  const handleCreditAdjustmentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedCustomerForCredit || !creditAdjustment.amount || !creditAdjustment.reason) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amount = parseInt(creditAdjustment.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    creditAdjustmentMutation.mutate({
+      userId: selectedCustomerForCredit.id,
+      amount: creditAdjustment.amount,
+      reason: creditAdjustment.reason,
+      type: creditAdjustment.type
+    });
   };
 
   const handleBoatSubmit = (e: React.FormEvent) => {
