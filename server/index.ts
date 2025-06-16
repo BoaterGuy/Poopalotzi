@@ -84,20 +84,27 @@ async function startServer() {
     // Register API routes
     registerRoutes(app);
 
-    // Import and setup Vite for development
-    if (process.env.NODE_ENV !== "production") {
-      const { setupVite } = await import("./vite");
-      await setupVite(app);
-    } else {
+    // Setup development server with proper Vite integration
+    if (process.env.NODE_ENV === "production") {
       const path = await import("path");
       app.use(express.static(path.resolve("dist/public")));
       
-      // Serve React app for all non-API routes
       app.get("*", (req, res) => {
         if (!req.path.startsWith("/api")) {
           res.sendFile(path.resolve("dist/public/index.html"));
         }
       });
+    } else {
+      // Development: Setup Vite dev server
+      const { createServer } = await import("vite");
+      const vite = await createServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+        root: './client'
+      });
+      
+      app.use(vite.ssrFixStacktrace);
+      app.use(vite.middlewares);
     }
 
     // Try to start server, with port fallback
