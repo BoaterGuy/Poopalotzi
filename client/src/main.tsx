@@ -8,8 +8,32 @@ import { Helmet } from "react-helmet";
 // TEMPORARILY DISABLE SERVICE WORKER TO FIX CACHING ISSUES
 // registerSW();
 
-// Force cache invalidation v2.1.0
-console.log('Poopalotzi Loading - Build:', '2025-06-16-v2.1.0');
+// Force cache invalidation v2.2.0
+console.log('Poopalotzi Loading - Build:', '2025-06-16-v2.2.0-FRESH');
+document.title = 'Poopalotzi v2.2 LOADING...';
+
+// Force reload if we detect old cache
+const APP_VERSION = '2.2.0';
+const lastVersion = localStorage.getItem('poopalotzi-version');
+
+if (lastVersion !== APP_VERSION) {
+  console.log(`Version update detected: ${lastVersion} -> ${APP_VERSION}`);
+  localStorage.setItem('poopalotzi-version', APP_VERSION);
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
+}
+
+// Secondary check for cached content
+setTimeout(() => {
+  const body = document.querySelector('body');
+  const hasNewVersion = body?.textContent?.includes('v2.2') || body?.textContent?.includes('FRESH LOADED');
+  
+  if (body && !hasNewVersion) {
+    console.log('Old cache detected, forcing hard reload...');
+    window.location.href = window.location.href + '?v=' + Date.now();
+  }
+}, 3000);
 
 // Aggressive cache clearing
 if ('serviceWorker' in navigator) {

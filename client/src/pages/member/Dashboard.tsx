@@ -260,6 +260,10 @@ export default function MemberDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
+            <div className="bg-green-600 text-white p-3 rounded-lg mb-4">
+              <div className="font-bold text-lg">🚀 POOPALOTZI v2.2 FRESH LOADED 🚀</div>
+              <div className="text-sm">New UI and features active</div>
+            </div>
             <h1 className="text-3xl font-bold text-[#0B1F3A]">Welcome, {user?.firstName}!</h1>
             <p className="text-gray-600">
               Manage your boat services and monitor upcoming appointments.
