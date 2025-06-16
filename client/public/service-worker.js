@@ -1,6 +1,6 @@
 // Poopalotzi Service Worker - Network-First Strategy
 
-const CACHE_NAME = 'poopalotzi-v3';
+const CACHE_NAME = 'poopalotzi-v4-interactive-credits';
 const urlsToCache = [
   '/',
   '/index.html',

@@ -1388,7 +1388,7 @@ export default function CustomerManagement() {
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Service Level</TableHead>
-                      <TableHead>Credits</TableHead>
+                      <TableHead>Credits ⚡</TableHead>
                       <TableHead>Boats</TableHead>
                       <TableHead className="w-[200px] text-center">Actions</TableHead>
                     </TableRow>
