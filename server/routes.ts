@@ -2143,37 +2143,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clover webhook endpoint
   app.post("/api/webhooks/clover", async (req, res, next) => {
     try {
-      const signature = req.headers['clover-signature'] as string;
-      const payload = JSON.stringify(req.body);
+      console.log('=== CLOVER WEBHOOK RECEIVED ===');
+      console.log('Headers:', JSON.stringify(req.headers, null, 2));
+      console.log('Body:', JSON.stringify(req.body, null, 2));
+      console.log('Method:', req.method);
+      console.log('URL:', req.url);
       
-      console.log('Clover webhook received:', {
-        headers: req.headers,
-        body: req.body,
-        signature: signature
+      // For initial verification, just respond with 200
+      console.log('Responding with 200 OK for webhook verification');
+      return res.status(200).json({ 
+        received: true, 
+        message: "Webhook endpoint is active",
+        timestamp: new Date().toISOString()
       });
-
-      // Handle Clover verification challenge
-      if (req.body.verificationCode) {
-        console.log('Clover webhook verification request received');
-        return res.status(200).json({ verificationCode: req.body.verificationCode });
-      }
-
-      // For actual webhook events, verify signature if present
-      if (signature) {
-        if (!cloverService.verifyWebhookSignature(payload, signature)) {
-          console.log('Invalid webhook signature');
-          return res.status(401).json({ message: "Invalid webhook signature" });
-        }
-      } else {
-        console.log('No signature provided, proceeding anyway for development');
-      }
-
-      const { type, data } = req.body;
-      if (type && data) {
-        await cloverService.handleWebhook(type, data);
-      }
       
-      res.status(200).json({ received: true });
     } catch (err) {
       console.error('Webhook processing error:', err);
       res.status(500).json({ message: "Webhook processing failed" });
