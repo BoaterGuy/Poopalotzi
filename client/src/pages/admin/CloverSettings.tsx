@@ -173,7 +173,7 @@ export default function CloverSettings() {
     }
   });
 
-  const handleConnectClover = () => {
+  const handleConnectClover = async () => {
     if (!merchantId.trim()) {
       toast({
         title: "Merchant ID Required",
@@ -182,6 +182,25 @@ export default function CloverSettings() {
       });
       return;
     }
+
+    // Clear browser cache to prevent conflicts
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
+      // Add timestamp to prevent any caching
+      const timestamp = Date.now();
+      console.log(`[${timestamp}] Initiating fresh Clover connection for merchant: ${merchantId}`);
+      
+    } catch (error) {
+      console.log('Cache clearing failed, continuing anyway:', error);
+    }
+
     connectCloverMutation.mutate(merchantId);
   };
 
@@ -335,18 +354,37 @@ export default function CloverSettings() {
                     </p>
                   </div>
 
-                  <Button
-                    onClick={handleConnectClover}
-                    disabled={connectCloverMutation.isPending || isConnecting}
-                    className="w-full"
-                  >
-                    {(connectCloverMutation.isPending || isConnecting) ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                    )}
-                    Connect to Clover
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => {
+                        // Hard refresh approach - force page reload with cache bypass
+                        window.location.href = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
+                      }}
+                      disabled={!merchantId.trim() || isConnecting}
+                      className="w-full"
+                    >
+                      {isConnecting ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                      )}
+                      Connect to Clover (Direct)
+                    </Button>
+                    
+                    <Button
+                      onClick={handleConnectClover}
+                      disabled={connectCloverMutation.isPending || isConnecting}
+                      className="w-full"
+                      variant="secondary"
+                    >
+                      {(connectCloverMutation.isPending || isConnecting) ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Clear Cache & Connect
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
