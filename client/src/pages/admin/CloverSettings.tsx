@@ -108,8 +108,9 @@ export default function CloverSettings() {
   // Initiate OAuth flow
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      // Use direct OAuth URL to avoid fetch/session issues
-      const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
+      // Use HTTPS redirect URI - Clover requires secure callbacks
+      const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
+      const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
       return { authUrl, merchantId };
     },
     onSuccess: (data) => {
@@ -357,8 +358,9 @@ export default function CloverSettings() {
                   <div className="space-y-2">
                     <Button
                       onClick={() => {
-                        // Hard refresh approach - force page reload with cache bypass
-                        window.location.href = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code`;
+                        // Use HTTPS redirect URI - Clover requires secure callbacks
+                        const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
+                        window.location.href = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
                       }}
                       disabled={!merchantId.trim() || isConnecting}
                       className="w-full"

@@ -29,8 +29,9 @@ export default function CloverConnect() {
     sessionStorage.clear();
     localStorage.clear();
     
-    // Direct redirect to Clover - no API calls, no caching, no interference
-    const cloverUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/admin/clover/oauth/callback')}&response_type=code&state=${Date.now()}`;
+    // Use HTTPS redirect URI - Clover requires secure callbacks
+    const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
+    const cloverUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${Date.now()}`;
     
     console.log('Redirecting to Clover OAuth:', cloverUrl);
     

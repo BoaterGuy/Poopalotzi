@@ -107,6 +107,9 @@ export class CloverService {
       throw new Error(`Invalid Clover environment: ${environment}`);
     }
     
+    // Ensure redirect URI uses HTTPS for Clover compatibility
+    const secureRedirectUri = redirectUri.replace(/^http:/, 'https:');
+    
     const baseUrl = endpoints.oauth;
     const params = new URLSearchParams({
       client_id: appId,
