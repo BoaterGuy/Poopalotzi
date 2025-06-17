@@ -2149,11 +2149,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Method:', req.method);
       console.log('URL:', req.url);
       
-      // For initial verification, just respond with 200
-      console.log('Responding with 200 OK for webhook verification');
+      // Handle Clover verification challenge
+      if (req.body && req.body.verificationCode) {
+        console.log('Clover verification challenge received:', req.body.verificationCode);
+        return res.status(200).json({ 
+          verificationCode: req.body.verificationCode 
+        });
+      }
+      
+      // For GET requests (sometimes used for verification)
+      if (req.method === 'GET') {
+        console.log('GET request for webhook verification');
+        return res.status(200).json({ 
+          message: "Webhook endpoint is active",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // For regular webhook events
+      console.log('Processing webhook event');
+      const { type, data } = req.body;
+      if (type && data) {
+        await cloverService.handleWebhook(type, data);
+      }
+      
       return res.status(200).json({ 
         received: true, 
-        message: "Webhook endpoint is active",
+        message: "Webhook processed successfully",
         timestamp: new Date().toISOString()
       });
       
@@ -2161,6 +2183,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Webhook processing error:', err);
       res.status(500).json({ message: "Webhook processing failed" });
     }
+  });
+
+  // Handle GET requests to webhook endpoint for verification
+  app.get("/api/webhooks/clover", async (req, res) => {
+    console.log('GET request to webhook endpoint for verification');
+    return res.status(200).json({ 
+      message: "Webhook endpoint is active",
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Get payment transaction details (admin only)
