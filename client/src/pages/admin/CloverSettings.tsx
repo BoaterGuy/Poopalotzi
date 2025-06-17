@@ -251,6 +251,9 @@ export default function CloverSettings() {
           <p className="text-muted-foreground">
             Configure and manage your Clover payment integration
           </p>
+          <div className="text-xs text-blue-600 font-mono mt-1">
+            v2.1 - HTTPS OAuth Fixed
+          </div>
         </div>
       </div>
 

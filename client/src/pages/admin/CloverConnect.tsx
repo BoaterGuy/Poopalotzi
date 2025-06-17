@@ -45,6 +45,9 @@ export default function CloverConnect() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">Connect to Clover</h1>
           <p className="text-gray-600 mt-2">Isolated connection flow</p>
+          <div className="text-xs text-blue-600 font-mono">
+            v2.1 - HTTPS OAuth Fixed
+          </div>
         </div>
 
         <Card>
