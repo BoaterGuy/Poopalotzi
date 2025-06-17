@@ -863,6 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           boatId: request.boatId,
           boatName: boat?.name || 'Unknown Boat',
           ownerName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Unknown Owner',
+          ownerId: user?.id || null,
           marinaId: marina?.id || 0,
           marinaName: marina?.name || 'Unassigned',
           pier: dockAssignment?.pier || '-',
