@@ -132,11 +132,6 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link to="/employee/schedule">
-                        <DropdownMenuItem className="cursor-pointer">
-                          My Schedule
-                        </DropdownMenuItem>
-                      </Link>
                       <Link to="/employee/manual-entry">
                         <DropdownMenuItem className="cursor-pointer">
                           Manual Entry
@@ -287,13 +282,6 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link 
-                        to="/employee/schedule"
-                        className="text-white hover:text-white hover:opacity-80 py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        My Schedule
-                      </Link>
                       <Link 
                         to="/employee/manual-entry"
                         className="text-white hover:text-white hover:opacity-80 py-2"
