@@ -36,6 +36,7 @@ import AdminCalendar from "@/pages/admin/Calendar";
 import AdminServiceLevelManagement from "@/pages/admin/ServiceLevelManagement";
 import AdminManualServiceEntry from "@/pages/admin/AdminManualServiceEntry";
 import CloverSettings from "@/pages/admin/CloverSettings";
+import CloverConnect from "@/pages/admin/CloverConnect";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
@@ -167,6 +168,9 @@ function App() {
                 </Route>
                 <Route path="/admin/clover-settings">
                   <AdminRoute component={CloverSettings} path="/admin/clover-settings" />
+                </Route>
+                <Route path="/admin/clover-connect">
+                  <AdminRoute component={CloverConnect} path="/admin/clover-connect" />
                 </Route>
                 
                 {/* 404 Route */}
