@@ -30,6 +30,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Raw text parser for Clover webhooks
+app.use('/api/webhooks/clover', express.raw({ type: 'text/plain' }));
+
 // Enhanced logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();

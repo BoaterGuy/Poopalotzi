@@ -2145,15 +2145,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('=== CLOVER WEBHOOK RECEIVED ===');
       console.log('Headers:', JSON.stringify(req.headers, null, 2));
-      console.log('Body:', JSON.stringify(req.body, null, 2));
+      console.log('Raw Body:', req.body);
+      console.log('Body String:', req.body.toString());
       console.log('Method:', req.method);
       console.log('URL:', req.url);
       
+      // Parse raw text body
+      let bodyData: any = {};
+      const rawBody = req.body.toString();
+      
+      // Try to parse as JSON first
+      try {
+        if (rawBody.trim()) {
+          bodyData = JSON.parse(rawBody);
+        }
+      } catch (parseErr) {
+        console.log('Not JSON, treating as plain text:', rawBody);
+        // If it's a verification code, it might be just the code as plain text
+        if (rawBody.trim()) {
+          bodyData = { verificationCode: rawBody.trim() };
+        }
+      }
+      
+      console.log('Parsed Body Data:', bodyData);
+      
       // Handle Clover verification challenge
-      if (req.body && req.body.verificationCode) {
-        console.log('Clover verification challenge received:', req.body.verificationCode);
+      if (bodyData.verificationCode) {
+        console.log('Clover verification challenge received:', bodyData.verificationCode);
         return res.status(200).json({ 
-          verificationCode: req.body.verificationCode 
+          verificationCode: bodyData.verificationCode 
         });
       }
       
@@ -2168,7 +2188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For regular webhook events
       console.log('Processing webhook event');
-      const { type, data } = req.body;
+      const { type, data } = bodyData;
       if (type && data) {
         await cloverService.handleWebhook(type, data);
       }
