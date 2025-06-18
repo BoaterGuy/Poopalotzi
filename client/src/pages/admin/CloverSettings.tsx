@@ -371,36 +371,24 @@ export default function CloverSettings() {
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() => {
-                        // Use HTTPS redirect URI - Clover requires secure callbacks
-                        const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
-                        window.location.href = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
-                      }}
-                      disabled={!merchantId.trim() || isConnecting}
-                      className="w-full"
-                    >
-                      {isConnecting ? (
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                      )}
-                      Connect to Clover (Direct)
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-mono">
+                        v2.3 - OAuth Fixed
+                      </span>
+                    </div>
                     
                     <Button
-                      onClick={handleConnectClover}
-                      disabled={connectCloverMutation.isPending || isConnecting}
+                      onClick={() => connectCloverMutation.mutate(merchantId)}
+                      disabled={connectCloverMutation.isPending || isConnecting || !merchantId.trim()}
                       className="w-full"
-                      variant="secondary"
                     >
                       {(connectCloverMutation.isPending || isConnecting) ? (
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <ExternalLink className="h-4 w-4 mr-2" />
                       )}
-                      Clear Cache & Connect
+                      Connect to Clover
                     </Button>
                   </div>
                 </div>
