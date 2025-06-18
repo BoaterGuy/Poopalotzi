@@ -10,6 +10,30 @@ const isDev = self.location.hostname === 'localhost' ||
 
 console.log(`Service Worker ${CACHE_VERSION} starting - Environment: ${isDev ? 'Development' : 'Production'}`);
 
+// In development, disable all caching by self-destructing
+if (isDev) {
+  console.log('Development mode detected - Service Worker will not cache anything');
+  self.addEventListener('install', () => {
+    self.skipWaiting();
+  });
+  
+  self.addEventListener('activate', () => {
+    self.clients.claim();
+    // Clear all caches in development
+    caches.keys().then(cacheNames => {
+      return Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+    });
+  });
+  
+  // Bypass all caching in development
+  self.addEventListener('fetch', event => {
+    event.respondWith(fetch(event.request));
+  });
+  
+  // Exit early - don't register any other event listeners
+  return;
+}
+
 // Install event - skip waiting in development
 self.addEventListener('install', event => {
   console.log(`Service Worker ${CACHE_VERSION} installing`);
