@@ -379,7 +379,10 @@ export default function CloverSettings() {
                     </div>
                     
                     <Button
-                      onClick={() => connectCloverMutation.mutate(merchantId)}
+                      onClick={() => {
+                        console.log('Button clicked, merchantId:', merchantId);
+                        connectCloverMutation.mutate(merchantId);
+                      }}
                       disabled={connectCloverMutation.isPending || isConnecting || !merchantId.trim()}
                       className="w-full"
                     >
