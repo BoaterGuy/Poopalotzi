@@ -2229,7 +2229,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Get payment transaction details (admin only)
   // Cache clearing utility route
   app.get("/clear-cache", (req, res) => {
     res.send(`
