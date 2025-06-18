@@ -26,6 +26,18 @@ if (!process.env.CLOVER_ENVIRONMENT) {
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
+// Cache-busting middleware for development
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'development') {
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+  }
+  next();
+});
+
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
