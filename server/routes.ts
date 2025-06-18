@@ -1926,7 +1926,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      console.log('Generated redirect URI:', redirectUri);
       const authUrl = cloverService.getAuthorizationUrl(merchantId, redirectUri);
+      console.log('Auth URL:', authUrl);
       
       res.json({ authUrl, merchantId });
     } catch (err) {
@@ -1937,14 +1939,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Handle Clover OAuth callback (admin only)
   app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
     try {
-      const { code, merchant_id } = req.query;
+      console.log('=== CLOVER OAUTH CALLBACK RECEIVED ===');
+      console.log('Query params:', req.query);
+      console.log('Full URL:', req.url);
+      
+      const { code, merchant_id, error, error_description } = req.query;
+      
+      if (error) {
+        console.error('Clover OAuth error:', error, error_description);
+        return res.redirect('/admin/clover-settings?error=' + encodeURIComponent(error_description || error));
+      }
       
       if (!code || !merchant_id) {
-        return res.status(400).json({ message: "Authorization code and merchant ID are required" });
+        console.error('Missing code or merchant_id:', { code, merchant_id });
+        return res.redirect('/admin/clover-settings?error=missing_params');
       }
 
+      console.log('Exchanging code for tokens...');
       // Exchange code for tokens
       const tokenData = await cloverService.exchangeCodeForTokens(code as string, merchant_id as string);
+      console.log('Token exchange successful:', { expires_in: tokenData.expires_in });
       
       // Save configuration
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
@@ -1955,11 +1969,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tokenExpiresAt: expiresAt
       });
 
-      // Redirect to admin settings page with success message
-      res.redirect('/admin/settings?clover=connected');
+      console.log('Clover configuration saved successfully');
+      // Redirect to clover settings page with success message
+      res.redirect('/admin/clover-settings?success=connected');
     } catch (err) {
       console.error('Clover OAuth callback error:', err);
-      res.redirect('/admin/settings?clover=error');
+      res.redirect('/admin/clover-settings?error=oauth_failed');
     }
   });
 
