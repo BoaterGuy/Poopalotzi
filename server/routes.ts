@@ -2230,6 +2230,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get payment transaction details (admin only)
+  // Cache clearing utility route
+  app.get("/clear-cache", (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Clear Service Worker Cache</title>
+          <style>
+              body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+              .button { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+              .success { color: green; font-weight: bold; }
+              .error { color: red; font-weight: bold; }
+              .info { background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 10px 0; }
+          </style>
+      </head>
+      <body>
+          <h1>Clear Service Worker Cache</h1>
+          <div class="info">
+              <p><strong>This will:</strong></p>
+              <ul>
+                  <li>Clear all browser caches</li>
+                  <li>Unregister all service workers</li>
+                  <li>Clear local storage</li>
+                  <li>Force fresh content loading</li>
+              </ul>
+          </div>
+          
+          <button class="button" onclick="clearEverything()">Clear All Caches</button>
+          <button class="button" onclick="window.location.href='/'">Go to App</button>
+          
+          <div id="status"></div>
+
+          <script>
+              async function clearEverything() {
+                  const status = document.getElementById('status');
+                  status.innerHTML = 'Clearing caches...';
+                  
+                  try {
+                      // Clear all caches
+                      if ('caches' in window) {
+                          const cacheNames = await caches.keys();
+                          await Promise.all(cacheNames.map(name => caches.delete(name)));
+                          console.log('Cleared', cacheNames.length, 'caches');
+                      }
+                      
+                      // Unregister all service workers
+                      if ('serviceWorker' in navigator) {
+                          const registrations = await navigator.serviceWorker.getRegistrations();
+                          await Promise.all(registrations.map(reg => reg.unregister()));
+                          console.log('Unregistered', registrations.length, 'service workers');
+                      }
+                      
+                      // Clear storages
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      
+                      status.innerHTML = '<div class="success">✓ All caches cleared successfully!</div>';
+                      
+                      setTimeout(() => {
+                          status.innerHTML += '<div class="info">Redirecting to app...</div>';
+                          window.location.href = '/';
+                      }, 2000);
+                      
+                  } catch (error) {
+                      console.error('Cache clearing error:', error);
+                      status.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+                  }
+              }
+              
+              // Auto-clear on page load
+              window.addEventListener('load', () => {
+                  setTimeout(clearEverything, 1000);
+              });
+          </script>
+      </body>
+      </html>
+    `);
+  });
+
   app.get("/api/admin/payments/:id", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const id = parseInt(req.params.id);
