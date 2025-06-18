@@ -84,9 +84,10 @@ export default function CloverSettings() {
   // Check URL parameters for OAuth callback status
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const cloverStatus = urlParams.get('clover');
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
     
-    if (cloverStatus === 'connected') {
+    if (success === 'connected') {
       toast({
         title: "Clover Connected",
         description: "Your Clover account has been successfully connected!",
@@ -94,10 +95,12 @@ export default function CloverSettings() {
       // Clean up URL
       window.history.replaceState({}, '', '/admin/clover-settings');
       queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
-    } else if (cloverStatus === 'error') {
+    } else if (error) {
       toast({
         title: "Connection Failed",
-        description: "Failed to connect your Clover account. Please try again.",
+        description: error === 'oauth_failed' ? "OAuth authorization failed. Please try again." : 
+                    error === 'missing_params' ? "Missing authorization parameters." :
+                    "Failed to connect your Clover account. Please try again.",
         variant: "destructive",
       });
       // Clean up URL
@@ -105,16 +108,26 @@ export default function CloverSettings() {
     }
   }, [toast, queryClient]);
 
-  // Initiate OAuth flow
+  // Initiate OAuth flow using server-side endpoint
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      // Use HTTPS redirect URI - Clover requires secure callbacks
-      const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
-      const authUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
-      return { authUrl, merchantId };
+      const response = await fetch('/api/admin/clover/oauth/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ merchantId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to initiate OAuth flow');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setIsConnecting(true);
+      console.log('Redirecting to OAuth URL:', data.authUrl);
       // Redirect to Clover OAuth
       window.location.href = data.authUrl;
     },
