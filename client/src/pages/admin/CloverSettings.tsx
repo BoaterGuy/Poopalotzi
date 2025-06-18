@@ -111,19 +111,32 @@ export default function CloverSettings() {
   // Initiate OAuth flow using server-side endpoint
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      const response = await fetch('/api/admin/clover/oauth/initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ merchantId }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to initiate OAuth flow');
+      console.log('Making API request to initiate OAuth...');
+      try {
+        const response = await fetch('/api/admin/clover/oauth/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ merchantId }),
+          credentials: 'include'
+        });
+        
+        console.log('API response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API error:', errorText);
+          throw new Error(`Failed to initiate OAuth flow: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('API response data:', data);
+        return data;
+      } catch (error) {
+        console.error('OAuth initiation error:', error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       setIsConnecting(true);
@@ -132,6 +145,7 @@ export default function CloverSettings() {
       window.location.href = data.authUrl;
     },
     onError: (error: any) => {
+      console.error('OAuth mutation error:', error);
       toast({
         title: "Connection Error",
         description: error.message || "Failed to initiate Clover connection",
