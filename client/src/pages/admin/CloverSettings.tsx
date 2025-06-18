@@ -393,8 +393,20 @@ export default function CloverSettings() {
                     </div>
                     
                     <Button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('=== BUTTON CLICKED ===');
                         console.log('Button clicked, merchantId:', merchantId);
+                        console.log('Mutation state:', connectCloverMutation.isPending);
+                        console.log('Is connecting:', isConnecting);
+                        
+                        if (!merchantId.trim()) {
+                          console.log('ERROR: No merchant ID provided');
+                          return;
+                        }
+                        
+                        console.log('Calling mutation...');
                         connectCloverMutation.mutate(merchantId);
                       }}
                       disabled={connectCloverMutation.isPending || isConnecting || !merchantId.trim()}
@@ -406,6 +418,23 @@ export default function CloverSettings() {
                         <ExternalLink className="h-4 w-4 mr-2" />
                       )}
                       Connect to Clover
+                    </Button>
+                    
+                    <Button
+                      onClick={() => {
+                        console.log('TEST: Direct API call');
+                        fetch('/api/admin/clover/oauth/initiate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ merchantId: merchantId || 'TEST123' }),
+                          credentials: 'include'
+                        }).then(r => r.json()).then(d => console.log('Direct API result:', d))
+                        .catch(e => console.error('Direct API error:', e));
+                      }}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Test Direct API Call
                     </Button>
                   </div>
                 </div>
