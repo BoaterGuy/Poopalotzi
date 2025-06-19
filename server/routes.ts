@@ -1926,9 +1926,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      console.log('=== OAUTH INITIATION DEBUG ===');
+      console.log('Request protocol:', req.protocol);
+      console.log('Request host:', req.get('host'));
       console.log('Generated redirect URI:', redirectUri);
+      console.log('Merchant ID:', merchantId);
+      
       const authUrl = cloverService.getAuthorizationUrl(merchantId, redirectUri);
-      console.log('Auth URL:', authUrl);
+      console.log('Generated Auth URL:', authUrl);
+      console.log('=== END OAUTH DEBUG ===');
       
       res.json({ authUrl, merchantId });
     } catch (err) {
@@ -1942,6 +1948,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('=== CLOVER OAUTH CALLBACK RECEIVED ===');
       console.log('Query params:', req.query);
       console.log('Full URL:', req.url);
+      console.log('Headers:', req.headers);
+      console.log('Request host:', req.get('host'));
+      console.log('Request protocol:', req.protocol);
       
       const { code, merchant_id, error, error_description } = req.query;
       
