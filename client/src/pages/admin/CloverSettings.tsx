@@ -403,6 +403,10 @@ export default function CloverSettings() {
                           return;
                         }
                         
+                        // Show current domain info for debugging
+                        console.log('Current domain:', window.location.host);
+                        console.log('Expected redirect URI:', `https://${window.location.host}/api/admin/clover/oauth/callback`);
+                        
                         setIsConnecting(true);
                         try {
                           console.log('Making direct OAuth request...');
@@ -414,12 +418,19 @@ export default function CloverSettings() {
                           });
                           
                           if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('OAuth API error:', errorText);
                             throw new Error(`OAuth initiation failed: ${response.status}`);
                           }
                           
                           const data = await response.json();
+                          console.log('Server response:', data);
                           console.log('Redirecting to:', data.authUrl);
-                          window.location.href = data.authUrl;
+                          
+                          // Small delay to see logs before redirect
+                          setTimeout(() => {
+                            window.location.href = data.authUrl;
+                          }, 1000);
                           
                         } catch (error) {
                           console.error('OAuth error:', error);
