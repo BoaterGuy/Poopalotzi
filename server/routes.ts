@@ -1925,7 +1925,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Merchant ID is required" });
       }
 
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      // Use the correct Replit domain for OAuth callback
+      const host = req.get('host');
+      const isReplit = host && host.includes('replit.dev');
+      const redirectUri = isReplit 
+        ? `https://${host}/api/admin/clover/oauth/callback`
+        : `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
       console.log('=== OAUTH INITIATION DEBUG ===');
       console.log('Request protocol:', req.protocol);
       console.log('Request host:', req.get('host'));

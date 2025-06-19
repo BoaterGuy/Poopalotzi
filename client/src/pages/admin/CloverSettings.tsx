@@ -387,8 +387,8 @@ export default function CloverSettings() {
 
                   <div className="space-y-4">
                     <div className="text-center">
-                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono">
-                        v2.5 - Cache Cleared
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-mono">
+                        v2.6 - Redirect Fixed
                       </span>
                     </div>
                     
