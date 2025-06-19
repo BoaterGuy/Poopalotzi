@@ -388,31 +388,53 @@ export default function CloverSettings() {
                   <div className="space-y-4">
                     <div className="text-center">
                       <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-mono">
-                        v2.3 - OAuth Fixed
+                        v2.4 - Direct OAuth
                       </span>
                     </div>
                     
                     <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('=== BUTTON CLICKED ===');
-                        console.log('Button clicked, merchantId:', merchantId);
-                        console.log('Mutation state:', connectCloverMutation.isPending);
-                        console.log('Is connecting:', isConnecting);
-                        
+                      onClick={async () => {
                         if (!merchantId.trim()) {
-                          console.log('ERROR: No merchant ID provided');
+                          toast({
+                            title: "Error",
+                            description: "Please enter a Merchant ID",
+                            variant: "destructive",
+                          });
                           return;
                         }
                         
-                        console.log('Calling mutation...');
-                        connectCloverMutation.mutate(merchantId);
+                        setIsConnecting(true);
+                        try {
+                          console.log('Making direct OAuth request...');
+                          const response = await fetch('/api/admin/clover/oauth/initiate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ merchantId }),
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error(`OAuth initiation failed: ${response.status}`);
+                          }
+                          
+                          const data = await response.json();
+                          console.log('Redirecting to:', data.authUrl);
+                          window.location.href = data.authUrl;
+                          
+                        } catch (error) {
+                          console.error('OAuth error:', error);
+                          toast({
+                            title: "Connection Error",
+                            description: error instanceof Error ? error.message : "Failed to connect to Clover",
+                            variant: "destructive",
+                          });
+                          setIsConnecting(false);
+                        }
                       }}
-                      disabled={connectCloverMutation.isPending || isConnecting || !merchantId.trim()}
+                      disabled={isConnecting || !merchantId.trim()}
                       className="w-full"
                     >
-                      {(connectCloverMutation.isPending || isConnecting) ? (
+                      {isConnecting ? (
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <ExternalLink className="h-4 w-4 mr-2" />
@@ -420,22 +442,7 @@ export default function CloverSettings() {
                       Connect to Clover
                     </Button>
                     
-                    <Button
-                      onClick={() => {
-                        console.log('TEST: Direct API call');
-                        fetch('/api/admin/clover/oauth/initiate', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ merchantId: merchantId || 'TEST123' }),
-                          credentials: 'include'
-                        }).then(r => r.json()).then(d => console.log('Direct API result:', d))
-                        .catch(e => console.error('Direct API error:', e));
-                      }}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      Test Direct API Call
-                    </Button>
+
                   </div>
                 </div>
               )}
