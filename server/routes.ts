@@ -1925,16 +1925,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Merchant ID is required" });
       }
 
-      // Use the correct Replit domain for OAuth callback
-      const host = req.get('host');
-      const isReplit = host && host.includes('replit.dev');
-      const redirectUri = isReplit 
-        ? `https://${host}/api/admin/clover/oauth/callback`
-        : `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      // Use the correct Replit domain for OAuth callback - hardcoded to match Clover app config
+      const redirectUri = 'https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback';
       console.log('=== OAUTH INITIATION DEBUG ===');
       console.log('Request protocol:', req.protocol);
       console.log('Request host:', req.get('host'));
-      console.log('Generated redirect URI:', redirectUri);
+      console.log('Hardcoded redirect URI:', redirectUri);
       console.log('Merchant ID:', merchantId);
       
       const authUrl = cloverService.getAuthorizationUrl(merchantId, redirectUri);
@@ -1949,6 +1945,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Handle Clover OAuth callback (admin only)
   app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
+    // Set CORS headers for cross-origin requests
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
     try {
       console.log('=== CLOVER OAUTH CALLBACK RECEIVED ===');
       console.log('Query params:', req.query);
