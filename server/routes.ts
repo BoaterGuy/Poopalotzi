@@ -2055,31 +2055,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update Clover configuration (admin only)
+  // Create or update Clover configuration (admin only)
   app.put("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
     try {
-      const configSchema = insertCloverConfigSchema.partial();
-      const result = configSchema.safeParse(req.body);
+      console.log('=== CLOVER CONFIG REQUEST ===');
+      console.log('Request body:', req.body);
       
-      if (!result.success) {
+      const { merchantId, accessToken, environment } = req.body;
+      
+      if (!merchantId || !accessToken) {
         return res.status(400).json({ 
-          message: "Invalid configuration data", 
-          errors: result.error.format() 
+          message: "Merchant ID and Access Token are required" 
         });
       }
 
-      const config = await storage.getCloverConfig();
-      if (!config) {
-        return res.status(404).json({ message: "Clover configuration not found" });
+      // Check if configuration already exists
+      const existingConfig = await storage.getCloverConfig();
+      
+      if (existingConfig) {
+        // Update existing configuration
+        const updatedConfig = await storage.updateCloverConfig(existingConfig.id, {
+          merchantId,
+          accessToken,
+          environment: environment || 'sandbox'
+        });
+        console.log('Updated existing Clover configuration');
+        res.json({ 
+          message: "Configuration updated successfully",
+          merchantId: updatedConfig?.merchantId,
+          environment: updatedConfig?.environment || 'sandbox'
+        });
+      } else {
+        // Create new configuration
+        await cloverService.saveConfiguration({
+          merchantId,
+          accessToken,
+          environment: environment || 'sandbox'
+        });
+        console.log('Created new Clover configuration');
+        res.json({ 
+          message: "Configuration created successfully",
+          merchantId,
+          environment: environment || 'sandbox'
+        });
       }
-
-      const updatedConfig = await storage.updateCloverConfig(config.id, result.data);
-      res.json({ 
-        message: "Configuration updated successfully",
-        merchantId: updatedConfig?.merchantId,
-        environment: updatedConfig?.environment
-      });
     } catch (err) {
+      console.error('Clover configuration error:', err);
       next(err);
     }
   });
