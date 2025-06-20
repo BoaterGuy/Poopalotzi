@@ -387,8 +387,8 @@ export default function CloverSettings() {
 
                   <div className="space-y-4">
                     <div className="text-center">
-                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-mono">
-                        v2.7 - Domain Fixed
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-mono">
+                        v2.8 - App ID Fixed
                       </span>
                     </div>
                     
