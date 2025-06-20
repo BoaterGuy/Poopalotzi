@@ -1935,6 +1935,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const authUrl = cloverService.getAuthorizationUrl(merchantId, redirectUri);
       console.log('Generated Auth URL:', authUrl);
+      console.log('URL Parameters:');
+      console.log('- client_id:', process.env.CLOVER_APP_ID);
+      console.log('- merchant_id:', merchantId);
+      console.log('- redirect_uri:', redirectUri);
       console.log('=== END OAUTH DEBUG ===');
       
       res.json({ authUrl, merchantId });

@@ -383,6 +383,11 @@ export default function CloverSettings() {
                     <p className="text-sm text-muted-foreground">
                       You can find your Merchant ID in your Clover dashboard under Account & Setup → Business Information
                     </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <p className="text-sm text-amber-800">
+                        <strong>OAuth Loop Issue:</strong> If login keeps redirecting back to Clover login page, the merchant ID may not be associated with your app. Try creating a new test merchant in your Clover Developer Console.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
