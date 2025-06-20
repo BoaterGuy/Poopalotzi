@@ -1958,6 +1958,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Manual OAuth completion endpoint for stuck loading scenarios
+  app.post("/api/admin/clover/oauth/manual-complete", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      console.log('=== MANUAL CLOVER OAUTH COMPLETION ===');
+      const { code, merchantId } = req.body;
+      
+      if (!code || !merchantId) {
+        return res.status(400).json({ error: 'Missing code or merchantId' });
+      }
+
+      // Exchange code for tokens
+      const tokenResponse = await cloverService.exchangeCodeForTokens(code, merchantId);
+      
+      // Save configuration
+      await cloverService.saveConfiguration({
+        merchantId: merchantId,
+        accessToken: tokenResponse.access_token,
+        refreshToken: tokenResponse.refresh_token,
+        environment: 'sandbox',
+        tokenExpiresAt: new Date(Date.now() + (tokenResponse.expires_in * 1000))
+      });
+
+      console.log('Manual OAuth completion successful');
+      res.json({ success: true, message: 'Clover connected successfully' });
+    } catch (err) {
+      console.error('Manual OAuth completion error:', err);
+      res.status(500).json({ error: 'Failed to complete OAuth manually' });
+    }
+  });
+
   // Handle Clover OAuth callback (admin only)
   app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
     // Set CORS headers for cross-origin requests

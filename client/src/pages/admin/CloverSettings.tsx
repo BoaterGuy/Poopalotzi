@@ -66,6 +66,7 @@ export default function CloverSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [refundDialog, setRefundDialog] = useState<{ open: boolean; transaction?: PaymentTransaction }>({ open: false });
   const [refundAmount, setRefundAmount] = useState('');
+  const [manualCode, setManualCode] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -494,6 +495,72 @@ export default function CloverSettings() {
                       Connect to Clover
                     </Button>
                     
+                    {/* Manual OAuth completion for stuck scenarios */}
+                    {isConnecting && (
+                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h4 className="font-medium text-yellow-800 mb-2">OAuth Stuck on Loading?</h4>
+                        <p className="text-sm text-yellow-700 mb-3">
+                          If the Clover page is stuck loading, you can complete the connection manually by pasting the authorization code from the URL:
+                        </p>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Paste the authorization code from the URL (starts with 'code=')"
+                            className="w-full px-3 py-2 border border-yellow-300 rounded text-sm"
+                            value={manualCode}
+                            onChange={(e) => setManualCode(e.target.value)}
+                          />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={async () => {
+                              if (!manualCode.trim() || !merchantId.trim()) {
+                                toast({
+                                  title: "Error",
+                                  description: "Please enter both merchant ID and authorization code",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
+                              try {
+                                const response = await fetch('/api/admin/clover/oauth/manual-complete', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    code: manualCode.trim(),
+                                    merchantId: merchantId.trim()
+                                  })
+                                });
+
+                                const data = await response.json();
+                                
+                                if (response.ok) {
+                                  toast({
+                                    title: "Success",
+                                    description: "Clover connected successfully!",
+                                  });
+                                  setManualCode('');
+                                  setIsConnecting(false);
+                                  queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                                } else {
+                                  throw new Error(data.error || 'Manual completion failed');
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: error instanceof Error ? error.message : "Manual completion failed",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            disabled={!manualCode.trim() || !merchantId.trim()}
+                          >
+                            Complete Connection Manually
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                 </div>
