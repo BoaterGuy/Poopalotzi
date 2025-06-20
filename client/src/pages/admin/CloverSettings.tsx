@@ -412,7 +412,17 @@ export default function CloverSettings() {
                     </div>
                     
                     <Button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        // Add manual loading reset
+                        if (isConnecting) {
+                          e.preventDefault();
+                          setIsConnecting(false);
+                          toast({
+                            title: "OAuth Reset",
+                            description: "OAuth process reset. You can try again.",
+                          });
+                          return;
+                        }
                         if (!merchantId.trim()) {
                           toast({
                             title: "Error",
@@ -446,10 +456,22 @@ export default function CloverSettings() {
                           console.log('Server response:', data);
                           console.log('Redirecting to:', data.authUrl);
                           
-                          // Small delay to see logs before redirect
+                          // Add timeout handling for OAuth
                           setTimeout(() => {
                             window.location.href = data.authUrl;
                           }, 1000);
+                          
+                          // Reset loading state after 2 minutes if no callback
+                          setTimeout(() => {
+                            if (isConnecting) {
+                              setIsConnecting(false);
+                              toast({
+                                title: "OAuth Timeout",
+                                description: "OAuth process took too long. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          }, 120000);
                           
                         } catch (error) {
                           console.error('OAuth error:', error);

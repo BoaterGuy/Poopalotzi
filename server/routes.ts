@@ -1947,6 +1947,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test callback endpoint accessibility
+  app.get("/api/admin/clover/oauth/test", async (req, res) => {
+    console.log('=== CALLBACK TEST ENDPOINT HIT ===');
+    res.json({ 
+      message: "Callback endpoint is accessible",
+      timestamp: new Date().toISOString(),
+      host: req.get('host'),
+      protocol: req.protocol
+    });
+  });
+
   // Handle Clover OAuth callback (admin only)
   app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
     // Set CORS headers for cross-origin requests
@@ -1988,6 +1999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tokenExpiresAt: expiresAt
       });
 
+      console.log('Clover configuration saved successfully');
       console.log('Clover configuration saved successfully');
       // Redirect to clover settings page with success message
       res.redirect('/admin/clover-settings?success=connected');
