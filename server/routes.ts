@@ -1947,15 +1947,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test callback endpoint accessibility
-  app.get("/api/admin/clover/oauth/test", async (req, res) => {
-    console.log('=== CALLBACK TEST ENDPOINT HIT ===');
-    res.json({ 
-      message: "Callback endpoint is accessible",
-      timestamp: new Date().toISOString(),
-      host: req.get('host'),
-      protocol: req.protocol
-    });
+  // Test Clover API connection
+  app.get("/api/admin/clover/test", isAdmin, async (req, res) => {
+    try {
+      const status = await cloverService.getConfigurationStatus();
+      if (!status.isConfigured) {
+        return res.status(400).json({ error: 'Clover not configured' });
+      }
+
+      // Test API connection by fetching merchant info
+      const testResult = { 
+        message: "Clover API connection successful",
+        timestamp: new Date().toISOString(),
+        merchantId: status.merchantId,
+        environment: status.environment,
+        tokenExpiry: status.tokenExpiry
+      };
+      
+      console.log('Clover API test successful:', testResult);
+      res.json(testResult);
+    } catch (error) {
+      console.error('Clover API test failed:', error);
+      res.status(500).json({ 
+        error: 'Clover API test failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   // Manual OAuth completion endpoint for stuck loading scenarios

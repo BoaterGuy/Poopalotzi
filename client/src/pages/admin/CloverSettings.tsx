@@ -496,11 +496,83 @@ export default function CloverSettings() {
                     </Button>
                     
                     {/* Manual OAuth completion for stuck scenarios */}
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-medium text-blue-800 mb-2">Alternative: Direct Token Setup</h4>
+                      <p className="text-sm text-blue-700 mb-3">
+                        Since OAuth is hanging, you can set up Clover directly using your merchant tokens from the Clover dashboard:
+                      </p>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Enter your Clover API Token (from Clover Dashboard > Setup > API Tokens)"
+                          className="w-full px-3 py-2 border border-blue-300 rounded text-sm"
+                          value={manualCode}
+                          onChange={(e) => setManualCode(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={async () => {
+                            if (!manualCode.trim() || !merchantId.trim()) {
+                              toast({
+                                title: "Error",
+                                description: "Please enter both merchant ID and API token",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+
+                            try {
+                              const response = await fetch('/api/admin/clover/config', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  merchantId: merchantId.trim(),
+                                  accessToken: manualCode.trim(),
+                                  environment: 'sandbox'
+                                })
+                              });
+
+                              const data = await response.json();
+                              
+                              if (response.ok) {
+                                toast({
+                                  title: "Success",
+                                  description: "Clover configured successfully!",
+                                });
+                                setManualCode('');
+                                setIsConnecting(false);
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                              } else {
+                                throw new Error(data.error || 'Configuration failed');
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: error instanceof Error ? error.message : "Configuration failed",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          disabled={!manualCode.trim() || !merchantId.trim()}
+                        >
+                          Configure Clover Manually
+                        </Button>
+                      </div>
+                      <div className="mt-2 text-xs text-blue-600">
+                        <strong>How to get your API Token:</strong><br/>
+                        1. Go to your Clover Sandbox Dashboard<br/>
+                        2. Setup → API Tokens<br/>
+                        3. Create a new token with "Payments" permissions<br/>
+                        4. Copy the token and paste it above
+                      </div>
+                    </div>
+                    
                     {isConnecting && (
                       <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <h4 className="font-medium text-yellow-800 mb-2">OAuth Stuck on Loading?</h4>
                         <p className="text-sm text-yellow-700 mb-3">
-                          If the Clover page is stuck loading, you can complete the connection manually by pasting the authorization code from the URL:
+                          You can also try to complete OAuth manually if you see an authorization code:
                         </p>
                         <div className="space-y-2">
                           <input
