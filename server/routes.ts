@@ -1976,7 +1976,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         merchantId: merchantId,
         accessToken: tokenResponse.access_token,
         refreshToken: tokenResponse.refresh_token,
-        environment: 'sandbox',
         tokenExpiresAt: new Date(Date.now() + (tokenResponse.expires_in * 1000))
       });
 
