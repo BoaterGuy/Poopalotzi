@@ -383,17 +383,31 @@ export default function CloverSettings() {
                     <p className="text-sm text-muted-foreground">
                       You can find your Merchant ID in your Clover dashboard under Account & Setup → Business Information
                     </p>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                      <p className="text-sm text-amber-800">
-                        <strong>OAuth Loop Issue:</strong> If login keeps redirecting back to Clover login page, the merchant ID may not be associated with your app. Try creating a new test merchant in your Clover Developer Console.
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <strong>Available Test Merchants:</strong>
                       </p>
+                      <div className="space-y-1">
+                        <button 
+                          onClick={() => setMerchantId('RCTSTAVI0010002')}
+                          className="block text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          RCTSTAVI0010002 (Poopalotzi Test Acct - Primary)
+                        </button>
+                        <button 
+                          onClick={() => setMerchantId('R6BSXSAY96KW1')}
+                          className="block text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          R6BSXSAY96KW1 (Poopalotzi Test Acct - Secondary)
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="text-center">
-                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-mono">
-                        v2.8 - App ID Fixed
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-mono">
+                        v2.9 - Multiple Merchants
                       </span>
                     </div>
                     
