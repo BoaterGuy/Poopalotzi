@@ -582,7 +582,7 @@ export default function ServiceHistory() {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedRequest && serviceLevel && (
+          {selectedRequest && selectedRequest.id && serviceLevel && (
             <PaymentForm 
               requestId={selectedRequest.id}
               amount={serviceLevel.price}

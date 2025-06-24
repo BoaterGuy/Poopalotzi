@@ -490,13 +490,13 @@ export default function RequestService() {
                 <CardTitle>Payment Details</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                {selectedRequest ? (
+                {selectedRequest && selectedRequest.id ? (
                   <PaymentForm 
                     requestId={selectedRequest.id}
                     amount={serviceLevel.price}
                     onSuccess={handlePaymentComplete}
                   />
-                ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 ? (
+                ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 && pendingPaymentRequests[0].id ? (
                   <PaymentForm 
                     requestId={pendingPaymentRequests[0].id}
                     amount={serviceLevel.price}

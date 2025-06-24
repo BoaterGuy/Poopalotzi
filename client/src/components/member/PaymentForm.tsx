@@ -63,9 +63,22 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
 
   const onSubmit = async (data: PaymentFormValues) => {
     setIsSubmitting(true);
+    
+    // Validate requestId before processing
+    if (!requestId || requestId === 0) {
+      toast({
+        title: "Payment Error",
+        description: "Invalid request ID. Please refresh the page and try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       // In a real application, this would call a secure payment processor
       // NEVER process actual payments in client-side code
+      console.log(`Processing payment for request ID: ${requestId}, amount: ${amount}`);
       await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
         paymentDetails: {
           ...data,
