@@ -91,31 +91,40 @@ export default function RequestService() {
   const isLoadingServiceLevel = isLoadingAllLevels;
 
   // Get pending payment requests - only for member's boats
-  const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments } = useQuery<PumpOutRequest[]>({
+  const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments, error: pendingPaymentError } = useQuery<PumpOutRequest[]>({
     queryKey: ['/api/pump-out-requests/payment/pending', boats?.map(b => b.id)],
     queryFn: async () => {
-      console.log('Fetching pump-out requests for pending payments...', boats?.length || 0, 'boats');
-      if (!boats || boats.length === 0) return [];
+      console.log('🔍 Fetching pump-out requests for pending payments...', boats?.length || 0, 'boats');
+      console.log('🔍 Boats data:', boats);
+      if (!boats || boats.length === 0) {
+        console.log('❌ No boats found, returning empty array');
+        return [];
+      }
       
       // Get requests for each boat and filter for pending payments
       const allPendingRequests: PumpOutRequest[] = [];
       
       for (const boat of boats) {
         try {
+          console.log(`🔍 Fetching requests for boat ${boat.id}...`);
           const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
             credentials: 'include'
           });
           if (response.ok) {
             const boatRequests = await response.json();
+            console.log(`✅ Got ${boatRequests.length} requests for boat ${boat.id}:`, boatRequests);
             const pendingRequests = boatRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+            console.log(`💰 Found ${pendingRequests.length} pending payment requests for boat ${boat.id}:`, pendingRequests);
             allPendingRequests.push(...pendingRequests);
+          } else {
+            console.error(`❌ Failed to fetch requests for boat ${boat.id}:`, response.status, response.statusText);
           }
         } catch (error) {
-          console.error(`Error fetching requests for boat ${boat.id}:`, error);
+          console.error(`❌ Error fetching requests for boat ${boat.id}:`, error);
         }
       }
       
-      console.log('Filtered member pending payment requests:', allPendingRequests);
+      console.log('🎯 Final filtered member pending payment requests:', allPendingRequests);
       return allPendingRequests;
     },
     enabled: !!boats && boats.length > 0,
@@ -522,13 +531,35 @@ export default function RequestService() {
                   const requestToUse = selectedRequest?.id ? selectedRequest : 
                                       (pendingPaymentRequests && pendingPaymentRequests.length > 0 ? pendingPaymentRequests[0] : null);
                   
-                  console.log('Payment tab - selectedRequest:', selectedRequest);
-                  console.log('Payment tab - pendingPaymentRequests:', pendingPaymentRequests);
-                  console.log('Payment tab - requestToUse:', requestToUse);
-                  console.log('Payment tab - user:', user);
+                  console.log('🎯 Payment tab render logic:');
+                  console.log('  - selectedRequest:', selectedRequest);
+                  console.log('  - pendingPaymentRequests:', pendingPaymentRequests);
+                  console.log('  - pendingPaymentError:', pendingPaymentError);
+                  console.log('  - isLoadingPendingPayments:', isLoadingPendingPayments);
+                  console.log('  - requestToUse:', requestToUse);
+                  console.log('  - user:', user);
+                  console.log('  - boats:', boats);
+                  console.log('  - serviceLevel:', serviceLevel);
+                  
+                  if (isLoadingPendingPayments) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600">Loading payment requests...</p>
+                      </div>
+                    );
+                  }
+                  
+                  if (pendingPaymentError) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-red-600 mb-4">Error loading payment requests</p>
+                        <p className="text-sm text-gray-500">{pendingPaymentError.message}</p>
+                      </div>
+                    );
+                  }
                   
                   if (requestToUse && requestToUse.id && requestToUse.id > 0) {
-                    console.log('Rendering PaymentForm with valid request:', requestToUse.id);
+                    console.log('✅ Rendering PaymentForm with valid request:', requestToUse.id);
                     return (
                       <PaymentForm 
                         requestId={requestToUse.id}
@@ -537,13 +568,17 @@ export default function RequestService() {
                       />
                     );
                   } else {
-                    console.log('No valid payment request found. pendingPaymentRequests:', pendingPaymentRequests);
+                    console.log('❌ No valid payment request found');
                     return (
                       <div className="text-center py-8">
                         <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
-                        <p className="text-sm text-gray-500 mb-4">
-                          Debug: {pendingPaymentRequests ? `Found ${pendingPaymentRequests.length} requests` : 'No requests loaded'}
-                        </p>
+                        <div className="text-sm text-gray-500 mb-4 text-left bg-gray-50 p-3 rounded">
+                          <p><strong>Debug Info:</strong></p>
+                          <p>• Boats: {boats ? boats.length : 'null'}</p>
+                          <p>• Pending requests: {pendingPaymentRequests ? pendingPaymentRequests.length : 'null'}</p>
+                          <p>• Loading: {isLoadingPendingPayments ? 'true' : 'false'}</p>
+                          <p>• Error: {pendingPaymentError ? pendingPaymentError.message : 'none'}</p>
+                        </div>
                         <Button 
                           onClick={() => setStep("request")}
                           className="bg-[#0B1F3A]"
