@@ -1872,6 +1872,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint for subscription payments through Clover
+  app.post("/api/payments/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const { amount, source, description, paymentDetails } = req.body;
+      
+      console.log('Processing subscription payment through Clover:', { amount, description });
+      
+      // Use Clover service to process the payment
+      const cloverPayment = await cloverService.processPayment({
+        amount: amount, // Already in cents
+        source: source,
+        description: description,
+        metadata: {
+          userId: req.user.id,
+          paymentType: 'subscription'
+        }
+      }, req.user.id);
+      
+      console.log('Clover payment result:', cloverPayment);
+      
+      res.json({
+        message: "Subscription payment processed successfully through Clover",
+        paymentId: cloverPayment.id,
+        amount: cloverPayment.amount,
+        result: cloverPayment.result
+      });
+    } catch (err) {
+      console.error("Error processing subscription payment:", err);
+      res.status(500).json({ message: "Payment processing failed", error: err.message });
+    }
+  });
+
   // Error handling middleware
   app.use(handleError);
 
