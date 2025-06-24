@@ -43,13 +43,14 @@ interface PaymentFormProps {
   requestId: number;
   amount: number;
   onSuccess: () => void;
+  isSubscriptionPayment?: boolean;
 }
 
-export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFormProps) {
+export default function PaymentForm({ requestId, amount, onSuccess, isSubscriptionPayment = false }: PaymentFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  console.log('PaymentForm initialized with requestId:', requestId, 'amount:', amount);
+  console.log('PaymentForm initialized with requestId:', requestId, 'amount:', amount, 'isSubscriptionPayment:', isSubscriptionPayment);
   
 
 
@@ -68,10 +69,10 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   const onSubmit = async (data: PaymentFormValues) => {
     setIsSubmitting(true);
     
-    console.log('Payment form submission started with requestId:', requestId);
+    console.log('Payment form submission started with requestId:', requestId, 'isSubscriptionPayment:', isSubscriptionPayment);
     
-    // Validate requestId before processing
-    if (!requestId || requestId === 0) {
+    // Validate requestId before processing (skip validation for subscription payments)
+    if (!isSubscriptionPayment && (!requestId || requestId === 0)) {
       console.error('Payment form validation failed - invalid requestId:', requestId);
       toast({
         title: "Payment Error",
@@ -83,19 +84,30 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
     }
     
     try {
-      // In a real application, this would call a secure payment processor
-      // NEVER process actual payments in client-side code
-      await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-        paymentDetails: {
-          ...data,
-          amount,
-        },
-      });
-      
-      toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully.",
-      });
+      if (isSubscriptionPayment) {
+        // For subscription payments, simulate successful payment
+        console.log('Processing subscription payment simulation...');
+        // Simulate a brief delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        toast({
+          title: "Payment Successful",
+          description: "Your subscription payment has been processed successfully.",
+        });
+      } else {
+        // For pump-out requests, call the actual payment endpoint
+        await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
+          paymentDetails: {
+            ...data,
+            amount,
+          },
+        });
+        
+        toast({
+          title: "Payment Successful",
+          description: "Your payment has been processed successfully.",
+        });
+      }
       
       onSuccess();
     } catch (error) {

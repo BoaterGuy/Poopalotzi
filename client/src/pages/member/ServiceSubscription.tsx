@@ -596,6 +596,7 @@ export default function ServiceSubscription() {
               requestId={0} // Not tied to a specific request for service subscription
               amount={selectedPlan.type === 'bulk' && bulkPlanDetails ? bulkPlanDetails.totalCost : selectedPlan.price}
               onSuccess={handlePaymentSuccess}
+              isSubscriptionPayment={true}
             />
           )}
         </DialogContent>
