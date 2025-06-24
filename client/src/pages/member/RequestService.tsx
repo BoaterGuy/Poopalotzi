@@ -90,37 +90,60 @@ export default function RequestService() {
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 
-  // Get pending payment requests
+  // Get pending payment requests - only for member's boats
   const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests/payment/pending'],
+    queryKey: ['/api/pump-out-requests/payment/pending', boats?.map(b => b.id)],
     queryFn: async () => {
-      console.log('Fetching pump-out requests for pending payments...');
-      const response = await fetch('/api/pump-out-requests', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        console.error('Failed to fetch pump-out requests:', response.status, response.statusText);
-        throw new Error('Failed to fetch pump-out requests');
+      console.log('Fetching pump-out requests for pending payments...', boats?.length || 0, 'boats');
+      if (!boats || boats.length === 0) return [];
+      
+      // Get requests for each boat and filter for pending payments
+      const allPendingRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        try {
+          const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const boatRequests = await response.json();
+            const pendingRequests = boatRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+            allPendingRequests.push(...pendingRequests);
+          }
+        } catch (error) {
+          console.error(`Error fetching requests for boat ${boat.id}:`, error);
+        }
       }
-      const allRequests = await response.json();
-      console.log('All requests received:', allRequests);
-      const pendingRequests = allRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
-      console.log('Filtered pending payment requests:', pendingRequests);
-      return pendingRequests;
+      
+      console.log('Filtered member pending payment requests:', allPendingRequests);
+      return allPendingRequests;
     },
+    enabled: !!boats && boats.length > 0,
   });
   
-  // Get all pump-out requests for quota checking (for when user has boats)
+  // Get all pump-out requests for quota checking - only for member's boats
   const { data: allRequests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests'],
+    queryKey: ['/api/pump-out-requests/member-boats', boats?.map(b => b.id)],
     queryFn: async () => {
-      const response = await fetch('/api/pump-out-requests', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch pump-out requests');
+      if (!boats || boats.length === 0) return [];
+      
+      const allMemberRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        try {
+          const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const boatRequests = await response.json();
+            allMemberRequests.push(...boatRequests);
+          }
+        } catch (error) {
+          console.error(`Error fetching requests for boat ${boat.id}:`, error);
+        }
       }
-      return response.json();
+      
+      return allMemberRequests;
     },
     enabled: !!boats && boats.length > 0,
   });
@@ -502,6 +525,7 @@ export default function RequestService() {
                   console.log('Payment tab - selectedRequest:', selectedRequest);
                   console.log('Payment tab - pendingPaymentRequests:', pendingPaymentRequests);
                   console.log('Payment tab - requestToUse:', requestToUse);
+                  console.log('Payment tab - user:', user);
                   
                   if (requestToUse && requestToUse.id && requestToUse.id > 0) {
                     return (
