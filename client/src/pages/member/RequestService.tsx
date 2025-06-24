@@ -94,14 +94,19 @@ export default function RequestService() {
   const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments } = useQuery<PumpOutRequest[]>({
     queryKey: ['/api/pump-out-requests/payment/pending'],
     queryFn: async () => {
+      console.log('Fetching pump-out requests for pending payments...');
       const response = await fetch('/api/pump-out-requests', {
         credentials: 'include'
       });
       if (!response.ok) {
+        console.error('Failed to fetch pump-out requests:', response.status, response.statusText);
         throw new Error('Failed to fetch pump-out requests');
       }
       const allRequests = await response.json();
-      return allRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+      console.log('All requests received:', allRequests);
+      const pendingRequests = allRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+      console.log('Filtered pending payment requests:', pendingRequests);
+      return pendingRequests;
     },
   });
   

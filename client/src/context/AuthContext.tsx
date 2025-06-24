@@ -52,12 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           const userData = await response.json();
+          console.log('AuthContext: User authenticated:', userData.email, userData.role);
           setUser(userData);
         } else {
+          console.log('AuthContext: No valid session found');
           setUser(null);
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('AuthContext: Error fetching user:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
