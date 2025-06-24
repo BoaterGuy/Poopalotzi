@@ -30,3 +30,7 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 - Focus on fixing core functionality over extensive explanations
 - Prioritize working payment processing for marina services
 - Maintain clean, readable code structure
+
+## Login Credentials
+- **Member Account**: member@poopalotzi.com / admin123
+- **Admin Account**: admin@poopalotzi.com / admin123
