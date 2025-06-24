@@ -168,14 +168,17 @@ export default function RequestService() {
   const quotaInfo = calculateRemainingQuota();
 
   const handleServiceRequested = (request: PumpOutRequest) => {
+    console.log("Service requested with request:", request);
     setSelectedRequest(request);
     
     // Check if user has a valid subscription and doesn't need to pay per request
     const hasValidSubscription = serviceLevel && currentServiceLevel;
     const needsPayment = !hasValidSubscription || request.paymentStatus === "Pending";
     
+    console.log("Payment needed:", needsPayment, "Request ID:", request?.id);
+    
     // Only go to payment if user doesn't have a subscription or payment is actually pending
-    if (needsPayment) {
+    if (needsPayment && request?.id) {
       setStep("payment");
     } else {
       // User has valid subscription, proceed with service request
@@ -490,29 +493,36 @@ export default function RequestService() {
                 <CardTitle>Payment Details</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                {selectedRequest && selectedRequest.id ? (
-                  <PaymentForm 
-                    requestId={selectedRequest.id}
-                    amount={serviceLevel.price}
-                    onSuccess={handlePaymentComplete}
-                  />
-                ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 && pendingPaymentRequests[0].id ? (
-                  <PaymentForm 
-                    requestId={pendingPaymentRequests[0].id}
-                    amount={serviceLevel.price}
-                    onSuccess={handlePaymentComplete}
-                  />
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
-                    <Button 
-                      onClick={() => setStep("request")}
-                      className="bg-[#0B1F3A]"
-                    >
-                      Go to Request Service
-                    </Button>
-                  </div>
-                )}
+                {(() => {
+                  const requestToUse = selectedRequest?.id ? selectedRequest : 
+                                      (pendingPaymentRequests && pendingPaymentRequests.length > 0 ? pendingPaymentRequests[0] : null);
+                  
+                  console.log("Payment form render - Selected request:", selectedRequest);
+                  console.log("Payment form render - Pending requests:", pendingPaymentRequests);
+                  console.log("Payment form render - Request to use:", requestToUse);
+                  
+                  if (requestToUse && requestToUse.id && requestToUse.id > 0) {
+                    return (
+                      <PaymentForm 
+                        requestId={requestToUse.id}
+                        amount={serviceLevel.price}
+                        onSuccess={handlePaymentComplete}
+                      />
+                    );
+                  } else {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
+                        <Button 
+                          onClick={() => setStep("request")}
+                          className="bg-[#0B1F3A]"
+                        >
+                          Go to Request Service
+                        </Button>
+                      </div>
+                    );
+                  }
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
