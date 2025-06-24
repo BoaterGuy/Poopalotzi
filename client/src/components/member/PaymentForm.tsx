@@ -49,6 +49,8 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  console.log('PaymentForm initialized with requestId:', requestId, 'amount:', amount);
+  
 
 
   const form = useForm<PaymentFormValues>({
@@ -66,8 +68,11 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   const onSubmit = async (data: PaymentFormValues) => {
     setIsSubmitting(true);
     
+    console.log('Payment form submission started with requestId:', requestId);
+    
     // Validate requestId before processing
     if (!requestId || requestId === 0) {
+      console.error('Payment form validation failed - invalid requestId:', requestId);
       toast({
         title: "Payment Error",
         description: "Invalid request ID. Please refresh the page and try again.",
@@ -145,42 +150,7 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Development Test Button - Remove in Production */}
-        <div className="bg-purple-50 border border-purple-200 rounded-md p-3 mb-2">
-          <h4 className="text-sm font-medium text-purple-700 mb-1">Development Testing</h4>
-          <p className="text-xs text-purple-600 mb-2">Skip payment processing for testing purposes.</p>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm"
-            className="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
-            onClick={async () => {
-              try {
-                // Call the payment endpoint to update the payment status in the database
-                await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-                  paymentDetails: { amount }
-                });
-                
-                // Show success toast
-                toast({
-                  title: "Test Payment Successful",
-                  description: "Payment simulation completed successfully.",
-                });
-                
-                onSuccess();
-              } catch (error) {
-                console.error("Error processing simulated payment:", error);
-                toast({
-                  title: "Payment Simulation Failed",
-                  description: "There was a problem processing your simulated payment.",
-                  variant: "destructive",
-                });
-              }
-            }}
-          >
-            Simulate Successful Payment
-          </Button>
-        </div>
+
         <div className="p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-6">
           <Lock className="h-5 w-5 text-blue-500" />
           <div>
