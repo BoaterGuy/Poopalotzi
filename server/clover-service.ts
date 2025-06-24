@@ -87,6 +87,31 @@ export class CloverService {
     if (!this.initialized) {
       await this.loadConfig();
     }
+    
+    // If still no config after loading, try to create from environment variables
+    if (!this.config) {
+      const appId = process.env.CLOVER_APP_ID;
+      const appSecret = process.env.CLOVER_APP_SECRET;
+      
+      if (appId && appSecret) {
+        console.log('Creating Clover config from environment variables');
+        // Create a basic config for testing
+        this.config = {
+          id: 1,
+          merchantId: 'R6BSXSAY96KW1',
+          appId,
+          appSecret,
+          accessToken: 'a019ed95-e334-76a8-1179-d63ba2952104',
+          refreshToken: null,
+          tokenExpiresAt: null,
+          environment: 'sandbox',
+          webhookSecret: null,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+      }
+    }
   }
 
   /**
