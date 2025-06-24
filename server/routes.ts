@@ -1681,6 +1681,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const year = now.getFullYear();
         startDate = now;
         endDate = new Date(year, 9, 31); // October 31
+      } else if (serviceLevel.type === 'one-time') {
+        // For one-time services, valid for current calendar year
+        const year = now.getFullYear();
+        startDate = now;
+        endDate = new Date(year, 11, 31); // December 31
       }
       
       // Update user's subscription information
@@ -1694,6 +1699,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           additionalPumpOuts: additionalPumpOuts || 0,
           totalPumpOuts: totalPumpOuts || serviceLevel.baseQuantity || 0,
           bulkPlanYear: bulkPlanYear || now.getFullYear()
+        }),
+        // For one-time services, increment pump-out credits
+        ...(serviceLevel.type === 'one-time' && {
+          additionalPumpOuts: (req.user.additionalPumpOuts || 0) + (serviceLevel.onDemandQuota || 1),
+          totalPumpOuts: (req.user.totalPumpOuts || 0) + (serviceLevel.onDemandQuota || 1)
         })
       };
       
@@ -1713,6 +1723,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           additionalPumpOuts: updatedUser.additionalPumpOuts,
           totalPumpOuts: updatedUser.totalPumpOuts,
           bulkPlanYear: updatedUser.bulkPlanYear
+        }),
+        ...(serviceLevel.type === 'one-time' && {
+          additionalPumpOuts: updatedUser.additionalPumpOuts,
+          totalPumpOuts: updatedUser.totalPumpOuts
         })
       });
     } catch (err) {

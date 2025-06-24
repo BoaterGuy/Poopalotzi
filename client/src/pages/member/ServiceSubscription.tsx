@@ -177,14 +177,7 @@ export default function ServiceSubscription() {
       // Update user subscription after payment
       const response = await apiRequest("POST", "/api/users/me/subscription", subscriptionRequest);
       
-      // For one-time services, also update the user's pump-out credits
-      if (selectedPlan.type === 'one-time') {
-        // Add one pump-out credit to the user's account
-        await apiRequest("POST", "/api/users/me/credits/add", {
-          amount: selectedPlan.onDemandQuota || 1,
-          reason: `Purchased ${selectedPlan.name}`
-        });
-      }
+      // Credits are automatically updated in the subscription endpoint for one-time services
       
       // Determine subscription period text
       let periodText = '';
@@ -224,7 +217,10 @@ export default function ServiceSubscription() {
         utils.saveSubscriptionToLocal(subscriptionData);
       });
       
+      // Invalidate all relevant queries to refresh dashboard data
       queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       setShowPayment(false);
       setIsSubscribing(false);
       setSelectedPlan(null);
