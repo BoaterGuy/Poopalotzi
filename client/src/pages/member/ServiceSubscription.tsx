@@ -177,6 +177,15 @@ export default function ServiceSubscription() {
       // Update user subscription after payment
       const response = await apiRequest("POST", "/api/users/me/subscription", subscriptionRequest);
       
+      // For one-time services, also update the user's pump-out credits
+      if (selectedPlan.type === 'one-time') {
+        // Add one pump-out credit to the user's account
+        await apiRequest("POST", "/api/users/me/credits/add", {
+          amount: selectedPlan.onDemandQuota || 1,
+          reason: `Purchased ${selectedPlan.name}`
+        });
+      }
+      
       // Determine subscription period text
       let periodText = '';
       if (selectedPlan.type === 'monthly') {
@@ -189,6 +198,8 @@ export default function ServiceSubscription() {
         }
       } else if (selectedPlan.type === 'seasonal') {
         periodText = 'for the season (May-October)';
+      } else if (selectedPlan.type === 'one-time') {
+        periodText = 'giving you 1 pump-out credit for this year';
       }
       
       toast({

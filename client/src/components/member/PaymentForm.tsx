@@ -85,14 +85,24 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
     
     try {
       if (isSubscriptionPayment) {
-        // For subscription payments, simulate successful payment
-        console.log('Processing subscription payment simulation...');
-        // Simulate a brief delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // For subscription payments, use actual Clover integration
+        console.log('Processing subscription payment through Clover...');
+        
+        const response = await apiRequest("POST", "/api/payments/subscription", {
+          amount: Math.round(amount * 100), // Convert to cents
+          source: 'clv_test_token_' + Date.now(), // Test token for sandbox
+          description: `Subscription payment - $${amount.toFixed(2)}`,
+          paymentDetails: {
+            ...data,
+            amount,
+          },
+        });
+        
+        console.log('Clover subscription payment response:', response);
         
         toast({
           title: "Payment Successful",
-          description: "Your subscription payment has been processed successfully.",
+          description: "Your subscription payment has been processed successfully through Clover.",
         });
       } else {
         // For pump-out requests, call the actual payment endpoint
