@@ -18,8 +18,8 @@ const AuthPage = () => {
   const { toast } = useToast();
 
   // For login
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState('member@poopalotzi.com');
+  const [loginPassword, setLoginPassword] = useState('admin123');
 
   // For registration
   const [registerEmail, setRegisterEmail] = useState('');

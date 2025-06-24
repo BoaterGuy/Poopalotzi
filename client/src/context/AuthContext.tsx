@@ -121,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Login to our API using direct fetch to avoid apiRequest issues
+      console.log('AuthContext: Attempting login with email:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -135,10 +136,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+        console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const userData = await response.json();
+      console.log('AuthContext: Login successful, user data:', userData);
       setUser(userData);
       
       toast({
