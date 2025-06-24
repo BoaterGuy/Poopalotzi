@@ -168,14 +168,11 @@ export default function RequestService() {
   const quotaInfo = calculateRemainingQuota();
 
   const handleServiceRequested = (request: PumpOutRequest) => {
-    console.log("Service requested with request:", request);
     setSelectedRequest(request);
     
     // Check if user has a valid subscription and doesn't need to pay per request
     const hasValidSubscription = serviceLevel && currentServiceLevel;
     const needsPayment = !hasValidSubscription || request.paymentStatus === "Pending";
-    
-    console.log("Payment needed:", needsPayment, "Request ID:", request?.id);
     
     // Only go to payment if user doesn't have a subscription or payment is actually pending
     if (needsPayment && request?.id) {
@@ -496,10 +493,6 @@ export default function RequestService() {
                 {(() => {
                   const requestToUse = selectedRequest?.id ? selectedRequest : 
                                       (pendingPaymentRequests && pendingPaymentRequests.length > 0 ? pendingPaymentRequests[0] : null);
-                  
-                  console.log("Payment form render - Selected request:", selectedRequest);
-                  console.log("Payment form render - Pending requests:", pendingPaymentRequests);
-                  console.log("Payment form render - Request to use:", requestToUse);
                   
                   if (requestToUse && requestToUse.id && requestToUse.id > 0) {
                     return (

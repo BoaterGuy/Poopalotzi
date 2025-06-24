@@ -48,6 +48,8 @@ interface PaymentFormProps {
 export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
@@ -78,7 +80,6 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
     try {
       // In a real application, this would call a secure payment processor
       // NEVER process actual payments in client-side code
-      console.log(`Processing payment for request ID: ${requestId}, amount: ${amount}`);
       await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
         paymentDetails: {
           ...data,
