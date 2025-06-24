@@ -528,6 +528,7 @@ export default function RequestService() {
                   console.log('Payment tab - user:', user);
                   
                   if (requestToUse && requestToUse.id && requestToUse.id > 0) {
+                    console.log('Rendering PaymentForm with valid request:', requestToUse.id);
                     return (
                       <PaymentForm 
                         requestId={requestToUse.id}
@@ -536,9 +537,13 @@ export default function RequestService() {
                       />
                     );
                   } else {
+                    console.log('No valid payment request found. pendingPaymentRequests:', pendingPaymentRequests);
                     return (
                       <div className="text-center py-8">
                         <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          Debug: {pendingPaymentRequests ? `Found ${pendingPaymentRequests.length} requests` : 'No requests loaded'}
+                        </p>
                         <Button 
                           onClick={() => setStep("request")}
                           className="bg-[#0B1F3A]"
