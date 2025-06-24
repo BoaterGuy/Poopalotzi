@@ -494,11 +494,15 @@ export default function RequestService() {
                   const requestToUse = selectedRequest?.id ? selectedRequest : 
                                       (pendingPaymentRequests && pendingPaymentRequests.length > 0 ? pendingPaymentRequests[0] : null);
                   
+                  console.log('Payment tab - selectedRequest:', selectedRequest);
+                  console.log('Payment tab - pendingPaymentRequests:', pendingPaymentRequests);
+                  console.log('Payment tab - requestToUse:', requestToUse);
+                  
                   if (requestToUse && requestToUse.id && requestToUse.id > 0) {
                     return (
                       <PaymentForm 
                         requestId={requestToUse.id}
-                        amount={serviceLevel.price}
+                        amount={serviceLevel?.price || 50}
                         onSuccess={handlePaymentComplete}
                       />
                     );
