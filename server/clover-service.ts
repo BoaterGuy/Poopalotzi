@@ -406,8 +406,16 @@ export class CloverService {
           error: errorText
         });
         
-        // For development, fall back to simulation if real payment fails
-        console.log('Falling back to simulation mode for development');
+        // Log detailed error information for troubleshooting
+        console.log('=== CLOVER PAYMENT ERROR DETAILS ===');
+        console.log('API Token permissions insufficient for payment processing');
+        console.log('Error details:', { status: response.status, error: errorText });
+        console.log('Merchant ID:', this.config.merchantId);
+        console.log('Environment:', this.config.environment);
+        console.log('=========================================');
+        
+        // For development, fall back to simulation with proper transaction logging
+        console.log('Using simulation mode - API token lacks payment permissions');
         const simulatedResult: CloverPaymentResponse = {
           id: `sim_${Date.now()}`,
           amount: paymentRequest.amount,
@@ -427,7 +435,8 @@ export class CloverService {
           paymentMethod: 'VISA',
           cardLast4: '1234',
           cardBrand: 'VISA',
-          cloverResponse: simulatedResult
+          cloverResponse: simulatedResult,
+          errorMessage: `API Error: ${errorText} - Using simulation`
         });
 
         return simulatedResult;

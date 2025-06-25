@@ -2342,6 +2342,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clover payment diagnostics endpoint
+  app.get("/api/clover/diagnostics", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const config = await storage.getActiveCloverConfig();
+      if (!config) {
+        return res.status(400).json({ message: "Clover not configured" });
+      }
+
+      const { CloverPaymentDiagnostics } = await import('./clover-payment-diagnostics');
+      const diagnostics = new CloverPaymentDiagnostics(config);
+      const results = await diagnostics.runFullDiagnostics();
+      
+      res.json({ results });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Process payment using Clover
   app.post("/api/payments/clover", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
