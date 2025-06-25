@@ -372,38 +372,100 @@ export default function CloverSettings() {
                     </AlertDescription>
                   </Alert>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="merchantId">Clover Merchant ID</Label>
-                    <Input
-                      id="merchantId"
-                      placeholder="Enter your Clover Merchant ID"
-                      value={merchantId}
-                      onChange={(e) => setMerchantId(e.target.value)}
-                      disabled={isConnecting}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      You can find your Merchant ID in your Clover dashboard under Account & Setup → Business Information
+                  {/* Direct Token Setup - Primary Method */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Set up Clover directly using API tokens from your merchant dashboard:
                     </p>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-800 mb-2">
-                        <strong>Available Test Merchants:</strong>
-                      </p>
-                      <div className="space-y-1">
-                        <button 
-                          onClick={() => setMerchantId('RCTSTAVI0010002')}
-                          className="block text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          RCTSTAVI0010002 (Poopalotzi Test Acct - Primary)
-                        </button>
-                        <button 
-                          onClick={() => setMerchantId('R6BSXSAY96KW1')}
-                          className="block text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          R6BSXSAY96KW1 (Poopalotzi Test Acct - Secondary)
-                        </button>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="merchantId">Clover Merchant ID</Label>
+                        <Input
+                          id="merchantId"
+                          placeholder="Enter your Clover Merchant ID"
+                          value={merchantId}
+                          onChange={(e) => setMerchantId(e.target.value)}
+                          disabled={isConnecting}
+                        />
                       </div>
+                      <div>
+                        <Label htmlFor="apiToken">API Token</Label>
+                        <Input
+                          id="apiToken"
+                          type="password"
+                          placeholder="Enter your Clover API Token"
+                          value={manualCode}
+                          onChange={(e) => setManualCode(e.target.value)}
+                          disabled={isConnecting}
+                        />
+                      </div>
+                      <Button 
+                        onClick={async () => {
+                          if (!manualCode.trim() || !merchantId.trim()) {
+                            toast({
+                              title: "Error",
+                              description: "Please enter both merchant ID and API token",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          setIsConnecting(true);
+                          try {
+                            const response = await fetch('/api/admin/clover/token-setup', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' }, 
+                              body: JSON.stringify({
+                                merchantId: merchantId.trim(),
+                                apiToken: manualCode.trim()
+                              })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (response.ok) {
+                              toast({
+                                title: "Success",
+                                description: "Clover connected successfully using API token!",
+                              });
+                              setManualCode('');
+                              setMerchantId('');
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                            } else {
+                              throw new Error(data.error || 'Token setup failed');
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: error instanceof Error ? error.message : "Token setup failed",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsConnecting(false);
+                          }
+                        }}
+                        disabled={!manualCode.trim() || !merchantId.trim() || isConnecting}
+                        className="w-full"
+                      >
+                        {isConnecting ? (
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                        )}
+                        Set Up Clover Integration
+                      </Button>
+                    </div>
+                    <div className="text-xs text-blue-600 mt-2">
+                      <strong>Steps to get API token:</strong><br/>
+                      1. Go to https://sandbox.dev.clover.com/developers/<br/>
+                      2. Select your merchant → Setup → API Tokens<br/>
+                      3. Create token with "Payments" permissions<br/>
+                      4. Copy the token and paste it above
                     </div>
                   </div>
+
+
 
                   <div className="space-y-4">
                     <div className="text-center">
