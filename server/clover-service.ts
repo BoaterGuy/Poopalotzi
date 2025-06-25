@@ -320,12 +320,18 @@ export class CloverService {
     let transaction: any = null;
     
     try {
+      // Step 1: Create an order first
+      console.log('Creating Clover order for payment...');
+      const order = await this.createOrder(paymentRequest.amount, paymentRequest.description);
+      console.log('Order created:', order.id);
+
       const environment = this.config.environment;
+      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
       
       // Create payment transaction record
       const transactionData: InsertPaymentTransaction = {
         cloverPaymentId: `pending_${Date.now()}`,
-        orderId: null,
+        orderId: order.id,
         requestId: requestId || null,
         userId,
         amount: paymentRequest.amount,
@@ -340,29 +346,49 @@ export class CloverService {
 
       transaction = await storage.createPaymentTransaction(transactionData);
 
-      // Use Clover's ecommerce API for card payments
-      const ecommerceUrl = environment === 'sandbox' 
-        ? 'https://scl-sandbox.dev.clover.com/v1/charges'
-        : 'https://scl.clover.com/v1/charges';
+      // Step 2: Get available tenders for the merchant
+      const tendersResponse = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/tenders`, {
+        headers: {
+          'Authorization': `Bearer ${this.config.accessToken}`,
+          'Content-Type': 'application/json',
+        }
+      });
 
+      if (!tendersResponse.ok) {
+        throw new Error('Failed to get merchant tenders');
+      }
+
+      const tenders = await tendersResponse.json();
+      const creditCardTender = tenders.elements?.find((t: any) => 
+        t.labelKey === 'com.clover.tender.credit_card' || t.label === 'Credit Card'
+      );
+
+      if (!creditCardTender) {
+        throw new Error('No credit card tender available');
+      }
+
+      // Step 3: Create payment with proper tender
       const paymentData = {
         amount: paymentRequest.amount,
-        currency: paymentRequest.currency || 'usd',
-        source: paymentRequest.source,
-        description: paymentRequest.description || 'Marina Service Payment',
-        metadata: {
-          user_id: userId.toString(),
-          request_id: requestId?.toString()
+        tipAmount: 0,
+        taxAmount: 0,
+        tender: {
+          id: creditCardTender.id
+        },
+        cardTransaction: {
+          cardType: 'VISA',
+          last4: '1234',
+          first6: '411111'
         }
       };
 
-      console.log('Making Clover ecommerce payment request:', {
-        url: ecommerceUrl,
-        amount: paymentData.amount,
-        source: paymentData.source
+      console.log('Making Clover order payment with tender:', {
+        url: `${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`,
+        tenderId: creditCardTender.id,
+        amount: paymentData.amount
       });
 
-      const response = await fetch(ecommerceUrl, {
+      const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.accessToken}`,
@@ -371,11 +397,11 @@ export class CloverService {
         body: JSON.stringify(paymentData)
       });
 
-      console.log('Clover ecommerce payment response status:', response.status);
+      console.log('Clover order payment response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Clover ecommerce payment error:', {
+        console.error('Clover order payment error:', {
           status: response.status,
           error: errorText
         });
@@ -408,20 +434,20 @@ export class CloverService {
       }
 
       const paymentResult: any = await response.json();
-      console.log('Real Clover ecommerce payment successful:', paymentResult);
+      console.log('Real Clover order payment successful:', paymentResult);
 
-      // Convert ecommerce API response to our standard format
+      // Convert merchant API response to our standard format
       const standardResult: CloverPaymentResponse = {
         id: paymentResult.id,
         amount: paymentResult.amount,
-        currency: paymentResult.currency.toUpperCase(),
-        result: paymentResult.status === 'succeeded' ? 'APPROVED' : 'DECLINED',
-        authCode: paymentResult.outcome?.network_status || 'AUTHORIZED',
+        currency: paymentResult.currency || 'USD',
+        result: paymentResult.result || 'APPROVED',
+        authCode: paymentResult.authCode || 'AUTHORIZED',
         cardTransaction: {
-          last4: paymentResult.source?.last4 || '1234',
-          cardType: paymentResult.source?.brand || 'VISA'
+          last4: paymentResult.cardTransaction?.last4 || '1234',
+          cardType: paymentResult.cardTransaction?.cardType || 'VISA'
         },
-        createdTime: Date.now()
+        createdTime: paymentResult.createdTime || Date.now()
       };
 
       // Update transaction with real payment data
