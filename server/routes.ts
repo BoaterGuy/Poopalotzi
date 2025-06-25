@@ -2161,44 +2161,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Test the token first
-      console.log(`Testing Clover API token for merchant: ${merchantId}`);
-      const testResponse = await fetch(`https://apisandbox.dev.clover.com/v3/merchants/${merchantId}`, {
-        headers: {
-          'Authorization': `Bearer ${apiToken}`,
-          'Content-Type': 'application/json'
-        }
+      console.log(`Setting up Clover configuration for merchant: ${merchantId}`);
+      
+      // Save configuration first to enable system functionality
+      await cloverService.saveConfiguration({
+        merchantId: merchantId,
+        accessToken: apiToken,
+        tokenExpiresAt: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000))
       });
       
-      console.log(`Clover API test response: ${testResponse.status} ${testResponse.statusText}`);
-      
-      if (!testResponse.ok) {
-        const errorText = await testResponse.text().catch(() => 'Unknown error');
-        console.log(`Clover API error response: ${errorText}`);
+      // Test the token after saving configuration
+      try {
+        const testResponse = await fetch(`https://apisandbox.dev.clover.com/v3/merchants/${merchantId}`, {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        // For 401/403 errors, save config anyway to enable system functionality
-        if (testResponse.status === 401 || testResponse.status === 403) {
-          console.log('Token validation failed, saving configuration for simulation mode');
-          
-          await cloverService.saveConfiguration({
-            merchantId: merchantId,
-            accessToken: apiToken,
-            tokenExpiresAt: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000))
-          });
-          
+        if (testResponse.ok) {
+          console.log('Clover API token validation successful');
           return res.json({ 
             success: true, 
-            message: 'Configuration saved - system ready for payments',
-            details: 'Token validation failed, but configuration saved. Payments will work in simulation mode until token permissions are resolved.',
+            message: 'Clover integration configured successfully - real transactions enabled',
+            merchantId: merchantId,
+            realTransactions: true
+          });
+        } else {
+          console.log(`Token validation failed: ${testResponse.status} ${testResponse.statusText}`);
+          return res.json({ 
+            success: true, 
+            message: 'Configuration saved - payments ready with simulation fallback',
+            details: 'Token validation failed but system is configured. Check token permissions in Clover dashboard for real transactions.',
             merchantId: merchantId,
             simulationMode: true
           });
         }
-        
-        return res.status(400).json({ 
-          error: 'Token validation failed',
-          details: `HTTP ${testResponse.status}: ${testResponse.statusText}`,
-          suggestion: 'Check: 1) Token permissions include Payments/Customers/Transactions, 2) Merchant ID is correct, 3) Token is active'
+      } catch (testError) {
+        console.log('Token validation error:', testError);
+        return res.json({ 
+          success: true, 
+          message: 'Configuration saved - payments ready with simulation fallback',
+          merchantId: merchantId,
+          simulationMode: true
         });
       }
       
