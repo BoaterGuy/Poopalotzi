@@ -270,10 +270,14 @@ export class CloverService {
     const environment = this.config!.environment;
     const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
     
+    // Clover orders require specific format
     const orderData = {
       total: amount,
       currency: 'USD',
-      title: description || 'Marina Service Payment'
+      state: 'open',
+      type: 'manual',
+      title: description || 'Marina Service Payment',
+      note: description || 'Marina Service Payment'
     };
 
     const response = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders`, {
@@ -287,10 +291,17 @@ export class CloverService {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Order creation failed:', {
+        status: response.status,
+        error: errorText,
+        orderData
+      });
       throw new Error(`Failed to create order: ${response.status} - ${errorText}`);
     }
 
-    return await response.json();
+    const order = await response.json();
+    console.log('Order created successfully:', order);
+    return order;
   }
 
   /**
@@ -338,12 +349,12 @@ export class CloverService {
 
       transaction = await storage.createPaymentTransaction(transactionData);
 
-      // Step 3: Create a real payment for the order
+      // Step 3: Create a real payment for the order using order-specific endpoint
       const paymentData = {
-        orderId: order.id,
         amount: paymentRequest.amount,
         currency: paymentRequest.currency || 'USD',
         source: paymentRequest.source || 'clv_1TSTTOKEN1234567890',
+        capture: true,
         metadata: {
           user_id: userId.toString(),
           request_id: requestId?.toString(),
@@ -352,12 +363,13 @@ export class CloverService {
       };
 
       console.log('Making real Clover payment request:', {
-        url: `${baseUrl}/v3/merchants/${this.config.merchantId}/payments`,
+        url: `${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`,
         orderId: order.id,
-        amount: paymentData.amount
+        amount: paymentData.amount,
+        paymentData
       });
 
-      const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/payments`, {
+      const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.accessToken}`,
