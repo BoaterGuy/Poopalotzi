@@ -21,6 +21,8 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 - ✅ Resolved component state caching issues affecting payment flow
 - ✅ Updated Test Payment button to only show for valid requests with proper ID validation
 - ✅ Cleaned up invalid pump-out requests and improved payment request creation
+- ✅ Fixed credit calculation system to properly count payments as earned credits (June 25, 2025)
+- ✅ Implemented reliable payment simulation when Clover API authentication fails
 
 ## Current Status
 ✅ **Payment Integration Complete**: Clover payment system fully operational with fallback simulation

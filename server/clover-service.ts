@@ -99,22 +99,6 @@ export class CloverService {
       throw new Error('Clover configuration not found. Please set up Clover integration first.');
     }
   }
-  }
-          merchantId: 'R6BSXSAY96KW1',
-          appId,
-          appSecret,
-          accessToken: 'a019ed95-e334-76a8-1179-d63ba2952104',
-          refreshToken: null,
-          tokenExpiresAt: null,
-          environment: 'sandbox',
-          webhookSecret: null,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-      }
-    }
-  }
 
   /**
    * Get the Clover OAuth authorization URL
