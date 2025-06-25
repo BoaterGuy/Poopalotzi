@@ -18,11 +18,10 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 ✅ **Tax Integration**: Website now includes tax in all payment flows consistently
 ✅ **Customer Data**: Names, emails, phones properly stored and linked to Clover orders
 ✅ **Line Items**: Service and tax breakdown correctly displayed in Clover dashboard
-✅ **Transaction Logging**: Payment metadata stored in database with order references
-✅ **Website Payments**: Fixed to include tax calculation and customer information
-✅ **Order Status**: Recent orders now showing "Paid" status in Clover dashboard
-✅ **Net Sales Ready**: Paid orders should appear in Clover Net Sales reporting
-🎯 **Production Ready**: System fully functional - API token with "Payments" scope will enable real processing
+✅ **Token Updated**: New API token with Payments permission installed in system
+❌ **Payment Processing**: Still receiving 401 Unauthorized despite token having Payments scope
+❌ **Order Completion**: Orders remain in "OPEN" paymentState, not appearing in Net Sales
+🔍 **Investigation**: Testing specific API endpoints to identify permission issue
 
 ## Clover Integration Status
 - Configuration Status: ⚠️ FUNCTIONAL BUT LIMITED - Token permissions insufficient for payment completion
