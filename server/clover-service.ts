@@ -626,14 +626,15 @@ export class CloverService {
           errorMessage: 'Development simulation - Order completion attempted'
         });
 
-        console.log('=== COMPLETE CLOVER INTEGRATION WITH ORDER COMPLETION ===');
-        console.log('Order Created:', order.id);
-        console.log('Customer:', `${paymentRequest.customer?.firstName} ${paymentRequest.customer?.lastName}`);
-        console.log('Total Amount:', totalAmount / 100, 'USD');
-        console.log('Tax Amount:', (paymentRequest.taxAmount || 0) / 100, 'USD');
-        console.log('Payment ID:', simulatedResult.id);
-        console.log('Order Status: Attempted to mark as paid for dashboard reporting');
-        console.log('============================================================');
+        console.log('=== CLOVER INTEGRATION STATUS SUMMARY ===');
+        console.log('✅ Order Created:', order.id);
+        console.log('✅ Customer Data:', `${paymentRequest.customer?.firstName} ${paymentRequest.customer?.lastName}`);
+        console.log('✅ Total Amount:', totalAmount / 100, 'USD');
+        console.log('✅ Tax Included:', (paymentRequest.taxAmount || 0) / 100, 'USD');
+        console.log('✅ Transaction ID:', simulatedResult.id);
+        console.log('⚠️  Order Status: Open (API token needs Payments permission)');
+        console.log('🎯 Solution: Create API token with Payments scope for order completion');
+        console.log('===============================================');
 
         return simulatedResult;
       }
@@ -767,33 +768,54 @@ export class CloverService {
         console.log('Order state updated to paid');
       }
 
-      // Approach 2: Try to create a manual payment record
-      const manualPaymentResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/payments`, {
-        method: 'POST',
+      // Approach 2: Get available tenders first, then create payment
+      const tendersResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/tenders`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.config!.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amount,
-          result: 'SUCCESS',
-          note: 'Manual payment - Development environment',
-          tender: {
-            label: 'Manual Payment',
-            labelKey: 'com.clover.tender.manual',
-            enabled: true,
-            opensCashDrawer: false
-          }
-        })
+        }
       });
 
-      if (manualPaymentResponse.ok) {
-        const paymentResult = await manualPaymentResponse.json();
-        console.log('Manual payment record created:', paymentResult.id);
-        return true;
+      if (tendersResponse.ok) {
+        const tenders = await tendersResponse.json();
+        console.log('Available tenders:', tenders.elements?.map(t => ({ id: t.id, label: t.label })));
+        
+        // Find a suitable tender (cash, credit, or manual)
+        const tender = tenders.elements?.find(t => 
+          t.label?.toLowerCase().includes('cash') || 
+          t.label?.toLowerCase().includes('credit') ||
+          t.label?.toLowerCase().includes('manual') ||
+          t.enabled === true
+        );
+
+        if (tender) {
+          const manualPaymentResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/payments`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.config!.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              amount: amount,
+              tender: { id: tender.id },
+              result: 'SUCCESS',
+              note: 'Development environment payment'
+            })
+          });
+
+          if (manualPaymentResponse.ok) {
+            const paymentResult = await manualPaymentResponse.json();
+            console.log('Manual payment created with tender:', paymentResult.id);
+            return true;
+          } else {
+            const errorText = await manualPaymentResponse.text();
+            console.log('Manual payment with tender failed:', manualPaymentResponse.status, errorText);
+          }
+        } else {
+          console.log('No suitable tender found for manual payment');
+        }
       } else {
-        const errorText = await manualPaymentResponse.text();
-        console.log('Manual payment failed:', manualPaymentResponse.status, errorText);
+        console.log('Could not fetch tenders');
       }
 
     } catch (error) {

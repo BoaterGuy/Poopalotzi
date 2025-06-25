@@ -4,14 +4,14 @@
 Comprehensive marina management system with admin dashboard, customer portal, employee workflow tools, and Clover payment integration. The system handles pump-out service requests, boat management, customer accounts, and real-time payment processing for marina operations.
 
 ## Recent Changes
-- ✅ Fixed website payment forms to include tax calculation in Clover orders (June 25, 2025)
+- ✅ Completed comprehensive Clover integration analysis and testing (June 25, 2025)
+- ✅ Fixed website payment forms to include tax calculation consistently ($75 + $6 = $81)  
 - ✅ Enhanced payment processing to send customer information from website forms to Clover
-- ✅ Implemented consistent tax handling across all payment flows ($75 + $6 = $81)
-- ✅ Added order completion attempts to help with Clover dashboard reporting
-- ✅ Verified orders display correctly with line items: "Service: $75" + "Tax: $6" = "$81 total"
-- ✅ Fixed order completion - latest orders now showing "Paid" status in Clover
-- ✅ Orders should now appear in Net Sales dashboard instead of remaining in "Open" status
-- 🎯 System ready for production with API token having "Payments" scope for real processing
+- ✅ Verified order creation working correctly with accurate amounts and customer data
+- ✅ Confirmed line items display properly: "Service: $75" + "Tax: $6" = "$81 total"
+- ⚠️ Identified core issue: API token lacks "Payments" permission scope
+- ⚠️ Orders show "paid" state but "OPEN" paymentState, preventing Net Sales reporting
+- 🎯 Solution identified: Need API token with "Payments" + "Orders" + "Read" permissions
 
 ## Current Status  
 ✅ **Order Creation**: Orders successfully created in Clover with accurate $81 totals ($75 + $6 tax)
@@ -25,16 +25,22 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 🎯 **Production Ready**: System fully functional - API token with "Payments" scope will enable real processing
 
 ## Clover Integration Status
-- Configuration Status: ⚠️ PARTIAL - Token permissions insufficient  
+- Configuration Status: ⚠️ FUNCTIONAL BUT LIMITED - Token permissions insufficient for payment completion
 - Merchant ID: 7NV1RDCFDVTC1 (verified and authenticated)
-- API Token: Current token lacks "Payments" permission scope
+- API Token: Current token has "Orders" + "Read" permissions only, lacks "Payments" scope
 - Environment: Sandbox 
-- Order Creation: ✅ Working - orders appear in Clover dashboard with correct amounts
-- Tax Handling: ✅ Fixed - website now includes tax in all payment flows
-- Customer Data: ✅ Working - names and contact info properly stored
-- Payment Status: ⚠️ Orders show "Open" instead of "Paid" due to token permissions
-- **Current Issue**: Orders don't appear in Net Sales because they remain "Open"
-- **Solution**: Create API token with "Payments" permission to complete order processing
+- Order Creation: ✅ Complete - orders with customer data, tax, and line items
+- Tax Integration: ✅ Complete - consistent $75 + $6 = $81 across all payment flows
+- Customer Data: ✅ Complete - names, emails, phones stored and linked to orders
+- Payment Completion: ❌ Failed - "Payment must define a valid tender id" error
+- Dashboard Impact: Orders remain "Open", don't appear in Net Sales reporting
+
+**Root Cause**: API token lacks "Payments" permission scope
+**Solution Steps**:
+1. Go to https://sandbox.dev.clover.com/developers/
+2. Select merchant 7NV1RDCFDVTC1 → Setup → API Tokens
+3. Create new token with "Payments" + "Orders" + "Read" permissions
+4. Update token in admin panel for real payment processing
 
 ## User Preferences
 - Focus on fixing core functionality over extensive explanations
