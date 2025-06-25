@@ -35,6 +35,14 @@ export interface CloverPaymentRequest {
   source: string; // Card token from Clover.js
   description?: string;
   metadata?: Record<string, any>;
+  taxAmount?: number; // Tax amount in cents
+  tipAmount?: number; // Tip amount in cents
+  customer?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 export interface CloverPaymentResponse {
@@ -264,20 +272,27 @@ export class CloverService {
   }
 
   /**
-   * Create an order in Clover
+   * Create an order in Clover with customer and tax information
    */
-  private async createOrder(amount: number, description?: string): Promise<any> {
+  private async createOrder(paymentRequest: CloverPaymentRequest): Promise<any> {
     const environment = this.config!.environment;
     const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
     
+    // Calculate total including tax
+    const subtotal = paymentRequest.amount;
+    const taxAmount = paymentRequest.taxAmount || 0;
+    const total = subtotal + taxAmount;
+    
     // Clover orders require specific format
     const orderData = {
-      total: amount,
+      total: total,
       currency: 'USD',
       state: 'open',
       type: 'manual',
-      title: description || 'Marina Service Payment',
-      note: description || 'Marina Service Payment'
+      title: paymentRequest.description || 'Marina Service Payment',
+      note: paymentRequest.description || 'Marina Service Payment',
+      taxRemoved: false,
+      manualTransaction: false
     };
 
     const response = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders`, {
@@ -301,7 +316,92 @@ export class CloverService {
 
     const order = await response.json();
     console.log('Order created successfully:', order);
+    
+    // Add customer information if provided
+    if (paymentRequest.customer) {
+      await this.addCustomerToOrder(order.id, paymentRequest.customer);
+    }
+    
+    // Add line items with tax if needed
+    if (taxAmount > 0) {
+      await this.addLineItemsToOrder(order.id, subtotal, taxAmount, paymentRequest.description);
+    }
+    
     return order;
+  }
+
+  /**
+   * Add customer information to order
+   */
+  private async addCustomerToOrder(orderId: string, customer: any): Promise<void> {
+    const environment = this.config!.environment;
+    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    
+    try {
+      // First, create or find customer
+      const customerData = {
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email,
+        phoneNumbers: customer.phone ? [{ phoneNumber: customer.phone }] : []
+      };
+
+      const customerResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/customers`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config!.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(customerData)
+      });
+
+      if (customerResponse.ok) {
+        const cloverCustomer = await customerResponse.json();
+        
+        // Associate customer with order
+        await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/customers/${cloverCustomer.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.config!.accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        console.log('Customer added to order:', cloverCustomer.id);
+      }
+    } catch (error) {
+      console.log('Customer creation failed (non-critical):', error);
+    }
+  }
+
+  /**
+   * Add line items to order with tax breakdown
+   */
+  private async addLineItemsToOrder(orderId: string, subtotal: number, taxAmount: number, description?: string): Promise<void> {
+    const environment = this.config!.environment;
+    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    
+    try {
+      // Add main line item
+      const lineItemData = {
+        name: description || 'Marina Service',
+        price: subtotal,
+        printed: true
+      };
+
+      await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/line_items`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config!.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lineItemData)
+      });
+
+      console.log('Line items added to order');
+    } catch (error) {
+      console.log('Line item creation failed (non-critical):', error);
+    }
   }
 
   /**
@@ -320,9 +420,9 @@ export class CloverService {
     let transaction: any = null;
     
     try {
-      // Step 1: Create an order first
+      // Step 1: Create an order with customer and tax information
       console.log('Creating Clover order for payment...');
-      const order = await this.createOrder(paymentRequest.amount, paymentRequest.description);
+      const order = await this.createOrder(paymentRequest);
       console.log('Order created:', order.id);
 
       const environment = this.config.environment;
@@ -367,11 +467,12 @@ export class CloverService {
         throw new Error('No credit card tender available');
       }
 
-      // Step 3: Create payment with proper tender
+      // Step 3: Create payment with proper tender including tax
+      const totalAmount = paymentRequest.amount + (paymentRequest.taxAmount || 0);
       const paymentData = {
-        amount: paymentRequest.amount,
-        tipAmount: 0,
-        taxAmount: 0,
+        amount: totalAmount,
+        tipAmount: paymentRequest.tipAmount || 0,
+        taxAmount: paymentRequest.taxAmount || 0,
         tender: {
           id: creditCardTender.id
         },

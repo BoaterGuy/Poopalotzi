@@ -2363,7 +2363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Process payment using Clover
   app.post("/api/payments/clover", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const { amount, currency, source, orderId, description, requestId } = req.body;
+      const { amount, currency, source, orderId, description, requestId, taxAmount, tipAmount, customer } = req.body;
       
       if (!amount || !source) {
         return res.status(400).json({ message: "Amount and payment source are required" });
@@ -2373,12 +2373,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
+      // Get user information for customer data
+      const user = await storage.getUserById(req.user.id);
+      const customerInfo = customer || {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        phone: user?.phone
+      };
+
       const paymentRequest = {
         amount: Math.round(amount * 100), // Convert to cents
         currency: currency || 'USD',
         source,
         orderId,
         description,
+        taxAmount: taxAmount ? Math.round(taxAmount * 100) : 0,
+        tipAmount: tipAmount ? Math.round(tipAmount * 100) : 0,
+        customer: customerInfo,
         metadata: {
           user_id: req.user.id.toString(),
           request_id: requestId?.toString()
