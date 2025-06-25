@@ -417,8 +417,6 @@ export class CloverService {
 
       return paymentResult;
 
-
-
     } catch (error) {
       console.error('Payment processing error:', error);
       
