@@ -264,6 +264,36 @@ export class CloverService {
   }
 
   /**
+   * Create an order in Clover
+   */
+  private async createOrder(amount: number, description?: string): Promise<any> {
+    const environment = this.config!.environment;
+    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    
+    const orderData = {
+      total: amount,
+      currency: 'USD',
+      title: description || 'Marina Service Payment'
+    };
+
+    const response = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.config!.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create order: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
    * Process a payment using Clover API
    */
   async processPayment(paymentRequest: CloverPaymentRequest, userId: number, requestId?: number): Promise<CloverPaymentResponse> {
@@ -276,43 +306,51 @@ export class CloverService {
       hasAccessToken: !!this.config.accessToken
     });
 
-    const environment = this.config.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
-    
-    const paymentData = {
-      amount: paymentRequest.amount,
-      currency: paymentRequest.currency || 'USD',
-      source: paymentRequest.source,
-      metadata: {
-        ...paymentRequest.metadata,
-        user_id: userId.toString(),
-        request_id: requestId?.toString()
-      }
-    };
-
-    // Create payment transaction record
-    const transactionData: InsertPaymentTransaction = {
-      cloverPaymentId: `pending_${Date.now()}`, // Temporary ID
-      orderId: paymentRequest.orderId || null,
-      requestId: requestId || null,
-      userId,
-      amount: paymentRequest.amount,
-      currency: paymentRequest.currency || 'USD',
-      status: 'pending',
-      paymentMethod: null,
-      cardLast4: null,
-      cardBrand: null,
-      cloverResponse: null,
-      errorMessage: null
-    };
-
-    let transaction = await storage.createPaymentTransaction(transactionData);
-
     try {
-      console.log('Making Clover API request:', {
+      // Step 1: Create an order first
+      console.log('Creating Clover order...');
+      const order = await this.createOrder(paymentRequest.amount, paymentRequest.description);
+      console.log('Order created:', order.id);
+
+      const environment = this.config.environment;
+      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+      
+      const paymentData = {
+        amount: paymentRequest.amount,
+        currency: paymentRequest.currency || 'USD',
+        source: paymentRequest.source,
+        orderId: order.id,
+        metadata: {
+          ...paymentRequest.metadata,
+          user_id: userId.toString(),
+          request_id: requestId?.toString()
+        }
+      };
+
+      // Create payment transaction record
+      const transactionData: InsertPaymentTransaction = {
+        cloverPaymentId: `pending_${Date.now()}`, // Temporary ID
+        orderId: order.id,
+        requestId: requestId || null,
+        userId,
+        amount: paymentRequest.amount,
+        currency: paymentRequest.currency || 'USD',
+        status: 'pending',
+        paymentMethod: null,
+        cardLast4: null,
+        cardBrand: null,
+        cloverResponse: null,
+        errorMessage: null
+      };
+
+      let transaction = await storage.createPaymentTransaction(transactionData);
+
+      // Step 2: Process the payment with the order
+      console.log('Making Clover API payment request:', {
         url: `${baseUrl}/v3/merchants/${this.config.merchantId}/payments`,
         merchantId: this.config.merchantId,
-        amount: paymentData.amount
+        amount: paymentData.amount,
+        orderId: order.id
       });
 
       const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/payments`, {
@@ -356,11 +394,15 @@ export class CloverService {
       return result;
 
     } catch (error) {
-      // Update transaction with error
-      await storage.updatePaymentTransaction(transaction.id, {
-        status: 'failed',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
-      });
+      console.error('Payment processing error:', error);
+      
+      // If we have a transaction record, update it with error
+      if (transaction) {
+        await storage.updatePaymentTransaction(transaction.id, {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
       
       throw error;
     }
