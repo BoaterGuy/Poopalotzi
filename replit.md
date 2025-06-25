@@ -25,7 +25,8 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 - ✅ Implemented reliable payment simulation when Clover API authentication fails
 - ✅ Prepared OAuth flow for new test merchant setup to enable real Clover transactions (June 25, 2025)
 - ✅ Generated OAuth authorization URL for new merchant ID 7NV1RDCFDVTC1 (June 25, 2025)
-- ✅ OAuth issue identified and resolved: App/merchant mismatch - providing corrected authorization options
+- ✅ OAuth issue identified and resolved: App/merchant mismatch - both test merchants share same MID (RCTSTAV00000002)
+- ✅ Fixed login bouncing issues with improved authentication flow and route guards
 - ✅ Fixed OAuth loading issues by implementing direct token setup method (June 25, 2025)
 - ✅ Created API token with Payments, Customers, and Transactions permissions
 - ✅ Direct token setup method ready for real Clover integration
