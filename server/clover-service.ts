@@ -306,6 +306,8 @@ export class CloverService {
       hasAccessToken: !!this.config.accessToken
     });
 
+    let transaction: any = null;
+    
     try {
       // Step 1: Create an order first
       console.log('Creating Clover order...');
@@ -319,7 +321,7 @@ export class CloverService {
         amount: paymentRequest.amount,
         currency: paymentRequest.currency || 'USD',
         source: paymentRequest.source,
-        orderId: order.id,
+        order: order.id,
         metadata: {
           ...paymentRequest.metadata,
           user_id: userId.toString(),
@@ -343,7 +345,7 @@ export class CloverService {
         errorMessage: null
       };
 
-      let transaction = await storage.createPaymentTransaction(transactionData);
+      transaction = await storage.createPaymentTransaction(transactionData);
 
       // Step 2: Process the payment with the order
       console.log('Making Clover API payment request:', {
@@ -397,11 +399,15 @@ export class CloverService {
       console.error('Payment processing error:', error);
       
       // If we have a transaction record, update it with error
-      if (transaction) {
-        await storage.updatePaymentTransaction(transaction.id, {
-          status: 'failed',
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        });
+      if (transaction && transaction.id) {
+        try {
+          await storage.updatePaymentTransaction(transaction.id, {
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+          });
+        } catch (updateError) {
+          console.error('Failed to update transaction:', updateError);
+        }
       }
       
       throw error;
