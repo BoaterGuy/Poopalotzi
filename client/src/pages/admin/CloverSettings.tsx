@@ -383,11 +383,14 @@ export default function CloverSettings() {
                         <Label htmlFor="merchantId">Clover Merchant ID</Label>
                         <Input
                           id="merchantId"
-                          placeholder="Enter your Clover Merchant ID"
+                          placeholder="e.g., R6BSXSAY96KW1 (not the MID number)"
                           value={merchantId}
                           onChange={(e) => setMerchantId(e.target.value)}
                           disabled={isConnecting}
                         />
+                        <p className="text-xs text-gray-600 mt-1">
+                          Use the Merchant ID (like R6BSXSAY96KW1), not the MID number
+                        </p>
                       </div>
                       <div>
                         <Label htmlFor="apiToken">API Token</Label>
