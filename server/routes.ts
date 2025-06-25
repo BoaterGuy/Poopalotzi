@@ -2149,6 +2149,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Direct token setup (bypasses OAuth entirely)
+  app.post("/api/admin/clover/token-setup", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const { merchantId, apiToken } = req.body;
+      
+      if (!merchantId || !apiToken) {
+        return res.status(400).json({ 
+          error: 'Merchant ID and API token required',
+          instructions: 'Get your API token from: https://sandbox.dev.clover.com/developers -> Select your merchant -> API Tokens'
+        });
+      }
+      
+      // Test the token first
+      const testResponse = await fetch(`https://apisandbox.dev.clover.com/v3/merchants/${merchantId}`, {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!testResponse.ok) {
+        return res.status(400).json({ 
+          error: 'Invalid API token or merchant ID',
+          details: `HTTP ${testResponse.status}: ${testResponse.statusText}`
+        });
+      }
+      
+      // Save configuration with API token
+      await cloverService.saveConfiguration({
+        merchantId: merchantId,
+        accessToken: apiToken,
+        tokenExpiresAt: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)) // 1 year
+      });
+      
+      console.log('Direct token setup successful for merchant:', merchantId);
+      res.json({ 
+        success: true, 
+        message: 'Clover API token configured successfully',
+        merchantId: merchantId
+      });
+    } catch (err) {
+      console.error('Direct token setup error:', err);
+      res.status(500).json({ error: 'Failed to configure API token' });
+    }
+  });
+
   // Handle Clover OAuth callback (admin only)
   app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
     // Set CORS headers for cross-origin requests

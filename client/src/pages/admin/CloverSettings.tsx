@@ -497,9 +497,9 @@ export default function CloverSettings() {
                     
                     {/* Manual OAuth completion for stuck scenarios */}
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-800 mb-2">Alternative: Direct Token Setup</h4>
+                      <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
                       <p className="text-sm text-blue-700 mb-3">
-                        Since OAuth is hanging, you can set up Clover directly using your merchant tokens from the Clover dashboard:
+                        Set up Clover directly using API tokens from your merchant dashboard:
                       </p>
                       <div className="space-y-2">
                         <input
@@ -520,6 +520,37 @@ export default function CloverSettings() {
                                 variant: "destructive",
                               });
                               return;
+                            }
+                            
+                            try {
+                              const response = await fetch('/api/admin/clover/token-setup', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify({
+                                  merchantId: merchantId.trim(),
+                                  apiToken: manualCode.trim()
+                                })
+                              });
+                              
+                              const data = await response.json();
+                              
+                              if (response.ok) {
+                                toast({
+                                  title: "Success",
+                                  description: "Clover connected successfully using API token!",
+                                });
+                                setManualCode('');
+                                setIsConnecting(false);
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                              } else {
+                                throw new Error(data.error || 'Token setup failed');
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: error instanceof Error ? error.message : "Token setup failed",
+                                variant: "destructive",
+                              });
                             }
 
                             try {
