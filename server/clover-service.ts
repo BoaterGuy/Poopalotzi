@@ -322,10 +322,8 @@ export class CloverService {
       await this.addCustomerToOrder(order.id, paymentRequest.customer);
     }
     
-    // Add line items with tax if needed
-    if (taxAmount > 0) {
-      await this.addLineItemsToOrder(order.id, subtotal, taxAmount, paymentRequest.description);
-    }
+    // Always add line items to show breakdown
+    await this.addLineItemsToOrder(order.id, subtotal, taxAmount, paymentRequest.description);
     
     return order;
   }
@@ -343,7 +341,8 @@ export class CloverService {
         firstName: customer.firstName,
         lastName: customer.lastName,
         email: customer.email,
-        phoneNumbers: customer.phone ? [{ phoneNumber: customer.phone }] : []
+        phoneNumbers: customer.phone ? [{ phoneNumber: customer.phone }] : [],
+        emailAddresses: customer.email ? [{ emailAddress: customer.email }] : []
       };
 
       const customerResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/customers`, {
@@ -386,10 +385,16 @@ export class CloverService {
       const lineItemData = {
         name: description || 'Marina Service',
         price: subtotal,
-        printed: true
+        printed: true,
+        itemStock: {
+          item: {
+            name: description || 'Marina Service',
+            price: subtotal
+          }
+        }
       };
 
-      await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/line_items`, {
+      const lineItemResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/line_items`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config!.accessToken}`,
@@ -398,9 +403,35 @@ export class CloverService {
         body: JSON.stringify(lineItemData)
       });
 
-      console.log('Line items added to order');
+      if (lineItemResponse.ok) {
+        const lineItem = await lineItemResponse.json();
+        console.log('Line item added successfully:', lineItem.id);
+        
+        // Add tax as separate line item if there's tax
+        if (taxAmount > 0) {
+          const taxItemData = {
+            name: 'Tax',
+            price: taxAmount,
+            printed: true
+          };
+
+          await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/line_items`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.config!.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taxItemData)
+          });
+          
+          console.log('Tax line item added');
+        }
+      } else {
+        const error = await lineItemResponse.text();
+        console.log('Line item creation failed:', lineItemResponse.status, error);
+      }
     } catch (error) {
-      console.log('Line item creation failed (non-critical):', error);
+      console.log('Line item creation error:', error);
     }
   }
 
