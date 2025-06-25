@@ -1602,21 +1602,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
       const userBoatIds = userBoats.map(b => b.id);
       
+      // For one-time service users, each payment GENERATES a credit, not uses one
+      // Count paid requests this year as earned credits
+      let earnedCreditsThisYear = 0;
       let usedCreditsThisYear = 0;
+      
       for (const boatId of userBoatIds) {
         const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
-        usedCreditsThisYear += boatRequests.filter(req => {
+        const thisYearRequests = boatRequests.filter(req => {
           if (!req.createdAt) return false;
           const reqDate = new Date(req.createdAt);
-          return req.paymentStatus === 'Paid' && 
-                 req.paymentId && 
-                 req.paymentId.startsWith('sub_one-time') &&
-                 req.status !== 'Canceled' && // Don't count canceled services
-                 reqDate >= yearStart && reqDate <= yearEnd;
-        }).length;
+          return reqDate >= yearStart && reqDate <= yearEnd && req.status !== 'Canceled';
+        });
+        
+        // Count paid requests as earned credits (each payment = 1 credit earned)
+        earnedCreditsThisYear += thisYearRequests.filter(req => req.paymentStatus === 'Paid').length;
+        
+        // Count completed services as used credits
+        usedCreditsThisYear += thisYearRequests.filter(req => req.status === 'Completed').length;
       }
       
-      const totalCredits = 1; // One-time service gives 1 credit per calendar year
+      // Add base credits from user's additional pump outs (from subscription purchases)
+      const user = await storage.getUser(req.user.id);
+      const basePumpOuts = user?.additionalPumpOuts || 0;
+      
+      const totalCredits = basePumpOuts + earnedCreditsThisYear;
       const availableCredits = Math.max(0, totalCredits - usedCreditsThisYear);
       
       res.json({
