@@ -552,38 +552,6 @@ export default function CloverSettings() {
                                 variant: "destructive",
                               });
                             }
-
-                            try {
-                              const response = await fetch('/api/admin/clover/config', {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  merchantId: merchantId.trim(),
-                                  accessToken: manualCode.trim(),
-                                  environment: 'sandbox'
-                                })
-                              });
-
-                              const data = await response.json();
-                              
-                              if (response.ok) {
-                                toast({
-                                  title: "Success",
-                                  description: "Clover configured successfully!",
-                                });
-                                setManualCode('');
-                                setIsConnecting(false);
-                                queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
-                              } else {
-                                throw new Error(data.error || 'Configuration failed');
-                              }
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description: error instanceof Error ? error.message : "Configuration failed",
-                                variant: "destructive",
-                              });
-                            }
                           }}
                           disabled={!manualCode.trim() || !merchantId.trim()}
                         >

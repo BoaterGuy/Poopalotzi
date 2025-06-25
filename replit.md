@@ -39,15 +39,16 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 ✅ **Ready for Production**: All core functionality verified and working across all entry points
 
 ## Clover Integration Status
-- Configuration Status: Issue identified - App/Merchant mismatch
+- Configuration Status: Ready for direct token setup
 - App ID: 8QSDCRTWSBPWT (from main dev account)
-- New Merchant ID: 7NV1RDCFDVTC1 (test merchant)
-- Issue: App not installed on test merchant or merchant in different account
 - Environment: Sandbox
-- Solution Options:
-  1) Refresh existing merchant R6BSXSAY96KW1 (fastest)
-  2) Install app on merchant 7NV1RDCFDVTC1 in Clover dashboard
-  3) Create new merchant in same account as app 8QSDCRTWSBPWT
+- Solution: Direct token setup method implemented to bypass OAuth issues
+- Setup Steps:
+  1) Go to https://sandbox.dev.clover.com/developers/
+  2) Select your merchant account
+  3) Navigate to Setup → API Tokens
+  4) Create new token with "Payments" permissions
+  5) Use Direct Token Setup in admin panel
 
 ## User Preferences
 - Focus on fixing core functionality over extensive explanations
