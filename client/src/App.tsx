@@ -22,6 +22,7 @@ import MemberRequestService from "@/pages/member/RequestServiceMinimal";
 import MemberServiceHistory from "@/pages/member/ServiceHistory";
 import MemberServiceSubscription from "@/pages/member/ServiceSubscription";
 import MemberServicePlans from "@/pages/member/ServicePlans";
+import MemberPaymentHistory from "@/pages/member/PaymentHistory";
 
 // Employee Pages
 import EmployeeSchedule from "@/pages/employee/Schedule";

@@ -121,6 +121,11 @@ export default function AppNavbar() {
                           Service Plans
                         </DropdownMenuItem>
                       </Link>
+                      <Link to="/member/payments">
+                        <DropdownMenuItem className="cursor-pointer">
+                          Payment History
+                        </DropdownMenuItem>
+                      </Link>
                       <Link to="/member/profile">
                         <DropdownMenuItem className="cursor-pointer">
                           Profile
@@ -268,6 +273,13 @@ export default function AppNavbar() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Service Plans
+                      </Link>
+                      <Link 
+                        to="/member/payments"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Payment History
                       </Link>
                       <Link 
                         to="/member/profile"
