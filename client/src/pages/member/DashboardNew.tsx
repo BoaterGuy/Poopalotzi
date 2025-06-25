@@ -1,19 +1,27 @@
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
 import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import BulkPlanStatus from "@/components/member/BulkPlanStatus";
+import PaymentForm from "@/components/member/PaymentForm";
 
 export default function MemberDashboardNew() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedPaymentRequest, setSelectedPaymentRequest] = useState<PumpOutRequest | null>(null);
 
 
 
@@ -126,6 +134,11 @@ export default function MemberDashboardNew() {
     request.status !== 'Completed' && request.status !== 'Canceled'
   );
 
+  // Filter pending payment requests
+  const pendingPaymentRequests = allRequests.filter(request => 
+    request.paymentStatus === 'Pending' && request.id > 0
+  );
+
   // Filter recent completed requests (last 5)
   const recentRequests = allRequests
     .filter(request => request.status === 'Completed')
@@ -198,6 +211,18 @@ export default function MemberDashboardNew() {
                                   {getPaymentStatusBadge(request.paymentStatus)}
                                 </div>
                               </div>
+                              {request.paymentStatus === 'Pending' && (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedPaymentRequest(request);
+                                    setShowPaymentDialog(true);
+                                  }}
+                                  className="bg-[#38B2AC] hover:bg-[#38B2AC]/90"
+                                >
+                                  Pay Now
+                                </Button>
+                              )}
                             </div>
                           </div>
                           <div className="p-4">
@@ -349,6 +374,31 @@ export default function MemberDashboardNew() {
           )}
         </div>
       </div>
+
+      {/* Payment Dialog */}
+      {showPaymentDialog && selectedPaymentRequest && (
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Complete Payment</DialogTitle>
+            </DialogHeader>
+            <PaymentForm
+              requestId={selectedPaymentRequest.id}
+              amount={60}
+              onSuccess={() => {
+                setShowPaymentDialog(false);
+                setSelectedPaymentRequest(null);
+                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+                toast({
+                  title: "Payment Successful",
+                  description: "Your payment has been processed successfully.",
+                });
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
