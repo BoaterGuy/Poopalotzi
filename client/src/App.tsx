@@ -47,11 +47,11 @@ const MemberRoute = ({ component: Component, ...rest }: { component: React.FC<an
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
   if (!user) {
-    return <Redirect to="/" />;
+    return <Redirect to="/auth" />;
   }
   
   return <Component {...rest} />;
@@ -61,10 +61,14 @@ const EmployeeRoute = ({ component: Component, ...rest }: { component: React.FC<
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  if (!user || (user.role !== 'employee' && user.role !== 'admin')) {
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  if (user.role !== 'employee' && user.role !== 'admin') {
     return <Redirect to="/" />;
   }
   
@@ -75,10 +79,14 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  if (user.role !== 'admin') {
     return <Redirect to="/" />;
   }
   

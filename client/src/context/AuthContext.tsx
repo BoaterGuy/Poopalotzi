@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check for existing session on mount
   useEffect(() => {
     const fetchUser = async () => {
-      setIsLoading(true);
       try {
         // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
@@ -149,14 +148,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome back, ${userData.firstName}!`,
       });
       
-      // Automatically redirect based on role
-      if (userData.role === 'admin') {
-        window.location.href = '/admin/dashboard';
-      } else if (userData.role === 'employee') {
-        window.location.href = '/employee/schedule';
-      } else {
-        window.location.href = '/member/dashboard';
-      }
+      // Use setTimeout to ensure state is set before redirect
+      setTimeout(() => {
+        if (userData.role === 'admin') {
+          window.location.href = '/admin/dashboard';
+        } else if (userData.role === 'employee') {
+          window.location.href = '/employee/schedule';
+        } else {
+          window.location.href = '/member/dashboard';
+        }
+      }, 100);
       
     } catch (error) {
       console.error('Login error:', error);
