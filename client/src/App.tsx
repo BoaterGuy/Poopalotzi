@@ -138,6 +138,9 @@ function App() {
                 <Route path="/member/service-plans">
                   <MemberRoute component={MemberServicePlans} path="/member/service-plans" />
                 </Route>
+                <Route path="/member/payments">
+                  <MemberRoute component={MemberPaymentHistory} path="/member/payments" />
+                </Route>
                 
                 {/* Employee Routes */}
                 <Route path="/employee/schedule">
