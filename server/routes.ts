@@ -2050,15 +2050,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiate Clover OAuth flow (admin only)
   app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-
-      
       // Additional admin check for safety
       if (req.user?.role !== "admin") {
         console.log("User is not admin, denying access");
         return res.status(403).json({ message: "Admin privileges required" });
       }
       
-      const { merchantId } = req.body;
+      let { merchantId } = req.body;
+      
+      // If no merchant ID provided, return instructions
+      if (!merchantId) {
+        return res.status(400).json({ 
+          message: "Merchant ID is required. Please create a new test merchant in Clover sandbox first.",
+          instructions: "1. Visit https://sandbox.dev.clover.com/developers/ 2. Create new test merchant 3. Copy the merchant ID 4. Send it in the request body"
+        });
+      }
       
       if (!merchantId) {
         return res.status(400).json({ message: "Merchant ID is required" });
