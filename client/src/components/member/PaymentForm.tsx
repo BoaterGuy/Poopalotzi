@@ -89,13 +89,23 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
         console.log('Processing subscription payment...');
         
         try {
+          const taxAmount = amount * 0.0675; // 6.75% tax
+          const totalAmount = amount + taxAmount;
+          
           const response = await apiRequest("POST", "/api/payments/subscription", {
-            amount: Math.round(amount * 100), // Convert to cents
+            amount: Math.round(amount * 100), // Convert to cents  
+            taxAmount: Math.round(taxAmount * 100), // Tax in cents
             source: 'clv_test_token_' + Date.now(), // Test token for sandbox
             description: `Subscription payment - $${amount.toFixed(2)}`,
+            customer: {
+              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+              email: "customer@marina.com", // You might want to get this from user context
+              phone: "555-0123"
+            },
             paymentDetails: {
               ...data,
-              amount,
+              amount: totalAmount,
             },
           });
           
@@ -116,18 +126,53 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
           });
         }
       } else {
-        // For pump-out requests, call the actual payment endpoint
-        await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-          paymentDetails: {
-            ...data,
-            amount,
-          },
-        });
+        // For regular service payments, try Clover first
+        console.log('Processing regular service payment with requestId:', requestId);
         
-        toast({
-          title: "Payment Successful",
-          description: "Your payment has been processed successfully.",
-        });
+        try {
+          const taxAmount = amount * 0.0675; // 6.75% tax
+          const totalAmount = amount + taxAmount;
+          
+          const response = await apiRequest("POST", "/api/payments/clover", {
+            amount: Math.round(amount * 100), // Convert to cents
+            taxAmount: Math.round(taxAmount * 100), // Tax in cents
+            requestId: requestId,
+            source: 'clv_test_token_' + Date.now(), // Test token for sandbox
+            description: `Service payment for request #${requestId} - $${amount.toFixed(2)}`,
+            customer: {
+              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+              email: "customer@marina.com", // You might want to get this from user context
+              phone: "555-0123"
+            },
+            paymentDetails: {
+              ...data,
+              amount: totalAmount,
+            },
+          });
+          
+          console.log('Clover payment response:', response);
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been processed successfully.",
+          });
+        } catch (error) {
+          console.log('Clover payment failed, falling back to original endpoint:', error);
+          
+          // Fallback to original payment endpoint
+          await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
+            paymentDetails: {
+              ...data,
+              amount,
+            },
+          });
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been processed successfully.",
+          });
+        }
       }
       
       onSuccess();
