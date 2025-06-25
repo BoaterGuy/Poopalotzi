@@ -2675,5 +2675,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Payment history endpoint for members
+  app.get('/api/users/me/payments', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user.id;
+      const payments = await storage.getPaymentTransactionsByUserId(userId);
+      res.json(payments);
+    } catch (error) {
+      console.error('Error fetching user payments:', error);
+      res.status(500).json({ error: 'Failed to fetch payments' });
+    }
+  });
+
   return httpServer;
 }
