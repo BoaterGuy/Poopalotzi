@@ -17,6 +17,10 @@ Comprehensive marina management system with admin dashboard, customer portal, em
 - ✅ Resolved payment form validation conflicts between subscription and request payments (June 24, 2025)
 - ✅ Fixed login form default credentials and authentication flow
 - ✅ Enhanced error logging and debugging for authentication issues
+- ✅ Fixed one-time service credit allocation and Clover payment integration (June 25, 2025)
+- ✅ Resolved component state caching issues affecting payment flow
+- ✅ Updated Test Payment button to only show for valid requests with proper ID validation
+- ✅ Cleaned up invalid pump-out requests and improved payment request creation
 
 ## Current Status
 ✅ **Payment Integration Complete**: Clover payment system fully operational

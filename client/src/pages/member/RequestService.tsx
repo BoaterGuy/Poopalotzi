@@ -563,27 +563,28 @@ export default function RequestService() {
                     return (
                       <PaymentForm 
                         requestId={requestToUse.id}
-                        amount={serviceLevel?.price || 50}
+                        amount={serviceLevel?.price || 60}
                         onSuccess={handlePaymentComplete}
                       />
                     );
                   } else {
                     console.log('❌ No valid payment request found');
+                    // Check if there are any pending requests at all
+                    const hasPendingButInvalid = pendingPaymentRequests && pendingPaymentRequests.length > 0;
+                    
                     return (
                       <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
-                        <div className="text-sm text-gray-500 mb-4 text-left bg-gray-50 p-3 rounded">
-                          <p><strong>Debug Info:</strong></p>
-                          <p>• Boats: {boats ? boats.length : 'null'}</p>
-                          <p>• Pending requests: {pendingPaymentRequests ? pendingPaymentRequests.length : 'null'}</p>
-                          <p>• Loading: {isLoadingPendingPayments ? 'true' : 'false'}</p>
-                          <p>• Error: {pendingPaymentError ? pendingPaymentError.message : 'none'}</p>
-                        </div>
+                        <p className="text-gray-600 mb-4">
+                          {hasPendingButInvalid 
+                            ? "No valid payment requests found. Please create a new service request."
+                            : "You don't have any pending payments."
+                          }
+                        </p>
                         <Button 
                           onClick={() => setStep("request")}
                           className="bg-[#0B1F3A]"
                         >
-                          Go to Request Service
+                          Create Service Request
                         </Button>
                       </div>
                     );
