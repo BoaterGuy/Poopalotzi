@@ -4,8 +4,6 @@ import "./index.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Helmet } from "react-helmet";
 
-// Simple loading indicator
-console.log('Poopalotzi Loading - Build:', '2025-06-16-v2.2.0-STABLE');
 document.title = 'Poopalotzi - Marina Management';
 
 createRoot(document.getElementById("root")!).render(

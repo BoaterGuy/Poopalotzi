@@ -22,6 +22,7 @@ import MemberRequestService from "@/pages/member/RequestServiceMinimal";
 import MemberServiceHistory from "@/pages/member/ServiceHistory";
 import MemberServiceSubscription from "@/pages/member/ServiceSubscription";
 import MemberServicePlans from "@/pages/member/ServicePlans";
+import MemberPaymentHistory from "@/pages/member/PaymentHistory";
 
 // Employee Pages
 import EmployeeSchedule from "@/pages/employee/Schedule";
@@ -36,6 +37,7 @@ import AdminCalendar from "@/pages/admin/Calendar";
 import AdminServiceLevelManagement from "@/pages/admin/ServiceLevelManagement";
 import AdminManualServiceEntry from "@/pages/admin/AdminManualServiceEntry";
 import CloverSettings from "@/pages/admin/CloverSettings";
+import CloverConnect from "@/pages/admin/CloverConnect";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
@@ -46,11 +48,11 @@ const MemberRoute = ({ component: Component, ...rest }: { component: React.FC<an
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
   if (!user) {
-    return <Redirect to="/" />;
+    return <Redirect to="/auth" />;
   }
   
   return <Component {...rest} />;
@@ -60,10 +62,14 @@ const EmployeeRoute = ({ component: Component, ...rest }: { component: React.FC<
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  if (!user || (user.role !== 'employee' && user.role !== 'admin')) {
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  if (user.role !== 'employee' && user.role !== 'admin') {
     return <Redirect to="/" />;
   }
   
@@ -74,10 +80,14 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  if (user.role !== 'admin') {
     return <Redirect to="/" />;
   }
   
@@ -128,6 +138,9 @@ function App() {
                 <Route path="/member/service-plans">
                   <MemberRoute component={MemberServicePlans} path="/member/service-plans" />
                 </Route>
+                <Route path="/member/payments">
+                  <MemberRoute component={MemberPaymentHistory} path="/member/payments" />
+                </Route>
                 
                 {/* Employee Routes */}
                 <Route path="/employee/schedule">
@@ -167,6 +180,9 @@ function App() {
                 </Route>
                 <Route path="/admin/clover-settings">
                   <AdminRoute component={CloverSettings} path="/admin/clover-settings" />
+                </Route>
+                <Route path="/admin/clover-connect">
+                  <AdminRoute component={CloverConnect} path="/admin/clover-connect" />
                 </Route>
                 
                 {/* 404 Route */}

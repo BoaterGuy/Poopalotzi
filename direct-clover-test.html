@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Clover OAuth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .url { background: #f5f5f5; padding: 15px; border-radius: 5px; word-break: break-all; margin: 10px 0; }
+        button { background: #007cba; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #005a87; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Direct Clover OAuth Test</h1>
+        <p>This bypasses all browser caching and JavaScript completely.</p>
+        
+        <h3>Test URL:</h3>
+        <div class="url" id="testUrl">
+            https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=RCTSTAVI0010002&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fadmin%2Fclover%2Foauth%2Fcallback&response_type=code&state=direct-test
+        </div>
+        
+        <button onclick="window.location.href = document.getElementById('testUrl').textContent.trim()">
+            Connect to Clover (Direct)
+        </button>
+        
+        <h3>Manual Steps:</h3>
+        <ol>
+            <li>Copy the URL above</li>
+            <li>Paste it directly in your browser address bar</li>
+            <li>Press Enter</li>
+            <li>Should redirect to Clover login page</li>
+        </ol>
+        
+        <h3>What this tests:</h3>
+        <ul>
+            <li>Direct HTTP redirect to Clover</li>
+            <li>No JavaScript interference</li>
+            <li>No browser caching</li>
+            <li>Pure OAuth flow</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -177,6 +177,8 @@ export default function ServiceSubscription() {
       // Update user subscription after payment
       const response = await apiRequest("POST", "/api/users/me/subscription", subscriptionRequest);
       
+      // Credits are automatically updated in the subscription endpoint for one-time services
+      
       // Determine subscription period text
       let periodText = '';
       if (selectedPlan.type === 'monthly') {
@@ -189,6 +191,8 @@ export default function ServiceSubscription() {
         }
       } else if (selectedPlan.type === 'seasonal') {
         periodText = 'for the season (May-October)';
+      } else if (selectedPlan.type === 'one-time') {
+        periodText = 'giving you 1 pump-out credit for this year';
       }
       
       toast({
@@ -213,7 +217,10 @@ export default function ServiceSubscription() {
         utils.saveSubscriptionToLocal(subscriptionData);
       });
       
+      // Invalidate all relevant queries to refresh dashboard data
       queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       setShowPayment(false);
       setIsSubscribing(false);
       setSelectedPlan(null);
@@ -596,6 +603,7 @@ export default function ServiceSubscription() {
               requestId={0} // Not tied to a specific request for service subscription
               amount={selectedPlan.type === 'bulk' && bulkPlanDetails ? bulkPlanDetails.totalCost : selectedPlan.price}
               onSuccess={handlePaymentSuccess}
+              isSubscriptionPayment={true}
             />
           )}
         </DialogContent>

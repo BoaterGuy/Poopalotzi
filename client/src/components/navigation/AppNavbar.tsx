@@ -121,6 +121,11 @@ export default function AppNavbar() {
                           Service Plans
                         </DropdownMenuItem>
                       </Link>
+                      <Link to="/member/payments">
+                        <DropdownMenuItem className="cursor-pointer">
+                          Payment History
+                        </DropdownMenuItem>
+                      </Link>
                       <Link to="/member/profile">
                         <DropdownMenuItem className="cursor-pointer">
                           Profile
@@ -132,11 +137,6 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link to="/employee/schedule">
-                        <DropdownMenuItem className="cursor-pointer">
-                          My Schedule
-                        </DropdownMenuItem>
-                      </Link>
                       <Link to="/employee/manual-entry">
                         <DropdownMenuItem className="cursor-pointer">
                           Manual Entry
@@ -275,6 +275,13 @@ export default function AppNavbar() {
                         Service Plans
                       </Link>
                       <Link 
+                        to="/member/payments"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Payment History
+                      </Link>
+                      <Link 
                         to="/member/profile"
                         className="text-white hover:text-white hover:opacity-80 py-2"
                         onClick={() => setMobileMenuOpen(false)}
@@ -287,13 +294,6 @@ export default function AppNavbar() {
                   {/* Employee Links */}
                   {isEmployee && (
                     <>
-                      <Link 
-                        to="/employee/schedule"
-                        className="text-white hover:text-white hover:opacity-80 py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        My Schedule
-                      </Link>
                       <Link 
                         to="/employee/manual-entry"
                         className="text-white hover:text-white hover:opacity-80 py-2"

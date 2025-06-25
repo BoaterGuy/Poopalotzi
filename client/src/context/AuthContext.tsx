@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check for existing session on mount
   useEffect(() => {
     const fetchUser = async () => {
-      setIsLoading(true);
       try {
         // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
@@ -52,12 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           const userData = await response.json();
+          console.log('AuthContext: User authenticated:', userData.email, userData.role);
           setUser(userData);
         } else {
+          console.log('AuthContext: No valid session found');
           setUser(null);
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('AuthContext: Error fetching user:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -119,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Login to our API using direct fetch to avoid apiRequest issues
+      console.log('AuthContext: Attempting login with email:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -133,10 +135,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+        console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const userData = await response.json();
+      console.log('AuthContext: Login successful, user data:', userData);
       setUser(userData);
       
       toast({
@@ -144,14 +148,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome back, ${userData.firstName}!`,
       });
       
-      // Automatically redirect based on role
-      if (userData.role === 'admin') {
-        window.location.href = '/admin/dashboard';
-      } else if (userData.role === 'employee') {
-        window.location.href = '/employee/schedule';
-      } else {
-        window.location.href = '/member/dashboard';
-      }
+      // Use setTimeout to ensure state is set before redirect
+      setTimeout(() => {
+        if (userData.role === 'admin') {
+          window.location.href = '/admin/dashboard';
+        } else if (userData.role === 'employee') {
+          window.location.href = '/employee/schedule';
+        } else {
+          window.location.href = '/member/dashboard';
+        }
+      }, 100);
       
     } catch (error) {
       console.error('Login error:', error);

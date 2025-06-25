@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Service Worker Cache</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .button { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Clear Service Worker Cache</h1>
+    <p>This will completely clear all service worker caches and registrations.</p>
+    
+    <button class="button" onclick="clearEverything()">Clear All Caches & Unregister Service Workers</button>
+    <button class="button" onclick="hardReload()">Hard Reload</button>
+    
+    <div id="status"></div>
+
+    <script>
+        async function clearEverything() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Clearing...';
+            
+            try {
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+                
+                // Clear local storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                status.innerHTML = '<div class="success">✓ All caches cleared and service workers unregistered!</div>';
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+                
+            } catch (error) {
+                status.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function hardReload() {
+            window.location.reload(true);
+        }
+        
+        // Auto-clear on page load
+        window.addEventListener('load', () => {
+            clearEverything();
+        });
+    </script>
+</body>
+</html>

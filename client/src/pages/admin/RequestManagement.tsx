@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
+import { Link } from "wouter";
 import {
   Card,
   CardContent,
@@ -42,7 +43,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin } from "lucide-react";
+import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User } from "lucide-react";
 import { format } from "date-fns";
 
 // Define types for our data structures
@@ -54,6 +55,7 @@ interface RequestType {
   boatId: number;
   boatName: string;
   ownerName: string;
+  ownerId: number | null;
   marinaId: number;
   marinaName: string;
   pier: string;
@@ -448,7 +450,18 @@ export default function RequestManagement() {
                     ) : (
                       filteredRequests.map((request) => (
                         <TableRow key={request.id}>
-                          <TableCell className="font-medium">{request.boatName}</TableCell>
+                          <TableCell className="font-medium">
+                            {request.ownerId ? (
+                              <Link to={`/admin/customers?highlight=${request.ownerId}`}>
+                                <Button variant="link" className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800">
+                                  <User className="h-4 w-4 mr-1" />
+                                  {request.boatName}
+                                </Button>
+                              </Link>
+                            ) : (
+                              <span className="text-gray-500">{request.boatName}</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">{request.marinaName}</span>

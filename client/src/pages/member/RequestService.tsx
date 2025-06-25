@@ -90,32 +90,69 @@ export default function RequestService() {
   
   const isLoadingServiceLevel = isLoadingAllLevels;
 
-  // Get pending payment requests
-  const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests/payment/pending'],
+  // Get pending payment requests - only for member's boats
+  const { data: pendingPaymentRequests, isLoading: isLoadingPendingPayments, error: pendingPaymentError } = useQuery<PumpOutRequest[]>({
+    queryKey: ['/api/pump-out-requests/payment/pending', boats?.map(b => b.id)],
     queryFn: async () => {
-      const response = await fetch('/api/pump-out-requests', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch pump-out requests');
+      console.log('🔍 Fetching pump-out requests for pending payments...', boats?.length || 0, 'boats');
+      console.log('🔍 Boats data:', boats);
+      if (!boats || boats.length === 0) {
+        console.log('❌ No boats found, returning empty array');
+        return [];
       }
-      const allRequests = await response.json();
-      return allRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+      
+      // Get requests for each boat and filter for pending payments
+      const allPendingRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        try {
+          console.log(`🔍 Fetching requests for boat ${boat.id}...`);
+          const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const boatRequests = await response.json();
+            console.log(`✅ Got ${boatRequests.length} requests for boat ${boat.id}:`, boatRequests);
+            const pendingRequests = boatRequests.filter((req: PumpOutRequest) => req.paymentStatus === 'Pending');
+            console.log(`💰 Found ${pendingRequests.length} pending payment requests for boat ${boat.id}:`, pendingRequests);
+            allPendingRequests.push(...pendingRequests);
+          } else {
+            console.error(`❌ Failed to fetch requests for boat ${boat.id}:`, response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error(`❌ Error fetching requests for boat ${boat.id}:`, error);
+        }
+      }
+      
+      console.log('🎯 Final filtered member pending payment requests:', allPendingRequests);
+      return allPendingRequests;
     },
+    enabled: !!boats && boats.length > 0,
   });
   
-  // Get all pump-out requests for quota checking (for when user has boats)
+  // Get all pump-out requests for quota checking - only for member's boats
   const { data: allRequests, isLoading: isLoadingRequests } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests'],
+    queryKey: ['/api/pump-out-requests/member-boats', boats?.map(b => b.id)],
     queryFn: async () => {
-      const response = await fetch('/api/pump-out-requests', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch pump-out requests');
+      if (!boats || boats.length === 0) return [];
+      
+      const allMemberRequests: PumpOutRequest[] = [];
+      
+      for (const boat of boats) {
+        try {
+          const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const boatRequests = await response.json();
+            allMemberRequests.push(...boatRequests);
+          }
+        } catch (error) {
+          console.error(`Error fetching requests for boat ${boat.id}:`, error);
+        }
       }
-      return response.json();
+      
+      return allMemberRequests;
     },
     enabled: !!boats && boats.length > 0,
   });
@@ -175,7 +212,7 @@ export default function RequestService() {
     const needsPayment = !hasValidSubscription || request.paymentStatus === "Pending";
     
     // Only go to payment if user doesn't have a subscription or payment is actually pending
-    if (needsPayment) {
+    if (needsPayment && request?.id) {
       setStep("payment");
     } else {
       // User has valid subscription, proceed with service request
@@ -490,29 +527,69 @@ export default function RequestService() {
                 <CardTitle>Payment Details</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                {selectedRequest ? (
-                  <PaymentForm 
-                    requestId={selectedRequest.id}
-                    amount={serviceLevel.price}
-                    onSuccess={handlePaymentComplete}
-                  />
-                ) : pendingPaymentRequests && pendingPaymentRequests.length > 0 ? (
-                  <PaymentForm 
-                    requestId={pendingPaymentRequests[0].id}
-                    amount={serviceLevel.price}
-                    onSuccess={handlePaymentComplete}
-                  />
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">You don't have any pending payments.</p>
-                    <Button 
-                      onClick={() => setStep("request")}
-                      className="bg-[#0B1F3A]"
-                    >
-                      Go to Request Service
-                    </Button>
-                  </div>
-                )}
+                {(() => {
+                  const requestToUse = selectedRequest?.id ? selectedRequest : 
+                                      (pendingPaymentRequests && pendingPaymentRequests.length > 0 ? pendingPaymentRequests[0] : null);
+                  
+                  console.log('🎯 Payment tab render logic:');
+                  console.log('  - selectedRequest:', selectedRequest);
+                  console.log('  - pendingPaymentRequests:', pendingPaymentRequests);
+                  console.log('  - pendingPaymentError:', pendingPaymentError);
+                  console.log('  - isLoadingPendingPayments:', isLoadingPendingPayments);
+                  console.log('  - requestToUse:', requestToUse);
+                  console.log('  - user:', user);
+                  console.log('  - boats:', boats);
+                  console.log('  - serviceLevel:', serviceLevel);
+                  
+                  if (isLoadingPendingPayments) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600">Loading payment requests...</p>
+                      </div>
+                    );
+                  }
+                  
+                  if (pendingPaymentError) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-red-600 mb-4">Error loading payment requests</p>
+                        <p className="text-sm text-gray-500">{pendingPaymentError.message}</p>
+                      </div>
+                    );
+                  }
+                  
+                  if (requestToUse && requestToUse.id && requestToUse.id > 0) {
+                    console.log('✅ Rendering PaymentForm with valid request:', requestToUse.id);
+                    return (
+                      <PaymentForm 
+                        requestId={requestToUse.id}
+                        amount={serviceLevel?.price || 60}
+                        onSuccess={handlePaymentComplete}
+                      />
+                    );
+                  } else {
+                    console.log('❌ No valid payment request found');
+                    // Check if there are any pending requests at all
+                    const hasPendingButInvalid = pendingPaymentRequests && pendingPaymentRequests.length > 0;
+                    
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600 mb-4">
+                          {hasPendingButInvalid 
+                            ? "No valid payment requests found. Please create a new service request."
+                            : "You don't have any pending payments."
+                          }
+                        </p>
+                        <Button 
+                          onClick={() => setStep("request")}
+                          className="bg-[#0B1F3A]"
+                        >
+                          Create Service Request
+                        </Button>
+                      </div>
+                    );
+                  }
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

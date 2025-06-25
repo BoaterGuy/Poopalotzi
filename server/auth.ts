@@ -33,8 +33,11 @@ export function setupAuth(app: Express) {
       secure: false,
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/'
+    },
+    name: 'connect.sid',
+    rolling: true
   };
 
   if (storage.sessionStore) {

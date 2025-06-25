@@ -66,6 +66,7 @@ export default function CloverSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [refundDialog, setRefundDialog] = useState<{ open: boolean; transaction?: PaymentTransaction }>({ open: false });
   const [refundAmount, setRefundAmount] = useState('');
+  const [manualCode, setManualCode] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -84,9 +85,10 @@ export default function CloverSettings() {
   // Check URL parameters for OAuth callback status
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const cloverStatus = urlParams.get('clover');
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
     
-    if (cloverStatus === 'connected') {
+    if (success === 'connected') {
       toast({
         title: "Clover Connected",
         description: "Your Clover account has been successfully connected!",
@@ -94,10 +96,12 @@ export default function CloverSettings() {
       // Clean up URL
       window.history.replaceState({}, '', '/admin/clover-settings');
       queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
-    } else if (cloverStatus === 'error') {
+    } else if (error) {
       toast({
         title: "Connection Failed",
-        description: "Failed to connect your Clover account. Please try again.",
+        description: error === 'oauth_failed' ? "OAuth authorization failed. Please try again." : 
+                    error === 'missing_params' ? "Missing authorization parameters." :
+                    "Failed to connect your Clover account. Please try again.",
         variant: "destructive",
       });
       // Clean up URL
@@ -105,18 +109,44 @@ export default function CloverSettings() {
     }
   }, [toast, queryClient]);
 
-  // Initiate OAuth flow
+  // Initiate OAuth flow using server-side endpoint
   const connectCloverMutation = useMutation({
     mutationFn: async (merchantId: string) => {
-      const response = await apiRequest('/api/admin/clover/oauth/initiate', 'POST', { merchantId });
-      return response;
+      console.log('Making API request to initiate OAuth...');
+      try {
+        const response = await fetch('/api/admin/clover/oauth/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ merchantId }),
+          credentials: 'include'
+        });
+        
+        console.log('API response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API error:', errorText);
+          throw new Error(`Failed to initiate OAuth flow: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('API response data:', data);
+        return data;
+      } catch (error) {
+        console.error('OAuth initiation error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       setIsConnecting(true);
+      console.log('Redirecting to OAuth URL:', data.authUrl);
       // Redirect to Clover OAuth
       window.location.href = data.authUrl;
     },
     onError: (error: any) => {
+      console.error('OAuth mutation error:', error);
       toast({
         title: "Connection Error",
         description: error.message || "Failed to initiate Clover connection",
@@ -129,7 +159,8 @@ export default function CloverSettings() {
   // Disconnect Clover
   const disconnectCloverMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/admin/clover/config', 'DELETE');
+      const response = await apiRequest('DELETE', '/api/admin/clover/config');
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -150,8 +181,9 @@ export default function CloverSettings() {
   // Process refund
   const refundMutation = useMutation({
     mutationFn: async ({ paymentId, amount }: { paymentId: string; amount?: number }) => {
-      return await apiRequest(`/api/admin/payments/${paymentId}/refund`, 'POST', 
+      const response = await apiRequest('POST', `/api/admin/payments/${paymentId}/refund`, 
         amount ? { amount: Math.round(amount * 100) } : {});
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -170,7 +202,7 @@ export default function CloverSettings() {
     }
   });
 
-  const handleConnectClover = () => {
+  const handleConnectClover = async () => {
     if (!merchantId.trim()) {
       toast({
         title: "Merchant ID Required",
@@ -179,6 +211,25 @@ export default function CloverSettings() {
       });
       return;
     }
+
+    // Clear browser cache to prevent conflicts
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // Clear session storage
+      sessionStorage.clear();
+      
+      // Add timestamp to prevent any caching
+      const timestamp = Date.now();
+      console.log(`[${timestamp}] Initiating fresh Clover connection for merchant: ${merchantId}`);
+      
+    } catch (error) {
+      console.log('Cache clearing failed, continuing anyway:', error);
+    }
+
     connectCloverMutation.mutate(merchantId);
   };
 
@@ -228,6 +279,9 @@ export default function CloverSettings() {
           <p className="text-muted-foreground">
             Configure and manage your Clover payment integration
           </p>
+          <div className="text-xs text-blue-600 font-mono mt-1">
+            v2.1 - HTTPS OAuth Fixed
+          </div>
         </div>
       </div>
 
@@ -318,32 +372,333 @@ export default function CloverSettings() {
                     </AlertDescription>
                   </Alert>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="merchantId">Clover Merchant ID</Label>
-                    <Input
-                      id="merchantId"
-                      placeholder="Enter your Clover Merchant ID"
-                      value={merchantId}
-                      onChange={(e) => setMerchantId(e.target.value)}
-                      disabled={isConnecting}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      You can find your Merchant ID in your Clover dashboard under Account & Setup → Business Information
+                  {/* Direct Token Setup - Primary Method */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Set up Clover directly using API tokens from your merchant dashboard:
                     </p>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="merchantId">Clover Merchant ID</Label>
+                        <Input
+                          id="merchantId"
+                          placeholder="e.g., R6BSXSAY96KW1 (not the MID number)"
+                          value={merchantId}
+                          onChange={(e) => setMerchantId(e.target.value)}
+                          disabled={isConnecting}
+                        />
+                        <p className="text-xs text-gray-600 mt-1">
+                          Use the Merchant ID (like R6BSXSAY96KW1), not the MID number
+                        </p>
+                      </div>
+                      <div>
+                        <Label htmlFor="apiToken">API Token</Label>
+                        <Input
+                          id="apiToken"
+                          type="password"
+                          placeholder="Enter your Clover API Token"
+                          value={manualCode}
+                          onChange={(e) => setManualCode(e.target.value)}
+                          disabled={isConnecting}
+                        />
+                      </div>
+                      <Button 
+                        onClick={async () => {
+                          if (!manualCode.trim() || !merchantId.trim()) {
+                            toast({
+                              title: "Error",
+                              description: "Please enter both merchant ID and API token",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          setIsConnecting(true);
+                          try {
+                            const response = await fetch('/api/admin/clover/token-setup', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' }, 
+                              body: JSON.stringify({
+                                merchantId: merchantId.trim(),
+                                apiToken: manualCode.trim()
+                              })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (response.ok) {
+                              toast({
+                                title: "Success",
+                                description: "Clover connected successfully using API token!",
+                              });
+                              setManualCode('');
+                              setMerchantId('');
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                            } else {
+                              throw new Error(data.error || 'Token setup failed');
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: error instanceof Error ? error.message : "Token setup failed",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsConnecting(false);
+                          }
+                        }}
+                        disabled={!manualCode.trim() || !merchantId.trim() || isConnecting}
+                        className="w-full"
+                      >
+                        {isConnecting ? (
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                        )}
+                        Set Up Clover Integration
+                      </Button>
+                    </div>
+                    <div className="text-xs text-blue-600 mt-2">
+                      <strong>Steps to get API token:</strong><br/>
+                      1. Go to https://sandbox.dev.clover.com/developers/<br/>
+                      2. Select your merchant → Setup → API Tokens<br/>
+                      3. Create token with "Payments" permissions<br/>
+                      4. Copy the token and paste it above
+                    </div>
                   </div>
 
-                  <Button
-                    onClick={handleConnectClover}
-                    disabled={connectCloverMutation.isPending || isConnecting}
-                    className="w-full"
-                  >
-                    {(connectCloverMutation.isPending || isConnecting) ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <ExternalLink className="h-4 w-4 mr-2" />
+
+
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-mono">
+                        v2.9 - Multiple Merchants
+                      </span>
+                    </div>
+                    
+                    <Button
+                      onClick={async (e) => {
+                        // Add manual loading reset
+                        if (isConnecting) {
+                          e.preventDefault();
+                          setIsConnecting(false);
+                          toast({
+                            title: "OAuth Reset",
+                            description: "OAuth process reset. You can try again.",
+                          });
+                          return;
+                        }
+                        if (!merchantId.trim()) {
+                          toast({
+                            title: "Error",
+                            description: "Please enter a Merchant ID",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        // Show current domain info for debugging
+                        console.log('Current domain:', window.location.host);
+                        console.log('Expected redirect URI:', `https://${window.location.host}/api/admin/clover/oauth/callback`);
+                        
+                        setIsConnecting(true);
+                        try {
+                          console.log('Making direct OAuth request...');
+                          const response = await fetch('/api/admin/clover/oauth/initiate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ merchantId }),
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('OAuth API error:', errorText);
+                            throw new Error(`OAuth initiation failed: ${response.status}`);
+                          }
+                          
+                          const data = await response.json();
+                          console.log('Server response:', data);
+                          console.log('Redirecting to:', data.authUrl);
+                          
+                          // Add timeout handling for OAuth
+                          setTimeout(() => {
+                            window.location.href = data.authUrl;
+                          }, 1000);
+                          
+                          // Reset loading state after 2 minutes if no callback
+                          setTimeout(() => {
+                            if (isConnecting) {
+                              setIsConnecting(false);
+                              toast({
+                                title: "OAuth Timeout",
+                                description: "OAuth process took too long. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          }, 120000);
+                          
+                        } catch (error) {
+                          console.error('OAuth error:', error);
+                          toast({
+                            title: "Connection Error",
+                            description: error instanceof Error ? error.message : "Failed to connect to Clover",
+                            variant: "destructive",
+                          });
+                          setIsConnecting(false);
+                        }
+                      }}
+                      disabled={isConnecting || !merchantId.trim()}
+                      className="w-full"
+                    >
+                      {isConnecting ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                      )}
+                      Connect to Clover
+                    </Button>
+                    
+                    {/* Manual OAuth completion for stuck scenarios */}
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
+                      <p className="text-sm text-blue-700 mb-3">
+                        Set up Clover directly using API tokens from your merchant dashboard:
+                      </p>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Enter your Clover API Token (from Clover Dashboard > Setup > API Tokens)"
+                          className="w-full px-3 py-2 border border-blue-300 rounded text-sm"
+                          value={manualCode}
+                          onChange={(e) => setManualCode(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={async () => {
+                            if (!manualCode.trim() || !merchantId.trim()) {
+                              toast({
+                                title: "Error",
+                                description: "Please enter both merchant ID and API token",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            
+                            try {
+                              const response = await fetch('/api/admin/clover/token-setup', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify({
+                                  merchantId: merchantId.trim(),
+                                  apiToken: manualCode.trim()
+                                })
+                              });
+                              
+                              const data = await response.json();
+                              
+                              if (response.ok) {
+                                toast({
+                                  title: "Success",
+                                  description: "Clover connected successfully using API token!",
+                                });
+                                setManualCode('');
+                                setIsConnecting(false);
+                                queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                              } else {
+                                throw new Error(data.error || 'Token setup failed');
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: error instanceof Error ? error.message : "Token setup failed",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          disabled={!manualCode.trim() || !merchantId.trim()}
+                        >
+                          Configure Clover Manually
+                        </Button>
+                      </div>
+                      <div className="mt-2 text-xs text-blue-600">
+                        <strong>How to get your API Token:</strong><br/>
+                        1. Go to your Clover Sandbox Dashboard<br/>
+                        2. Setup → API Tokens<br/>
+                        3. Create a new token with "Payments" permissions<br/>
+                        4. Copy the token and paste it above
+                      </div>
+                    </div>
+                    
+                    {isConnecting && (
+                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h4 className="font-medium text-yellow-800 mb-2">OAuth Stuck on Loading?</h4>
+                        <p className="text-sm text-yellow-700 mb-3">
+                          You can also try to complete OAuth manually if you see an authorization code:
+                        </p>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Paste the authorization code from the URL (starts with 'code=')"
+                            className="w-full px-3 py-2 border border-yellow-300 rounded text-sm"
+                            value={manualCode}
+                            onChange={(e) => setManualCode(e.target.value)}
+                          />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={async () => {
+                              if (!manualCode.trim() || !merchantId.trim()) {
+                                toast({
+                                  title: "Error",
+                                  description: "Please enter both merchant ID and authorization code",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
+                              try {
+                                const response = await fetch('/api/admin/clover/oauth/manual-complete', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    code: manualCode.trim(),
+                                    merchantId: merchantId.trim()
+                                  })
+                                });
+
+                                const data = await response.json();
+                                
+                                if (response.ok) {
+                                  toast({
+                                    title: "Success",
+                                    description: "Clover connected successfully!",
+                                  });
+                                  setManualCode('');
+                                  setIsConnecting(false);
+                                  queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
+                                } else {
+                                  throw new Error(data.error || 'Manual completion failed');
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: error instanceof Error ? error.message : "Manual completion failed",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            disabled={!manualCode.trim() || !merchantId.trim()}
+                          >
+                            Complete Connection Manually
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                    Connect to Clover
-                  </Button>
+
+                  </div>
                 </div>
               )}
             </CardContent>

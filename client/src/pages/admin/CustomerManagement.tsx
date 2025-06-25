@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -237,7 +238,9 @@ const MOCK_CUSTOMERS = [
 
 export default function CustomerManagement() {
   const { toast } = useToast();
+  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedCustomerId, setHighlightedCustomerId] = useState<number | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddBoatDialogOpen, setIsAddBoatDialogOpen] = useState(false);
@@ -296,6 +299,19 @@ export default function CustomerManagement() {
       return res.json();
     },
   });
+
+  // Handle highlight parameter from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+      setHighlightedCustomerId(parseInt(highlightId));
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedCustomerId(null);
+      }, 3000);
+    }
+  }, [location]);
 
   // Add customer mutation
   const addCustomerMutation = useMutation({
@@ -1402,7 +1418,10 @@ export default function CustomerManagement() {
                       </TableRow>
                     ) : (
                       filteredCustomers.map((customer) => (
-                        <TableRow key={customer.id}>
+                        <TableRow 
+                          key={customer.id}
+                          className={highlightedCustomerId === customer.id ? "bg-blue-50 border-2 border-blue-200 animate-pulse" : ""}
+                        >
                           <TableCell className="font-medium">
                             {customer.firstName} {customer.lastName}
                           </TableCell>

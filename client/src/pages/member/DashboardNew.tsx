@@ -1,22 +1,29 @@
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
 import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import BulkPlanStatus from "@/components/member/BulkPlanStatus";
+import PaymentForm from "@/components/member/PaymentForm";
 
 export default function MemberDashboardNew() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedPaymentRequest, setSelectedPaymentRequest] = useState<PumpOutRequest | null>(null);
 
-  // FORCE CACHE BREAK - This is the NEW v2.2 Dashboard
-  console.log('LOADING NEW DASHBOARD v2.2 - CACHE BROKEN!');
+
 
   const { data: boats, isLoading: isLoadingBoats } = useQuery<Boat[]>({
     queryKey: ['/api/boats'],
@@ -127,6 +134,11 @@ export default function MemberDashboardNew() {
     request.status !== 'Completed' && request.status !== 'Canceled'
   );
 
+  // Filter pending payment requests
+  const pendingPaymentRequests = allRequests.filter(request => 
+    request.paymentStatus === 'Pending' && request.id > 0
+  );
+
   // Filter recent completed requests (last 5)
   const recentRequests = allRequests
     .filter(request => request.status === 'Completed')
@@ -140,21 +152,15 @@ export default function MemberDashboardNew() {
   return (
     <>
       <Helmet>
-        <title>Member Dashboard - Poopalotzi v2.2 NEW</title>
+        <title>Member Dashboard - Poopalotzi</title>
         <meta name="description" content="Manage your boat pump-out services and monitor upcoming appointments." />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
-        {/* HIGHLY VISIBLE VERSION BANNER */}
-        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white text-center py-4 shadow-lg">
-          <div className="text-xl font-bold">🚀 POOPALOTZI v2.2 FRESH LOADED - NEW UI ACTIVE 🚀</div>
-          <div className="text-sm mt-1">Cache successfully broken - New features active</div>
-        </div>
-
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-[#0B1F3A]">Welcome, {user?.firstName}! (v2.2)</h1>
+              <h1 className="text-3xl font-bold text-[#0B1F3A]">Welcome, {user?.firstName}!</h1>
               <p className="text-gray-600">
                 Manage your boat services and monitor upcoming appointments.
               </p>
@@ -205,6 +211,18 @@ export default function MemberDashboardNew() {
                                   {getPaymentStatusBadge(request.paymentStatus)}
                                 </div>
                               </div>
+                              {request.paymentStatus === 'Pending' && (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedPaymentRequest(request);
+                                    setShowPaymentDialog(true);
+                                  }}
+                                  className="bg-[#38B2AC] hover:bg-[#38B2AC]/90"
+                                >
+                                  Pay Now
+                                </Button>
+                              )}
                             </div>
                           </div>
                           <div className="p-4">
@@ -271,7 +289,6 @@ export default function MemberDashboardNew() {
                             serviceLevel.type === 'monthly' ? 'Monthly Plan' : 
                             serviceLevel.type === 'seasonal' ? 'Seasonal Plan' : 'Service Plan'}</p>
 
-                          {/* NEW CREDIT DISPLAY - v2.2 */}
                           {serviceLevel.type === 'one-time' && creditInfo && (
                             <div className="flex items-center mt-2 text-sm">
                               <Badge variant="outline" className={`${
@@ -279,7 +296,7 @@ export default function MemberDashboardNew() {
                                   ? 'bg-green-50 text-green-700 border-green-200' 
                                   : 'bg-red-50 text-red-700 border-red-200'
                               } font-normal`}>
-                                🎯 NEW UI: {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available v2.2
+                                {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} available
                               </Badge>
                             </div>
                           )}
@@ -357,6 +374,31 @@ export default function MemberDashboardNew() {
           )}
         </div>
       </div>
+
+      {/* Payment Dialog */}
+      {showPaymentDialog && selectedPaymentRequest && (
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Complete Payment</DialogTitle>
+            </DialogHeader>
+            <PaymentForm
+              requestId={selectedPaymentRequest.id}
+              amount={60}
+              onSuccess={() => {
+                setShowPaymentDialog(false);
+                setSelectedPaymentRequest(null);
+                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+                toast({
+                  title: "Payment Successful",
+                  description: "Your payment has been processed successfully.",
+                });
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

@@ -582,12 +582,11 @@ export default function ServiceHistory() {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedRequest && serviceLevel && (
+          {selectedRequest && selectedRequest.id && serviceLevel && (
             <PaymentForm 
-              selectedRequest={selectedRequest}
-              serviceLevel={serviceLevel}
+              requestId={selectedRequest.id}
+              amount={serviceLevel.price}
               onSuccess={handlePaymentSuccess}
-              onCancel={() => setShowPaymentModal(false)}
             />
           )}
         </DialogContent>

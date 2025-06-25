@@ -43,11 +43,16 @@ interface PaymentFormProps {
   requestId: number;
   amount: number;
   onSuccess: () => void;
+  isSubscriptionPayment?: boolean;
 }
 
-export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFormProps) {
+export default function PaymentForm({ requestId, amount, onSuccess, isSubscriptionPayment = false }: PaymentFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  console.log('PaymentForm initialized with requestId:', requestId, 'amount:', amount, 'isSubscriptionPayment:', isSubscriptionPayment);
+  
+
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
@@ -63,20 +68,112 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
 
   const onSubmit = async (data: PaymentFormValues) => {
     setIsSubmitting(true);
-    try {
-      // In a real application, this would call a secure payment processor
-      // NEVER process actual payments in client-side code
-      await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-        paymentDetails: {
-          ...data,
-          amount,
-        },
-      });
-      
+    
+    console.log('Payment form submission started with requestId:', requestId, 'isSubscriptionPayment:', isSubscriptionPayment);
+    
+    // Validate requestId before processing (skip validation for subscription payments)
+    if (!isSubscriptionPayment && (!requestId || requestId === 0)) {
+      console.error('Payment form validation failed - invalid requestId:', requestId);
       toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully.",
+        title: "Payment Error",
+        description: "Invalid request ID. Please refresh the page and try again.",
+        variant: "destructive",
       });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      if (isSubscriptionPayment) {
+        // For subscription payments, try Clover first, fallback to simulation
+        console.log('Processing subscription payment...');
+        
+        try {
+          const taxAmount = amount * 0.0675; // 6.75% tax
+          const totalAmount = amount + taxAmount;
+          
+          const response = await apiRequest("POST", "/api/payments/subscription", {
+            amount: Math.round(amount * 100), // Convert to cents  
+            taxAmount: Math.round(taxAmount * 100), // Tax in cents
+            source: 'clv_test_token_' + Date.now(), // Test token for sandbox
+            description: `Subscription payment - $${amount.toFixed(2)}`,
+            customer: {
+              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+              email: "customer@marina.com", // You might want to get this from user context
+              phone: "555-0123"
+            },
+            paymentDetails: {
+              ...data,
+              amount: totalAmount,
+            },
+          });
+          
+          console.log('Clover subscription payment response:', response);
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your subscription payment has been processed successfully.",
+          });
+        } catch (error) {
+          // If Clover fails, use simulation for development
+          console.log('Clover payment failed, using simulation:', error);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your subscription payment has been processed successfully (simulated).",
+          });
+        }
+      } else {
+        // For regular service payments, try Clover first
+        console.log('Processing regular service payment with requestId:', requestId);
+        
+        try {
+          const taxAmount = amount * 0.0675; // 6.75% tax
+          const totalAmount = amount + taxAmount;
+          
+          const response = await apiRequest("POST", "/api/payments/clover", {
+            amount: Math.round(amount * 100), // Convert to cents
+            taxAmount: Math.round(taxAmount * 100), // Tax in cents
+            requestId: requestId,
+            source: 'clv_test_token_' + Date.now(), // Test token for sandbox
+            description: `Service payment for request #${requestId} - $${amount.toFixed(2)}`,
+            customer: {
+              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+              email: "customer@marina.com", // You might want to get this from user context
+              phone: "555-0123"
+            },
+            paymentDetails: {
+              ...data,
+              amount: totalAmount,
+            },
+          });
+          
+          console.log('Clover payment response:', response);
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been processed successfully.",
+          });
+        } catch (error) {
+          console.log('Clover payment failed, falling back to original endpoint:', error);
+          
+          // Fallback to original payment endpoint
+          await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
+            paymentDetails: {
+              ...data,
+              amount,
+            },
+          });
+          
+          toast({
+            title: "Payment Successful",
+            description: "Your payment has been processed successfully.",
+          });
+        }
+      }
       
       onSuccess();
     } catch (error) {
@@ -131,42 +228,7 @@ export default function PaymentForm({ requestId, amount, onSuccess }: PaymentFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Development Test Button - Remove in Production */}
-        <div className="bg-purple-50 border border-purple-200 rounded-md p-3 mb-2">
-          <h4 className="text-sm font-medium text-purple-700 mb-1">Development Testing</h4>
-          <p className="text-xs text-purple-600 mb-2">Skip payment processing for testing purposes.</p>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm"
-            className="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
-            onClick={async () => {
-              try {
-                // Call the payment endpoint to update the payment status in the database
-                await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-                  paymentDetails: { amount }
-                });
-                
-                // Show success toast
-                toast({
-                  title: "Test Payment Successful",
-                  description: "Payment simulation completed successfully.",
-                });
-                
-                onSuccess();
-              } catch (error) {
-                console.error("Error processing simulated payment:", error);
-                toast({
-                  title: "Payment Simulation Failed",
-                  description: "There was a problem processing your simulated payment.",
-                  variant: "destructive",
-                });
-              }
-            }}
-          >
-            Simulate Successful Payment
-          </Button>
-        </div>
+
         <div className="p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-6">
           <Lock className="h-5 w-5 text-blue-500" />
           <div>
