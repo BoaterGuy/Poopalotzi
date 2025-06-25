@@ -680,6 +680,24 @@ export class CloverService {
 
       console.log('Real Clover payment completed:', standardResult.id);
       return standardResult;
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      
+      // If we have a transaction record, update it with error
+      if (transaction && transaction.id) {
+        try {
+          await storage.updatePaymentTransaction(transaction.id, {
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+          });
+        } catch (updateError) {
+          console.error('Failed to update transaction:', updateError);
+        }
+      }
+      
+      throw error;
+    }
+  }
 
   /**
    * Create manual payment record to complete order
@@ -741,23 +759,6 @@ export class CloverService {
       console.log('Order marked as paid');
     } catch (error) {
       console.log('Order update error:', error);
-
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      
-      // If we have a transaction record, update it with error
-      if (transaction && transaction.id) {
-        try {
-          await storage.updatePaymentTransaction(transaction.id, {
-            status: 'failed',
-            errorMessage: error instanceof Error ? error.message : 'Unknown error'
-          });
-        } catch (updateError) {
-          console.error('Failed to update transaction:', updateError);
-        }
-      }
-      
-      throw error;
     }
   }
 
