@@ -2373,13 +2373,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      // Get user information for customer data
-      const user = await storage.getUserById(req.user.id);
+      // Use authenticated user information for customer data
       const customerInfo = customer || {
-        firstName: user?.firstName,
-        lastName: user?.lastName,
-        email: user?.email,
-        phone: user?.phone
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        email: req.user.email,
+        phone: req.user.phone
       };
 
       const paymentRequest = {
