@@ -88,16 +88,18 @@ export class CloverService {
       await this.loadConfig();
     }
     
-    // If still no config after loading, try to create from environment variables
+    console.log('Clover config check:', {
+      hasConfig: !!this.config,
+      merchantId: this.config?.merchantId,
+      hasAccessToken: !!this.config?.accessToken,
+      environment: this.config?.environment
+    });
+    
     if (!this.config) {
-      const appId = process.env.CLOVER_APP_ID;
-      const appSecret = process.env.CLOVER_APP_SECRET;
-      
-      if (appId && appSecret) {
-        console.log('Creating Clover config from environment variables');
-        // Create a basic config for testing
-        this.config = {
-          id: 1,
+      throw new Error('Clover configuration not found. Please set up Clover integration first.');
+    }
+  }
+  }
           merchantId: 'R6BSXSAY96KW1',
           appId,
           appSecret,
@@ -323,6 +325,12 @@ export class CloverService {
     let transaction = await storage.createPaymentTransaction(transactionData);
 
     try {
+      console.log('Making Clover API request:', {
+        url: `${baseUrl}/v3/merchants/${this.config.merchantId}/payments`,
+        merchantId: this.config.merchantId,
+        amount: paymentData.amount
+      });
+
       const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/payments`, {
         method: 'POST',
         headers: {
@@ -331,6 +339,18 @@ export class CloverService {
         },
         body: JSON.stringify(paymentData)
       });
+
+      console.log('Clover API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Clover API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Clover API error: ${response.status} - ${errorText}`);
+      }
 
       const result: CloverPaymentResponse = await response.json();
 
