@@ -281,12 +281,14 @@ export class CloverService {
    * Process a payment using Clover API
    */
   async processPayment(paymentRequest: CloverPaymentRequest, userId: number, requestId?: number): Promise<CloverPaymentResponse> {
-    await this.ensureValidToken();
+    await this.ensureInitialized();
     const { storage } = await import('./index');
     
-    if (!this.config) {
-      throw new Error('Clover not configured');
-    }
+    console.log('Processing Clover payment with config:', {
+      merchantId: this.config.merchantId,
+      environment: this.config.environment,
+      hasAccessToken: !!this.config.accessToken
+    });
 
     const environment = this.config.environment;
     const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;

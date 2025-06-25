@@ -1871,10 +1871,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Try to process payment through Clover first, fallback to simulation
       let paymentResult;
+      let paymentMethod = 'simulation';
+      
       try {
+        console.log('Attempting Clover payment for request:', id);
+        
+        // Generate a proper test card token for Clover sandbox
+        const testCardSource = `clv_1T${Date.now()}${Math.random().toString(36).substr(2, 6)}`;
+        
         paymentResult = await cloverService.processPayment({
           amount: 6000, // $60.00 in cents
-          source: 'clv_test_token_' + Date.now(),
+          source: testCardSource,
           description: `Pump-out service payment for request ${id}`,
           metadata: {
             userId: req.user.id,
@@ -1883,9 +1890,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }, req.user.id, id);
         
-        console.log('Clover payment successful:', paymentResult);
+        paymentMethod = 'clover';
+        console.log('✅ Clover payment successful:', paymentResult.id);
+        
       } catch (cloverError) {
-        console.log('Clover payment failed, using simulation:', cloverError.message);
+        console.log('❌ Clover payment failed:', cloverError.message);
+        console.log('Using simulation fallback');
+        
         // Fallback to simulation
         paymentResult = {
           id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1893,6 +1904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           result: 'APPROVED',
           currency: 'USD'
         };
+        paymentMethod = 'simulation';
       }
       
       // Update the payment status to paid
@@ -1915,11 +1927,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Updated user pump-out credits after payment:', updatedUser?.additionalPumpOuts, updatedUser?.totalPumpOuts);
       }
       
-      console.log('Payment processed successfully for request:', id, 'Payment ID:', paymentResult.id);
+      console.log(`✅ Payment processed successfully for request ${id}:`, {
+        paymentId: paymentResult.id,
+        method: paymentMethod,
+        amount: paymentResult.amount
+      });
       
       res.status(200).json({
         message: "Payment processed successfully",
         paymentId: paymentResult.id,
+        paymentMethod: paymentMethod,
         request: updatedRequest,
         paymentResult: paymentResult.result
       });
