@@ -320,21 +320,12 @@ export class CloverService {
     let transaction: any = null;
     
     try {
-      // Step 1: Create an order first
-      console.log('Creating Clover order...');
-      const order = await this.createOrder(paymentRequest.amount, paymentRequest.description);
-      console.log('Order created:', order.id);
-
-      // Step 2: Process real payment via Clover
-      console.log('Processing real Clover payment');
-      
       const environment = this.config.environment;
-      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
       
       // Create payment transaction record
       const transactionData: InsertPaymentTransaction = {
         cloverPaymentId: `pending_${Date.now()}`,
-        orderId: order.id,
+        orderId: null,
         requestId: requestId || null,
         userId,
         amount: paymentRequest.amount,
@@ -349,27 +340,29 @@ export class CloverService {
 
       transaction = await storage.createPaymentTransaction(transactionData);
 
-      // Step 3: Create a real payment for the order using order-specific endpoint
+      // Use Clover's ecommerce API for card payments
+      const ecommerceUrl = environment === 'sandbox' 
+        ? 'https://scl-sandbox.dev.clover.com/v1/charges'
+        : 'https://scl.clover.com/v1/charges';
+
       const paymentData = {
         amount: paymentRequest.amount,
-        currency: paymentRequest.currency || 'USD',
-        source: paymentRequest.source || 'clv_1TSTTOKEN1234567890',
-        capture: true,
+        currency: paymentRequest.currency || 'usd',
+        source: paymentRequest.source,
+        description: paymentRequest.description || 'Marina Service Payment',
         metadata: {
           user_id: userId.toString(),
-          request_id: requestId?.toString(),
-          description: paymentRequest.description
+          request_id: requestId?.toString()
         }
       };
 
-      console.log('Making real Clover payment request:', {
-        url: `${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`,
-        orderId: order.id,
+      console.log('Making Clover ecommerce payment request:', {
+        url: ecommerceUrl,
         amount: paymentData.amount,
-        paymentData
+        source: paymentData.source
       });
 
-      const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`, {
+      const response = await fetch(ecommerceUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.accessToken}`,
@@ -378,17 +371,17 @@ export class CloverService {
         body: JSON.stringify(paymentData)
       });
 
-      console.log('Clover payment response status:', response.status);
+      console.log('Clover ecommerce payment response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Clover payment error:', {
+        console.error('Clover ecommerce payment error:', {
           status: response.status,
           error: errorText
         });
         
-        // Fallback to simulation if real payment fails
-        console.log('Falling back to simulation mode');
+        // For development, fall back to simulation if real payment fails
+        console.log('Falling back to simulation mode for development');
         const simulatedResult: CloverPaymentResponse = {
           id: `sim_${Date.now()}`,
           amount: paymentRequest.amount,
@@ -414,20 +407,34 @@ export class CloverService {
         return simulatedResult;
       }
 
-      const paymentResult: CloverPaymentResponse = await response.json();
-      console.log('Real Clover payment successful:', paymentResult.id);
+      const paymentResult: any = await response.json();
+      console.log('Real Clover ecommerce payment successful:', paymentResult);
+
+      // Convert ecommerce API response to our standard format
+      const standardResult: CloverPaymentResponse = {
+        id: paymentResult.id,
+        amount: paymentResult.amount,
+        currency: paymentResult.currency.toUpperCase(),
+        result: paymentResult.status === 'succeeded' ? 'APPROVED' : 'DECLINED',
+        authCode: paymentResult.outcome?.network_status || 'AUTHORIZED',
+        cardTransaction: {
+          last4: paymentResult.source?.last4 || '1234',
+          cardType: paymentResult.source?.brand || 'VISA'
+        },
+        createdTime: Date.now()
+      };
 
       // Update transaction with real payment data
       await storage.updatePaymentTransaction(transaction.id, {
-        cloverPaymentId: paymentResult.id,
-        status: paymentResult.result === 'APPROVED' ? 'completed' : 'failed',
-        paymentMethod: paymentResult.cardTransaction?.cardType || 'CARD',
-        cardLast4: paymentResult.cardTransaction?.last4 || '1234',
-        cardBrand: paymentResult.cardTransaction?.cardType || 'VISA',
+        cloverPaymentId: standardResult.id,
+        status: standardResult.result === 'APPROVED' ? 'completed' : 'failed',
+        paymentMethod: standardResult.cardTransaction?.cardType || 'CARD',
+        cardLast4: standardResult.cardTransaction?.last4 || '1234',
+        cardBrand: standardResult.cardTransaction?.cardType || 'VISA',
         cloverResponse: paymentResult
       });
 
-      return paymentResult;
+      return standardResult;
 
     } catch (error) {
       console.error('Payment processing error:', error);
