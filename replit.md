@@ -1,7 +1,7 @@
-# Marina Management System - Project Documentation
+# Poopalotzi - Boat Pump-Out Service
 
 ## Overview
-Comprehensive marina management system with admin dashboard, customer portal, employee workflow tools, and Clover payment integration. The system handles pump-out service requests, boat management, customer accounts, and real-time payment processing for marina operations.
+Professional boat pump-out service application with admin dashboard, customer portal, employee workflow tools, and Clover payment integration. The system handles pump-out service requests, boat management, customer accounts, and real-time payment processing for boat pump-out operations.
 
 ## Recent Changes
 - ✅ Completed comprehensive Clover integration analysis and testing (June 25, 2025)

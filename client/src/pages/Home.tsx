@@ -28,10 +28,10 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Poopalotzi - Marina Management System</title>
+        <title>Poopalotzi - Boat Pump-Out Service</title>
         <meta 
           name="description" 
-          content="Professional marina management system for boat pump-out services, customer management, and operational efficiency." 
+          content="Professional boat pump-out service for marinas and boat owners. Schedule pump-outs, track services, and maintain your vessel with ease." 
         />
       </Helmet>
       
@@ -43,7 +43,7 @@ export default function Home() {
               Poopalotzi
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Professional Marina Management System
+              Professional Boat Pump-Out Service
             </p>
           </div>
 
@@ -54,15 +54,15 @@ export default function Home() {
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl text-white">Admin Portal</CardTitle>
                 <CardDescription className="text-gray-300">
-                  Comprehensive system management and analytics
+                  Manage pump-out operations and customer accounts
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-sm text-gray-400">
-                  <p>• Customer & marina management</p>
-                  <p>• Service scheduling & analytics</p>
-                  <p>• Payment processing & reporting</p>
-                  <p>• User management & permissions</p>
+                  <p>• Customer & boat management</p>
+                  <p>• Schedule pump-out services</p>
+                  <p>• Track service history & analytics</p>
+                  <p>• Process payments & manage accounts</p>
                 </div>
                 <Button 
                   onClick={() => setAuthModalOpen(true)}
@@ -100,7 +100,7 @@ export default function Home() {
 
           {/* Footer */}
           <div className="text-center text-gray-400 text-sm">
-            <p>© 2025 Poopalotzi LLC - Professional Marina Management Solutions</p>
+            <p>© 2025 Poopalotzi LLC - Professional Boat Pump-Out Services</p>
           </div>
         </div>
       </div>
