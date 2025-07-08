@@ -22,6 +22,11 @@ export default function AppNavbar() {
   const { user, logout, isAdmin, isEmployee } = useAuth();
   const [location, setLocation] = useLocation();
 
+  // Don't show navbar on home page for non-authenticated users
+  if (location === "/" && !user) {
+    return null;
+  }
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
