@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache - User Management Fix</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h2>Cache Clear Helper</h2>
+    <p>User Management navigation has been fixed. Please:</p>
+    <ol>
+        <li>Close all browser tabs for this application</li>
+        <li>Clear your browser cache completely (not just refresh)</li>
+        <li>Restart your browser</li>
+        <li>Navigate back to the application</li>
+        <li>Log in as admin and check the dropdown menu</li>
+    </ol>
+    
+    <h3>Browser Cache Clear Instructions:</h3>
+    <ul>
+        <li><strong>Chrome:</strong> Ctrl+Shift+Delete → Clear browsing data</li>
+        <li><strong>Firefox:</strong> Ctrl+Shift+Delete → Clear recent history</li>
+        <li><strong>Safari:</strong> Cmd+Option+E → Empty caches</li>
+        <li><strong>Edge:</strong> Ctrl+Shift+Delete → Clear browsing data</li>
+    </ul>
+    
+    <p><a href="/" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Return to Application</a></p>
+    
+    <script>
+        // Force reload without cache
+        if (window.location.search !== '?nocache=' + Date.now()) {
+            window.location.search = '?nocache=' + Date.now();
+        }
+    </script>
+</body>
+</html>

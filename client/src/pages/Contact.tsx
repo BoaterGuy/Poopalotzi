@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock } from "react-icons/fa";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,7 +30,6 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export default function Contact() {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch marinas from API for contact page
   const { data: marinas = [] } = useQuery({
@@ -49,19 +48,41 @@ export default function Contact() {
     },
   });
 
-  const onSubmit = async (values: ContactFormValues) => {
-    setIsSubmitting(true);
-    
-    // In a real implementation, this would send the form data to the server
-    // For now, we'll just simulate a successful submission
-    setTimeout(() => {
+  const contactMutation = useMutation({
+    mutationFn: async (values: ContactFormValues) => {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send message');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
         title: "Message Sent!",
         description: "We've received your message and will get back to you soon.",
       });
       form.reset();
-      setIsSubmitting(false);
-    }, 1500);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = async (values: ContactFormValues) => {
+    contactMutation.mutate(values);
   };
 
   return (
@@ -171,9 +192,9 @@ export default function Contact() {
                   <Button 
                     type="submit" 
                     className="bg-[#FF6B6B] hover:bg-opacity-90 w-full"
-                    disabled={isSubmitting}
+                    disabled={contactMutation.isPending}
                   >
-                    {isSubmitting ? "Sending..." : "Send Message"}
+                    {contactMutation.isPending ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </Form>

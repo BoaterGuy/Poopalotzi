@@ -105,6 +105,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(schema.users).where(eq(schema.users.role, 'member'));
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(schema.users).orderBy(asc(schema.users.firstName), asc(schema.users.lastName));
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const result = await db.update(schema.users)
+      .set({ role: role as "member" | "employee" | "admin" })
+      .where(eq(schema.users.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Boat Owner operations
   async getBoatOwner(id: number): Promise<BoatOwner | undefined> {
     const results = await db.select().from(schema.boatOwner).where(eq(schema.boatOwner.id, id));

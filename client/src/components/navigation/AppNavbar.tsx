@@ -20,7 +20,7 @@ export default function AppNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, logout, isAdmin, isEmployee } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -149,46 +149,33 @@ export default function AppNavbar() {
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
-                      <Link to="/admin/dashboard">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Admin Dashboard
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/customers">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Customers
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/marinas">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Marinas
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/requests">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Requests
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/calendar">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Calendar
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/service-levels">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Service Levels
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/manual-service-form">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Manual Service Entry
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link to="/admin/clover-settings">
-                        <DropdownMenuItem className="cursor-pointer">
-                          Payment Settings
-                        </DropdownMenuItem>
-                      </Link>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/dashboard")}>
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/customers")}>
+                        Customers
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/marinas")}>
+                        Marinas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/requests")}>
+                        Requests
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/calendar")}>
+                        Calendar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/service-levels")}>
+                        Service Levels
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/user-management")}>
+                        🔧 User Management
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/manual-service-form")}>
+                        Manual Service Entry
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/clover-settings")}>
+                        Payment Settings
+                      </DropdownMenuItem>
                     </>
                   )}
                   
@@ -308,26 +295,68 @@ export default function AppNavbar() {
                   {isAdmin && (
                     <>
                       <div className="py-2 border-t border-gray-700"></div>
-                      <Link to="/admin/dashboard">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</a>
+                      <Link 
+                        to="/admin/dashboard"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin Dashboard
                       </Link>
-                      <Link to="/admin/customers">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Customers</a>
+                      <Link 
+                        to="/admin/customers"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Customers
                       </Link>
-                      <Link to="/admin/marinas">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Marinas</a>
+                      <Link 
+                        to="/admin/marinas"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Marinas
                       </Link>
-                      <Link to="/admin/requests">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Requests</a>
+                      <Link 
+                        to="/admin/requests"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Requests
                       </Link>
-                      <Link to="/admin/calendar">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Calendar</a>
+                      <Link 
+                        to="/admin/calendar"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Calendar
                       </Link>
-                      <Link to="/admin/service-levels">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Service Levels</a>
+                      <Link 
+                        to="/admin/service-levels"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Service Levels
                       </Link>
-                      <Link to="/admin/manual-service-form">
-                        <a className="text-white hover:text-white hover:opacity-80 py-2" onClick={() => setMobileMenuOpen(false)}>Manual Service Entry</a>
+                      <Link 
+                        to="/admin/user-management"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        User Management
+                      </Link>
+                      <Link 
+                        to="/admin/manual-service-form"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Manual Service Entry
+                      </Link>
+                      <Link 
+                        to="/admin/clover-settings"
+                        className="text-white hover:text-white hover:opacity-80 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Payment Settings
                       </Link>
                     </>
                   )}

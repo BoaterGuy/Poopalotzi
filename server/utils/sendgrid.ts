@@ -45,6 +45,52 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   }
 }
 
+export async function sendContactFormEmail(
+  name: string,
+  email: string,
+  phone: string | undefined,
+  subject: string,
+  message: string
+): Promise<boolean> {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@poopalotzi.com';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #0B1F3A; padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">Poopalotzi</h1>
+        <p style="color: #F4EBD0; margin: 5px 0 0 0;">New Contact Form Submission</p>
+      </div>
+      <div style="padding: 20px; border: 1px solid #eaeaea; border-top: none;">
+        <h2 style="color: #0B1F3A; margin-top: 0;">Contact Details</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+        <p><strong>Subject:</strong> ${subject}</p>
+        
+        <h3 style="color: #0B1F3A;">Message</h3>
+        <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #FF6B6B; margin: 10px 0;">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 12px; color: #666;">
+          Reply directly to this email to respond to ${name}.
+        </p>
+      </div>
+      <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+        <p>© 2024 Poopalotzi. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+  
+  return sendEmail({
+    to: adminEmail,
+    from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
+    subject: `Contact Form: ${subject}`,
+    html,
+    text: `New contact form submission from ${name} (${email})${phone ? `\nPhone: ${phone}` : ''}\n\nSubject: ${subject}\n\nMessage:\n${message}`,
+  });
+}
+
 export async function sendServiceStatusEmail(
   email: string,
   firstName: string,

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import AppNavbar from "../navigation/AppNavbar";
 import Footer from "../Footer";
+// Force rebuild - User Management fix
 
 interface PageLayoutProps {
   children: ReactNode;

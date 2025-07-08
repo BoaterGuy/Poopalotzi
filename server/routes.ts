@@ -5,7 +5,7 @@ import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
-import { sendServiceStatusEmail } from "./utils/sendgrid";
+import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/sendgrid";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
 import { z } from "zod";
@@ -2345,14 +2345,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clover payment diagnostics endpoint
   app.get("/api/clover/diagnostics", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const config = await storage.getActiveCloverConfig();
+      const config = await storage.getCloverConfig();
       if (!config) {
         return res.status(400).json({ message: "Clover not configured" });
       }
 
-      const { CloverPaymentDiagnostics } = await import('./clover-payment-diagnostics');
-      const diagnostics = new CloverPaymentDiagnostics(config);
-      const results = await diagnostics.runFullDiagnostics();
+      // const { CloverPaymentDiagnostics } = await import('./clover-payment-diagnostics');
+      // const diagnostics = new CloverPaymentDiagnostics(config);
+      // const results = await diagnostics.runFullDiagnostics();
+      const results = { status: 'disabled', message: 'Diagnostics temporarily disabled' };
       
       res.json({ results });
     } catch (err) {
@@ -2684,6 +2685,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching user payments:', error);
       res.status(500).json({ error: 'Failed to fetch payments' });
+    }
+  });
+
+  // Contact form endpoint
+  const contactFormSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().optional(),
+    subject: z.string().min(2, "Subject must be at least 2 characters"),
+    message: z.string().min(10, "Message must be at least 10 characters"),
+  });
+
+  app.post('/api/contact', async (req, res) => {
+    try {
+      const validatedData = contactFormSchema.parse(req.body);
+      
+      const success = await sendContactFormEmail(
+        validatedData.name,
+        validatedData.email,
+        validatedData.phone,
+        validatedData.subject,
+        validatedData.message
+      );
+      
+      if (success) {
+        res.json({ success: true, message: "Message sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send message" });
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Validation failed", 
+          details: validationError.toString() 
+        });
+      }
+      
+      console.error('Contact form error:', error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
+  // Admin user management endpoints
+  const createUserSchema = z.object({
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().optional(),
+    role: z.enum(["member", "employee", "admin"]),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  });
+
+  // Get all users (admin only)
+  app.get('/api/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Create new user (admin only)
+  app.post('/api/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const validatedData = createUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'User with this email already exists' });
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+      
+      const newUser = await storage.createUser({
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone || null,
+        role: validatedData.role,
+      }, hashedPassword);
+      
+      // Remove passwordHash from response
+      const { passwordHash, ...userResponse } = newUser;
+      res.status(201).json(userResponse);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          details: validationError.toString() 
+        });
+      }
+      
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+
+  // Update user role (admin only)
+  app.patch('/api/admin/users/:id/role', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = parseInt(req.params.id);
+      const { role } = req.body;
+      
+      if (!['member', 'employee', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role' });
+      }
+
+      const updatedUser = await storage.updateUserRole(userId, role);
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      res.status(500).json({ message: 'Failed to update user role' });
     }
   });
 

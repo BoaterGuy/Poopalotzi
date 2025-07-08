@@ -36,6 +36,7 @@ import AdminRequestManagement from "@/pages/admin/RequestManagement";
 import AdminCalendar from "@/pages/admin/Calendar";
 import AdminServiceLevelManagement from "@/pages/admin/ServiceLevelManagement";
 import AdminManualServiceEntry from "@/pages/admin/AdminManualServiceEntry";
+import AdminUserManagement from "@/pages/admin/UserManagement";
 import CloverSettings from "@/pages/admin/CloverSettings";
 import CloverConnect from "@/pages/admin/CloverConnect";
 
@@ -174,6 +175,9 @@ function App() {
                 </Route>
                 <Route path="/admin/service-levels">
                   <AdminRoute component={AdminServiceLevelManagement} path="/admin/service-levels" />
+                </Route>
+                <Route path="/admin/user-management">
+                  <AdminRoute component={AdminUserManagement} path="/admin/user-management" />
                 </Route>
                 <Route path="/admin/manual-service-form">
                   <AdminRoute component={AdminManualServiceEntry} path="/admin/manual-service-form" />
