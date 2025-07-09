@@ -57,6 +57,13 @@ export default function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    userId: number;
+    userName: string;
+    currentRole: string;
+    newRole: string;
+  } | null>(null);
 
   const form = useForm<CreateUserValues>({
     resolver: zodResolver(createUserSchema),
@@ -156,7 +163,39 @@ export default function UserManagement() {
   };
 
   const handleRoleChange = (userId: number, newRole: string) => {
-    updateRoleMutation.mutate({ userId, role: newRole });
+    const user = users.find((u: User) => u.id === userId);
+    if (!user) return;
+    
+    // If changing to member, no confirmation needed
+    if (newRole === "member") {
+      updateRoleMutation.mutate({ userId, role: newRole });
+      return;
+    }
+    
+    // For admin or employee roles, show confirmation
+    setPendingRoleChange({
+      userId,
+      userName: `${user.firstName} ${user.lastName}`,
+      currentRole: user.role,
+      newRole,
+    });
+    setIsRoleChangeDialogOpen(true);
+  };
+
+  const confirmRoleChange = () => {
+    if (pendingRoleChange) {
+      updateRoleMutation.mutate({
+        userId: pendingRoleChange.userId,
+        role: pendingRoleChange.newRole,
+      });
+      setIsRoleChangeDialogOpen(false);
+      setPendingRoleChange(null);
+    }
+  };
+
+  const cancelRoleChange = () => {
+    setIsRoleChangeDialogOpen(false);
+    setPendingRoleChange(null);
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -386,6 +425,60 @@ export default function UserManagement() {
             )}
           </CardContent>
         </Card>
+
+        {/* Role Change Confirmation Dialog */}
+        <Dialog open={isRoleChangeDialogOpen} onOpenChange={setIsRoleChangeDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-600" />
+                Confirm Role Change
+              </DialogTitle>
+              <DialogDescription>
+                {pendingRoleChange && (
+                  <div className="space-y-2">
+                    <p>
+                      Are you sure you want to change <strong>{pendingRoleChange.userName}</strong>'s role from{' '}
+                      <Badge variant={getRoleBadgeVariant(pendingRoleChange.currentRole)} className="mx-1">
+                        {pendingRoleChange.currentRole}
+                      </Badge>
+                      to{' '}
+                      <Badge variant={getRoleBadgeVariant(pendingRoleChange.newRole)} className="mx-1">
+                        {pendingRoleChange.newRole}
+                      </Badge>?
+                    </p>
+                    {pendingRoleChange.newRole === "admin" && (
+                      <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
+                        <p className="text-sm text-red-800">
+                          <strong>Warning:</strong> Admin users have full system access and can modify all settings, users, and data.
+                        </p>
+                      </div>
+                    )}
+                    {pendingRoleChange.newRole === "employee" && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-3">
+                        <p className="text-sm text-blue-800">
+                          <strong>Note:</strong> Employee users can access the employee dashboard and service management tools.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={cancelRoleChange}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmRoleChange}
+                disabled={updateRoleMutation.isPending}
+                className="bg-[#FF6B6B] hover:bg-opacity-90"
+              >
+                {updateRoleMutation.isPending ? "Updating..." : "Confirm Change"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

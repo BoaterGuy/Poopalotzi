@@ -243,6 +243,23 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  async getAllMembers(): Promise<User[]> {
+    return Array.from(this.usersData.values()).filter(user => user.role === 'member');
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.usersData.values());
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const existingUser = this.usersData.get(id);
+    if (!existingUser) return undefined;
+    
+    const updatedUser = { ...existingUser, role: role as "member" | "employee" | "admin" };
+    this.usersData.set(id, updatedUser);
+    return updatedUser;
+  }
+
   // Boat Owner operations
   async getBoatOwner(id: number): Promise<BoatOwner | undefined> {
     return this.boatOwnersData.get(id);
