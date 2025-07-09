@@ -116,25 +116,32 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Use existing Vite server setup
+      // Development: Build and serve the React app
       try {
-        const viteModule = await import("./vite");
-        const viteBuild = await viteModule.default();
+        const { execSync } = await import('child_process');
+        const fs = await import('fs');
+        const distPath = path.resolve("dist/public");
         
-        // Serve the built client files
-        app.use(express.static(viteBuild.outDir));
+        // Build if dist doesn't exist
+        if (!fs.existsSync(distPath)) {
+          log("Building client application...");
+          execSync('npm run build', { stdio: 'inherit' });
+        }
         
-        // SPA fallback for client-side routing
+        // Serve built files
+        app.use(express.static(distPath));
+        
+        // SPA fallback
         app.get("*", (req, res) => {
           if (!req.path.startsWith("/api")) {
-            res.sendFile(path.resolve(viteBuild.outDir, "index.html"));
+            res.sendFile(path.resolve(distPath, "index.html"));
           }
         });
         
-        log("Vite server setup complete");
-      } catch (error) {
-        log("Vite server setup failed, serving manual HTML");
-        // Serve the client HTML directly
+        log("Built React app served successfully");
+      } catch (buildError) {
+        log("Build failed, serving fallback HTML");
+        // Serve original Poopalotzi content if build fails
         app.get("*", (req, res) => {
           if (!req.path.startsWith("/api")) {
             res.send(`
@@ -153,26 +160,113 @@ async function startServer() {
                     .navy { background-color: #0B1F3A; }
                     .primary { background-color: #38B2AC; }
                     .accent { background-color: #FF6B6B; }
+                    .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+                    .card { transition: transform 0.3s ease; }
+                    .card:hover { transform: translateY(-5px); }
+                    .btn { transition: all 0.3s ease; }
+                    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
                   </style>
                 </head>
-                <body>
-                  <div id="root">
-                    <div class="hero min-h-screen flex items-center justify-center">
-                      <div class="text-center max-w-4xl mx-auto px-4">
-                        <h1 class="text-6xl font-bold text-gray-900 mb-6">Poopalotzi</h1>
-                        <h2 class="text-3xl font-semibold text-gray-800 mb-8">Simplify Your Boating Lifestyle</h2>
-                        <p class="text-xl text-gray-700 mb-8">Schedule pump-outs, track services, and maintain your vessel with ease. The intelligent solution for the savvy boater.</p>
-                        <img src="/logo.png" alt="Poopalotzi Logo" class="mx-auto mb-8 w-64 h-auto rounded-lg shadow-lg">
-                        <div class="bg-white rounded-lg shadow-md p-6 mx-auto max-w-md">
-                          <p class="text-2xl font-bold text-gray-900">We are #1 in the #2 business</p>
+                <body class="bg-gray-50">
+                  <!-- Header -->
+                  <header class="bg-white shadow-sm">
+                    <div class="container mx-auto px-4 py-4">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                          <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">P</span>
+                          </div>
+                          <h1 class="text-2xl font-bold text-gray-900">Poopalotzi</h1>
                         </div>
-                        <div class="mt-12">
-                          <h3 class="text-3xl font-bold text-red-500 italic">Let us take care of your business!</h3>
+                        <nav class="space-x-6">
+                          <a href="#" class="text-gray-700 hover:text-blue-600 transition">Home</a>
+                          <a href="#" class="text-gray-700 hover:text-blue-600 transition">Services</a>
+                          <a href="#" class="text-gray-700 hover:text-blue-600 transition">About</a>
+                          <a href="#" class="text-gray-700 hover:text-blue-600 transition">Contact</a>
+                          <a href="#" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Login</a>
+                        </nav>
+                      </div>
+                    </div>
+                  </header>
+
+                  <!-- Hero Section -->
+                  <section class="hero min-h-screen flex items-center justify-center">
+                    <div class="text-center max-w-4xl mx-auto px-4">
+                      <h1 class="text-6xl font-bold text-gray-900 mb-6">Poopalotzi</h1>
+                      <h2 class="text-4xl font-semibold text-gray-800 mb-8">Simplify Your Boating Lifestyle</h2>
+                      <p class="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+                        Schedule pump-outs, track services, and maintain your vessel with ease. 
+                        The intelligent solution for the savvy boater.
+                      </p>
+                      
+                      <div class="bg-white rounded-lg shadow-lg p-8 mx-auto max-w-md mb-8">
+                        <p class="text-3xl font-bold text-gray-900 mb-2">We are #1 in the #2 business</p>
+                        <p class="text-gray-600">Professional boat pump-out services you can trust</p>
+                      </div>
+                      
+                      <div class="mb-12">
+                        <h3 class="text-4xl font-bold text-red-500 italic mb-4">Let us take care of your business!</h3>
+                        <div class="space-x-4">
+                          <button class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition btn">
+                            Schedule Service
+                          </button>
+                          <button class="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-50 transition btn">
+                            Learn More
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <script type="module" src="/src/main.tsx"></script>
+                  </section>
+
+                  <!-- Features Section -->
+                  <section class="py-16 bg-white">
+                    <div class="container mx-auto px-4">
+                      <h2 class="text-3xl font-bold text-center mb-12 text-gray-900">Why Choose Poopalotzi?</h2>
+                      <div class="grid md:grid-cols-3 gap-8">
+                        <div class="text-center p-6 card bg-white rounded-lg shadow-md">
+                          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 class="text-xl font-semibold mb-2">Quick & Reliable</h3>
+                          <p class="text-gray-600">Fast response times and dependable service when you need it most.</p>
+                        </div>
+                        <div class="text-center p-6 card bg-white rounded-lg shadow-md">
+                          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 class="text-xl font-semibold mb-2">Professional Service</h3>
+                          <p class="text-gray-600">Certified technicians with years of marine service experience.</p>
+                        </div>
+                        <div class="text-center p-6 card bg-white rounded-lg shadow-md">
+                          <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <h3 class="text-xl font-semibold mb-2">Easy Booking</h3>
+                          <p class="text-gray-600">Simple online scheduling that fits your busy boating schedule.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <!-- Footer -->
+                  <footer class="bg-gray-900 text-white py-12">
+                    <div class="container mx-auto px-4 text-center">
+                      <div class="flex items-center justify-center space-x-4 mb-6">
+                        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                          <span class="text-white font-bold text-lg">P</span>
+                        </div>
+                        <h3 class="text-2xl font-bold">Poopalotzi</h3>
+                      </div>
+                      <p class="text-gray-400 mb-6">Professional boat pump-out services for marina customers</p>
+                      <p class="text-gray-500 text-sm">© 2025 Poopalotzi LLC. All rights reserved.</p>
+                    </div>
+                  </footer>
                 </body>
               </html>
             `);
