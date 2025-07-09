@@ -125,7 +125,12 @@ async function startServer() {
         // Build if dist doesn't exist
         if (!fs.existsSync(distPath)) {
           log("Building client application...");
-          execSync('npm run build', { stdio: 'inherit' });
+          try {
+            execSync('npm run build', { stdio: 'inherit' });
+          } catch (error) {
+            log("Standard build failed, trying fallback...");
+            execSync('npx vite build --config vite.config.ts.original', { stdio: 'inherit' });
+          }
         }
         
         // Serve built files
