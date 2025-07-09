@@ -116,54 +116,63 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Setup Vite middleware
+      // Development: Use existing Vite server setup
       try {
-        const { createServer } = await import('vite');
-        const viteServer = await createServer({
-          server: { middlewareMode: true },
-          appType: 'spa',
-          root: path.resolve("client"),
-          resolve: {
-            alias: {
-              "@": path.resolve("client", "src"),
-              "@shared": path.resolve("shared"),
-              "@assets": path.resolve("attached_assets"),
-            },
-          },
+        const viteModule = await import("./vite");
+        const viteBuild = await viteModule.default();
+        
+        // Serve the built client files
+        app.use(express.static(viteBuild.outDir));
+        
+        // SPA fallback for client-side routing
+        app.get("*", (req, res) => {
+          if (!req.path.startsWith("/api")) {
+            res.sendFile(path.resolve(viteBuild.outDir, "index.html"));
+          }
         });
         
-        app.use(viteServer.ssrFixStacktrace);
-        app.use('/', viteServer.middlewares);
-        
-        log("Vite middleware setup complete");
+        log("Vite server setup complete");
       } catch (error) {
-        log("Vite middleware failed, serving basic HTML");
-        // Fallback to basic HTML if Vite fails
+        log("Vite server setup failed, serving manual HTML");
+        // Serve the client HTML directly
         app.get("*", (req, res) => {
           if (!req.path.startsWith("/api")) {
             res.send(`
               <!DOCTYPE html>
-              <html>
+              <html lang="en">
                 <head>
+                  <meta charset="UTF-8" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                   <title>Poopalotzi - Boat Pump-Out Service</title>
+                  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
                   <script src="https://cdn.tailwindcss.com"></script>
+                  <style>
+                    body { font-family: 'Open Sans', sans-serif; }
+                    h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+                    .hero { background: linear-gradient(135deg, #F4EBD0 0%, #E5D5B7 100%); }
+                    .navy { background-color: #0B1F3A; }
+                    .primary { background-color: #38B2AC; }
+                    .accent { background-color: #FF6B6B; }
+                  </style>
                 </head>
-                <body class="bg-gray-50">
-                  <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
-                      <h1 class="text-3xl font-bold text-gray-900 mb-6">Poopalotzi - Boat Pump-Out Service</h1>
-                      <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-                        <strong>Server Status:</strong> Running on port ${PORT}
-                      </div>
-                      <p class="text-gray-600 mb-6">Your backend is running successfully!</p>
-                      <div class="space-y-3">
-                        <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition">
-                          API Health Check
-                        </a>
-                        <p class="text-sm text-gray-500">Vite development server integration</p>
+                <body>
+                  <div id="root">
+                    <div class="hero min-h-screen flex items-center justify-center">
+                      <div class="text-center max-w-4xl mx-auto px-4">
+                        <h1 class="text-6xl font-bold text-gray-900 mb-6">Poopalotzi</h1>
+                        <h2 class="text-3xl font-semibold text-gray-800 mb-8">Simplify Your Boating Lifestyle</h2>
+                        <p class="text-xl text-gray-700 mb-8">Schedule pump-outs, track services, and maintain your vessel with ease. The intelligent solution for the savvy boater.</p>
+                        <img src="/logo.png" alt="Poopalotzi Logo" class="mx-auto mb-8 w-64 h-auto rounded-lg shadow-lg">
+                        <div class="bg-white rounded-lg shadow-md p-6 mx-auto max-w-md">
+                          <p class="text-2xl font-bold text-gray-900">We are #1 in the #2 business</p>
+                        </div>
+                        <div class="mt-12">
+                          <h3 class="text-3xl font-bold text-red-500 italic">Let us take care of your business!</h3>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <script type="module" src="/src/main.tsx"></script>
                 </body>
               </html>
             `);
