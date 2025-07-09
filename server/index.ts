@@ -127,9 +127,9 @@ async function startServer() {
         if (!fs.existsSync(distPath)) {
           log("Building client application...");
           try {
-            execSync('npx vite build --config vite.config.simple.ts', { stdio: 'inherit' });
+            execSync('npx vite build --config vite.config.clean.ts', { stdio: 'inherit' });
           } catch (error) {
-            log("Simple build failed, trying standard build...");
+            log("Working build failed, trying standard build...");
             execSync('npm run build', { stdio: 'inherit' });
           }
         }
