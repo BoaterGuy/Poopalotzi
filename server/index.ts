@@ -116,28 +116,29 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Use Vite dev server proxy
+      // Development: Setup Vite middleware
       try {
-        const { createProxyMiddleware } = await import('http-proxy-middleware');
+        const { createServer } = await import('vite');
+        const viteServer = await createServer({
+          server: { middlewareMode: true },
+          appType: 'spa',
+          root: path.resolve("client"),
+          resolve: {
+            alias: {
+              "@": path.resolve("client", "src"),
+              "@shared": path.resolve("shared"),
+              "@assets": path.resolve("attached_assets"),
+            },
+          },
+        });
         
-        // Proxy all non-API requests to Vite dev server
-        app.use('/', createProxyMiddleware({
-          target: 'http://localhost:5173',
-          changeOrigin: true,
-          ws: true,
-          router: (req) => {
-            // Only proxy non-API requests
-            if (!req.url?.startsWith('/api')) {
-              return 'http://localhost:5173';
-            }
-            return false;
-          }
-        }));
+        app.use(viteServer.ssrFixStacktrace);
+        app.use('/', viteServer.middlewares);
         
-        log("Proxying to Vite dev server on port 5173");
+        log("Vite middleware setup complete");
       } catch (error) {
-        log("Vite proxy failed, serving basic HTML");
-        // Fallback to basic HTML if proxy fails
+        log("Vite middleware failed, serving basic HTML");
+        // Fallback to basic HTML if Vite fails
         app.get("*", (req, res) => {
           if (!req.path.startsWith("/api")) {
             res.send(`
@@ -159,7 +160,7 @@ async function startServer() {
                         <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition">
                           API Health Check
                         </a>
-                        <p class="text-sm text-gray-500">Start the frontend with: cd client && npm run dev</p>
+                        <p class="text-sm text-gray-500">Vite development server integration</p>
                       </div>
                     </div>
                   </div>
