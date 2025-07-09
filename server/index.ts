@@ -116,31 +116,28 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Build and serve the client app
+      // Development: Use Vite dev server proxy
       try {
-        const { execSync } = await import('child_process');
+        const { createProxyMiddleware } = await import('http-proxy-middleware');
         
-        // Build the client app if it doesn't exist
-        const distPath = path.resolve("dist/public");
-        const fs = await import('fs');
-        
-        if (!fs.existsSync(distPath)) {
-          log("Building client application...");
-          execSync('npm run build', { stdio: 'inherit' });
-        }
-        
-        // Serve built files
-        app.use(express.static(distPath));
-        
-        // SPA fallback
-        app.get("*", (req, res) => {
-          if (!req.path.startsWith("/api")) {
-            res.sendFile(path.resolve(distPath, "index.html"));
+        // Proxy all non-API requests to Vite dev server
+        app.use('/', createProxyMiddleware({
+          target: 'http://localhost:5173',
+          changeOrigin: true,
+          ws: true,
+          router: (req) => {
+            // Only proxy non-API requests
+            if (!req.url?.startsWith('/api')) {
+              return 'http://localhost:5173';
+            }
+            return false;
           }
-        });
+        }));
+        
+        log("Proxying to Vite dev server on port 5173");
       } catch (error) {
-        log("Client build failed, serving basic HTML");
-        // Fallback to basic HTML if build fails
+        log("Vite proxy failed, serving basic HTML");
+        // Fallback to basic HTML if proxy fails
         app.get("*", (req, res) => {
           if (!req.path.startsWith("/api")) {
             res.send(`
@@ -162,7 +159,7 @@ async function startServer() {
                         <a href="/api/health" class="block bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition">
                           API Health Check
                         </a>
-                        <p class="text-sm text-gray-500">The React frontend will be available once built.</p>
+                        <p class="text-sm text-gray-500">Start the frontend with: cd client && npm run dev</p>
                       </div>
                     </div>
                   </div>
