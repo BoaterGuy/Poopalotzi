@@ -147,13 +147,13 @@ async function startServer() {
               <!DOCTYPE html>
               <html>
                 <head>
-                  <title>Marina Management System</title>
+                  <title>Poopalotzi - Boat Pump-Out Service</title>
                   <script src="https://cdn.tailwindcss.com"></script>
                 </head>
                 <body class="bg-gray-50">
                   <div class="min-h-screen flex items-center justify-center p-4">
                     <div class="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
-                      <h1 class="text-3xl font-bold text-gray-900 mb-6">Marina Management System</h1>
+                      <h1 class="text-3xl font-bold text-gray-900 mb-6">Poopalotzi - Boat Pump-Out Service</h1>
                       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
                         <strong>Server Status:</strong> Running on port ${PORT}
                       </div>
