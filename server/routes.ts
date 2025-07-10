@@ -693,8 +693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               usedCreditsThisYear += boatRequests.filter(req => {
                 if (!req.createdAt) return false;
                 const reqDate = new Date(req.createdAt);
-                return req.status === 'Completed' && 
-                       req.status !== 'Canceled' &&
+                return req.status !== 'Canceled' &&
                        reqDate >= yearStart && reqDate <= yearEnd;
               }).length;
             }
@@ -1289,7 +1288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const requestDate = request.createdAt ? new Date(request.createdAt) : null;
               return requestDate && 
                      requestDate.getFullYear() === currentYear && 
-                     request.status === 'Completed';
+                     request.status !== 'Canceled';
             });
             usedCredits += thisYearRequests.length;
           }
@@ -1354,7 +1353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const requestDate = request.createdAt ? new Date(request.createdAt) : null;
           return requestDate && 
                  requestDate.getFullYear() === currentYear && 
-                 request.status === 'Completed';
+                 request.status !== 'Canceled';
         });
         usedCredits += thisYearRequests.length;
       }
@@ -1608,57 +1607,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update user subscription
-  // Get available credits for one-time service users
+  // Get available credits for users (unified system)
   app.get("/api/users/me/credits", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      if (!req.user?.serviceLevelId) {
+      // Get user and their total credits
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
         return res.json({ availableCredits: 0, totalCredits: 0, usedCredits: 0 });
       }
 
-      const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
-      if (!serviceLevel || serviceLevel.type !== 'one-time') {
-        return res.json({ availableCredits: 0, totalCredits: 0, usedCredits: 0 });
-      }
-
-      // Calculate used credits for current calendar year
+      // Use unified credit system: totalPumpOuts is the source of truth
+      const totalCredits = user.totalPumpOuts || 0;
+      
+      // Count used credits (all non-canceled requests this year)
       const currentYear = new Date().getFullYear();
       const yearStart = new Date(currentYear, 0, 1);
       const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
       
-      // Get all user's boats and requests for this calendar year
-      const boatOwner = await storage.getBoatOwnerByUserId(req.user.id);
-      if (!boatOwner) {
-        return res.json({ availableCredits: 1, totalCredits: 1, usedCredits: 0 });
-      }
-
-      const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
-      const userBoatIds = userBoats.map(b => b.id);
-      
-      // For one-time service users, each payment GENERATES a credit, not uses one
-      // Count paid requests this year as earned credits
-      let earnedCreditsThisYear = 0;
+      const boatOwner = await storage.getBoatOwnerByUserId(user.id);
       let usedCreditsThisYear = 0;
       
-      for (const boatId of userBoatIds) {
-        const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
-        const thisYearRequests = boatRequests.filter(req => {
-          if (!req.createdAt) return false;
-          const reqDate = new Date(req.createdAt);
-          return reqDate >= yearStart && reqDate <= yearEnd && req.status !== 'Canceled';
-        });
+      if (boatOwner) {
+        const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
+        const userBoatIds = userBoats.map(b => b.id);
         
-        // Count paid requests as earned credits (each payment = 1 credit earned)
-        earnedCreditsThisYear += thisYearRequests.filter(req => req.paymentStatus === 'Paid').length;
-        
-        // Count completed services as used credits
-        usedCreditsThisYear += thisYearRequests.filter(req => req.status === 'Completed').length;
+        for (const boatId of userBoatIds) {
+          const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
+          usedCreditsThisYear += boatRequests.filter(req => {
+            if (!req.createdAt) return false;
+            const reqDate = new Date(req.createdAt);
+            return req.status !== 'Canceled' &&
+                   reqDate >= yearStart && reqDate <= yearEnd;
+          }).length;
+        }
       }
       
-      // Add base credits from user's additional pump outs (from subscription purchases)
-      const user = await storage.getUser(req.user.id);
-      const basePumpOuts = user?.additionalPumpOuts || 0;
-      
-      const totalCredits = basePumpOuts + earnedCreditsThisYear;
       const availableCredits = Math.max(0, totalCredits - usedCreditsThisYear);
       
       res.json({
