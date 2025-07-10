@@ -21,11 +21,6 @@ export default function AppNavbar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, logout, isAdmin, isEmployee } = useAuth();
   const [location, setLocation] = useLocation();
-  
-  // Debug logging
-  console.log("AppNavbar - user:", user);
-  console.log("AppNavbar - isAdmin:", isAdmin);
-  console.log("AppNavbar - user.role:", user?.role);
 
 
 
@@ -153,7 +148,7 @@ export default function AppNavbar() {
                   )}
                   
                   {/* Admin Links */}
-                  {isAdmin && (
+                  {(isAdmin || user?.role === 'admin') && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/dashboard")}>
@@ -299,7 +294,7 @@ export default function AppNavbar() {
                   )}
                   
                   {/* Admin Links */}
-                  {isAdmin && (
+                  {(isAdmin || user?.role === 'admin') && (
                     <>
                       <div className="py-2 border-t border-gray-700"></div>
                       <Link 
