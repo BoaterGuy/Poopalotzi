@@ -21,7 +21,8 @@ import {
   UserPlus,
   Shield,
   User,
-  Settings
+  Settings,
+  Edit
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { format, subMonths } from "date-fns";
@@ -38,6 +39,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 // --- REMOVED ALL STATIC TEST DATA ---
 // All dashboard data now comes from real database API calls
@@ -532,17 +538,41 @@ export default function AdminDashboard() {
   );
 }
 
+// Edit User Form Schema
+const editUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email format"),
+  phone: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+});
+
+type EditUserFormData = z.infer<typeof editUserSchema>;
+
 // User Management Table Component
 function UserManagementTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [pendingRoleChange, setPendingRoleChange] = useState<{
     userId: number;
     userName: string;
     currentRole: string;
     newRole: string;
   } | null>(null);
+
+  const editForm = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    },
+  });
 
   // Fetch all users
   const { data: users = [], isLoading, error } = useQuery({
@@ -586,6 +616,40 @@ function UserManagementTable() {
     },
   });
 
+  // Edit user mutation
+  const editUserMutation = useMutation({
+    mutationFn: async (formData: EditUserFormData) => {
+      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "User Updated",
+        description: "User details have been updated successfully.",
+      });
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      editForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRoleChange = (userId: number, userName: string, currentRole: string, newRole: string) => {
     if (currentRole === newRole) return;
     
@@ -605,6 +669,27 @@ function UserManagementTable() {
         role: pendingRoleChange.newRole,
       });
     }
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    editForm.reset({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      password: "", // Always empty for security
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (formData: EditUserFormData) => {
+    // Remove password field if it's empty
+    const dataToSubmit = { ...formData };
+    if (!dataToSubmit.password || dataToSubmit.password.trim() === "") {
+      delete dataToSubmit.password;
+    }
+    editUserMutation.mutate(dataToSubmit);
   };
 
   const getRoleIcon = (role: string) => {
@@ -642,8 +727,10 @@ function UserManagementTable() {
             <tr className="border-b">
               <th className="text-left py-3 px-4 font-medium">User</th>
               <th className="text-left py-3 px-4 font-medium">Email</th>
+              <th className="text-left py-3 px-4 font-medium">Phone</th>
               <th className="text-left py-3 px-4 font-medium">Role</th>
               <th className="text-left py-3 px-4 font-medium">Change Role</th>
+              <th className="text-left py-3 px-4 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -659,6 +746,7 @@ function UserManagementTable() {
                   </div>
                 </td>
                 <td className="py-3 px-4">{user.email}</td>
+                <td className="py-3 px-4">{user.phone || 'N/A'}</td>
                 <td className="py-3 px-4">
                   <Badge className={getRoleBadgeColor(user.role)}>
                     {user.role}
@@ -678,6 +766,16 @@ function UserManagementTable() {
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
+                </td>
+                <td className="py-3 px-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditUser(user)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -732,6 +830,105 @@ function UserManagementTable() {
               {roleChangeMutation.isPending ? 'Updating...' : 'Confirm Change'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update {editingUser?.firstName} {editingUser?.lastName}'s information.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter first name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter last name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={editForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter email" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave blank to keep current password" type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  disabled={editUserMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={editUserMutation.isPending}
+                >
+                  {editUserMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>

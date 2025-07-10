@@ -2823,5 +2823,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user details (admin only)
+  app.patch('/api/admin/users/:id', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      const userId = parseInt(req.params.id);
+      const { firstName, lastName, email, phone, password } = req.body;
+      
+      // Validate input
+      const updateData: any = {};
+      
+      if (firstName !== undefined) {
+        if (typeof firstName !== 'string' || firstName.trim().length === 0) {
+          return res.status(400).json({ message: 'First name must be a non-empty string' });
+        }
+        updateData.firstName = firstName.trim();
+      }
+      
+      if (lastName !== undefined) {
+        if (typeof lastName !== 'string' || lastName.trim().length === 0) {
+          return res.status(400).json({ message: 'Last name must be a non-empty string' });
+        }
+        updateData.lastName = lastName.trim();
+      }
+      
+      if (email !== undefined) {
+        if (typeof email !== 'string' || !email.includes('@')) {
+          return res.status(400).json({ message: 'Invalid email format' });
+        }
+        updateData.email = email.trim().toLowerCase();
+      }
+      
+      if (phone !== undefined) {
+        if (phone !== null && typeof phone !== 'string') {
+          return res.status(400).json({ message: 'Phone must be a string or null' });
+        }
+        updateData.phone = phone ? phone.trim() : null;
+      }
+      
+      if (password !== undefined) {
+        if (typeof password !== 'string' || password.length < 6) {
+          return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+      
+      // Check if user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check if email is already taken (if email is being updated)
+      if (email && email !== existingUser.email) {
+        const emailExists = await storage.getUserByEmail(email);
+        if (emailExists) {
+          return res.status(400).json({ message: 'Email already in use' });
+        }
+      }
+      
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = updatedUser;
+      res.json(userResponse);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   return httpServer;
 }
