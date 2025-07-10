@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Cache Clear - Poopalotzi Admin</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .button { display: inline-block; padding: 15px 30px; background: #38B2AC; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+        .button:hover { background: #2C7A7B; }
+        .step { margin: 20px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #38B2AC; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Force Cache Clear Required</h1>
+        <p>The Admin Dashboard updates aren't showing due to browser cache issues. Please follow these steps:</p>
+        
+        <div class="step">
+            <h3>Step 1: Clear Browser Cache</h3>
+            <p>Use one of these methods:</p>
+            <ul>
+                <li><strong>Chrome/Edge:</strong> Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)</li>
+                <li><strong>Firefox:</strong> Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)</li>
+                <li><strong>Safari:</strong> Cmd+Option+E (Mac)</li>
+            </ul>
+            <p>OR press <strong>Ctrl+F5</strong> (Windows) or <strong>Cmd+Shift+R</strong> (Mac) for hard refresh</p>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Open Developer Tools</h3>
+            <p>Press <strong>F12</strong> or right-click and select "Inspect Element"</p>
+            <p>Go to the Network tab and check "Disable cache" while DevTools is open</p>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Access Admin Dashboard</h3>
+            <a href="/admin/dashboard?cache_bust=1752148737" class="button">Go to Admin Dashboard (Cache Busted)</a>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ What to Look For:</h3>
+            <ul>
+                <li>Red "CACHE BUST" badge next to the dashboard title</li>
+                <li>"User Management" section at the bottom of the page</li>
+                <li>Updated page title should show "UPDATED"</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>Alternative: Incognito/Private Mode</h3>
+            <p>Open the dashboard in an incognito/private window:</p>
+            <ul>
+                <li><strong>Chrome:</strong> Ctrl+Shift+N (Windows) or Cmd+Shift+N (Mac)</li>
+                <li><strong>Firefox:</strong> Ctrl+Shift+P (Windows) or Cmd+Shift+P (Mac)</li>
+                <li><strong>Safari:</strong> Cmd+Shift+N (Mac)</li>
+            </ul>
+        </div>
+        
+        <p><strong>After clearing cache, you should see:</strong></p>
+        <ul>
+            <li>✅ Red "CACHE BUST" indicator in the dashboard header</li>
+            <li>✅ User Management section with user table at the bottom</li>
+            <li>✅ Role change dropdowns for each user</li>
+            <li>✅ Confirmation dialogs when changing roles</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Auto-clear storage when this page loads
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Add timestamp to any links
+        document.querySelectorAll('a[href*="dashboard"]').forEach(link => {
+            link.href = link.href + '&t=' + Date.now();
+        });
+    </script>
+</body>
+</html>

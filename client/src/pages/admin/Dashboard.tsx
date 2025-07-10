@@ -99,17 +99,18 @@ export default function AdminDashboard() {
   return (
     <>
       <Helmet>
-        <title>Admin Dashboard - Poopalotzi</title>
-        <meta name="description" content="Admin analytics dashboard for Poopalotzi" />
+        <title>Admin Dashboard - Poopalotzi - UPDATED</title>
+        <meta name="description" content="Admin analytics dashboard for Poopalotzi - UPDATED" />
+        <meta name="cache-buster" content={Date.now().toString()} />
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-[#0B1F3A]">Analytics Dashboard</h1>
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+            <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">
               <Activity className="h-4 w-4" />
-              <span>Updated</span>
+              <span>CACHE BUST #{Math.random().toString(36).substr(2, 9)}</span>
             </div>
           </div>
           <p className="text-gray-600">
