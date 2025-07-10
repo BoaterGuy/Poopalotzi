@@ -116,25 +116,31 @@ async function startServer() {
         }
       });
     } else {
-      // Development: Build and serve the React app
+      // Development: Force rebuild and serve fresh
       try {
         const { execSync } = await import('child_process');
         const fs = await import('fs');
         const distPath = path.resolve("dist/public");
         
-        // Build if dist doesn't exist
-        if (!fs.existsSync(distPath)) {
-          log("Building client application...");
-          try {
-            execSync('npm run build', { stdio: 'inherit' });
-          } catch (error) {
-            log("Standard build failed, trying fallback...");
-            execSync('npx vite build --config vite.config.ts.original', { stdio: 'inherit' });
+        // Always rebuild in development to get latest changes
+        log("Development mode: Force rebuilding client to get latest changes...");
+        try {
+          // Remove old build
+          if (fs.existsSync(distPath)) {
+            fs.rmSync(distPath, { recursive: true, force: true });
           }
+          execSync('npm run build', { stdio: 'inherit' });
+        } catch (error) {
+          log("Standard build failed, trying fallback...");
+          execSync('npx vite build --config vite.config.ts.original', { stdio: 'inherit' });
         }
         
-        // Serve built files
-        app.use(express.static(distPath));
+        // Serve built files with strong cache headers for development
+        app.use(express.static(distPath, {
+          etag: false,
+          lastModified: false,
+          maxAge: 0
+        }));
         
         // SPA fallback
         app.get("*", (req, res) => {
@@ -143,7 +149,7 @@ async function startServer() {
           }
         });
         
-        log("Built React app served successfully");
+        log("Fresh React app built and served successfully");
       } catch (buildError) {
         log("Build failed, serving fallback HTML");
         // Serve original Poopalotzi content if build fails

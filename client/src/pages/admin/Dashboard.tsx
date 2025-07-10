@@ -121,7 +121,7 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-[#0B1F3A]">Analytics Dashboard</h1>
             <div className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold animate-pulse">
               <Activity className="h-4 w-4" />
-              <span>🔄 REFRESH PAGE NOW - Cache Issue Detected</span>
+              <span>🔥 HMR TEST - {Date.now()}</span>
             </div>
           </div>
           <p className="text-gray-600">
