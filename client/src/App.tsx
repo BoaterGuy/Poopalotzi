@@ -80,27 +80,18 @@ const EmployeeRoute = ({ component: Component, ...rest }: { component: React.FC<
 const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any>, path: string }) => {
   const { user, isLoading } = useAuth();
   
-  // Debug logging
-  console.log("AdminRoute - user:", user);
-  console.log("AdminRoute - isLoading:", isLoading);
-  console.log("AdminRoute - user.role:", user?.role);
-  console.log("AdminRoute - path:", rest.path);
-  
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
   if (!user) {
-    console.log("AdminRoute - No user, redirecting to auth");
     return <Redirect to="/auth" />;
   }
   
   if (user.role !== 'admin') {
-    console.log("AdminRoute - User is not admin, redirecting to home");
     return <Redirect to="/" />;
   }
   
-  console.log("AdminRoute - Access granted for admin");
   return <Component {...rest} />;
 };
 

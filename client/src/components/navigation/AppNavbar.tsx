@@ -21,13 +21,6 @@ export default function AppNavbar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, logout, isAdmin, isEmployee } = useAuth();
   const [location, setLocation] = useLocation();
-  
-  // Debug logging for role detection
-  console.log("AppNavbar - user:", user);
-  console.log("AppNavbar - isAdmin:", isAdmin);
-  console.log("AppNavbar - user?.role:", user?.role);
-  console.log("AppNavbar - user?.role === 'admin':", user?.role === 'admin');
-  console.log("AppNavbar - condition result:", (isAdmin || user?.role === 'admin'));
 
 
 

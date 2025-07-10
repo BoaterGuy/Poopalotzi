@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -17,10 +17,27 @@ import {
   TrendingUp,
   TrendingDown,
   Activity,
-  Filter
+  Filter,
+  UserPlus,
+  Shield,
+  User,
+  Settings
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { format, subMonths } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 // --- REMOVED ALL STATIC TEST DATA ---
 // All dashboard data now comes from real database API calls
@@ -445,7 +462,230 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* User Management Section */}
+        <UserManagementSection />
       </div>
+    </>
+  );
+}
+
+// User Management Component
+function UserManagementSection() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    userId: number;
+    userName: string;
+    currentRole: string;
+    newRole: string;
+  } | null>(null);
+
+  // Fetch all users
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) throw new Error('Failed to fetch users');
+      return res.json();
+    }
+  });
+
+  // Role change mutation
+  const roleChangeMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "Role Updated",
+        description: "User role has been updated successfully.",
+      });
+      setIsRoleChangeDialogOpen(false);
+      setPendingRoleChange(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user role. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRoleChange = (userId: number, userName: string, currentRole: string, newRole: string) => {
+    if (currentRole === newRole) return;
+    
+    setPendingRoleChange({
+      userId,
+      userName,
+      currentRole,
+      newRole,
+    });
+    setIsRoleChangeDialogOpen(true);
+  };
+
+  const confirmRoleChange = () => {
+    if (pendingRoleChange) {
+      roleChangeMutation.mutate({
+        userId: pendingRoleChange.userId,
+        role: pendingRoleChange.newRole,
+      });
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return <Shield className="h-4 w-4" />;
+      case 'employee': return <Settings className="h-4 w-4" />;
+      default: return <User className="h-4 w-4" />;
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'employee': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="mt-8">
+        <CardHeader className="bg-[#F4EBD0]">
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            User Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-gray-500">Loading users...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card className="mt-8">
+        <CardHeader className="bg-[#F4EBD0]">
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            User Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium">User</th>
+                  <th className="text-left py-3 px-4 font-medium">Email</th>
+                  <th className="text-left py-3 px-4 font-medium">Role</th>
+                  <th className="text-left py-3 px-4 font-medium">Change Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user: any) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        {getRoleIcon(user.role)}
+                        <div>
+                          <div className="font-medium">{user.firstName} {user.lastName}</div>
+                          <div className="text-sm text-gray-500">ID: {user.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">{user.email}</td>
+                    <td className="py-3 px-4">
+                      <Badge className={getRoleBadgeColor(user.role)}>
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Select
+                        value={user.role}
+                        onValueChange={(newRole) => handleRoleChange(user.id, `${user.firstName} ${user.lastName}`, user.role, newRole)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="member">Member</SelectItem>
+                          <SelectItem value="employee">Employee</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Role Change Confirmation Dialog */}
+      <Dialog open={isRoleChangeDialogOpen} onOpenChange={setIsRoleChangeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Role Change</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to change {pendingRoleChange?.userName}'s role from{' '}
+              <strong>{pendingRoleChange?.currentRole}</strong> to{' '}
+              <strong>{pendingRoleChange?.newRole}</strong>?
+              {pendingRoleChange?.newRole === 'admin' && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-800 text-sm font-medium">
+                    ⚠️ Warning: Admin role grants full system access
+                  </p>
+                  <p className="text-red-700 text-sm mt-1">
+                    This user will be able to manage all users, settings, and system configuration.
+                  </p>
+                </div>
+              )}
+              {pendingRoleChange?.newRole === 'employee' && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-blue-800 text-sm font-medium">
+                    ℹ️ Employee Role
+                  </p>
+                  <p className="text-blue-700 text-sm mt-1">
+                    This user will have access to employee tools and manual service entry.
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsRoleChangeDialogOpen(false)}
+              disabled={roleChangeMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmRoleChange}
+              disabled={roleChangeMutation.isPending}
+              variant={pendingRoleChange?.newRole === 'admin' ? 'destructive' : 'default'}
+            >
+              {roleChangeMutation.isPending ? 'Updating...' : 'Confirm Change'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
