@@ -1274,6 +1274,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Check if user has admin-adjusted credits (totalPumpOuts > 0)
+      const adminAdjustedCredits = user.totalPumpOuts || 0;
+      
+      if (adminAdjustedCredits > 0) {
+        // User has admin-adjusted credits, calculate used credits
+        const boatOwner = await storage.getBoatOwnerByUserId(userId);
+        let usedCredits = 0;
+        
+        if (boatOwner) {
+          const boats = await storage.getBoatsByOwnerId(boatOwner.id);
+          const boatIds = boats.map(boat => boat.id);
+          
+          // Count completed requests for this year (excluding canceled ones)
+          const currentYear = new Date().getFullYear();
+          for (const boatId of boatIds) {
+            const requests = await storage.getPumpOutRequestsByBoatId(boatId);
+            const thisYearRequests = requests.filter(request => {
+              const requestDate = request.createdAt ? new Date(request.createdAt) : null;
+              return requestDate && 
+                     requestDate.getFullYear() === currentYear && 
+                     request.status === 'Completed';
+            });
+            usedCredits += thisYearRequests.length;
+          }
+        }
+        
+        const availableCredits = Math.max(0, adminAdjustedCredits - usedCredits);
+        
+        return res.json({
+          availableCredits,
+          totalCredits: adminAdjustedCredits,
+          usedCredits,
+          adminAdjusted: true
+        });
+      }
+
+      // Fall back to standard credit calculation for users without admin adjustments
       // Only show credits for users with service levels (members)
       if (!user.serviceLevelId) {
         return res.json({ availableCredits: 0, totalCredits: 0 });

@@ -35,7 +35,9 @@ Professional boat pump-out service application with admin dashboard, customer po
 ✅ **Security Implementation**: Password hashing, email validation, and proper authentication checks
 ✅ **Navigation Cleanup**: Removed user management from dropdown menu since it's now on dashboard
 ✅ **UI Polish**: Removed cache warning box, HMR test indicator, and cleaned up debug elements
-🎯 **Completed**: Admin can now edit all user details including name, email, phone, and password
+✅ **Admin Login Fixed**: Updated password hash for poopalotzillc@gmail.com to work with MikeR0cks!
+✅ **Credit System Bug Fixed**: Admin credit adjustments now properly display in customer management
+🎯 **Completed**: Admin can now edit all user details and manage customer credits successfully
 
 ## Clover Integration Status
 - Configuration Status: ⚠️ FUNCTIONAL BUT LIMITED - Token permissions insufficient for payment completion
@@ -72,3 +74,4 @@ Professional boat pump-out service application with admin dashboard, customer po
 ## Login Credentials
 - **Member Account**: member@poopalotzi.com / admin123
 - **Admin Account**: admin@poopalotzi.com / admin123
+- **Brian & Pam Admin**: poopalotzillc@gmail.com / MikeR0cks!
