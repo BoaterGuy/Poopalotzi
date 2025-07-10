@@ -464,14 +464,24 @@ export default function AdminDashboard() {
         </Card>
 
         {/* User Management Section */}
-        <UserManagementSection />
+        <Card className="mt-8">
+          <CardHeader className="bg-[#F4EBD0]">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <UserManagementTable />
+          </CardContent>
+        </Card>
       </div>
     </>
   );
 }
 
-// User Management Component
-function UserManagementSection() {
+// User Management Table Component
+function UserManagementTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
@@ -483,7 +493,7 @@ function UserManagementSection() {
   } | null>(null);
 
   // Fetch all users
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const res = await fetch('/api/admin/users');
@@ -559,83 +569,63 @@ function UserManagementSection() {
   };
 
   if (isLoading) {
-    return (
-      <Card className="mt-8">
-        <CardHeader className="bg-[#F4EBD0]">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            User Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">Loading users...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div className="text-center py-8">Loading users...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">Error loading users</div>;
   }
 
   return (
     <>
-      <Card className="mt-8">
-        <CardHeader className="bg-[#F4EBD0]">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            User Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">User</th>
-                  <th className="text-left py-3 px-4 font-medium">Email</th>
-                  <th className="text-left py-3 px-4 font-medium">Role</th>
-                  <th className="text-left py-3 px-4 font-medium">Change Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user: any) => (
-                  <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        {getRoleIcon(user.role)}
-                        <div>
-                          <div className="font-medium">{user.firstName} {user.lastName}</div>
-                          <div className="text-sm text-gray-500">ID: {user.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">{user.email}</td>
-                    <td className="py-3 px-4">
-                      <Badge className={getRoleBadgeColor(user.role)}>
-                        {user.role}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Select
-                        value={user.role}
-                        onValueChange={(newRole) => handleRoleChange(user.id, `${user.firstName} ${user.lastName}`, user.role, newRole)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="member">Member</SelectItem>
-                          <SelectItem value="employee">Employee</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-3 px-4 font-medium">User</th>
+              <th className="text-left py-3 px-4 font-medium">Email</th>
+              <th className="text-left py-3 px-4 font-medium">Role</th>
+              <th className="text-left py-3 px-4 font-medium">Change Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user: any) => (
+              <tr key={user.id} className="border-b hover:bg-gray-50">
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    {getRoleIcon(user.role)}
+                    <div>
+                      <div className="font-medium">{user.firstName} {user.lastName}</div>
+                      <div className="text-sm text-gray-500">ID: {user.id}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 px-4">{user.email}</td>
+                <td className="py-3 px-4">
+                  <Badge className={getRoleBadgeColor(user.role)}>
+                    {user.role}
+                  </Badge>
+                </td>
+                <td className="py-3 px-4">
+                  <Select
+                    value={user.role}
+                    onValueChange={(newRole) => handleRoleChange(user.id, `${user.firstName} ${user.lastName}`, user.role, newRole)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Role Change Confirmation Dialog */}
       <Dialog open={isRoleChangeDialogOpen} onOpenChange={setIsRoleChangeDialogOpen}>
