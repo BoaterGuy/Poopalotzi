@@ -105,7 +105,13 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0B1F3A]">Analytics Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-[#0B1F3A]">Analytics Dashboard</h1>
+            <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+              <Activity className="h-4 w-4" />
+              <span>Updated</span>
+            </div>
+          </div>
           <p className="text-gray-600">
             Overview of key metrics and performance indicators
           </p>
@@ -469,6 +475,9 @@ export default function AdminDashboard() {
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               User Management
+              <div className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                DEBUG: Component Loaded
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -496,8 +505,10 @@ function UserManagementTable() {
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
+      const res = await fetch('/api/admin/users', {
+        credentials: 'include' // Include cookies for authentication
+      });
+      if (!res.ok) throw new Error(`Failed to fetch users: ${res.status}`);
       return res.json();
     }
   });
@@ -508,6 +519,7 @@ function UserManagementTable() {
       const res = await fetch(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ role }),
       });
       if (!res.ok) throw new Error('Failed to update role');
@@ -569,15 +581,18 @@ function UserManagementTable() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading users...</div>;
+    return <div className="text-center py-8 bg-yellow-100 border border-yellow-300 rounded">Loading users...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">Error loading users</div>;
+    return <div className="text-center py-8 bg-red-100 border border-red-300 rounded text-red-600">Error loading users: {error.message}</div>;
   }
 
   return (
     <>
+      <div className="mb-4 p-2 bg-blue-100 border border-blue-300 rounded text-sm">
+        <strong>DEBUG:</strong> UserManagementTable rendered successfully. Found {users.length} users.
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
