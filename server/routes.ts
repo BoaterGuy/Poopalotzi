@@ -669,53 +669,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestData.status = "Waitlisted";
       }
 
-      // For subscription users, handle payment based on subscription type
-      if (req.user && req.user.serviceLevelId) {
-        const serviceLevel = await storage.getServiceLevel(req.user.serviceLevelId);
-        if (serviceLevel) {
-          if (serviceLevel.type === 'one-time') {
-            // For one-time services, check available credits for current calendar year
-            const currentYear = new Date().getFullYear();
-            const yearStart = new Date(currentYear, 0, 1);
-            const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
-            
-            // Get all user's requests for this calendar year
-            const userBoats = await storage.getBoatsByOwnerId((await storage.getBoatOwnerByUserId(req.user.id))?.id || 0);
+      // For all users, check available credits first
+      if (req.user) {
+        const user = await storage.getUser(req.user.id);
+        if (user) {
+          // Get user's total available credits from all sources
+          const totalCredits = user.totalPumpOuts || 0;
+          
+          // Count used credits (completed services this year)
+          const currentYear = new Date().getFullYear();
+          const yearStart = new Date(currentYear, 0, 1);
+          const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
+          
+          const boatOwner = await storage.getBoatOwnerByUserId(user.id);
+          let usedCreditsThisYear = 0;
+          
+          if (boatOwner) {
+            const userBoats = await storage.getBoatsByOwnerId(boatOwner.id);
             const userBoatIds = userBoats.map(b => b.id);
             
-            let usedCreditsThisYear = 0;
             for (const boatId of userBoatIds) {
               const boatRequests = await storage.getPumpOutRequestsByBoatId(boatId);
               usedCreditsThisYear += boatRequests.filter(req => {
                 if (!req.createdAt) return false;
                 const reqDate = new Date(req.createdAt);
-                return req.paymentStatus === 'Paid' && 
-                       req.paymentId && 
-                       req.paymentId.startsWith('sub_one-time') &&
-                       req.status !== 'Canceled' && // Don't count canceled services
+                return req.status === 'Completed' && 
+                       req.status !== 'Canceled' &&
                        reqDate >= yearStart && reqDate <= yearEnd;
               }).length;
             }
-            
-            // One-time service gives 1 credit per calendar year
-            const availableCredits = 1 - usedCreditsThisYear;
-            
-            if (availableCredits > 0) {
-              // User has available credits, mark as paid
-              requestData.paymentStatus = 'Paid';
-              requestData.paymentId = `sub_one-time_${currentYear}_${Date.now()}`;
-            } else {
-              // No credits available, requires new payment
-              requestData.paymentStatus = 'Pending';
-            }
-          } else if (serviceLevel.type === 'bulk') {
-            // Bulk plans are paid while active and within season
+          }
+          
+          const availableCredits = totalCredits - usedCreditsThisYear;
+          
+          if (availableCredits > 0) {
+            // User has available credits, mark as paid and use credit
             requestData.paymentStatus = 'Paid';
-            requestData.paymentId = `sub_bulk_${Date.now()}`;
+            requestData.paymentId = `credit_${Date.now()}`;
+            console.log(`Using credit for user ${user.id}: ${availableCredits} credits available`);
           } else {
-            // Monthly and seasonal subscriptions are always paid while active
-            requestData.paymentStatus = 'Paid';
-            requestData.paymentId = `sub_${serviceLevel.type}_${Date.now()}`;
+            // No credits available, requires payment
+            requestData.paymentStatus = 'Pending';
+            console.log(`No credits available for user ${user.id}: ${totalCredits} total, ${usedCreditsThisYear} used`);
           }
         }
       }
@@ -1741,16 +1736,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscriptionStartDate: startDate,
         subscriptionEndDate: endDate,
         autoRenew: serviceLevel.type === 'monthly' ? !!autoRenew : false,
-        // Add bulk plan specific fields
+        // Add credits based on service level type
         ...(serviceLevel.type === 'bulk' && {
           additionalPumpOuts: additionalPumpOuts || 0,
           totalPumpOuts: totalPumpOuts || serviceLevel.baseQuantity || 0,
           bulkPlanYear: bulkPlanYear || now.getFullYear()
         }),
-        // For one-time services, increment pump-out credits
         ...(serviceLevel.type === 'one-time' && {
           additionalPumpOuts: (req.user.additionalPumpOuts || 0) + (serviceLevel.onDemandQuota || 1),
           totalPumpOuts: (req.user.totalPumpOuts || 0) + (serviceLevel.onDemandQuota || 1)
+        }),
+        ...(serviceLevel.type === 'seasonal' && {
+          additionalPumpOuts: (req.user.additionalPumpOuts || 0) + (serviceLevel.onDemandQuota || 100),
+          totalPumpOuts: (req.user.totalPumpOuts || 0) + (serviceLevel.onDemandQuota || 100)
+        }),
+        ...(serviceLevel.type === 'monthly' && {
+          additionalPumpOuts: (req.user.additionalPumpOuts || 0) + (serviceLevel.monthlyQuota || 2),
+          totalPumpOuts: (req.user.totalPumpOuts || 0) + (serviceLevel.monthlyQuota || 2)
         })
       };
       
@@ -1954,14 +1956,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to update payment status" });
       }
 
-      // For users with one-time service plans, increment their pump-out credits when they pay
+      // For users without subscriptions who pay individually, add credits
       const user = await storage.getUser(req.user.id);
-      if (user && user.serviceLevelId === 5) { // One-time service level
+      if (user && !user.serviceLevelId) { // No subscription - individual payment
         const updatedUser = await storage.updateUser(req.user.id, {
           additionalPumpOuts: (user.additionalPumpOuts || 0) + 1,
           totalPumpOuts: (user.totalPumpOuts || 0) + 1
         });
-        console.log('Updated user pump-out credits after payment:', updatedUser?.additionalPumpOuts, updatedUser?.totalPumpOuts);
+        console.log('Added credit after individual payment for user without subscription:', updatedUser?.totalPumpOuts);
       }
       
       console.log(`✅ Payment processed successfully for request ${id}:`, {
