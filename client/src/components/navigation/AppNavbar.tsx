@@ -170,7 +170,7 @@ export default function AppNavbar() {
                         Service Levels
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/user-management")}>
-                        🔧 User Management
+                        User Management
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/admin/manual-service-form")}>
                         Manual Service Entry
