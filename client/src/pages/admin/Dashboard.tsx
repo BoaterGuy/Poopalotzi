@@ -487,36 +487,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* CACHE CLEAR INSTRUCTIONS */}
-        <Card className="mt-8 border-red-500 border-2">
-          <CardHeader className="bg-red-50">
-            <CardTitle className="text-red-800">
-              🚨 CACHE ISSUE DETECTED - User Management Not Visible
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <h3 className="font-bold text-yellow-800 mb-2">Quick Fix - Try These Steps:</h3>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li><strong>Hard Refresh:</strong> Press Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)</li>
-                  <li><strong>Clear Cache:</strong> Press Ctrl+Shift+Delete and clear browsing data</li>
-                  <li><strong>Incognito Mode:</strong> Open in private/incognito window</li>
-                  <li><strong>Developer Tools:</strong> Press F12, go to Network tab, check "Disable cache"</li>
-                </ol>
-              </div>
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-                <h3 className="font-bold text-blue-800 mb-2">What You Should See After Cache Clear:</h3>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>User Management section with user table</li>
-                  <li>Role change dropdowns for each user</li>
-                  <li>Confirmation dialogs when changing roles</li>
-                  <li>Debug indicators showing the component loaded</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* User Management Section */}
         <Card className="mt-8">
@@ -524,9 +495,6 @@ export default function AdminDashboard() {
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               User Management
-              <div className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                ✅ LOADED: {new Date().toLocaleTimeString()}
-              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
