@@ -140,7 +140,7 @@ export default function ServiceSubscription() {
   const handleBulkPlanPurchase = (additionalPumpOuts: number, totalCost: number) => {
     setBulkPlanDetails({ additionalPumpOuts, totalCost });
     setShowBulkPlanForm(false);
-    setIsSubscribing(true);
+    setShowPayment(true);
   };
 
   const handleBulkPlanCancel = () => {
