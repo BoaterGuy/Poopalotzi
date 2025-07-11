@@ -40,10 +40,10 @@ export default function BulkPlanPurchaseForm({
       <CardHeader>
         <CardTitle>Customize Your {serviceLevel.name}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-4">
         {/* Plan Summary */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-3">Your Plan</h3>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <h3 className="font-semibold text-blue-900 mb-2">Your Plan</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Base plan includes:</span>
@@ -118,8 +118,8 @@ export default function BulkPlanPurchaseForm({
         </div>
 
         {/* Total Summary */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h3 className="font-semibold text-green-900 mb-3">Plan Summary</h3>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <h3 className="font-semibold text-green-900 mb-2">Plan Summary</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Base plan ({serviceLevel.baseQuantity} pump-outs):</span>
@@ -140,7 +140,7 @@ export default function BulkPlanPurchaseForm({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between pt-4">
+        <div className="flex justify-between pt-2">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>

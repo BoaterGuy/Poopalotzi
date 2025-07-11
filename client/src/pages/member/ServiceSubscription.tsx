@@ -577,7 +577,7 @@ export default function ServiceSubscription() {
       
       {/* Bulk Plan Purchase Form Dialog */}
       <Dialog open={showBulkPlanForm} onOpenChange={(open) => !open && handleBulkPlanCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Customize Bulk Plan</DialogTitle>
             <DialogDescription>
