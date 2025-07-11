@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
-import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
+import { CalendarPlus, History, AlertCircle, Check, X, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -22,6 +22,7 @@ export default function MemberDashboardNew() {
   const queryClient = useQueryClient();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedPaymentRequest, setSelectedPaymentRequest] = useState<PumpOutRequest | null>(null);
+  const [cancelingRequestId, setCancelingRequestId] = useState<number | null>(null);
 
 
 
@@ -63,6 +64,48 @@ export default function MemberDashboardNew() {
       return response.json();
     },
   });
+
+  // Cancel pump-out request function
+  const cancelPumpOutRequest = async (requestId: number) => {
+    try {
+      setCancelingRequestId(requestId);
+      
+      const response = await fetch(`/api/pump-out-requests/${requestId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'Canceled' })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to cancel request');
+      }
+
+      // Show success message
+      toast({
+        title: "Request Canceled",
+        description: "Your pump-out request has been canceled and your credit has been restored.",
+        variant: "default",
+      });
+
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
+      
+    } catch (error) {
+      console.error('Error canceling request:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to cancel request",
+        variant: "destructive",
+      });
+    } finally {
+      setCancelingRequestId(null);
+    }
+  };
 
   // Get all pump-out requests for all user's boats
   const allBoatIds = boats?.map(boat => boat.id) || [];
@@ -211,18 +254,32 @@ export default function MemberDashboardNew() {
                                   {getPaymentStatusBadge(request.paymentStatus)}
                                 </div>
                               </div>
-                              {request.paymentStatus === 'Pending' && (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedPaymentRequest(request);
-                                    setShowPaymentDialog(true);
-                                  }}
-                                  className="bg-[#38B2AC] hover:bg-[#38B2AC]/90"
-                                >
-                                  Pay Now
-                                </Button>
-                              )}
+                              <div className="flex gap-2">
+                                {request.paymentStatus === 'Pending' && (
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPaymentRequest(request);
+                                      setShowPaymentDialog(true);
+                                    }}
+                                    className="bg-[#38B2AC] hover:bg-[#38B2AC]/90"
+                                  >
+                                    Pay Now
+                                  </Button>
+                                )}
+                                {['Requested', 'Scheduled', 'Waitlisted'].includes(request.status) && (
+                                  <Button 
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => cancelPumpOutRequest(request.id)}
+                                    disabled={cancelingRequestId === request.id}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    {cancelingRequestId === request.id ? 'Canceling...' : 'Cancel'}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="p-4">
