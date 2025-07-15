@@ -6,7 +6,7 @@ import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/sendgrid";
-import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
+import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
 import { z } from "zod";
 import { ZodError } from "zod";
@@ -2748,6 +2748,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.error('Contact form error:', error);
       res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
+  // Email Notification Preference endpoints
+  // Create a schema for updating notification preferences
+  const updateNotificationPreferencesSchema = insertNotificationPreferencesSchema
+    .omit({ userId: true })
+    .partial();
+
+  // GET /api/notifications/preferences - Get current user's notification preferences
+  app.get('/api/notifications/preferences', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get or create notification preferences for the user
+      const preferences = await storage.getOrCreateNotificationPreferences(userId);
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error('Error fetching notification preferences:', error);
+      res.status(500).json({ message: 'Failed to fetch notification preferences' });
+    }
+  });
+
+  // PUT /api/notifications/preferences - Update user's notification preferences
+  app.put('/api/notifications/preferences', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Validate the request body
+      const validatedData = updateNotificationPreferencesSchema.parse(req.body);
+      
+      // Update the preferences
+      const updatedPreferences = await storage.updateNotificationPreferences(userId, validatedData);
+      
+      if (!updatedPreferences) {
+        // If no existing preferences, create new ones
+        const newPreferences = await storage.createNotificationPreferences({
+          userId,
+          ...validatedData
+        });
+        return res.json(newPreferences);
+      }
+      
+      res.json(updatedPreferences);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          details: validationError.toString() 
+        });
+      }
+      
+      console.error('Error updating notification preferences:', error);
+      res.status(500).json({ message: 'Failed to update notification preferences' });
+    }
+  });
+
+  // GET /api/notifications/history - Get user's email notification history
+  app.get('/api/notifications/history', isAuthenticated, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Parse query parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100 items
+      const emailType = req.query.emailType as string | undefined;
+      
+      // Validate page and limit
+      if (page < 1) {
+        return res.status(400).json({ message: 'Page must be greater than 0' });
+      }
+      if (limit < 1) {
+        return res.status(400).json({ message: 'Limit must be greater than 0' });
+      }
+      
+      // Get email notification logs
+      let logs;
+      if (emailType) {
+        // Filter by email type - get all matching logs first, then filter by user
+        const allTypeLogs = await storage.getEmailNotificationLogsByType(emailType, 1000);
+        logs = allTypeLogs.filter(log => log.userId === userId);
+      } else {
+        // Get all logs for the user
+        logs = await storage.getEmailNotificationLogs(userId, 1000);
+      }
+      
+      // Calculate pagination
+      const total = logs.length;
+      const totalPages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedLogs = logs.slice(startIndex, endIndex);
+      
+      res.json({
+        data: paginatedLogs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        },
+        ...(emailType && { emailType })
+      });
+    } catch (error) {
+      console.error('Error fetching notification history:', error);
+      res.status(500).json({ message: 'Failed to fetch notification history' });
     }
   });
 
