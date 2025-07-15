@@ -108,15 +108,13 @@ export default function NotificationPreferences() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Fetch notification preferences
-  const { data: preferences, isLoading: preferencesLoading } = useQuery<NotificationPreferences>({
+  const { data: preferences, isLoading: preferencesLoading, error: preferencesError } = useQuery<NotificationPreferences>({
     queryKey: ['/api/notifications/preferences'],
-    queryFn: undefined,
   });
 
   // Fetch notification history
-  const { data: history, isLoading: historyLoading } = useQuery<NotificationHistoryResponse>({
+  const { data: history, isLoading: historyLoading, error: historyError } = useQuery<NotificationHistoryResponse>({
     queryKey: ['/api/notifications/history'],
-    queryFn: undefined,
     enabled: activeTab === "history",
   });
 
@@ -203,6 +201,17 @@ export default function NotificationPreferences() {
           <span className="ml-2">Loading notification preferences...</span>
         </div>
       </div>
+    );
+  }
+
+  if (preferencesError) {
+    return (
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Unable to load notification preferences. {preferencesError.message}. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
     );
   }
 
