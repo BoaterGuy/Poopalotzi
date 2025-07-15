@@ -4,7 +4,7 @@
 
 ### Test Results Summary:
 1. **API Key Validation**: ✅ PASSED
-   - Format: Correct (xkeysib-f5...)
+   - Format: Correct (xkeysib-[64_chars]-[16_chars])
    - Length: 89 characters (expected)
    - Authentication: Successful
 
