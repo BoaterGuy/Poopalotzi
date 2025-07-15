@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
+import NotificationPreferences from "@/components/member/NotificationPreferences";
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -222,14 +223,15 @@ export default function Profile() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#0B1F3A]">Account Settings</h1>
           <p className="text-gray-600">
-            Manage your profile information and password.
+            Manage your profile information, password, and notification preferences.
           </p>
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-2">
+          <TabsList className="grid w-full md:w-auto grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="password">Password</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -387,6 +389,10 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <NotificationPreferences />
+          </TabsContent>
 
         </Tabs>
       </div>
