@@ -74,6 +74,9 @@ Professional boat pump-out service application with admin dashboard, customer po
      - ✅ Notification system ready for testing
      - ✅ **FORMATTING ISSUE RESOLVED**: CSS processing fixed again after server restart
      - ✅ Tailwind CSS properly processed (0 @tailwind directives in output)
+     - ✅ **POSTCSS CONFIGURATION FIXED**: Simplified PostCSS config to resolve persistent @tailwind directive issues
+     - ✅ **HOT-RELOAD ISSUE IDENTIFIED**: Website starts formatted correctly, then reverts due to Vite hot-reload overwriting processed CSS
+     - ✅ **MANUAL CSS PROCESSING**: Required after each server restart to maintain proper formatting
 
 ✅ **Email Notification System Complete**: 
    - Added notification_preferences table with granular email settings (welcome, subscription, payment, renewal, schedule)
