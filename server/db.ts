@@ -204,6 +204,31 @@ export async function setupDatabase() {
             "employee_id" INTEGER NOT NULL REFERENCES "users"("id"),
             "request_id" INTEGER NOT NULL REFERENCES "pump_out_request"("id"),
             "assigned_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )`,
+          
+          `CREATE TABLE IF NOT EXISTS "notification_preferences" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "email_notifications" BOOLEAN DEFAULT TRUE,
+            "welcome_emails" BOOLEAN DEFAULT TRUE,
+            "subscription_emails" BOOLEAN DEFAULT TRUE,
+            "payment_emails" BOOLEAN DEFAULT TRUE,
+            "renewal_reminders" BOOLEAN DEFAULT TRUE,
+            "schedule_emails" BOOLEAN DEFAULT TRUE,
+            "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )`,
+          
+          `CREATE TABLE IF NOT EXISTS "email_notification_log" (
+            "id" SERIAL PRIMARY KEY,
+            "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+            "email_type" TEXT NOT NULL,
+            "recipient_email" TEXT NOT NULL,
+            "subject" TEXT NOT NULL,
+            "status" TEXT NOT NULL,
+            "sendgrid_message_id" TEXT,
+            "error_message" TEXT,
+            "sent_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )`
         ];
         

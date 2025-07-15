@@ -192,6 +192,33 @@ export const paymentTransaction = pgTable('payment_transaction', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+// Notification Preferences
+export const notificationPreferences = pgTable('notification_preferences', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  emailNotifications: boolean('email_notifications').default(true),
+  welcomeEmails: boolean('welcome_emails').default(true),
+  subscriptionEmails: boolean('subscription_emails').default(true),
+  paymentEmails: boolean('payment_emails').default(true),
+  renewalReminders: boolean('renewal_reminders').default(true),
+  scheduleEmails: boolean('schedule_emails').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Email Notification Log
+export const emailNotificationLog = pgTable('email_notification_log', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  emailType: text('email_type').notNull(), // 'welcome', 'subscription', 'payment', 'renewal', 'schedule'
+  recipientEmail: text('recipient_email').notNull(),
+  subject: text('subject').notNull(),
+  status: text('status').notNull(), // 'sent', 'failed', 'simulated'
+  sendgridMessageId: text('sendgrid_message_id'),
+  errorMessage: text('error_message'),
+  sentAt: timestamp('sent_at').defaultNow(),
+});
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, passwordHash: true, createdAt: true })
@@ -232,6 +259,12 @@ export const insertCloverConfigSchema = createInsertSchema(cloverConfig)
 export const insertPaymentTransactionSchema = createInsertSchema(paymentTransaction)
   .omit({ id: true, createdAt: true, updatedAt: true });
 
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertEmailNotificationLogSchema = createInsertSchema(emailNotificationLog)
+  .omit({ id: true, sentAt: true });
+
 // Types for insert and select
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -265,3 +298,9 @@ export type CloverConfig = typeof cloverConfig.$inferSelect;
 
 export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
 export type PaymentTransaction = typeof paymentTransaction.$inferSelect;
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+export type InsertEmailNotificationLog = z.infer<typeof insertEmailNotificationLogSchema>;
+export type EmailNotificationLog = typeof emailNotificationLog.$inferSelect;

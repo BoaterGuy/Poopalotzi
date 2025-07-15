@@ -4,7 +4,8 @@ import type {
   DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
   BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment,
-  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction
+  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction,
+  NotificationPreferences, InsertNotificationPreferences, EmailNotificationLog, InsertEmailNotificationLog
 } from "@shared/schema";
 import { requestStatusEnum, paymentStatusEnum } from "@shared/schema";
 import { eq, and, gte, lte, sql, desc, asc } from "drizzle-orm";
@@ -97,6 +98,18 @@ export interface IStorage {
   updatePaymentTransactionStatus(cloverPaymentId: string, status: string, errorMessage?: string): Promise<PaymentTransaction | undefined>;
   getAllPaymentTransactions(): Promise<PaymentTransaction[]>;
   getPaymentTransactionsByStatus(status: string): Promise<PaymentTransaction[]>;
+  
+  // Notification Preferences operations
+  createNotificationPreferences(preferences: InsertNotificationPreferences): Promise<NotificationPreferences>;
+  getNotificationPreferences(userId: number): Promise<NotificationPreferences | undefined>;
+  updateNotificationPreferences(userId: number, preferencesData: Partial<NotificationPreferences>): Promise<NotificationPreferences | undefined>;
+  getOrCreateNotificationPreferences(userId: number): Promise<NotificationPreferences>;
+  
+  // Email Notification Log operations
+  createEmailNotificationLog(log: InsertEmailNotificationLog): Promise<EmailNotificationLog>;
+  getEmailNotificationLogs(userId?: number, limit?: number): Promise<EmailNotificationLog[]>;
+  getEmailNotificationLogsByType(emailType: string, limit?: number): Promise<EmailNotificationLog[]>;
+  updateEmailNotificationLog(id: number, logData: Partial<EmailNotificationLog>): Promise<EmailNotificationLog | undefined>;
 }
 
 // In-memory storage implementation

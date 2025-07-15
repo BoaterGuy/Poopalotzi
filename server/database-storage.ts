@@ -6,7 +6,8 @@ import type {
   DockAssignment, InsertDockAssignment, ServiceLevel, InsertServiceLevel,
   PumpOutRequest, InsertPumpOutRequest, PumpOutLog, InsertPumpOutLog,
   BoatOwner, InsertBoatOwner, EmployeeAssignment, InsertEmployeeAssignment,
-  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction
+  CloverConfig, InsertCloverConfig, PaymentTransaction, InsertPaymentTransaction,
+  NotificationPreferences, InsertNotificationPreferences, EmailNotificationLog, InsertEmailNotificationLog
 } from '@shared/schema';
 import { IStorage } from './storage';
 import connectPg from "connect-pg-simple";
@@ -561,5 +562,77 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(schema.paymentTransaction)
       .where(eq(schema.paymentTransaction.status, status))
       .orderBy(desc(schema.paymentTransaction.createdAt));
+  }
+
+  // Notification preferences operations
+  async createNotificationPreferences(preferencesData: InsertNotificationPreferences): Promise<NotificationPreferences> {
+    const [preferences] = await db.insert(schema.notificationPreferences)
+      .values({ ...preferencesData, updatedAt: new Date() })
+      .returning();
+    
+    return preferences;
+  }
+
+  async getNotificationPreferences(userId: number): Promise<NotificationPreferences | undefined> {
+    const [preferences] = await db.select().from(schema.notificationPreferences)
+      .where(eq(schema.notificationPreferences.userId, userId))
+      .limit(1);
+    
+    return preferences;
+  }
+
+  async updateNotificationPreferences(userId: number, preferencesData: Partial<NotificationPreferences>): Promise<NotificationPreferences | undefined> {
+    const [updated] = await db.update(schema.notificationPreferences)
+      .set({ ...preferencesData, updatedAt: new Date() })
+      .where(eq(schema.notificationPreferences.userId, userId))
+      .returning();
+    
+    return updated;
+  }
+
+  async getOrCreateNotificationPreferences(userId: number): Promise<NotificationPreferences> {
+    const existing = await this.getNotificationPreferences(userId);
+    if (existing) {
+      return existing;
+    }
+    
+    return await this.createNotificationPreferences({ userId });
+  }
+
+  // Email notification log operations
+  async createEmailNotificationLog(logData: InsertEmailNotificationLog): Promise<EmailNotificationLog> {
+    const [log] = await db.insert(schema.emailNotificationLog)
+      .values(logData)
+      .returning();
+    
+    return log;
+  }
+
+  async getEmailNotificationLogs(userId?: number, limit: number = 50): Promise<EmailNotificationLog[]> {
+    let query = db.select().from(schema.emailNotificationLog);
+    
+    if (userId) {
+      query = query.where(eq(schema.emailNotificationLog.userId, userId));
+    }
+    
+    return await query
+      .orderBy(desc(schema.emailNotificationLog.sentAt))
+      .limit(limit);
+  }
+
+  async getEmailNotificationLogsByType(emailType: string, limit: number = 50): Promise<EmailNotificationLog[]> {
+    return await db.select().from(schema.emailNotificationLog)
+      .where(eq(schema.emailNotificationLog.emailType, emailType))
+      .orderBy(desc(schema.emailNotificationLog.sentAt))
+      .limit(limit);
+  }
+
+  async updateEmailNotificationLog(id: number, logData: Partial<EmailNotificationLog>): Promise<EmailNotificationLog | undefined> {
+    const [updated] = await db.update(schema.emailNotificationLog)
+      .set(logData)
+      .where(eq(schema.emailNotificationLog.id, id))
+      .returning();
+    
+    return updated;
   }
 }
