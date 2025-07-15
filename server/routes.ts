@@ -5,7 +5,7 @@ import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
-import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/brevo";
+import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/sendgrid";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
 import { z } from "zod";

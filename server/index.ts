@@ -132,7 +132,7 @@ async function startServer() {
           execSync('npm run build', { stdio: 'inherit' });
         } catch (error) {
           log("Standard build failed, trying fallback...");
-          execSync('npx vite build --config vite.config.ts.original', { stdio: 'inherit' });
+          execSync('npx vite build', { stdio: 'inherit' });
         }
         
         // Serve built files with strong cache headers for development

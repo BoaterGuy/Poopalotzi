@@ -29,25 +29,24 @@ Professional boat pump-out service application with admin dashboard, customer po
 🎯 **System Complete**: Credit flow working exactly as designed
 
 ## Recent Development (July 15, 2025)
-✅ **Email Service Migration Complete**: 
-   - **MIGRATED FROM SENDGRID TO BREVO**: Successfully migrated entire email service due to SendGrid trial expiration
-   - **BREVO INTEGRATION**: Implemented sib-api-v3-sdk for Brevo email service (300 emails/day free = 9,000/month)
-   - **BACKWARD COMPATIBILITY**: Maintained support for existing SENDGRID_FROM_EMAIL environment variable
-   - **UPDATED DEPENDENCIES**: Added sib-api-v3-sdk package, updated all email service imports
-   - **FILES MODIFIED**: 
-     - Created server/utils/brevo.ts with full Brevo API integration
-     - Updated server/routes.ts and server/utils/email-service.ts imports
-     - Enhanced environment variable handling for smooth transition
-   - **TESTED FUNCTIONALITY**: 
-     - Contact form working with Brevo service
-     - All email templates preserved and functional
-     - Fallback simulation mode working properly
-     - Error handling and logging implemented
-   - **MIGRATION BENEFITS**: 
-     - 9,000 emails/month free (vs SendGrid's expired trial)
-     - Better deliverability and modern API
-     - Perfect for current usage (41 customers, <500 emails/month)
-   - **DEPLOYMENT READY**: Code complete, just needs BREVO_API_KEY environment variable set
+🔄 **Website Restoration in Progress**: 
+   - **ISSUE IDENTIFIED**: Brevo email migration broke website build and display
+   - **ROOT CAUSE**: Modified build configuration files during migration process
+   - **RESTORATION PROCESS**: 
+     - ✅ Restored package.json from backup (June 16 version)
+     - ✅ Fixed server/index.ts hardcoded vite.config.ts.original reference
+     - ✅ Reverted server/routes.ts to use SendGrid email service
+     - ✅ Reverted server/utils/email-service.ts to use SendGrid imports
+     - ✅ Simplified vite.config.ts to basic configuration
+     - ⚠️ **CURRENT ISSUE**: @vitejs/plugin-react package missing from node_modules
+   - **NEXT STEPS**: 
+     - Need to rebuild dependencies to match restored package.json
+     - Verify website loads with original styling and functionality
+     - Re-apply ONLY email service changes after website restoration
+   - **SELECTIVE MIGRATION PLAN**: 
+     - Keep original SendGrid setup as primary
+     - Add Brevo as optional secondary service
+     - Modify only server/utils/brevo.ts and environment variable handling
 
 ✅ **Email Notification System Complete**: 
    - Added notification_preferences table with granular email settings (welcome, subscription, payment, renewal, schedule)
