@@ -35,12 +35,15 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     }
     
     // Debug logging for Brevo configuration
-    console.log('Brevo Configuration:');
+    console.log('🔍 Brevo Configuration:');
     console.log('- API Key exists:', !!process.env.BREVO_API_KEY);
     console.log('- API Key length:', process.env.BREVO_API_KEY?.length);
+    console.log('- API Key prefix:', process.env.BREVO_API_KEY?.substring(0, 10) + '...');
     console.log('- From email:', fromEmail);
     console.log('- To email:', params.to);
     console.log('- Subject:', params.subject);
+    console.log('- Has text content:', !!params.text);
+    console.log('- Has HTML content:', !!params.html);
     
     // Prepare email data for Brevo
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
@@ -53,7 +56,13 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     // Send email via Brevo
     const response = await brevoClient.sendTransacEmail(sendSmtpEmail);
     
-    console.log('Email sent successfully via Brevo:', response.body);
+    console.log('✅ Email sent successfully via Brevo!');
+    console.log('📧 Response data:', {
+      messageId: response.messageId,
+      body: response.body,
+      status: response.response?.status || 'unknown'
+    });
+    
     return true;
   } catch (error) {
     console.error('Brevo email error:', error);
