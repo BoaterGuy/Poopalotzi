@@ -99,7 +99,7 @@ export async function sendContactFormEmail(
   subject: string,
   message: string
 ): Promise<boolean> {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@poopalotzi.com';
+  const adminEmail = process.env.ADMIN_EMAIL || 'mmotsis@gmail.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
