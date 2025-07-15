@@ -22,7 +22,7 @@ interface EmailParams {
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   // Use the from email from environment or default
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com';
+  const fromEmail = process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com';
   
   try {
     if (!process.env.BREVO_API_KEY) {
