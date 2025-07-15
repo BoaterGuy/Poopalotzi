@@ -1,4 +1,4 @@
-import { sendEmail } from './sendgrid';
+import { sendEmail } from './brevo';
 import {
   getWelcomeEmailTemplate,
   getSubscriptionConfirmationTemplate,
@@ -18,7 +18,7 @@ export async function sendWelcomeEmail(user: User): Promise<boolean> {
   
   return sendEmail({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
+    from: process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
     subject: 'Welcome to Poopalotzi',
     html,
   });
@@ -43,7 +43,7 @@ export async function sendSubscriptionConfirmationEmail(
   
   return sendEmail({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
+    from: process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
     subject: 'Your Poopalotzi Subscription Confirmation',
     html,
   });
@@ -68,7 +68,7 @@ export async function sendSubscriptionRenewalReminderEmail(
   
   return sendEmail({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
+    from: process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
     subject: 'Your Poopalotzi Subscription is Expiring Soon',
     html,
   });
