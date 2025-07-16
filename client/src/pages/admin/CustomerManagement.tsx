@@ -1270,7 +1270,7 @@ export default function CustomerManagement() {
                         onCheckedChange={(checked) => setEditingBoat({...editingBoat, canBeDoneByOnePerson: checked})}
                       />
                       <Label htmlFor="edit-boat-single-person">
-                        Can be serviced by one person (displays Capt Crappy logo)
+                        Can be serviced by one person (displays single person icon)
                       </Label>
                     </div>
                   </div>

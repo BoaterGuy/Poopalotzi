@@ -45,7 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User, Pencil } from "lucide-react";
-import CaptCrappyLogoUrl from "@/assets/capt-crappy-logo.svg";
+import PoopalotziSinglePersonIcon from "@/assets/poopalotzi-01_edited.png";
 import { format } from "date-fns";
 
 // Define types for our data structures
@@ -513,7 +513,7 @@ export default function RequestManagement() {
                             <div className="flex items-center gap-2">
                               {request.canBeDoneByOnePerson && (
                                 <div className="flex-shrink-0" title="Can be done by one person">
-                                  <img src={CaptCrappyLogoUrl} alt="Capt Crappy Logo" className="h-5 w-5" />
+                                  <img src={PoopalotziSinglePersonIcon} alt="Single Person Capability" className="h-5 w-5" />
                                 </div>
                               )}
                               <div>
