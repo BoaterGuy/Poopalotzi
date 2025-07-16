@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-info { background: #f0f0f0; padding: 15px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Cache Debug Test</h1>
+    
+    <div class="debug-info">
+        <h2>CSS File Check</h2>
+        <p>Current CSS file: <span id="cssFile">Loading...</span></p>
+        <p>File size: <span id="fileSize">Loading...</span></p>
+        <p>Last modified: <span id="lastModified">Loading...</span></p>
+    </div>
+    
+    <div class="debug-info">
+        <h2>Test Responsive Classes</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style="background: #e3f2fd; padding: 10px; margin: 10px 0;">
+            <div style="background: #2196f3; color: white; padding: 10px; text-align: center;">Col 1</div>
+            <div style="background: #2196f3; color: white; padding: 10px; text-align: center;">Col 2</div>
+            <div style="background: #2196f3; color: white; padding: 10px; text-align: center;">Col 3</div>
+        </div>
+        <p>Above grid should: 1 column on mobile, 2 on tablet, 3 on desktop</p>
+    </div>
+    
+    <div class="debug-info">
+        <h2>Test Dialog Max Height</h2>
+        <div class="max-h-[95vh] overflow-y-auto" style="background: #fff3e0; border: 2px solid #ff9800; padding: 15px;">
+            <p>This container should have max-height: 95vh and scrollable overflow</p>
+            <p>Resize window to test responsiveness</p>
+        </div>
+    </div>
+    
+    <div class="debug-info">
+        <h2>Cache Busting Actions</h2>
+        <button onclick="hardRefresh()">Hard Refresh</button>
+        <button onclick="clearCaches()">Clear All Caches</button>
+        <button onclick="testCSSLoad()">Test CSS Load</button>
+        <button onclick="openMainApp()">Open Main App (Cache Busted)</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Get CSS file info
+        document.addEventListener('DOMContentLoaded', function() {
+            const cssLink = document.querySelector('link[rel="stylesheet"]');
+            if (cssLink) {
+                document.getElementById('cssFile').textContent = cssLink.href;
+                
+                fetch(cssLink.href)
+                    .then(response => {
+                        document.getElementById('fileSize').textContent = response.headers.get('content-length') || 'Unknown';
+                        document.getElementById('lastModified').textContent = response.headers.get('last-modified') || 'Unknown';
+                    })
+                    .catch(e => console.error('Error fetching CSS info:', e));
+            } else {
+                document.getElementById('cssFile').textContent = 'No external CSS found';
+            }
+        });
+        
+        function hardRefresh() {
+            window.location.reload(true);
+        }
+        
+        function clearCaches() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                    alert('Browser caches cleared');
+                });
+            }
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.unregister());
+                });
+            }
+            
+            localStorage.clear();
+            sessionStorage.clear();
+        }
+        
+        function testCSSLoad() {
+            const timestamp = Date.now();
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `/assets/index-CIobrDji.css?v=${timestamp}`;
+            link.onload = () => {
+                document.getElementById('results').innerHTML = '<div class="success">CSS loaded successfully with timestamp: ' + timestamp + '</div>';
+            };
+            link.onerror = () => {
+                document.getElementById('results').innerHTML = '<div class="error">Failed to load CSS</div>';
+            };
+            document.head.appendChild(link);
+        }
+        
+        function openMainApp() {
+            const timestamp = Date.now();
+            window.open(`/?cache_bust=${timestamp}`, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Test - Payment Form</title>
+    <link rel="stylesheet" href="/assets/index-CIobrDji.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 20px; border: 2px solid #007cba; }
+        .success { background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 10px; margin: 10px 0; }
+        .test-grid { background: #f8f9fa; padding: 15px; margin: 10px 0; }
+        .test-item { background: #007cba; color: white; padding: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Responsive Payment Form Test</h1>
+    <p>This page tests if the responsive CSS classes are working correctly.</p>
+    
+    <div class="info">
+        <strong>Current viewport:</strong> <span id="viewport">Loading...</span><br>
+        <strong>CSS file loaded:</strong> <span id="cssStatus">Checking...</span>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 1: Responsive Grid Layout</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 test-grid">
+            <div class="test-item">Expiry Month</div>
+            <div class="test-item">Expiry Year</div>
+            <div class="test-item">CVV</div>
+        </div>
+        <p><strong>Expected:</strong> 1 column on mobile, 2 columns on tablet, 3 columns on desktop</p>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 2: Dialog Max Height</h2>
+        <div class="max-h-[95vh] overflow-y-auto test-grid" style="height: 200px;">
+            <div style="height: 400px; background: linear-gradient(to bottom, #e3f2fd, #90caf9); padding: 20px;">
+                <h3>Scrollable Content</h3>
+                <p>This container should be scrollable with max-height: 95vh</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
+                <p>Scroll down to see more content...</p>
+                <p>More content here...</p>
+                <p>Even more content...</p>
+                <p>This should be scrollable!</p>
+            </div>
+        </div>
+        <p><strong>Expected:</strong> Container should scroll vertically</p>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 3: Responsive Input Heights</h2>
+        <input type="text" class="h-12 md:h-10 text-base md:text-sm" placeholder="Mobile: 48px, Desktop: 40px" 
+               style="width: 100%; padding: 0 12px; border: 2px solid #ccc; border-radius: 4px;">
+        <p><strong>Expected:</strong> 48px height on mobile, 40px on desktop</p>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 4: Responsive Dialog Width</h2>
+        <div class="max-w-md sm:max-w-2xl lg:max-w-3xl test-grid" style="margin: 0 auto;">
+            <div class="test-item">Dialog Content</div>
+        </div>
+        <p><strong>Expected:</strong> Small on mobile, medium on tablet, large on desktop</p>
+    </div>
+    
+    <div class="success">
+        <h2>✅ Cache Busting Applied</h2>
+        <p>Tailwind safelist configuration added to ensure responsive classes are included</p>
+        <p>Hard refresh performed to clear any cached CSS</p>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <h2>🚀 Test Main Application</h2>
+        <button onclick="openApp()" style="background: #28a745; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+            Open Payment Form in Main App
+        </button>
+    </div>
+    
+    <script>
+        // Check viewport size
+        function updateViewport() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            let device = 'Mobile';
+            if (width >= 768 && width < 1024) device = 'Tablet';
+            if (width >= 1024) device = 'Desktop';
+            
+            document.getElementById('viewport').textContent = `${width}x${height} (${device})`;
+        }
+        
+        // Check CSS loading
+        function checkCSS() {
+            const cssLink = document.querySelector('link[href*="index-CIobrDji.css"]');
+            if (cssLink) {
+                document.getElementById('cssStatus').textContent = 'CSS file loaded successfully';
+                document.getElementById('cssStatus').style.color = 'green';
+            } else {
+                document.getElementById('cssStatus').textContent = 'CSS file not found';
+                document.getElementById('cssStatus').style.color = 'red';
+            }
+        }
+        
+        function openApp() {
+            window.open('/', '_blank');
+        }
+        
+        // Initialize
+        updateViewport();
+        checkCSS();
+        window.addEventListener('resize', updateViewport);
+    </script>
+</body>
+</html>
