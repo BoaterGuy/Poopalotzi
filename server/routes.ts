@@ -6,7 +6,7 @@ import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/brevo";
-import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
+import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema, insertNotificationPreferencesSchema, insertEmailNotificationLogSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
 import { z } from "zod";
 import { ZodError } from "zod";
@@ -2941,6 +2941,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating user:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Notification preferences routes
+  app.get("/api/notifications/preferences", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const preferences = await storage.getOrCreateNotificationPreferences(req.user.id);
+      res.json(preferences);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.put("/api/notifications/preferences", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const updateData = req.body;
+      
+      // Validate that we have valid preference keys
+      const validKeys = ['emailNotifications', 'welcomeEmails', 'subscriptionEmails', 'paymentEmails', 'renewalReminders', 'scheduleEmails'];
+      const filteredData = Object.keys(updateData)
+        .filter(key => validKeys.includes(key))
+        .reduce((obj: any, key) => {
+          obj[key] = updateData[key];
+          return obj;
+        }, {});
+
+      if (Object.keys(filteredData).length === 0) {
+        return res.status(400).json({ message: "No valid preference keys provided" });
+      }
+
+      const updatedPreferences = await storage.updateNotificationPreferences(req.user.id, filteredData);
+      if (!updatedPreferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+
+      res.json(updatedPreferences);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/notifications/history", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+
+      const logs = await storage.getEmailNotificationLogs(req.user.id, limit);
+      const totalCount = logs.length; // For now, return what we have
+
+      const response = {
+        data: logs.slice(offset, offset + limit),
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasNext: offset + limit < totalCount,
+          hasPrev: page > 1,
+        }
+      };
+
+      res.json(response);
+    } catch (err) {
+      next(err);
     }
   });
 
