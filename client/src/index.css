@@ -4956,6 +4956,12 @@ body {
 .p-4 { padding: 1rem; }
 .max-w-md { max-width: 28rem; }
 
+/* TEST CHANGE - VISIBLE RED BORDER */
+[data-radix-dialog-content] {
+  border: 5px solid red !important;
+  background-color: #ffeeee !important;
+}
+
 @media (min-width: 640px) {
   .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sm\:max-w-2xl { max-width: 42rem; }

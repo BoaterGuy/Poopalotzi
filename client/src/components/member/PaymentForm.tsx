@@ -227,6 +227,10 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
   return (
     <Form {...form}>
+      {/* TEST CHANGE - VISIBLE TEXT */}
+      <div className="bg-red-500 text-white p-2 mb-4 text-center font-bold">
+        TEST CHANGE - PAYMENT FORM LOADED
+      </div>
       {/* Debug: Force Tailwind to include responsive classes */}
       <div className="hidden max-h-[95vh] overflow-y-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-md sm:max-w-2xl lg:max-w-3xl h-12 md:h-10 text-base md:text-sm"></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 p-4 md:p-6 lg:p-8">
