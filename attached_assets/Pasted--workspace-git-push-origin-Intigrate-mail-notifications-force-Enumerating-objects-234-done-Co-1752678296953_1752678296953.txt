@@ -1,0 +1,38 @@
+~/workspace$ git push origin Intigrate_mail_notifications --force
+Enumerating objects: 234, done.
+Counting objects: 100% (234/234), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (204/204), done.
+Writing objects: 100% (207/207), 35.30 MiB | 5.25 MiB/s, done.
+Total 207 (delta 139), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (139/139), completed with 22 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/Intigrate_mail_notifications.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:      (?) This repository does not have Secret Scanning enabled, but is eligible. Enable Secret Scanning to view and manage detected secrets.
+remote:      Visit the repository settings page, https://github.com/BoaterGuy/Poopalotzi/settings/security_analysis
+remote:     
+remote:     
+remote:       —— Sendinblue API Key ————————————————————————————————
+remote:        locations:
+remote:          - commit: c0bb0d3e32845f7c2a781629e1a52a725086ec98
+remote:            path: brevo-migration-test.md:47
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/BoaterGuy/Poopalotzi/security/secret-scanning/unblock-secret/2zvsKHZTbh3JPkOLgQHbv197Y1M
+remote:     
+remote: 
+remote: 
+To https://github.com/BoaterGuy/Poopalotzi
+ ! [remote rejected] Intigrate_mail_notifications -> Intigrate_mail_notifications (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/BoaterGuy/Poopalotzi'
+~/workspace$ 
