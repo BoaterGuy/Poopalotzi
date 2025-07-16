@@ -227,10 +227,10 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 payment-form-container">
 
-        <div className="p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-6">
-          <Lock className="h-5 w-5 text-blue-500" />
+        <div className="p-3 md:p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-4 md:mb-6">
+          <Lock className="h-4 w-4 md:h-5 md:w-5 text-blue-500 flex-shrink-0" />
           <div>
             <h4 className="text-sm font-medium text-blue-700">Secure Payment</h4>
             <p className="text-xs text-blue-600">
@@ -239,18 +239,18 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
-          <div>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-3 md:space-y-0">
+          <div className="flex-1">
             <h3 className="text-lg font-medium">Payment Details</h3>
             <p className="text-sm text-gray-500">
               Complete your payment for pump-out service
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-left md:text-right bg-gray-50 md:bg-transparent p-3 md:p-0 rounded-md md:rounded-none">
             <p className="text-sm text-gray-500">Amount</p>
-            <p className="text-2xl font-bold text-green-600">${amount.toFixed(2)}</p>
+            <p className="text-xl md:text-2xl font-bold text-green-600">${amount.toFixed(2)}</p>
             <p className="text-sm text-gray-500">Tax (6.75%): ${(amount * 0.0675).toFixed(2)}</p>
-            <p className="text-lg font-semibold text-green-700">Total: ${(amount + (amount * 0.0675)).toFixed(2)}</p>
+            <p className="text-base md:text-lg font-semibold text-green-700">Total: ${(amount + (amount * 0.0675)).toFixed(2)}</p>
           </div>
         </div>
 
@@ -265,7 +265,11 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
               <FormItem>
                 <FormLabel>Cardholder Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Smith" {...field} />
+                  <Input 
+                    placeholder="John Smith" 
+                    {...field}
+                    className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -281,9 +285,9 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                 <FormLabel>Card Number</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <CreditCard className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input 
-                      className="pl-10"
+                      className="pl-10 h-12 md:h-10 text-base md:text-sm payment-form-input"
                       placeholder="4111 1111 1111 1111" 
                       {...field}
                       value={formatCardNumber(field.value)}
@@ -300,7 +304,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             )}
           />
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="payment-form-grid three-col">
             {/* Expiry Month */}
             <FormField
               control={form.control}
@@ -313,6 +317,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="MM"
                       {...field}
                       maxLength={2}
+                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
                     />
                   </FormControl>
                   <FormMessage />
@@ -332,6 +337,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="YYYY"
                       {...field}
                       maxLength={4}
+                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
                     />
                   </FormControl>
                   <FormMessage />
@@ -352,6 +358,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="123"
                       {...field}
                       maxLength={4}
+                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
                     />
                   </FormControl>
                   <FormMessage />
@@ -368,7 +375,12 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
               <FormItem>
                 <FormLabel>Billing Zip Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="12345" {...field} maxLength={10} />
+                  <Input 
+                    placeholder="12345" 
+                    {...field} 
+                    maxLength={10}
+                    className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -378,20 +390,20 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
         <Separator />
 
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 px-1">
           By clicking "Pay Now", you agree to the terms of service and privacy policy.
           Your card will be charged ${(amount + (amount * 0.0675)).toFixed(2)} (including 6.75% tax) for the pump-out service.
         </p>
 
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <Button 
             type="submit" 
             disabled={isSubmitting} 
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-green-600 hover:bg-green-700 h-12 md:h-10 text-base md:text-sm font-medium payment-form-button"
           >
             {isSubmitting ? "Processing..." : (
-              <span className="flex items-center">
-                <DollarSign className="mr-2 h-4 w-4" />
+              <span className="flex items-center justify-center">
+                <DollarSign className="mr-2 h-5 w-5 md:h-4 md:w-4" />
                 Pay ${(amount + (amount * 0.0675)).toFixed(2)} Now
               </span>
             )}

@@ -574,7 +574,7 @@ export default function ServiceHistory() {
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-md sm:max-w-2xl lg:max-w-3xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
