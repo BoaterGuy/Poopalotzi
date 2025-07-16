@@ -1,0 +1,95 @@
+# Scope Estimation: Converting Requests Table to Mobile Card Format
+
+Please analyze the current Requests page and provide a detailed scope estimate for converting it from table format to a mobile-friendly card format. Address each of the following areas:
+
+## Current Implementation Analysis
+1. **Technology Stack**: What framework/library is used for the Requests page? (React, Vue, Angular, vanilla JS, etc.)
+2. **CSS Framework**: Are you using any CSS frameworks? (Bootstrap, Tailwind, Material-UI, custom CSS, etc.)
+3. **Current Responsive Behavior**: How does the table currently behave on mobile devices?
+4. **Table Structure**: 
+   - How many columns does the table have?
+   - What types of data are displayed in each column?
+   - Are there any nested or complex data structures?
+
+## Functionality Assessment
+5. **Interactive Elements**: What interactive features exist in the table?
+   - Sorting capabilities
+   - Filtering/search functionality
+   - Inline editing
+   - Action buttons (edit, delete, view details, etc.)
+   - Checkboxes for bulk actions
+   - Pagination or infinite scroll
+
+6. **Data Operations**: How is data loaded and managed?
+   - API calls for data fetching
+   - Real-time updates or websockets
+   - Local state management
+   - Caching mechanisms
+
+## Design Requirements
+7. **Card Layout Needs**: 
+   - Which fields should be most prominent in the card view?
+   - Are there fields that can be hidden or shown on expand?
+   - Do you need different card layouts for different request types/statuses?
+
+8. **Responsive Strategy**: 
+   - Should this be mobile-only cards, or responsive cards for all screen sizes?
+   - Do you want to maintain table view for desktop and cards for mobile?
+   - What breakpoints should trigger the layout change?
+
+## Technical Considerations
+9. **Component Architecture**: 
+   - Is the table a reusable component used elsewhere?
+   - Are there existing card components in the codebase?
+   - How is the table integrated with other page components?
+
+10. **Performance Impact**: 
+    - How many requests typically display per page?
+    - Are there performance considerations with the current table?
+    - Will card format affect loading or rendering performance?
+
+## Integration & Dependencies
+11. **External Dependencies**: 
+    - Are there third-party table libraries being used?
+    - Are there dependencies on specific table plugins or extensions?
+    - What testing frameworks are in place?
+
+12. **Backend Considerations**: 
+    - Will API responses need modification for card format?
+    - Are there any backend sorting/filtering dependencies?
+
+## Delivery & Maintenance
+13. **Rollout Strategy**: 
+    - Should this be a feature flag rollout?
+    - Are there different user roles that might need different views?
+    - What's the timeline expectation?
+
+14. **Testing Requirements**: 
+    - What testing coverage currently exists for the Requests page?
+    - Are there automated tests that would need updates?
+    - What devices/browsers need testing?
+
+## Output Format
+Please provide your analysis in this format:
+
+### Effort Estimate: [Low/Medium/High]
+
+### Breakdown by Task:
+- **UI Component Development**: [X hours/days]
+- **Responsive Layout Implementation**: [X hours/days]  
+- **Functionality Migration**: [X hours/days]
+- **Testing & QA**: [X hours/days]
+- **Integration & Deployment**: [X hours/days]
+
+### Risk Factors:
+- List any technical risks or unknowns
+- Dependencies that could cause delays
+- Potential performance impacts
+
+### Recommended Approach:
+- Suggested implementation strategy
+- Whether to maintain dual views or full replacement
+- Any preparatory work needed
+
+### Questions/Clarifications Needed:
+- List any information you need to refine the estimate
