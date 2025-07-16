@@ -1,4 +1,4 @@
-git rebase -i c0bb0d3^import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./index";
@@ -871,6 +871,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tieUpSide: boat?.tieUpSide || null,
           pumpPortLocations: boat?.pumpPortLocations || [],
           boatNotes: boat?.notes || '',
+          adminNotes: boat?.adminNotes || null,
+          canBeDoneByOnePerson: boat?.canBeDoneByOnePerson || false,
           beforeImageUrl: null,
           duringImageUrl: null,
           afterImageUrl: null
@@ -2016,6 +2018,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       console.error("Error processing subscription payment:", err);
       res.status(500).json({ message: "Payment processing failed", error: err.message });
+    }
+  });
+
+  // Update boat admin notes (admin only)
+  app.patch("/api/boats/:id/admin-notes", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const boatId = parseInt(req.params.id);
+      const { adminNotes } = req.body;
+      
+      // Validate boat exists
+      const boat = await storage.getBoat(boatId);
+      if (!boat) {
+        return res.status(404).json({ message: "Boat not found" });
+      }
+      
+      // Update admin notes
+      const updatedBoat = await storage.updateBoat(boatId, { adminNotes });
+      if (!updatedBoat) {
+        return res.status(500).json({ message: "Failed to update admin notes" });
+      }
+      
+      res.json({ message: "Admin notes updated successfully", boat: updatedBoat });
+    } catch (err) {
+      next(err);
     }
   });
 

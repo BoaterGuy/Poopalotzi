@@ -42,8 +42,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User } from "lucide-react";
+import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User, Pencil } from "lucide-react";
+import CaptCrappyLogo from "@/assets/capt-crappy-logo.svg?react";
 import { format } from "date-fns";
 
 // Define types for our data structures
@@ -68,6 +70,9 @@ interface RequestType {
   beforeImageUrl: string | null;
   duringImageUrl: string | null;
   afterImageUrl: string | null;
+  boatNotes: string | null;
+  adminNotes: string | null;
+  canBeDoneByOnePerson: boolean;
 }
 
 interface MarinaType {
@@ -88,6 +93,11 @@ export default function RequestManagement() {
   // State for request details dialog
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestType | null>(null);
+  
+  // State for admin notes editing
+  const [adminNotesDialogOpen, setAdminNotesDialogOpen] = useState(false);
+  const [editingAdminNotes, setEditingAdminNotes] = useState<{id: number, notes: string} | null>(null);
+  const [adminNotesValue, setAdminNotesValue] = useState("");
   
   // WebSocket connection for real-time updates
   const wsRef = useRef<WebSocket | null>(null);
@@ -311,6 +321,54 @@ export default function RequestManagement() {
     }
   };
 
+  const handleEditAdminNotes = (requestId: number, currentNotes: string) => {
+    setEditingAdminNotes({ id: requestId, notes: currentNotes });
+    setAdminNotesValue(currentNotes);
+    setAdminNotesDialogOpen(true);
+  };
+
+  const handleSaveAdminNotes = async () => {
+    if (!editingAdminNotes) return;
+    
+    try {
+      // Find the request to get the boat ID
+      const request = (data || []).find(r => r.id === editingAdminNotes.id);
+      if (!request) {
+        throw new Error('Request not found');
+      }
+
+      const response = await fetch(`/api/boats/${request.boatId}/admin-notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminNotes: adminNotesValue })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update admin notes');
+      }
+
+      // Invalidate and refetch data
+      queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
+      
+      // Close dialog and reset state
+      setAdminNotesDialogOpen(false);
+      setEditingAdminNotes(null);
+      setAdminNotesValue("");
+      
+      toast({
+        title: "Admin Notes Updated",
+        description: "The admin notes have been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating admin notes:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update admin notes. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -437,13 +495,14 @@ export default function RequestManagement() {
                       <TableHead>Pump-Out Ports</TableHead>
                       <TableHead>Request Notes</TableHead>
                       <TableHead>Boat Notes</TableHead>
+                      <TableHead>Admin Notes</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRequests.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="h-24 text-center">
+                        <TableCell colSpan={11} className="h-24 text-center">
                           No requests found.
                         </TableCell>
                       </TableRow>
@@ -510,6 +569,26 @@ export default function RequestManagement() {
                           <TableCell className="max-w-xs">
                             <div className="truncate" title={request.boatNotes || ""}>
                               {request.boatNotes || "No notes"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="truncate" title={request.adminNotes || ""}>
+                                {request.adminNotes || "No admin notes"}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => handleEditAdminNotes(request.id, request.adminNotes || "")}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              {request.canBeDoneByOnePerson && (
+                                <div className="flex-shrink-0" title="Can be done by one person">
+                                  <CaptCrappyLogo className="h-5 w-5" />
+                                </div>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -755,6 +834,46 @@ export default function RequestManagement() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Admin Notes Dialog */}
+      <Dialog open={adminNotesDialogOpen} onOpenChange={setAdminNotesDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Admin Notes</DialogTitle>
+            <DialogDescription>
+              Add or update admin-only notes for this boat. These notes are only visible to admin users.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="admin-notes" className="block text-sm font-medium mb-2">
+                Admin Notes
+              </label>
+              <Textarea
+                id="admin-notes"
+                value={adminNotesValue}
+                onChange={(e) => setAdminNotesValue(e.target.value)}
+                className="resize-none"
+                rows={4}
+                placeholder="Enter admin-only notes about this boat..."
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setAdminNotesDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveAdminNotes}>
+                Save Notes
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

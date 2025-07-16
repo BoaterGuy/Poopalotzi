@@ -77,6 +77,8 @@ export const boat = pgTable('boat', {
   pier: text('pier'),
   dock: integer('dock'),
   notes: text('notes'),
+  adminNotes: text('admin_notes'), // Admin-only notes - NOT visible to customers
+  canBeDoneByOnePerson: boolean('can_be_done_by_one_person').default(false), // Admin-only flag for single-person capability
   createdAt: timestamp('created_at').defaultNow(),
 });
 

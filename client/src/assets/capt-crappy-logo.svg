@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Captain hat -->
+  <ellipse cx="50" cy="30" rx="30" ry="8" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
+  <rect x="20" y="22" width="60" height="16" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
+  <ellipse cx="50" cy="22" rx="30" ry="8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+  
+  <!-- Hat band -->
+  <rect x="25" y="24" width="50" height="4" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+  
+  <!-- Anchor symbol on hat -->
+  <g transform="translate(50, 26)">
+    <path d="M0,-2 L0,6 M-3,2 L3,2 M-2,4 L2,4" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+    <circle cx="0" cy="-2" r="1.5" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+    <path d="M-2,4 L-3,6 M2,4 L3,6" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+  </g>
+  
+  <!-- Face -->
+  <circle cx="50" cy="55" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+  
+  <!-- Eyes -->
+  <circle cx="45" cy="52" r="2" fill="#1e40af"/>
+  <circle cx="55" cy="52" r="2" fill="#1e40af"/>
+  
+  <!-- Beard -->
+  <path d="M35,65 Q50,75 65,65 Q60,70 50,72 Q40,70 35,65" fill="#8b5cf6" stroke="#7c3aed" stroke-width="1"/>
+  
+  <!-- Mustache -->
+  <path d="M42,58 Q50,62 58,58" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+  
+  <!-- Pipe -->
+  <rect x="65" y="56" width="8" height="3" fill="#92400e" stroke="#78350f" stroke-width="1"/>
+  <ellipse cx="67" cy="57.5" rx="2" ry="1.5" fill="#451a03"/>
+  
+  <!-- Smoke -->
+  <path d="M73,56 Q75,54 74,52 Q76,50 75,48" stroke="#6b7280" stroke-width="1.5" fill="none"/>
+  
+  <!-- Text below -->
+  <text x="50" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#1e40af">CAPT CRAPPY</text>
+</svg>
