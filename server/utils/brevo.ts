@@ -1,14 +1,25 @@
 import SibApiV3Sdk from 'sib-api-v3-sdk';
 
+// Security check for API key
 if (!process.env.BREVO_API_KEY) {
-  console.warn("BREVO_API_KEY environment variable is not set. Email functionality will be simulated.");
+  console.warn("⚠️  BREVO_API_KEY environment variable is not set. Email functionality will be simulated.");
+  console.warn("📋 To enable real email delivery, add your Brevo API key to Replit Secrets:");
+  console.warn("   1. Go to Replit Secrets tab");
+  console.warn("   2. Add key: BREVO_API_KEY");
+  console.warn("   3. Add value: your_brevo_api_key_here");
 }
 
-// Initialize Brevo client
+// Initialize Brevo client with security validation
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 if (process.env.BREVO_API_KEY) {
-  const apiKey = defaultClient.authentications['api-key'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
+  // Validate API key format
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey.startsWith('xkeysib-') || apiKey.length < 64) {
+    console.error("❌ Invalid BREVO_API_KEY format. Please check your API key.");
+  } else {
+    const apiKeyAuth = defaultClient.authentications['api-key'];
+    apiKeyAuth.apiKey = apiKey;
+  }
 }
 const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
 
@@ -20,25 +31,51 @@ interface EmailParams {
   html?: string;
 }
 
+// Email validation utility
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 export async function sendEmail(params: EmailParams): Promise<boolean> {
+  // Input validation
+  if (!params.to || !isValidEmail(params.to)) {
+    console.error("❌ Invalid recipient email address:", params.to);
+    return false;
+  }
+  
+  if (!params.subject || params.subject.trim().length === 0) {
+    console.error("❌ Email subject is required");
+    return false;
+  }
+  
+  if (!params.text && !params.html) {
+    console.error("❌ Email must have either text or HTML content");
+    return false;
+  }
+  
   // Use the from email from environment or default
   const fromEmail = process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com';
   
+  if (!isValidEmail(fromEmail)) {
+    console.error("❌ Invalid sender email address:", fromEmail);
+    return false;
+  }
+  
   try {
     if (!process.env.BREVO_API_KEY) {
-      console.log('Email simulation mode (Brevo):');
-      console.log(`From: ${fromEmail}`);
-      console.log(`To: ${params.to}`);
-      console.log(`Subject: ${params.subject}`);
-      console.log(`Body: ${params.text || params.html}`);
+      console.log('📧 Email simulation mode (Brevo):');
+      console.log(`   From: ${fromEmail}`);
+      console.log(`   To: ${params.to}`);
+      console.log(`   Subject: ${params.subject}`);
+      console.log(`   Body: ${params.text || params.html?.substring(0, 200) + '...'}`);
+      console.log('💡 Add BREVO_API_KEY to Replit Secrets to enable real email delivery');
       return true;
     }
     
-    // Debug logging for Brevo configuration
+    // Secure logging (no sensitive data)
     console.log('🔍 Brevo Configuration:');
-    console.log('- API Key exists:', !!process.env.BREVO_API_KEY);
-    console.log('- API Key length:', process.env.BREVO_API_KEY?.length);
-    console.log('- API Key prefix:', process.env.BREVO_API_KEY?.substring(0, 10) + '...');
+    console.log('- API Key configured:', !!process.env.BREVO_API_KEY);
     console.log('- From email:', fromEmail);
     console.log('- To email:', params.to);
     console.log('- Subject:', params.subject);
@@ -65,7 +102,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     
     return true;
   } catch (error) {
-    console.error('Brevo email error:', error);
+    console.error('❌ Brevo email error:', error);
     
     // Additional error details
     if (error instanceof Error) {
@@ -73,14 +110,14 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       console.error('Error message:', error.message);
     }
     
-    // Fallback to simulation mode if Brevo fails
+    // Graceful fallback to simulation mode if Brevo fails
     console.log('🔄 Falling back to email simulation mode due to Brevo error:');
     console.log('📧 Email Details:');
     console.log(`   From: ${fromEmail}`);
     console.log(`   To: ${params.to}`);
     console.log(`   Subject: ${params.subject}`);
     if (params.text) {
-      console.log(`   Text Body: ${params.text}`);
+      console.log(`   Text Body: ${params.text.substring(0, 200)}${params.text.length > 200 ? '...' : ''}`);
     }
     if (params.html) {
       console.log(`   HTML Body: ${params.html.substring(0, 200)}...`);
@@ -99,7 +136,29 @@ export async function sendContactFormEmail(
   subject: string,
   message: string
 ): Promise<boolean> {
-  const adminEmail = 'mmotsis@gmail.com'; // Testing phase - send to mmotsis instead of process.env.ADMIN_EMAIL
+  // Input validation
+  if (!name || name.trim().length === 0) {
+    console.error("❌ Contact form: Name is required");
+    return false;
+  }
+  
+  if (!email || !isValidEmail(email)) {
+    console.error("❌ Contact form: Valid email is required");
+    return false;
+  }
+  
+  if (!subject || subject.trim().length === 0) {
+    console.error("❌ Contact form: Subject is required");
+    return false;
+  }
+  
+  if (!message || message.trim().length === 0) {
+    console.error("❌ Contact form: Message is required");
+    return false;
+  }
+  
+  // Use environment variable for admin email, fallback to testing email
+  const adminEmail = process.env.ADMIN_EMAIL || 'mmotsis@gmail.com'; // Testing phase
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
