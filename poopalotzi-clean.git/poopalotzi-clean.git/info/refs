@@ -1,0 +1,16 @@
+09788bc8bc52c7cea5ea1f9412010e7659d54138	refs/heads/Intigrate_mail_notifications
+4600c530dc4beabfb38f00aaf35eb9ba1a0926e8	refs/heads/Manage_Members
+2fca2b0574d736bddf80af5a6a2e934b8bc83e2b	refs/heads/Member_Management
+9a280d43db1a9677ee3328e9e9a3ac86649eb2a5	refs/heads/admin-manual-credit-adjustments
+09788bc8bc52c7cea5ea1f9412010e7659d54138	refs/heads/backup-main-20251507
+44843317f12043209af1d9a5dc03cb5cf34ab873	refs/heads/cleanup-purchasing-forms
+2f7429096264b91b16801b167d44549b7568016f	refs/heads/clover-payments
+73ab0244da52fbd6229005ccd806457f9004e8e0	refs/heads/connect-clover-with-merch-id
+44843317f12043209af1d9a5dc03cb5cf34ab873	refs/heads/email-notifications
+8b15540cb9b690a4ef964e0105127e1e356b4ecd	refs/heads/feature/clover-functionality
+12eb9dcbc6fc7f687dc8ea875a873ddd009625f3	refs/heads/feature/fix-bulk-form-for-boat-owner
+8bc9fcf26ca99a53448b1f6ee6dc7c33936119e3	refs/heads/fix-service-history-bug
+09788bc8bc52c7cea5ea1f9412010e7659d54138	refs/heads/main
+ce2c0690bb81f06c01b9bf7a1e66d7024f5c78ff	refs/heads/rename-dock-slip
+73ab0244da52fbd6229005ccd806457f9004e8e0	refs/pull/1/head
+20fa16db932731851b9da16760000a1a0dc22bb4	refs/tags/working-backup-2024-06-16
