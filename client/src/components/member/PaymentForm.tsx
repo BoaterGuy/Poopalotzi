@@ -227,7 +227,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 payment-form-container">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 p-4 md:p-6 lg:p-8">
 
         <div className="p-3 md:p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-4 md:mb-6">
           <Lock className="h-4 w-4 md:h-5 md:w-5 text-blue-500 flex-shrink-0" />
@@ -268,7 +268,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                   <Input 
                     placeholder="John Smith" 
                     {...field}
-                    className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                    className="h-12 md:h-10 text-base md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -287,7 +287,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                   <div className="relative">
                     <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input 
-                      className="pl-10 h-12 md:h-10 text-base md:text-sm payment-form-input"
+                      className="pl-10 h-12 md:h-10 text-base md:text-sm"
                       placeholder="4111 1111 1111 1111" 
                       {...field}
                       value={formatCardNumber(field.value)}
@@ -304,7 +304,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             )}
           />
 
-          <div className="payment-form-grid three-col">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Expiry Month */}
             <FormField
               control={form.control}
@@ -317,7 +317,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="MM"
                       {...field}
                       maxLength={2}
-                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                      className="h-12 md:h-10 text-base md:text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -337,7 +337,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="YYYY"
                       {...field}
                       maxLength={4}
-                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                      className="h-12 md:h-10 text-base md:text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -358,7 +358,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                       placeholder="123"
                       {...field}
                       maxLength={4}
-                      className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                      className="h-12 md:h-10 text-base md:text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -379,7 +379,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
                     placeholder="12345" 
                     {...field} 
                     maxLength={10}
-                    className="h-12 md:h-10 text-base md:text-sm payment-form-input"
+                    className="h-12 md:h-10 text-base md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -399,7 +399,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
           <Button 
             type="submit" 
             disabled={isSubmitting} 
-            className="w-full bg-green-600 hover:bg-green-700 h-12 md:h-10 text-base md:text-sm font-medium payment-form-button"
+            className="w-full bg-green-600 hover:bg-green-700 h-12 md:h-10 text-base md:text-sm font-medium"
           >
             {isSubmitting ? "Processing..." : (
               <span className="flex items-center justify-center">

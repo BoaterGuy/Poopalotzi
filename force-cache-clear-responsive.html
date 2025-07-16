@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Cache Clear - Responsive Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f5f5f5;
+            border-left: 4px solid #007cba;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .important {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        .test-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        .test-link:hover {
+            background: #218838;
+        }
+        .responsive-info {
+            background: #e7f3ff;
+            border: 1px solid #b8d4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔄 Force Cache Clear - Responsive Payment Form Test</h1>
+    
+    <div class="important">
+        <h2>⚠️ Cache Issue Detected</h2>
+        <p>You're experiencing a cache issue where the new responsive payment form styles aren't loading. Let's force a complete cache clear.</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Clear Browser Cache</h3>
+        <p>Clear your browser cache using these methods:</p>
+        <button onclick="clearCache()">Force Reload (Ctrl+Shift+R)</button>
+        <button onclick="clearServiceWorker()">Clear Service Worker</button>
+        <button onclick="clearLocalStorage()">Clear Local Storage</button>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Hard Refresh Application</h3>
+        <p>The application has been rebuilt. Click this link to load the fresh version:</p>
+        <a href="/?v=responsive-test-1752684800" class="test-link" target="_blank">🚀 Launch Fresh App</a>
+    </div>
+
+    <div class="responsive-info">
+        <h3>🔍 What to Look For - Responsive Payment Form</h3>
+        <p><strong>Mobile (320px-768px):</strong></p>
+        <ul>
+            <li>✅ Form inputs are 48px tall (larger touch targets)</li>
+            <li>✅ Expiry date fields stack vertically (one per row)</li>
+            <li>✅ Payment dialog scrolls properly with max-height: 95vh</li>
+            <li>✅ No horizontal scrolling</li>
+            <li>✅ 16px font size prevents iOS zoom</li>
+        </ul>
+        
+        <p><strong>Tablet (768px-1024px):</strong></p>
+        <ul>
+            <li>✅ Expiry fields in 2-column layout</li>
+            <li>✅ Balanced spacing and input sizes</li>
+        </ul>
+        
+        <p><strong>Desktop (1024px+):</strong></p>
+        <ul>
+            <li>✅ Expiry fields in 3-column layout</li>
+            <li>✅ Standard input sizes and spacing</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Test Payment Form</h3>
+        <p>Navigate to Service Plans or Dashboard and try opening the payment form to test responsiveness:</p>
+        <a href="/service-plans?v=responsive-test-1752684800" class="test-link" target="_blank">🛒 Test Service Plans</a>
+        <a href="/dashboard?v=responsive-test-1752684800" class="test-link" target="_blank">📊 Test Dashboard</a>
+    </div>
+
+    <div class="success">
+        <h3>✅ Recent Changes Applied</h3>
+        <ul>
+            <li>✅ Added custom CSS media queries for mobile, tablet, desktop</li>
+            <li>✅ Updated all payment dialogs with responsive classes</li>
+            <li>✅ Added payment-form-* CSS classes for better control</li>
+            <li>✅ Enabled viewport scrolling with max-height: 95vh</li>
+            <li>✅ Prevented horizontal scrolling on mobile</li>
+            <li>✅ Added touch-friendly 48px input heights</li>
+        </ul>
+    </div>
+
+    <script>
+        function clearCache() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.unregister());
+                });
+            }
+            
+            // Clear various caches
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+            
+            // Force reload
+            window.location.reload(true);
+        }
+
+        function clearServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => {
+                        registration.unregister();
+                        console.log('Service worker unregistered');
+                    });
+                    alert('Service worker cleared. Please refresh the page.');
+                });
+            }
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('Local storage cleared. Please refresh the page.');
+        }
+
+        // Auto-reload timer
+        let countdown = 30;
+        const timer = setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.reload(true);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
