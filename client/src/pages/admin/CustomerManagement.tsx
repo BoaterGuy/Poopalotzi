@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -683,6 +684,7 @@ export default function CustomerManagement() {
       dock: boat.dock || "",
       slip: boat.slip ? boat.slip.toString() : "",
       notes: boat.notes || "",
+      canBeDoneByOnePerson: boat.canBeDoneByOnePerson || false,
     });
     setIsEditBoatDialogOpen(true);
   };
@@ -717,6 +719,7 @@ export default function CustomerManagement() {
       dock: editingBoat.dock || null,
       slip: editingBoat.slip ? parseInt(editingBoat.slip) : null,
       notes: editingBoat.notes || null,
+      canBeDoneByOnePerson: editingBoat.canBeDoneByOnePerson || false,
     };
     
     editBoatMutation.mutate({ id: editingBoat.id, boatData });
@@ -1259,6 +1262,16 @@ export default function CustomerManagement() {
                         onChange={(e) => setEditingBoat({...editingBoat, notes: e.target.value})}
                         placeholder="Additional notes about the boat"
                       />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-boat-single-person"
+                        checked={editingBoat.canBeDoneByOnePerson}
+                        onCheckedChange={(checked) => setEditingBoat({...editingBoat, canBeDoneByOnePerson: checked})}
+                      />
+                      <Label htmlFor="edit-boat-single-person">
+                        Can be serviced by one person (displays Capt Crappy logo)
+                      </Label>
                     </div>
                   </div>
                   <DialogFooter>

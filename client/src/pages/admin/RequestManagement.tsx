@@ -510,16 +510,25 @@ export default function RequestManagement() {
                       filteredRequests.map((request) => (
                         <TableRow key={request.id}>
                           <TableCell className="font-medium">
-                            {request.ownerId ? (
-                              <Link to={`/admin/customers?highlight=${request.ownerId}`}>
-                                <Button variant="link" className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800">
-                                  <User className="h-4 w-4 mr-1" />
-                                  {request.boatName}
-                                </Button>
-                              </Link>
-                            ) : (
-                              <span className="text-gray-500">{request.boatName}</span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {request.canBeDoneByOnePerson && (
+                                <div className="flex-shrink-0" title="Can be done by one person">
+                                  <img src={CaptCrappyLogoUrl} alt="Capt Crappy Logo" className="h-5 w-5" />
+                                </div>
+                              )}
+                              <div>
+                                {request.ownerId ? (
+                                  <Link to={`/admin/customers?highlight=${request.ownerId}`}>
+                                    <Button variant="link" className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800">
+                                      <User className="h-4 w-4 mr-1" />
+                                      {request.boatName}
+                                    </Button>
+                                  </Link>
+                                ) : (
+                                  <span className="text-gray-500">{request.boatName}</span>
+                                )}
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
@@ -584,11 +593,6 @@ export default function RequestManagement() {
                               >
                                 <Pencil className="h-3 w-3" />
                               </Button>
-                              {request.canBeDoneByOnePerson && (
-                                <div className="flex-shrink-0" title="Can be done by one person">
-                                  <img src={CaptCrappyLogoUrl} alt="Capt Crappy Logo" className="h-5 w-5" />
-                                </div>
-                              )}
                             </div>
                           </TableCell>
                           <TableCell>
