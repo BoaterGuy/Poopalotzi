@@ -32,11 +32,15 @@ Professional boat pump-out service application with admin dashboard, customer po
 
 ✅ **CACHE ISSUE RESOLVED - PAYMENT FORM RESPONSIVE DESIGN COMPLETE**:
    - **Root Cause Identified**: Tailwind CSS was stripping out responsive classes during build process
+   - **Browser Cache Issue**: User's browser was loading cached CSS file instead of updated responsive styles
    - **Tailwind Safelist Added**: Comprehensive safelist in tailwind.config.ts to prevent CSS purging
    - **Custom CSS Fallbacks**: Manual CSS definitions in index.css to ensure all responsive classes work
-   - **Component Updates**: Updated all payment dialogs to use corrected CSS classes
-   - **Force Rebuild**: New CSS file generated (index-CaRZIglp.css) with all responsive classes included
-   - **Cache Clearing**: Complete application rebuild with workflow restart to clear all caches
+   - **Enhanced Dialog Scrolling**: Applied !important CSS rules for proper scrolling behavior across all devices
+   - **Component Updates**: Updated all payment dialogs to use corrected CSS classes with proper height limits
+   - **Force Rebuild**: New CSS file generated (index-Bxikl76i.css) with all responsive classes included
+   - **Cache Clearing**: Complete application rebuild with workflow restart and browser cache clearing resolved issue
+   - **Responsive Heights**: Desktop (90vh), Mobile (85vh) for optimal screen coverage
+   - **Touch Scrolling**: Added -webkit-overflow-scrolling: touch for smooth mobile experience
 
 ✅ **PAYMENT FORM RESPONSIVE DESIGN COMPLETE**:
    - **Full Mobile Responsiveness**: Payment form now fully optimized for mobile devices (320px-768px)
