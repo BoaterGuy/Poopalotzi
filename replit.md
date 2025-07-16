@@ -28,6 +28,20 @@ Professional boat pump-out service application with admin dashboard, customer po
 ✅ **Bulk Form Simplified**: Replaced complex bulk plan form with clean, straightforward interface
 🎯 **System Complete**: Credit flow working exactly as designed
 
+## Recent Development (July 16, 2025)
+
+✅ **ADMIN-ONLY FEATURES COMPLETE**:
+   - **Admin Notes System**: Added boat-specific admin notes field to database schema with admin-only API endpoint
+   - **Request Management UI**: Added admin notes column with inline editing functionality using pencil icon
+   - **Single-Person Capability**: Added database field and Capt Crappy logo indicator for boats serviceable by one person
+   - **Database Integration**: Both features properly stored in boat table and retrieved in pump-out requests
+   - **Admin-Only Security**: Features completely invisible to non-admin users with proper authentication checks
+   - **API Endpoints**: PATCH /api/boats/:id/admin-notes for updating admin notes (admin-only access)
+   - **SVG Asset**: Custom Capt Crappy logo created for single-person capability indicator
+   - **UI Components**: Admin notes dialog with Textarea component for easy editing
+   - **Real-time Updates**: Changes immediately reflected in requests table via React Query cache invalidation
+   - **Testing Complete**: All features tested and working correctly with proper authentication
+
 ## Recent Development (July 15, 2025)
 
 ✅ **EMERGENCY WEBSITE RESTORATION COMPLETE**: 

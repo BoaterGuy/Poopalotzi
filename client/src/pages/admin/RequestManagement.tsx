@@ -45,7 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User, Pencil } from "lucide-react";
-import CaptCrappyLogo from "@/assets/capt-crappy-logo.svg?react";
+import CaptCrappyLogoUrl from "@/assets/capt-crappy-logo.svg";
 import { format } from "date-fns";
 
 // Define types for our data structures
@@ -586,7 +586,7 @@ export default function RequestManagement() {
                               </Button>
                               {request.canBeDoneByOnePerson && (
                                 <div className="flex-shrink-0" title="Can be done by one person">
-                                  <CaptCrappyLogo className="h-5 w-5" />
+                                  <img src={CaptCrappyLogoUrl} alt="Capt Crappy Logo" className="h-5 w-5" />
                                 </div>
                               )}
                             </div>
