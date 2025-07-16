@@ -4948,6 +4948,7 @@ body {
 }
 
 /* Force include responsive payment form classes */
+.max-h-90vh { max-height: 90vh; }
 .max-h-95vh { max-height: 95vh; }
 .overflow-y-auto { overflow-y: auto; }
 .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
@@ -4956,10 +4957,19 @@ body {
 .p-4 { padding: 1rem; }
 .max-w-md { max-width: 28rem; }
 
-/* TEST CHANGE - VISIBLE RED BORDER */
+/* Enhanced dialog scrolling for all screen sizes */
 [data-radix-dialog-content] {
-  border: 5px solid red !important;
-  background-color: #ffeeee !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Mobile responsive dialog scrolling */
+@media (max-width: 768px) {
+  [data-radix-dialog-content] {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
 }
 
 @media (min-width: 640px) {

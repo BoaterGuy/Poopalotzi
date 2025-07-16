@@ -435,7 +435,7 @@ export default function MemberDashboardNew() {
       {/* Payment Dialog */}
       {showPaymentDialog && selectedPaymentRequest && (
         <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-          <DialogContent className="max-w-md sm:max-w-2xl lg:max-w-3xl max-h-95vh overflow-y-auto">
+          <DialogContent className="max-w-md sm:max-w-2xl lg:max-w-3xl max-h-90vh overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Complete Payment</DialogTitle>
             </DialogHeader>
