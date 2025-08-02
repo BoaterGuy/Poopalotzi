@@ -48,3 +48,12 @@ The application is built using React for the frontend, served by Vite. It incorp
      * Maintained existing credit functionality for one-time service users
      * Added proper Badge styling for bulk plan names
    - **Status**: Bulk plan users now show their program names correctly
+
+✅ **CUSTOMER SORTING ENHANCEMENT ADDED**:
+   - **Feature**: Alphabetical sorting of customers by last name in customer management table
+   - **Implementation**: Added sorting logic to filteredCustomers array
+   - **Details**:
+     * Primary sort by last name (case-insensitive)
+     * Secondary sort by first name when last names match
+     * Maintains existing search functionality
+   - **Status**: Customer table now displays in alphabetical order by last name

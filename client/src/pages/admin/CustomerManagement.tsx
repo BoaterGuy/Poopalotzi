@@ -682,12 +682,21 @@ export default function CustomerManagement() {
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = customers
+    .filter(
+      (customer) =>
+        customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Sort alphabetically by last name, then by first name if last names are the same
+      const lastNameComparison = a.lastName.toLowerCase().localeCompare(b.lastName.toLowerCase());
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.toLowerCase().localeCompare(b.firstName.toLowerCase());
+    });
 
   const handleEditCustomer = (id: number) => {
     const customer = customers.find(c => c.id === id);
