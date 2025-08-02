@@ -31,10 +31,11 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     cookie: { 
       secure: false,
-      httpOnly: true,
-      sameSite: 'lax',
+      httpOnly: false, // Changed to false for development debugging
+      sameSite: 'none', // Changed to 'none' for cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/'
+      path: '/',
+      domain: undefined // Explicitly set to undefined to work with localhost
     },
     name: 'connect.sid',
     rolling: true
@@ -45,6 +46,10 @@ export function setupAuth(app: Express) {
   }
   
   console.log("Setting up authentication with session store");
+  console.log("Session settings:", {
+    ...sessionSettings,
+    secret: "[REDACTED]"
+  });
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
@@ -189,12 +194,24 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/auth/me", (req, res) => {
+    console.log("--- /api/auth/me REQUEST ---");
+    console.log("Session ID:", req.sessionID);
+    console.log("Session data:", JSON.stringify(req.session, null, 2));
+    console.log("User from session:", req.user ? `ID: ${req.user.id}, Email: ${req.user.email}` : 'No user');
+    console.log("isAuthenticated():", req.isAuthenticated());
+    console.log("Request headers:", {
+      cookie: req.headers.cookie,
+      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...'
+    });
+    
     if (!req.isAuthenticated()) {
+      console.log("Authentication failed - returning 401");
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     // Remove sensitive data
     const { passwordHash: _, ...safeUser } = req.user as any;
+    console.log("Returning authenticated user:", safeUser.email);
     res.json(safeUser);
   });
 }

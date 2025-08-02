@@ -98,6 +98,12 @@ async function startServer() {
       res.json({ status: "ok", timestamp: new Date().toISOString(), port: PORT });
     });
 
+    // Serve debug page
+    app.get('/debug', (req: Request, res: Response) => {
+      const path = require('path');
+      res.sendFile(path.resolve('session-debug.html'));
+    });
+
     // Set up authentication
     setupAuth(app);
 

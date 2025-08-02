@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #0056b3; }
+        .output { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; white-space: pre-wrap; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>Poopalotzi Session Debug Tool</h1>
+    
+    <div class="section">
+        <h2>Browser Information</h2>
+        <div id="browserInfo"></div>
+    </div>
+
+    <div class="section">
+        <h2>Current Cookies</h2>
+        <button class="button" onclick="showCookies()">Show All Cookies</button>
+        <button class="button" onclick="clearCookies()">Clear All Cookies</button>
+        <div id="cookieOutput" class="output"></div>
+    </div>
+
+    <div class="section">
+        <h2>Login Test</h2>
+        <button class="button" onclick="testLogin()">Test Admin Login</button>
+        <button class="button" onclick="checkAuthStatus()">Check Auth Status</button>
+        <div id="loginOutput" class="output"></div>
+    </div>
+
+    <div class="section">
+        <h2>Session Storage Test</h2>
+        <button class="button" onclick="testSessionStorage()">Test Session Storage</button>
+        <button class="button" onclick="testLocalStorage()">Test Local Storage</button>
+        <div id="storageOutput" class="output"></div>
+    </div>
+
+    <script>
+        // Display browser info
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('browserInfo').innerHTML = `
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>Platform:</strong> ${navigator.platform}<br>
+                <strong>Cookie Enabled:</strong> ${navigator.cookieEnabled}<br>
+                <strong>URL:</strong> ${window.location.href}<br>
+                <strong>Protocol:</strong> ${window.location.protocol}<br>
+                <strong>Host:</strong> ${window.location.host}
+            `;
+        });
+
+        function showCookies() {
+            const cookies = document.cookie;
+            const output = document.getElementById('cookieOutput');
+            if (cookies) {
+                output.innerHTML = `Current cookies:\n${cookies}`;
+                output.className = 'output success';
+            } else {
+                output.innerHTML = 'No cookies found';
+                output.className = 'output error';
+            }
+        }
+
+        function clearCookies() {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+            }
+            document.getElementById('cookieOutput').innerHTML = 'Cookies cleared';
+            document.getElementById('cookieOutput').className = 'output success';
+        }
+
+        async function testLogin() {
+            const output = document.getElementById('loginOutput');
+            output.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Important for cookies
+                    body: JSON.stringify({
+                        email: 'poopalotzillc@gmail.com',
+                        password: 'MikeR0cks!'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    output.innerHTML = `Login successful!\nUser: ${data.email}\nRole: ${data.role}\nResponse headers: ${JSON.stringify([...response.headers.entries()], null, 2)}`;
+                    output.className = 'output success';
+                } else {
+                    output.innerHTML = `Login failed: ${data.message}`;
+                    output.className = 'output error';
+                }
+            } catch (error) {
+                output.innerHTML = `Login error: ${error.message}`;
+                output.className = 'output error';
+            }
+        }
+
+        async function checkAuthStatus() {
+            const output = document.getElementById('loginOutput');
+            output.innerHTML = 'Checking auth status...';
+            
+            try {
+                const response = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    credentials: 'include' // Important for cookies
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    output.innerHTML = `Authenticated as: ${data.email} (${data.role})`;
+                    output.className = 'output success';
+                } else {
+                    output.innerHTML = `Not authenticated: ${data.message}`;
+                    output.className = 'output error';
+                }
+            } catch (error) {
+                output.innerHTML = `Auth check error: ${error.message}`;
+                output.className = 'output error';
+            }
+        }
+
+        function testSessionStorage() {
+            const output = document.getElementById('storageOutput');
+            try {
+                sessionStorage.setItem('test', 'session-test-value');
+                const value = sessionStorage.getItem('test');
+                sessionStorage.removeItem('test');
+                output.innerHTML = `Session Storage: WORKING (test value: ${value})`;
+                output.className = 'output success';
+            } catch (error) {
+                output.innerHTML = `Session Storage: FAILED (${error.message})`;
+                output.className = 'output error';
+            }
+        }
+
+        function testLocalStorage() {
+            const output = document.getElementById('storageOutput');
+            try {
+                localStorage.setItem('test', 'local-test-value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                output.innerHTML = `Local Storage: WORKING (test value: ${value})`;
+                output.className = 'output success';
+            } catch (error) {
+                output.innerHTML = `Local Storage: FAILED (${error.message})`;
+                output.className = 'output error';
+            }
+        }
+    </script>
+</body>
+</html>
