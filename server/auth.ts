@@ -25,20 +25,25 @@ export async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   // Express middleware already set up in index.ts
   
+  // Detect if we're running on Replit's production domain
+  const isReplitProduction = process.env.REPLIT_DOMAINS || process.env.REPL_SLUG;
+  const isHttps = process.env.NODE_ENV === 'production' || isReplitProduction;
+  
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
-    saveUninitialized: true, // Changed to true for better session persistence
+    saveUninitialized: false, // Keep false to avoid creating unnecessary sessions
     cookie: { 
-      secure: false, // Must be false for development (non-HTTPS)
-      httpOnly: false, // Changed to false for debugging
-      sameSite: 'lax', // Changed back to 'lax' for same-origin requests
+      secure: isHttps, // Use HTTPS on Replit production, HTTP for local dev
+      httpOnly: true, // Restore security - keep cookies server-only
+      sameSite: isHttps ? 'none' : 'lax', // 'none' for cross-origin on HTTPS, 'lax' for local
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/'
-      // Removed domain setting to let browser handle it
+      path: '/',
+      domain: undefined // Let browser handle domain automatically
     },
-    name: 'poopalotzi-session', // Changed name to avoid conflicts
-    rolling: true
+    name: 'poopalotzi-session',
+    rolling: true,
+    proxy: isHttps // Trust proxy headers when on Replit
   };
 
   if (storage.sessionStore) {
@@ -46,12 +51,24 @@ export function setupAuth(app: Express) {
   }
   
   console.log("Setting up authentication with session store");
-  console.log("Session settings:", {
-    ...sessionSettings,
-    secret: "[REDACTED]"
+  console.log("Environment detected:", {
+    isReplitProduction,
+    isHttps,
+    nodeEnv: process.env.NODE_ENV,
+    replitDomains: process.env.REPLIT_DOMAINS,
+    replSlug: process.env.REPL_SLUG
+  });
+  console.log("Session cookie settings:", {
+    secure: sessionSettings.cookie?.secure,
+    httpOnly: sessionSettings.cookie?.httpOnly,
+    sameSite: sessionSettings.cookie?.sameSite,
+    domain: sessionSettings.cookie?.domain
   });
 
-  app.set("trust proxy", 1);
+  // Trust proxy when on Replit's infrastructure
+  if (isHttps) {
+    app.set("trust proxy", 1);
+  }
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -189,6 +206,13 @@ export function setupAuth(app: Express) {
         console.log("USER LOGGED IN:", user.id, user.email);
         console.log("SESSION AFTER LOGIN:", req.sessionID, !!req.user);
         console.log("SESSION DATA:", JSON.stringify(req.session, null, 2));
+        console.log("COOKIE BEING SET:", res.get('Set-Cookie'));
+        console.log("REQUEST FROM:", {
+          userAgent: req.headers['user-agent']?.substring(0, 100),
+          origin: req.headers.origin,
+          host: req.headers.host,
+          isExternalBrowser: !req.headers['user-agent']?.includes('replit')
+        });
         
         // Remove sensitive data
         const { passwordHash: _, ...safeUser } = user;
@@ -212,11 +236,20 @@ export function setupAuth(app: Express) {
     console.log("isAuthenticated():", req.isAuthenticated());
     console.log("Request headers:", {
       cookie: req.headers.cookie,
-      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...'
+      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...',
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      host: req.headers.host
+    });
+    console.log("External browser indicators:", {
+      hasCookie: !!req.headers.cookie,
+      cookieContainsSession: req.headers.cookie?.includes('poopalotzi-session'),
+      isExternalBrowser: !req.headers['user-agent']?.includes('replit')
     });
     
     if (!req.isAuthenticated()) {
       console.log("Authentication failed - returning 401");
+      console.log("Possible external browser session loss detected");
       return res.status(401).json({ message: "Unauthorized" });
     }
     

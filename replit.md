@@ -14,3 +14,17 @@ The application is built using React for the frontend, served by Vite. It incorp
 ## External Dependencies
 - **Clover**: For payment processing and order management. Currently configured in sandbox environment with limitations on payment completion due to token permissions.
 - **Brevo (formerly Sendinblue)**: For email services, handling transactional emails such as contact form submissions, welcome emails, subscription confirmations, payment notifications, and service schedule confirmations.
+
+## Recent Development (August 2, 2025)
+
+✅ **EXTERNAL BROWSER SESSION COOKIE FIX APPLIED**:
+   - **Issue**: Session cookies not persisting in external browsers (Chrome, Safari) when accessing Replit app
+   - **Root Cause**: Incorrect cookie configuration for cross-origin requests and HTTPS requirements
+   - **Solution Applied**: 
+     * Dynamic cookie configuration based on environment (Replit vs local)
+     * `secure: true` for HTTPS (Replit production), `false` for local development
+     * `sameSite: 'none'` for cross-origin HTTPS requests, `'lax'` for local
+     * `httpOnly: true` for security, proper proxy trust configuration
+     * Enhanced debugging logs to track external browser behavior
+   - **Configuration**: Detects Replit environment via `REPLIT_DOMAINS` and `REPL_SLUG`
+   - **Status**: Ready for external browser testing - sessions should now persist correctly
