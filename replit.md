@@ -21,10 +21,10 @@ The application is built using React for the frontend, served by Vite. It incorp
    - **Issue**: Session cookies not persisting in external browsers (Chrome, Safari) when accessing Replit app
    - **Root Cause**: Incorrect cookie configuration for cross-origin requests and HTTPS requirements
    - **Solution Applied**: 
-     * Dynamic cookie configuration based on environment (Replit vs local)
-     * `secure: true` for HTTPS (Replit production), `false` for local development
-     * `sameSite: 'none'` for cross-origin HTTPS requests, `'lax'` for local
-     * `httpOnly: true` for security, proper proxy trust configuration
+     * Force HTTPS settings (`secure: true`) for external browser compatibility
+     * `sameSite: 'none'` for cross-origin HTTPS requests
+     * `httpOnly: true` for security
+     * Forced proxy trust configuration (`app.set("trust proxy", 1)`) before session middleware
      * Enhanced debugging logs to track external browser behavior
-   - **Configuration**: Detects Replit environment via `REPLIT_DOMAINS` and `REPL_SLUG`
-   - **Status**: Ready for external browser testing - sessions should now persist correctly
+   - **Configuration**: Environment auto-detected (REPLIT_DOMAINS and REPL_SLUG present)
+   - **Status**: Fixed and ready for external browser testing

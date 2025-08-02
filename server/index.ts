@@ -26,6 +26,11 @@ if (!process.env.CLOVER_ENVIRONMENT) {
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
+// CRITICAL: Set up proxy trust BEFORE any session middleware for external browsers
+// Force proxy trust for external browser compatibility
+app.set("trust proxy", 1);
+console.log("🔧 PROXY TRUST ENABLED for external browser compatibility");
+
 // Cache-busting middleware for development
 app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'development') {

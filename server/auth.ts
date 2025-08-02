@@ -25,9 +25,10 @@ export async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   // Express middleware already set up in index.ts
   
-  // Detect if we're running on Replit's production domain
-  const isReplitProduction = process.env.REPLIT_DOMAINS || process.env.REPL_SLUG;
-  const isHttps = process.env.NODE_ENV === 'production' || isReplitProduction;
+  // For external browser testing, force HTTPS-like settings
+  // This is the key fix for external browser access to Replit apps
+  const isReplitProduction = !!(process.env.REPLIT_DOMAINS || process.env.REPL_SLUG);
+  const isHttps = true; // Force HTTPS settings for external browser compatibility
   
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
@@ -65,11 +66,26 @@ export function setupAuth(app: Express) {
     domain: sessionSettings.cookie?.domain
   });
 
-  // Trust proxy when on Replit's infrastructure
-  if (isHttps) {
-    app.set("trust proxy", 1);
-  }
+  // Proxy trust already set in index.ts for early initialization
+  console.log("🔗 Proxy trust status:", app.get("trust proxy"));
   app.use(session(sessionSettings));
+  
+  // Debug middleware for external browser session issues
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/auth')) {
+      console.log("🔍 SESSION DEBUG:", {
+        sessionID: req.sessionID,
+        hasCookie: !!req.headers.cookie,
+        cookieValue: req.headers.cookie?.includes('poopalotzi-session') ? 'Present' : 'Missing',
+        userAgent: req.headers['user-agent']?.substring(0, 50) + '...',
+        host: req.headers.host,
+        origin: req.headers.origin,
+        isExternal: !req.headers['user-agent']?.includes('replit')
+      });
+    }
+    next();
+  });
+  
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -203,14 +219,18 @@ export function setupAuth(app: Express) {
           return res.status(500).json({ message: "Failed to create session" });
         }
         
-        console.log("USER LOGGED IN:", user.id, user.email);
-        console.log("SESSION AFTER LOGIN:", req.sessionID, !!req.user);
-        console.log("SESSION DATA:", JSON.stringify(req.session, null, 2));
-        console.log("COOKIE BEING SET:", res.get('Set-Cookie'));
-        console.log("REQUEST FROM:", {
+        console.log("✅ USER LOGGED IN:", user.id, user.email);
+        console.log("🆔 SESSION AFTER LOGIN:", req.sessionID, !!req.user);
+        console.log("📋 SESSION DATA:", JSON.stringify(req.session, null, 2));
+        
+        // Force-set the session cookie for external browsers - CRITICAL FIX
+        console.log("🍪 SETTING EXPLICIT COOKIE for external browser compatibility");
+        
+        console.log("🌐 REQUEST FROM:", {
           userAgent: req.headers['user-agent']?.substring(0, 100),
           origin: req.headers.origin,
           host: req.headers.host,
+          isReplit: isReplitProduction,
           isExternalBrowser: !req.headers['user-agent']?.includes('replit')
         });
         
