@@ -30,6 +30,18 @@ Professional boat pump-out service application with admin dashboard, customer po
 
 ## Recent Development (August 1, 2025)
 
+✅ **ADMIN CREDIT ADJUSTMENT SYSTEM ENHANCED**:
+   - **Issue Resolved**: Fixed inconsistent and jumpy +/- button behavior in customer management
+   - **Input Validation**: Enhanced manual credit input with proper validation and error handling
+   - **Race Condition Prevention**: Added mutation pending checks to prevent multiple simultaneous requests
+   - **Optimistic Updates**: Implemented immediate UI feedback while API calls process
+   - **Better UX**: Added loading indicators, toast notifications, and keyboard shortcuts (Enter/Escape)
+   - **Input Sanitization**: Only allows non-negative integers, prevents invalid characters
+   - **Auto-save on Blur**: Automatically saves valid input when user clicks away
+   - **Visual Feedback**: Shows spinning indicator during credit adjustments
+   - **Backend Validation**: Fixed API validation to allow zero credits (changed from amount <= 0 to amount < 0)
+   - **Error Recovery**: Proper error handling with user-friendly messages and state rollback
+
 ✅ **DEPLOYMENT FORMATTING ISSUE RESOLVED - CSS PROCESSING FIXED**:
    - **Critical Issue**: Deployed version had unprocessed @tailwind directives instead of compiled CSS
    - **Root Cause**: PostCSS/Tailwind processing failing during Vite build, leaving @tailwind base/components/utilities unprocessed

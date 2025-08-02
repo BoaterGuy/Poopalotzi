@@ -1390,8 +1390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const adjustmentAmount = parseInt(amount);
-      if (isNaN(adjustmentAmount) || adjustmentAmount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive integer" });
+      if (isNaN(adjustmentAmount) || adjustmentAmount < 0) {
+        return res.status(400).json({ message: "Amount must be a non-negative integer" });
       }
 
       // Get user information

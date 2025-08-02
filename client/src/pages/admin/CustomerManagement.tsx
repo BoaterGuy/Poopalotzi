@@ -52,7 +52,9 @@ import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhon
 function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: number, serviceLevelId: number | null }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [localCredits, setLocalCredits] = useState<number | null>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const { data: creditInfo, isLoading } = useQuery({
     queryKey: ['/api/admin/credits', customerId],
@@ -88,33 +90,61 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
       }
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async ({ amount, type }) => {
+      // Optimistic update
+      if (creditInfo) {
+        const newTotal = type === "add" ? creditInfo.totalCredits + amount : amount;
+        setLocalCredits(newTotal);
+      }
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/credits', customerId] });
       queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
       setIsEditing(false);
       setEditValue("");
+      setLocalCredits(null);
+      toast({
+        title: "Success",
+        description: data.message || "Credits updated successfully",
+      });
+    },
+    onError: (error) => {
+      setLocalCredits(null); // Reset optimistic update
+      console.error('Credit adjustment error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update credits",
+        variant: "destructive",
+      });
     },
   });
 
   const handleQuickAdjust = (action: "add" | "subtract") => {
-    if (!creditInfo) return;
+    if (!creditInfo || creditAdjustmentMutation.isPending) return;
     
     if (action === "add") {
       creditAdjustmentMutation.mutate({ amount: 1, type: "add" });
-    } else if (action === "subtract" && creditInfo.totalCredits > 0) {
-      const newTotal = Math.max(0, creditInfo.totalCredits - 1);
+    } else if (action === "subtract" && (localCredits ?? creditInfo.totalCredits) > 0) {
+      const currentTotal = localCredits ?? creditInfo.totalCredits;
+      const newTotal = Math.max(0, currentTotal - 1);
       creditAdjustmentMutation.mutate({ amount: newTotal, type: "set" });
     }
   };
 
   const handleSetValue = () => {
+    if (creditAdjustmentMutation.isPending) return;
+    
     const value = parseInt(editValue);
     if (!isNaN(value) && value >= 0) {
       creditAdjustmentMutation.mutate({ amount: value, type: "set" });
+    } else {
+      // Reset to current value if invalid input
+      setEditValue(creditInfo?.totalCredits?.toString() || "0");
     }
   };
 
   const handleCreditClick = () => {
+    if (creditAdjustmentMutation.isPending) return;
     setIsEditing(true);
     setEditValue(creditInfo?.totalCredits?.toString() || "0");
   };
@@ -123,6 +153,10 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
   if (!serviceLevelId || !creditInfo) {
     return <span className="text-gray-400 text-sm">-</span>;
   }
+
+  // Use local optimistic credits if available, otherwise use actual data
+  const displayCredits = localCredits ?? creditInfo.totalCredits;
+  const displayAvailable = localCredits ? Math.max(0, localCredits - (creditInfo.totalCredits - creditInfo.availableCredits)) : creditInfo.availableCredits;
 
   if (isLoading) {
     return <span className="text-gray-400 text-sm">Loading...</span>;
@@ -134,11 +168,37 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
         <Input
           type="number"
           min="0"
+          step="1"
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            // Only allow non-negative integers
+            if (value === '' || /^\d+$/.test(value)) {
+              setEditValue(value);
+            }
+          }}
           className="w-16 h-6 text-xs"
-          onKeyPress={(e) => e.key === 'Enter' && handleSetValue()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSetValue();
+            } else if (e.key === 'Escape') {
+              setIsEditing(false);
+              setEditValue("");
+            }
+          }}
+          onBlur={() => {
+            // Save on blur if value is valid
+            const value = parseInt(editValue);
+            if (!isNaN(value) && value >= 0) {
+              handleSetValue();
+            } else {
+              setIsEditing(false);
+              setEditValue("");
+            }
+          }}
           autoFocus
+          placeholder="0"
         />
         <Button
           size="sm"
@@ -170,8 +230,8 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
         variant="ghost"
         size="sm"
         onClick={() => handleQuickAdjust("subtract")}
-        disabled={creditInfo.totalCredits === 0 || creditAdjustmentMutation.isPending}
-        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+        disabled={displayCredits === 0 || creditAdjustmentMutation.isPending}
+        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
         title="Remove 1 credit"
       >
         −
@@ -179,14 +239,15 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
       <Badge 
         variant="outline" 
         className={`cursor-pointer hover:bg-gray-50 ${
-          creditInfo.availableCredits > 0 
+          displayAvailable > 0 
             ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
             : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-        } font-normal`}
+        } font-normal ${creditAdjustmentMutation.isPending ? 'opacity-60' : ''}`}
         onClick={handleCreditClick}
         title="Click to edit total credits"
       >
-        {creditInfo.availableCredits}/{creditInfo.totalCredits}
+        {displayAvailable}/{displayCredits}
+        {creditAdjustmentMutation.isPending && <span className="ml-1 animate-spin">⟳</span>}
       </Badge>
       <Button
         variant="ghost"
