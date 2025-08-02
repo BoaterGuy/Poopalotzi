@@ -44,17 +44,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        console.log('AuthContext: Checking authentication status...');
+        console.log('AuthContext: Document cookies:', document.cookie);
+        
         // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
           credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
+
+        console.log('AuthContext: /api/auth/me response status:', response.status);
+        console.log('AuthContext: Response headers:', [...response.headers.entries()]);
 
         if (response.ok) {
           const userData = await response.json();
           console.log('AuthContext: User authenticated:', userData.email, userData.role);
           setUser(userData);
         } else {
-          console.log('AuthContext: No valid session found');
+          const errorData = await response.json().catch(() => ({}));
+          console.log('AuthContext: No valid session found, error:', errorData);
           setUser(null);
         }
       } catch (error) {

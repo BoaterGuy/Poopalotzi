@@ -28,16 +28,16 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Changed to true for better session persistence
     cookie: { 
-      secure: false,
-      httpOnly: false, // Changed to false for development debugging
-      sameSite: 'none', // Changed to 'none' for cross-origin requests
+      secure: false, // Must be false for development (non-HTTPS)
+      httpOnly: false, // Changed to false for debugging
+      sameSite: 'lax', // Changed back to 'lax' for same-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/',
-      domain: undefined // Explicitly set to undefined to work with localhost
+      path: '/'
+      // Removed domain setting to let browser handle it
     },
-    name: 'connect.sid',
+    name: 'poopalotzi-session', // Changed name to avoid conflicts
     rolling: true
   };
 
@@ -98,14 +98,18 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user: any, done) => {
+    console.log("SERIALIZING USER:", user.id, user.email);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log("DESERIALIZING USER ID:", id);
       const user = await storage.getUser(id);
+      console.log("USER RETRIEVED FROM DB:", user ? `${user.id} - ${user.email}` : 'NOT FOUND');
       done(null, user);
     } catch (err) {
+      console.error("DESERIALIZATION ERROR:", err);
       done(err);
     }
   });
@@ -148,6 +152,9 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         
+        console.log("USER LOGGED IN AFTER REGISTRATION:", user.id, user.email);
+        console.log("SESSION AFTER LOGIN:", req.sessionID, !!req.user);
+        
         // Remove sensitive data
         const { passwordHash: _, ...safeUser } = user;
         console.log("Registration completed successfully for:", safeUser.email);
@@ -178,6 +185,10 @@ export function setupAuth(app: Express) {
           console.error("Session error:", err);
           return res.status(500).json({ message: "Failed to create session" });
         }
+        
+        console.log("USER LOGGED IN:", user.id, user.email);
+        console.log("SESSION AFTER LOGIN:", req.sessionID, !!req.user);
+        console.log("SESSION DATA:", JSON.stringify(req.session, null, 2));
         
         // Remove sensitive data
         const { passwordHash: _, ...safeUser } = user;
