@@ -49,7 +49,7 @@ import { Pencil, Plus, Trash2, UserPlus, Search, Anchor, Eye, Edit, Ship, AlertC
 import { formatPhoneDisplay, formatPhoneInput, cleanPhoneForStorage, isValidPhone } from "@/lib/phoneUtils";
 
 // Credit Display Component for One-Time Service Users
-function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: number, serviceLevelId: number | null }) {
+function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { customerId: number, serviceLevelId: number | null, serviceLevels: any[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [localCredits, setLocalCredits] = useState<number | null>(null);
@@ -175,8 +175,26 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
     setEditValue(creditInfo?.totalCredits?.toString() || "0");
   };
 
-  // Only show credits for one-time service users
-  if (!serviceLevelId || !creditInfo) {
+  // Handle users without service level
+  if (!serviceLevelId) {
+    return <span className="text-gray-400 text-sm">-</span>;
+  }
+
+  // Check if this is a bulk plan user (has service level but no credit system)
+  if (serviceLevelId && !creditInfo) {
+    // Find the service level to show its name
+    const serviceLevel = serviceLevels.find(level => level.id === serviceLevelId);
+    if (serviceLevel && serviceLevel.type === 'bulk') {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          {serviceLevel.name}
+        </Badge>
+      );
+    }
+    // For loading state or other service types without credits
+    if (isLoading) {
+      return <span className="text-gray-400 text-sm">Loading...</span>;
+    }
     return <span className="text-gray-400 text-sm">-</span>;
   }
 
@@ -1539,7 +1557,8 @@ export default function CustomerManagement() {
                           <TableCell>
                             <CustomerCreditDisplay 
                               customerId={customer.id} 
-                              serviceLevelId={customer.serviceLevelId} 
+                              serviceLevelId={customer.serviceLevelId}
+                              serviceLevels={serviceLevels}
                             />
                           </TableCell>
                           <TableCell>

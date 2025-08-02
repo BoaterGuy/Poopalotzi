@@ -38,3 +38,13 @@ The application is built using React for the frontend, served by Vite. It incorp
      * Added immediate refetch after successful updates
      * Improved error handling with rollback functionality
    - **Status**: Real-time credit updates now working correctly
+
+✅ **BULK PLAN DISPLAY ISSUE RESOLVED**:
+   - **Issue**: Bulk plan users showing dashes instead of program names in customer management
+   - **Root Cause**: CustomerCreditDisplay component only showing credits, not service level names for bulk plans
+   - **Solution Applied**:
+     * Enhanced CustomerCreditDisplay component to detect bulk plan users
+     * Added service level name display for bulk plan types
+     * Maintained existing credit functionality for one-time service users
+     * Added proper Badge styling for bulk plan names
+   - **Status**: Bulk plan users now show their program names correctly
