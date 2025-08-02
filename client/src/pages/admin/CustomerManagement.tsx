@@ -184,6 +184,8 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   if (serviceLevelId && !creditInfo) {
     // Find the service level to show its name
     const serviceLevel = serviceLevels.find(level => level.id === serviceLevelId);
+    console.log(`Customer ${customerId} - serviceLevelId: ${serviceLevelId}, serviceLevel found:`, serviceLevel, 'available serviceLevels:', serviceLevels);
+    
     if (serviceLevel && serviceLevel.type === 'bulk') {
       return (
         <Badge variant="secondary" className="text-xs">
@@ -382,7 +384,9 @@ export default function CustomerManagement() {
     queryKey: ["/api/service-levels"],
     queryFn: async () => {
       const res = await fetch('/api/service-levels');
-      return res.json();
+      const data = await res.json();
+      console.log('Service levels data:', data); // Debug service levels
+      return data;
     },
   });
 
@@ -401,7 +405,9 @@ export default function CustomerManagement() {
     queryFn: async () => {
       const res = await fetch('/api/users/members');
       if (!res.ok) throw new Error('Failed to fetch customers');
-      return res.json();
+      const data = await res.json();
+      console.log('Customer data:', data.slice(0, 3)); // Debug first 3 customers
+      return data;
     },
   });
 
@@ -685,18 +691,28 @@ export default function CustomerManagement() {
   const filteredCustomers = customers
     .filter(
       (customer) =>
-        customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+        customer.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
       // Sort alphabetically by last name, then by first name if last names are the same
-      const lastNameComparison = a.lastName.toLowerCase().localeCompare(b.lastName.toLowerCase());
+      const aLastName = (a.lastName || '').toLowerCase();
+      const bLastName = (b.lastName || '').toLowerCase();
+      const lastNameComparison = aLastName.localeCompare(bLastName);
       if (lastNameComparison !== 0) {
         return lastNameComparison;
       }
-      return a.firstName.toLowerCase().localeCompare(b.firstName.toLowerCase());
+      const aFirstName = (a.firstName || '').toLowerCase();
+      const bFirstName = (b.firstName || '').toLowerCase();
+      return aFirstName.localeCompare(bFirstName);
     });
+  
+  // Debug sorting
+  console.log('Filtered and sorted customers:', filteredCustomers.slice(0, 5).map(c => ({ 
+    name: `${c.firstName} ${c.lastName}`, 
+    serviceLevelId: c.serviceLevelId 
+  })));
 
   const handleEditCustomer = (id: number) => {
     const customer = customers.find(c => c.id === id);
