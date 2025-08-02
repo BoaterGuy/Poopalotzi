@@ -28,3 +28,13 @@ The application is built using React for the frontend, served by Vite. It incorp
      * Enhanced debugging logs to track external browser behavior
    - **Configuration**: Environment auto-detected (REPLIT_DOMAINS and REPL_SLUG present)
    - **Status**: Fixed and ready for external browser testing
+
+✅ **CREDIT REFRESH ISSUE RESOLVED**:
+   - **Issue**: Credit adjustments not reflecting correctly in customer management table
+   - **Root Cause**: Query key mismatch between credit queries and cache invalidation
+   - **Solution Applied**:
+     * Fixed query key structure to match API endpoint pattern
+     * Enhanced optimistic updates with proper cache management
+     * Added immediate refetch after successful updates
+     * Improved error handling with rollback functionality
+   - **Status**: Real-time credit updates now working correctly

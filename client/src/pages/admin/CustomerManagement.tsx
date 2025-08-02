@@ -57,7 +57,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
   const { toast } = useToast();
   
   const { data: creditInfo, isLoading } = useQuery({
-    queryKey: ['/api/admin/credits', customerId],
+    queryKey: ['/api/admin/users', customerId, 'credits'],
     queryFn: async () => {
       const response = await fetch(`/api/admin/users/${customerId}/credits`, {
         credentials: 'include'
@@ -68,7 +68,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
       return null;
     },
     enabled: !!serviceLevelId,
-    refetchInterval: 10000, // Refresh every 10 seconds for live data
+    refetchInterval: 5000, // Refresh every 5 seconds for live data
     refetchIntervalInBackground: true,
   });
 
@@ -91,15 +91,37 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
       return res.json();
     },
     onMutate: async ({ amount, type }) => {
-      // Optimistic update
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
+      
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['/api/admin/users', customerId, 'credits']);
+      
+      // Optimistically update to the new value
       if (creditInfo) {
         const newTotal = type === "add" ? creditInfo.totalCredits + amount : amount;
         setLocalCredits(newTotal);
+        
+        // Update the query cache with new data
+        queryClient.setQueryData(['/api/admin/users', customerId, 'credits'], {
+          ...creditInfo,
+          totalCredits: newTotal,
+          availableCredits: Math.max(0, newTotal - (creditInfo.totalCredits - creditInfo.availableCredits))
+        });
       }
+      
+      // Return context with previous data for rollback
+      return { previousData };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/credits', customerId] });
+      // Invalidate the specific user's credit query
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
+      // Invalidate the members list to refresh the table
       queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
+      // Force immediate refetch after a short delay to ensure backend has updated
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
+      }, 100);
       setIsEditing(false);
       setEditValue("");
       setLocalCredits(null);
@@ -108,8 +130,12 @@ function CustomerCreditDisplay({ customerId, serviceLevelId }: { customerId: num
         description: data.message || "Credits updated successfully",
       });
     },
-    onError: (error) => {
-      setLocalCredits(null); // Reset optimistic update
+    onError: (error, variables, context) => {
+      // Rollback optimistic update
+      setLocalCredits(null);
+      if (context?.previousData) {
+        queryClient.setQueryData(['/api/admin/users', customerId, 'credits'], context.previousData);
+      }
       console.error('Credit adjustment error:', error);
       toast({
         title: "Error",
