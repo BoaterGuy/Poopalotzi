@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev
+Cache-Control: no-cache, no-store, must-revalidate
+Content-Length: 432
+Content-Type: application/json; charset=utf-8
+Date: Sun, 03 Aug 2025 14:57:31 GMT
+Etag: W/"1b0-biO5JldbtAeqVjZ34sldcNIRcOU"
+Expires: 0
+Pragma: no-cache
+Replit-Cluster: janeway
+Set-Cookie: poopalotzi_session=s%3A0_FdSnI5Jf-GrolFP5x2sr0Wm4Ucx4eF.4vs2cCsjqHcQAzZh8kAs5jjk%2FYfDweM8F7v5uyMyQoE; Path=/; Expires=Mon, 04 Aug 2025 14:57:31 GMT; HttpOnly; Secure; SameSite=None
+Vary: Origin
+X-Powered-By: Express
+X-Robots-Tag: none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+X-Robots-Tag: none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+

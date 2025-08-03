@@ -34,7 +34,7 @@ console.log("🔧 PROXY TRUST ENABLED for external browser compatibility");
 
 // CORS configuration for production HTTPS environment
 app.use(cors({
-  origin: 'https://51342bba-90ac-4f1d-a8d3-e9da07e96781.janeway.prod.repl.run',
+  origin: 'https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
   credentials: true
 }));
 console.log("🌐 CORS ENABLED with credentials support for session cookies");
