@@ -57,3 +57,14 @@ The application is built using React for the frontend, served by Vite. It incorp
      * Secondary sort by first name when last names match
      * Maintains existing search functionality
    - **Status**: Customer table now displays in alphabetical order by last name
+
+✅ **BULK PLAN SERVICE LEVEL DISPLAY FIXED** (August 3, 2025):
+   - **Issue**: Bulk plan users showing dashes in both Service Level and Credits columns
+   - **Root Cause**: 
+     * Credits column logic incorrectly showing service level names instead of dashes
+     * Service Level column missing handling for `type === "bulk"` plans
+   - **Solution Applied**:
+     * **Credits Column**: Fixed CustomerCreditDisplay to show dashes (-) for bulk plan users (serviceLevelId with 0 totalCredits)
+     * **Service Level Column**: Enhanced getServiceLevelDisplay function to handle bulk plan type and show full service level names
+     * **Credit Display Logic**: Available/Total format (e.g., "2/2") where available = usable credits, total = all credits ever assigned
+   - **Status**: Bulk plan users now correctly show service level names in Service Level column and dashes in Credits column
