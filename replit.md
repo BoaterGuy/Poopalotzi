@@ -101,7 +101,7 @@ The application is built using React for the frontend, served by Vite. It incorp
    - **Root Cause**: Database password hash was corrupted or changed during development
    - **Solution Applied**: Reset member password to known value
    - **Current Login Credentials**:
-     * **Member Account**: member@poopalotzi.com / password
+     * **Member Account**: member@poopalotzi.com / admin123
      * **Admin Account**: admin@poopalotzi.com / admin123
    - **Session Configuration**: External browser compatibility confirmed working
    - **Status**: Login functionality restored for both internal and external browsers
