@@ -95,3 +95,13 @@ The application is built using React for the frontend, served by Vite. It incorp
      * **SameSite**: `sameSite: 'none'` for cross-origin requests
      * **Proxy Trust**: `app.set("trust proxy", 1)` for Replit environment
    - **Status**: Dashboard now clearly displays service plan and credit status in separate sections
+
+✅ **LOGIN CREDENTIALS FIXED** (August 3, 2025):
+   - **Issue**: Member login failing with 401 Unauthorized due to password hash mismatch
+   - **Root Cause**: Database password hash was corrupted or changed during development
+   - **Solution Applied**: Reset member password to known value
+   - **Current Login Credentials**:
+     * **Member Account**: member@poopalotzi.com / password
+     * **Admin Account**: admin@poopalotzi.com / admin123
+   - **Session Configuration**: External browser compatibility confirmed working
+   - **Status**: Login functionality restored for both internal and external browsers
