@@ -1,0 +1,15 @@
+HTTP/2 200 
+access-control-allow-credentials: true
+access-control-expose-headers: Set-Cookie
+content-length: 432
+content-type: application/json; charset=utf-8
+date: Sun, 03 Aug 2025 14:26:40 GMT
+etag: W/"1b0-biO5JldbtAeqVjZ34sldcNIRcOU"
+server-timing: pid1req;dur=1754231199002
+server-timing: pid1res;dur=1754231200255
+vary: Origin
+x-powered-by: Express
+x-robots-tag: none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+set-cookie: 
+via: 1.1 google
+

@@ -23,11 +23,14 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  console.log("🔧 === STARTING AUTH SETUP ===");
   // Express middleware already set up in index.ts
   
   // Environment detection for proper session configuration
   const isReplitProduction = !!(process.env.REPLIT_DOMAINS || process.env.REPL_SLUG);
   const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  console.log("🔧 Auth setup environment detection:", { isReplitProduction, isDevelopment });
   
   // Force localhost settings for any localhost:3000 connections regardless of environment
   // This allows testing with curl and browsers on localhost
@@ -66,6 +69,9 @@ export function setupAuth(app: Express) {
 
   if (storage.sessionStore) {
     sessionSettings.store = storage.sessionStore;
+    console.log("✅ Using database session store");
+  } else {
+    console.log("⚠️ No session store found - using memory store");
   }
   
   console.log("Setting up authentication with session store");
@@ -88,19 +94,27 @@ export function setupAuth(app: Express) {
   // Proxy trust already set in index.ts for early initialization
   console.log("🔗 Proxy trust status:", app.get("trust proxy"));
   
-  // Use simple session setup - fix localhost by setting secure to false for all requests initially
-  // This ensures cookies work for both localhost testing and external browsers
-  const workingSessionSettings = {
+  // Production HTTPS session configuration as requested
+  const productionSessionSettings = {
     ...sessionSettings,
     cookie: {
       ...sessionSettings.cookie,
-      secure: false, // Temporarily set to false to fix localhost testing
-      sameSite: 'lax' as const // Use lax for better compatibility
+      secure: true, // HTTPS required for production
+      sameSite: 'none' as const, // Required for cross-origin HTTPS requests
+      httpOnly: true // Security best practice
     }
   };
   
-  console.log("🔄 USING DEVELOPMENT SESSION SETTINGS (secure: false) for localhost compatibility");
-  app.use(session(workingSessionSettings));
+  console.log("🔄 USING PRODUCTION SESSION SETTINGS (secure: true, sameSite: none)");
+  console.log("🔄 Final session configuration:", JSON.stringify(productionSessionSettings, null, 2));
+  
+  try {
+    app.use(session(productionSessionSettings));
+    console.log("✅ Session middleware successfully registered");
+  } catch (error) {
+    console.error("❌ SESSION MIDDLEWARE ERROR:", error);
+    throw error;
+  }
   
   // Debug middleware for external browser session issues
   app.use((req, res, next) => {
@@ -124,8 +138,16 @@ export function setupAuth(app: Express) {
     next();
   });
   
-  app.use(passport.initialize());
-  app.use(passport.session());
+  try {
+    app.use(passport.initialize());
+    console.log("✅ Passport initialize middleware registered");
+    
+    app.use(passport.session());
+    console.log("✅ Passport session middleware registered");
+  } catch (error) {
+    console.error("❌ PASSPORT MIDDLEWARE ERROR:", error);
+    throw error;
+  }
 
   passport.use(
     new LocalStrategy(
@@ -273,11 +295,17 @@ export function setupAuth(app: Express) {
         });
         
         // Force save session and add explicit cookie headers for external browsers
+        console.log("🔄 About to save session...");
+        console.log("🔄 Session ID before save:", req.sessionID);
+        console.log("🔄 Session data before save:", JSON.stringify(req.session, null, 2));
+        
         req.session.save((saveErr) => {
           if (saveErr) {
             console.error("❌ SESSION SAVE ERROR:", saveErr);
           } else {
             console.log("✅ SESSION SAVED SUCCESSFULLY");
+            console.log("🔄 Session ID after save:", req.sessionID);
+            console.log("🔄 Session data after save:", JSON.stringify(req.session, null, 2));
           }
           
           // Set explicit cookie headers for external browser compatibility
@@ -304,6 +332,7 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/me", (req, res) => {
     console.log("--- /api/auth/me REQUEST ---");
     console.log("Session ID:", req.sessionID);
+    console.log("req.session:", req.session); // Print req.session as requested
     console.log("Session data:", JSON.stringify(req.session, null, 2));
     console.log("User from session:", req.user ? `ID: ${req.user.id}, Email: ${req.user.email}` : 'No user');
     console.log("isAuthenticated():", req.isAuthenticated());
@@ -314,21 +343,24 @@ export function setupAuth(app: Express) {
       referer: req.headers.referer,
       host: req.headers.host
     });
-    console.log("External browser indicators:", {
+    console.log("Cookie analysis:", {
       hasCookie: !!req.headers.cookie,
       cookieContainsSession: req.headers.cookie?.includes('poopalotzi_session'),
-      isExternalBrowser: !req.headers['user-agent']?.includes('replit')
+      cookieContainsDash: req.headers.cookie?.includes('poopalotzi-session'),
+      rawCookieHeader: req.headers.cookie,
+      expectedCookieName: 'poopalotzi_session',
+      actualCookieNames: req.headers.cookie?.match(/[^=;,\s]+=/)?.map(s => s.slice(0, -1))
     });
     
     if (!req.isAuthenticated()) {
-      console.log("Authentication failed - returning 401");
-      console.log("Possible external browser session loss detected");
+      console.log("❌ Authentication failed - returning 401");
+      console.log("❌ Session appears to be invalid or missing user data");
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     // Remove sensitive data
     const { passwordHash: _, ...safeUser } = req.user as any;
-    console.log("Returning authenticated user:", safeUser.email);
+    console.log("✅ Returning authenticated user:", safeUser.email);
     res.json(safeUser);
   });
 }
