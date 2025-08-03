@@ -35,16 +35,16 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false, // Keep false to avoid creating unnecessary sessions
     cookie: { 
-      secure: isHttps, // Use HTTPS on Replit production, HTTP for local dev
-      httpOnly: true, // Restore security - keep cookies server-only
-      sameSite: isHttps ? 'none' : 'lax', // 'none' for cross-origin on HTTPS, 'lax' for local
+      secure: true, // Always true for external browser compatibility
+      httpOnly: true, // Security - keep cookies server-only
+      sameSite: 'none', // Required for cross-origin HTTPS requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
       domain: undefined // Let browser handle domain automatically
     },
-    name: 'poopalotzi-session',
+    name: 'poopalotzi_session', // Custom session cookie name as requested
     rolling: true,
-    proxy: isHttps // Trust proxy headers when on Replit
+    proxy: true // Always trust proxy for Replit environment
   };
 
   if (storage.sessionStore) {
@@ -76,7 +76,7 @@ export function setupAuth(app: Express) {
       console.log("🔍 SESSION DEBUG:", {
         sessionID: req.sessionID,
         hasCookie: !!req.headers.cookie,
-        cookieValue: req.headers.cookie?.includes('poopalotzi-session') ? 'Present' : 'Missing',
+        cookieValue: req.headers.cookie?.includes('poopalotzi_session') ? 'Present' : 'Missing',
         userAgent: req.headers['user-agent']?.substring(0, 50) + '...',
         host: req.headers.host,
         origin: req.headers.origin,
@@ -223,8 +223,8 @@ export function setupAuth(app: Express) {
         console.log("🆔 SESSION AFTER LOGIN:", req.sessionID, !!req.user);
         console.log("📋 SESSION DATA:", JSON.stringify(req.session, null, 2));
         
-        // Force-set the session cookie for external browsers - CRITICAL FIX
-        console.log("🍪 SETTING EXPLICIT COOKIE for external browser compatibility");
+        // Force session save and confirm cookie is sent for external browsers
+        console.log("🍪 FORCING SESSION SAVE for external browser compatibility");
         
         console.log("🌐 REQUEST FROM:", {
           userAgent: req.headers['user-agent']?.substring(0, 100),
@@ -234,9 +234,24 @@ export function setupAuth(app: Express) {
           isExternalBrowser: !req.headers['user-agent']?.includes('replit')
         });
         
-        // Remove sensitive data
-        const { passwordHash: _, ...safeUser } = user;
-        res.json(safeUser);
+        // Force save session and add explicit cookie headers for external browsers
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("❌ SESSION SAVE ERROR:", saveErr);
+          } else {
+            console.log("✅ SESSION SAVED SUCCESSFULLY");
+          }
+          
+          // Set explicit cookie headers for external browser compatibility
+          console.log("🍪 SETTING EXPLICIT COOKIE HEADERS");
+          res.set({
+            'Access-Control-Allow-Credentials': 'true'
+          });
+          
+          // Remove sensitive data and respond
+          const { passwordHash: _, ...safeUser } = user;
+          res.json(safeUser);
+        });
       });
     })(req, res, next);
   });
@@ -263,7 +278,7 @@ export function setupAuth(app: Express) {
     });
     console.log("External browser indicators:", {
       hasCookie: !!req.headers.cookie,
-      cookieContainsSession: req.headers.cookie?.includes('poopalotzi-session'),
+      cookieContainsSession: req.headers.cookie?.includes('poopalotzi_session'),
       isExternalBrowser: !req.headers['user-agent']?.includes('replit')
     });
     
