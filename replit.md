@@ -68,3 +68,17 @@ The application is built using React for the frontend, served by Vite. It incorp
      * **Service Level Column**: Enhanced getServiceLevelDisplay function to handle bulk plan type and show full service level names
      * **Credit Display Logic**: Available/Total format (e.g., "2/2") where available = usable credits, total = all credits ever assigned
    - **Status**: Bulk plan users now correctly show service level names in Service Level column and dashes in Credits column
+
+✅ **CREDIT DISPLAY SIMPLIFIED** (August 3, 2025):
+   - **Change**: Removed total credit display across all interfaces, now showing only remaining credits
+   - **Rationale**: User confirmed purchase history provides sufficient tracking for purchases and admin adjustments
+   - **Updates Applied**:
+     * **Admin Customer Management**: Credits column shows only available credits (e.g., "4" instead of "4/4")
+     * **Member Dashboard**: Credit displays show only remaining credits
+     * **Service Request Pages**: Updated error messages to reference remaining credits
+     * **PaymentHistory Component**: Fixed API endpoint to `/api/payments/history` for customer access
+   - **Purchase History Access**: Both admins and customers can view complete transaction history
+     * **Admin Access**: `/api/admin/payments` - view all transactions, filter by user
+     * **Customer Access**: `/api/payments/history` - view own transaction history
+     * **Admin Adjustments**: Tracked through credit adjustment endpoints with logging
+   - **Status**: Credit display simplified while maintaining full purchase/adjustment history access

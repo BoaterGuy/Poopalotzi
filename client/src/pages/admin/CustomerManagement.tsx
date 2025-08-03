@@ -150,10 +150,10 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
     
     if (action === "add") {
       creditAdjustmentMutation.mutate({ amount: 1, type: "add" });
-    } else if (action === "subtract" && (localCredits ?? creditInfo.totalCredits) > 0) {
-      const currentTotal = localCredits ?? creditInfo.totalCredits;
-      const newTotal = Math.max(0, currentTotal - 1);
-      creditAdjustmentMutation.mutate({ amount: newTotal, type: "set" });
+    } else if (action === "subtract" && (localCredits ?? creditInfo.availableCredits) > 0) {
+      const currentAvailable = localCredits ?? creditInfo.availableCredits;
+      const newAvailable = Math.max(0, currentAvailable - 1);
+      creditAdjustmentMutation.mutate({ amount: newAvailable, type: "set" });
     }
   };
 
@@ -165,14 +165,14 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
       creditAdjustmentMutation.mutate({ amount: value, type: "set" });
     } else {
       // Reset to current value if invalid input
-      setEditValue(creditInfo?.totalCredits?.toString() || "0");
+      setEditValue(creditInfo?.availableCredits?.toString() || "0");
     }
   };
 
   const handleCreditClick = () => {
     if (creditAdjustmentMutation.isPending) return;
     setIsEditing(true);
-    setEditValue(creditInfo?.totalCredits?.toString() || "0");
+    setEditValue(creditInfo?.availableCredits?.toString() || "0");
   };
 
   // Handle users without service level
@@ -191,8 +191,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   }
 
   // Use local optimistic credits if available, otherwise use actual data
-  const displayCredits = localCredits ?? creditInfo.totalCredits;
-  const displayAvailable = localCredits ? Math.max(0, localCredits - (creditInfo.totalCredits - creditInfo.availableCredits)) : creditInfo.availableCredits;
+  const displayAvailable = localCredits ?? creditInfo.availableCredits;
 
   if (isLoading) {
     return <span className="text-gray-400 text-sm">Loading...</span>;
@@ -266,7 +265,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
         variant="ghost"
         size="sm"
         onClick={() => handleQuickAdjust("subtract")}
-        disabled={displayCredits === 0 || creditAdjustmentMutation.isPending}
+        disabled={displayAvailable === 0 || creditAdjustmentMutation.isPending}
         className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
         title="Remove 1 credit"
       >
@@ -280,9 +279,9 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
             : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
         } font-normal ${creditAdjustmentMutation.isPending ? 'opacity-60' : ''}`}
         onClick={handleCreditClick}
-        title="Click to edit total credits"
+        title="Click to edit available credits"
       >
-        {displayAvailable}/{displayCredits}
+        {displayAvailable}
         {creditAdjustmentMutation.isPending && <span className="ml-1 animate-spin">⟳</span>}
       </Badge>
       <Button

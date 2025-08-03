@@ -76,7 +76,7 @@ export default function PaymentHistory() {
   const { toast } = useToast();
 
   const { data: payments, isLoading } = useQuery<PaymentTransaction[]>({
-    queryKey: ['/api/users/me/payments'],
+    queryKey: ['/api/payments/history'],
   });
 
   const copyToClipboard = async (text: string, label: string) => {

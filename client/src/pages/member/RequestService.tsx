@@ -407,7 +407,7 @@ export default function RequestService() {
                         <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
                           <h3 className="text-lg font-semibold text-red-700 mb-2">No Credits Available</h3>
                           <p className="text-gray-700">
-                            You have used all {creditsData.totalCredits} pump-out service included in your one-time plan for {creditsData.year}.
+                            You have no pump-out credits remaining in your one-time plan for {creditsData.year}.
                           </p>
                           <p className="text-gray-700 mt-2">
                             Your credit will reset on January 1st, {creditsData.year + 1}. If you need additional services now, 
