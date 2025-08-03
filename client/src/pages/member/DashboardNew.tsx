@@ -342,14 +342,14 @@ export default function MemberDashboardNew() {
                         <h3 className="font-semibold text-[#0B1F3A] mb-1">Service Plan</h3>
                         <div className="bg-white p-3 rounded border">
                           <h4 className="font-medium text-gray-900 mb-1">{serviceLevel.name}</h4>
-                          {serviceLevel.type === 'one-time' && creditInfo && (
+                          {serviceLevel.type === 'one-time' && (
                             <div className="flex items-center mt-1 text-sm">
                               <Badge variant="outline" className={`${
-                                creditInfo.availableCredits > 0 
+                                (creditInfo?.availableCredits || 0) > 0 
                                   ? 'bg-green-50 text-green-700 border-green-200' 
                                   : 'bg-red-50 text-red-700 border-red-200'
                               } font-normal`}>
-                                {creditInfo.availableCredits} {creditInfo.availableCredits === 1 ? 'credit' : 'credits'} remaining
+                                {creditInfo?.availableCredits || 0} {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
                               </Badge>
                             </div>
                           )}
