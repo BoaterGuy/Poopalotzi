@@ -53,16 +53,19 @@ export default function MemberDashboardNew() {
   });
 
   const { data: creditInfo } = useQuery({
-    queryKey: ['/api/users/me/credits'],
+    queryKey: ['/api/users/me/credits', Date.now()],
     queryFn: async () => {
-      const response = await fetch('/api/users/me/credits', {
-        credentials: 'include'
+      const response = await fetch(`/api/users/me/credits?_t=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-cache'
       });
       if (!response.ok) {
         throw new Error('Failed to fetch credit info');
       }
       return response.json();
     },
+    staleTime: 0,
+    cacheTime: 0,
   });
 
   // Cancel pump-out request function
@@ -355,11 +358,15 @@ export default function MemberDashboardNew() {
                                   ? 'text-green-600' 
                                   : 'text-red-600'
                               }`}>
-                                {creditInfo?.availableCredits || 0}
+                                {creditInfo?.availableCredits !== undefined ? creditInfo.availableCredits : 0}
                               </span>
                               <span className="text-gray-600 text-sm ml-2 font-normal">
                                 {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
                               </span>
+                            </div>
+                            {/* Debug info - remove this after testing */}
+                            <div className="text-xs text-gray-400 mt-1">
+                              Debug: {JSON.stringify(creditInfo)} | Updated: {new Date().toLocaleTimeString()}
                             </div>
                           </div>
                         </div>
