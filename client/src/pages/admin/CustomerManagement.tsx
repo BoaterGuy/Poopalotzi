@@ -181,22 +181,24 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   }
 
   // Check if this is a bulk plan user (has service level but no credit system)
-  if (serviceLevelId && !creditInfo) {
+  if (serviceLevelId && !creditInfo && !isLoading) {
     // Find the service level to show its name
     const serviceLevel = serviceLevels.find(level => level.id === serviceLevelId);
     
-    if (serviceLevel && serviceLevel.type === 'bulk') {
+    if (serviceLevel) {
+      // Show service level name for any type (bulk, seasonal, etc.) that doesn't use credits
       return (
         <Badge variant="secondary" className="text-xs">
           {serviceLevel.name}
         </Badge>
       );
     }
-    // For loading state or other service types without credits
-    if (isLoading) {
-      return <span className="text-gray-400 text-sm">Loading...</span>;
-    }
     return <span className="text-gray-400 text-sm">-</span>;
+  }
+  
+  // For loading state
+  if (isLoading) {
+    return <span className="text-gray-400 text-sm">Loading...</span>;
   }
 
   // Use local optimistic credits if available, otherwise use actual data
