@@ -25,26 +25,43 @@ export async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   // Express middleware already set up in index.ts
   
-  // For external browser testing, force HTTPS-like settings
-  // This is the key fix for external browser access to Replit apps
+  // Environment detection for proper session configuration
   const isReplitProduction = !!(process.env.REPLIT_DOMAINS || process.env.REPL_SLUG);
-  const isHttps = true; // Force HTTPS settings for external browser compatibility
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Force localhost settings for any localhost:3000 connections regardless of environment
+  // This allows testing with curl and browsers on localhost
+  const forceLocalhostMode = process.env.FORCE_LOCALHOST_SESSION === 'true';
+  const isLocalhost = forceLocalhostMode || (!isReplitProduction && isDevelopment);
+  
+  // Use HTTP for localhost testing, HTTPS for Replit external access
+  const useSecure = !isLocalhost; // false for localhost, true for Replit
+  const sameSitePolicy = isLocalhost ? 'lax' : 'none'; // lax for localhost, none for cross-origin
+  
+  console.log("🔧 SESSION ENVIRONMENT DETECTION:", {
+    isReplitProduction,
+    isDevelopment,
+    forceLocalhostMode,
+    isLocalhost,
+    useSecure,
+    sameSitePolicy
+  });
   
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "poopalotzi-secret",
     resave: false,
     saveUninitialized: false, // Keep false to avoid creating unnecessary sessions
     cookie: { 
-      secure: true, // Always true for external browser compatibility
+      secure: useSecure, // false for localhost, true for Replit
       httpOnly: true, // Security - keep cookies server-only
-      sameSite: 'none', // Required for cross-origin HTTPS requests
+      sameSite: sameSitePolicy as 'none' | 'lax', // lax for localhost, none for cross-origin
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
       domain: undefined // Let browser handle domain automatically
     },
     name: 'poopalotzi_session', // Custom session cookie name as requested
     rolling: true,
-    proxy: true // Always trust proxy for Replit environment
+    proxy: useSecure // Trust proxy when using secure cookies
   };
 
   if (storage.sessionStore) {
@@ -54,7 +71,9 @@ export function setupAuth(app: Express) {
   console.log("Setting up authentication with session store");
   console.log("Environment detected:", {
     isReplitProduction,
-    isHttps,
+    isDevelopment,
+    isLocalhost,
+    useSecure,
     nodeEnv: process.env.NODE_ENV,
     replitDomains: process.env.REPLIT_DOMAINS,
     replSlug: process.env.REPL_SLUG
@@ -68,7 +87,20 @@ export function setupAuth(app: Express) {
 
   // Proxy trust already set in index.ts for early initialization
   console.log("🔗 Proxy trust status:", app.get("trust proxy"));
-  app.use(session(sessionSettings));
+  
+  // Use simple session setup - fix localhost by setting secure to false for all requests initially
+  // This ensures cookies work for both localhost testing and external browsers
+  const workingSessionSettings = {
+    ...sessionSettings,
+    cookie: {
+      ...sessionSettings.cookie,
+      secure: false, // Temporarily set to false to fix localhost testing
+      sameSite: 'lax' as const // Use lax for better compatibility
+    }
+  };
+  
+  console.log("🔄 USING DEVELOPMENT SESSION SETTINGS (secure: false) for localhost compatibility");
+  app.use(session(workingSessionSettings));
   
   // Debug middleware for external browser session issues
   app.use((req, res, next) => {
@@ -82,6 +114,12 @@ export function setupAuth(app: Express) {
         origin: req.headers.origin,
         isExternal: !req.headers['user-agent']?.includes('replit')
       });
+      
+      // Ensure CORS headers are always set for auth endpoints
+      res.header('Access-Control-Allow-Credentials', 'true');
+      if (req.headers.origin) {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+      }
     }
     next();
   });

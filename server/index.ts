@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupFullDatabase } from "./setup-database";
 import { DatabaseStorage } from "./database-storage";
@@ -30,6 +31,34 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 // Force proxy trust for external browser compatibility
 app.set("trust proxy", 1);
 console.log("🔧 PROXY TRUST ENABLED for external browser compatibility");
+
+// CORS configuration for session cookies and external browsers
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow Replit domains
+    if (origin.includes('replit.dev') || origin.includes('replit.co')) {
+      return callback(null, true);
+    }
+    
+    // Allow any origin for development - can be restricted in production
+    return callback(null, true);
+  },
+  credentials: true, // CRITICAL: Allow cookies to be sent cross-origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
+};
+
+app.use(cors(corsOptions));
+console.log("🌐 CORS ENABLED with credentials support for session cookies");
 
 // Cache-busting middleware for development
 app.use((req, res, next) => {

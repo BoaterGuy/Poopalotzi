@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: http://localhost:5173
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Access-Control-Expose-Headers: Set-Cookie
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Content-Type: application/json; charset=utf-8
+Content-Length: 432
+ETag: W/"1b0-biO5JldbtAeqVjZ34sldcNIRcOU"
+Set-Cookie: poopalotzi_session=s%3AryPRNXkApNj1lvF-visz4apsxvuxC1DP.CACHPkEEbyyxXcvDwrutnZ%2FKNEGz6FJLIYa2OUkiaIs; Path=/; Expires=Mon, 04 Aug 2025 13:51:12 GMT; HttpOnly; SameSite=Lax
+Date: Sun, 03 Aug 2025 13:51:12 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
