@@ -184,7 +184,6 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   if (serviceLevelId && !creditInfo) {
     // Find the service level to show its name
     const serviceLevel = serviceLevels.find(level => level.id === serviceLevelId);
-    console.log(`Customer ${customerId} - serviceLevelId: ${serviceLevelId}, serviceLevel found:`, serviceLevel, 'available serviceLevels:', serviceLevels);
     
     if (serviceLevel && serviceLevel.type === 'bulk') {
       return (
@@ -384,9 +383,7 @@ export default function CustomerManagement() {
     queryKey: ["/api/service-levels"],
     queryFn: async () => {
       const res = await fetch('/api/service-levels');
-      const data = await res.json();
-      console.log('Service levels data:', data); // Debug service levels
-      return data;
+      return res.json();
     },
   });
 
@@ -405,9 +402,7 @@ export default function CustomerManagement() {
     queryFn: async () => {
       const res = await fetch('/api/users/members');
       if (!res.ok) throw new Error('Failed to fetch customers');
-      const data = await res.json();
-      console.log('Customer data:', data.slice(0, 3)); // Debug first 3 customers
-      return data;
+      return res.json();
     },
   });
 
@@ -707,12 +702,6 @@ export default function CustomerManagement() {
       const bFirstName = (b.firstName || '').toLowerCase();
       return aFirstName.localeCompare(bFirstName);
     });
-  
-  // Debug sorting
-  console.log('Filtered and sorted customers:', filteredCustomers.slice(0, 5).map(c => ({ 
-    name: `${c.firstName} ${c.lastName}`, 
-    serviceLevelId: c.serviceLevelId 
-  })));
 
   const handleEditCustomer = (id: number) => {
     const customer = customers.find(c => c.id === id);
