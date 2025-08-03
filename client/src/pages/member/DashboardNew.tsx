@@ -341,22 +341,29 @@ export default function MemberDashboardNew() {
                       <div>
                         <h3 className="font-semibold text-[#0B1F3A] mb-1">Service Plan</h3>
                         <div className="bg-white p-3 rounded border">
-                          <h4 className="font-medium text-gray-900 mb-1">{serviceLevel.name}</h4>
-                          {serviceLevel.type === 'one-time' && (
-                            <div className="flex items-center mt-1 text-sm">
-                              <Badge variant="outline" className={`${
-                                (creditInfo?.availableCredits || 0) > 0 
-                                  ? 'bg-green-50 text-green-700 border-green-200' 
-                                  : 'bg-red-50 text-red-700 border-red-200'
-                              } font-normal`}>
-                                {creditInfo?.availableCredits || 0} {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
-                              </Badge>
-                            </div>
-                          )}
-
-
+                          <h4 className="font-medium text-gray-900">{serviceLevel.name}</h4>
                         </div>
                       </div>
+
+                      {serviceLevel.type === 'one-time' && (
+                        <div>
+                          <h3 className="font-semibold text-[#0B1F3A] mb-1">Credits Available</h3>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="flex items-center text-lg font-semibold">
+                              <span className={`${
+                                (creditInfo?.availableCredits || 0) > 0 
+                                  ? 'text-green-600' 
+                                  : 'text-red-600'
+                              }`}>
+                                {creditInfo?.availableCredits || 0}
+                              </span>
+                              <span className="text-gray-600 text-sm ml-2 font-normal">
+                                {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       <Separator />
 
