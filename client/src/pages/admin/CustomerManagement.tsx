@@ -185,20 +185,8 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
     return <span className="text-gray-400 text-sm">Loading...</span>;
   }
 
-  // Check if this is a bulk plan user (has service level but no credits)
-  // Bulk plan users have serviceLevelId and creditInfo with 0 totalCredits
+  // For bulk plan users (serviceLevelId with 0 totalCredits), show dash in credits column
   if (serviceLevelId && creditInfo && creditInfo.totalCredits === 0) {
-    // Find the service level to show its name
-    const serviceLevel = serviceLevels.find(level => level.id === serviceLevelId);
-    
-    if (serviceLevel) {
-      // Show service level name for bulk plans that don't use credits
-      return (
-        <Badge variant="secondary" className="text-xs">
-          {serviceLevel.name}
-        </Badge>
-      );
-    }
     return <span className="text-gray-400 text-sm">-</span>;
   }
 
@@ -645,6 +633,11 @@ export default function CustomerManagement() {
       shortLabel = isMultiHead ? "Seasonal Multi" : "Seasonal";
       variant = "secondary";
       color = "text-green-600";
+    } else if (type === "bulk") {
+      // For bulk plans, show the actual plan name (e.g., "Single Royal Flush")
+      shortLabel = level.name;
+      variant = "secondary";
+      color = "text-purple-600";
     }
     
     return {
