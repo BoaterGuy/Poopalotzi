@@ -53,19 +53,16 @@ export default function MemberDashboardNew() {
   });
 
   const { data: creditInfo } = useQuery({
-    queryKey: ['/api/users/me/credits', Date.now()],
+    queryKey: ['/api/users/me/credits'],
     queryFn: async () => {
-      const response = await fetch(`/api/users/me/credits?_t=${Date.now()}`, {
-        credentials: 'include',
-        cache: 'no-cache'
+      const response = await fetch('/api/users/me/credits', {
+        credentials: 'include'
       });
       if (!response.ok) {
         throw new Error('Failed to fetch credit info');
       }
       return response.json();
     },
-    staleTime: 0,
-    cacheTime: 0,
   });
 
   // Cancel pump-out request function
@@ -315,7 +312,7 @@ export default function MemberDashboardNew() {
                       <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-700 mb-2">No Upcoming Services</h3>
                       <p className="text-gray-500 mb-4">You don't have any pump-out services scheduled.</p>
-                      {creditInfo && creditInfo.availableCredits > 0 ? (
+                      {creditInfo && (creditInfo as any).availableCredits > 0 ? (
                         <Link href="/member/request-service">
                           <Button className="bg-[#38B2AC] hover:bg-opacity-90">
                             Schedule a Pump-Out
@@ -354,20 +351,17 @@ export default function MemberDashboardNew() {
                           <div className="bg-white p-3 rounded border">
                             <div className="flex items-center text-lg font-semibold">
                               <span className={`${
-                                (creditInfo?.availableCredits || 0) > 0 
+                                ((creditInfo as any)?.availableCredits || 0) > 0 
                                   ? 'text-green-600' 
                                   : 'text-red-600'
                               }`}>
-                                {creditInfo?.availableCredits !== undefined ? creditInfo.availableCredits : 0}
+                                {(creditInfo as any)?.availableCredits !== undefined ? (creditInfo as any).availableCredits : 0}
                               </span>
                               <span className="text-gray-600 text-sm ml-2 font-normal">
-                                {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
+                                {((creditInfo as any)?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
                               </span>
                             </div>
-                            {/* Debug info - remove this after testing */}
-                            <div className="text-xs text-gray-400 mt-1">
-                              Debug: {JSON.stringify(creditInfo)} | Updated: {new Date().toLocaleTimeString()}
-                            </div>
+
                           </div>
                         </div>
                       )}

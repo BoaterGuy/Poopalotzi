@@ -82,3 +82,16 @@ The application is built using React for the frontend, served by Vite. It incorp
      * **Customer Access**: `/api/payments/history` - view own transaction history
      * **Admin Adjustments**: Tracked through credit adjustment endpoints with logging
    - **Status**: Credit display simplified while maintaining full purchase/adjustment history access
+
+✅ **MEMBER DASHBOARD CREDIT DISPLAY ENHANCED** (August 3, 2025):
+   - **Feature**: Separate "Credits Available" section in member dashboard  
+   - **Implementation**: 
+     * **Service Plan**: Displays service level name (e.g., "Single Royal Flush")
+     * **Credits Available**: Separate section showing remaining credits with color coding
+     * **Color Coding**: Green for available credits, red for zero credits
+   - **Technical**: Enhanced React Query configuration and fixed TypeScript issues
+   - **Session Configuration**: Confirmed external browser compatibility with secure cookie settings
+     * **Secure**: `secure: true` for HTTPS compatibility
+     * **SameSite**: `sameSite: 'none'` for cross-origin requests
+     * **Proxy Trust**: `app.set("trust proxy", 1)` for Replit environment
+   - **Status**: Dashboard now clearly displays service plan and credit status in separate sections
