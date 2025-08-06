@@ -84,9 +84,20 @@ const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) =>
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && req.user?.role === "admin") {
+  console.log("🔍 ADMIN CHECK:", {
+    isAuthenticated: req.isAuthenticated(),
+    userRole: req.user?.role,
+    userEmail: req.user?.email,
+    userId: req.user?.id,
+    expectedRole: "admin"
+  });
+  
+  if (req.isAuthenticated() && (req.user?.role === "admin" || req.user?.role === "super_admin")) {
+    console.log("✅ Admin access granted");
     return next();
   }
+  
+  console.log("❌ Admin access denied");
   res.status(403).json({ message: "Forbidden" });
 };
 
