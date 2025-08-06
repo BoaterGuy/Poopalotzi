@@ -186,7 +186,8 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   }
 
   // For bulk plan users (serviceLevelId with 0 totalCredits), show dash in credits column
-  if (serviceLevelId && creditInfo && creditInfo.totalCredits === 0) {
+  // BUT if user has been admin-adjusted (has usedCredits or adminAdjusted flag), show the actual credits
+  if (serviceLevelId && creditInfo && creditInfo.totalCredits === 0 && !creditInfo.adminAdjusted && creditInfo.usedCredits === 0) {
     return <span className="text-gray-400 text-sm">-</span>;
   }
 
@@ -265,7 +266,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
         variant="ghost"
         size="sm"
         onClick={() => handleQuickAdjust("subtract")}
-        disabled={displayAvailable === 0 || creditAdjustmentMutation.isPending}
+        disabled={displayAvailable <= 0 || creditAdjustmentMutation.isPending}
         className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
         title="Remove 1 credit"
       >
