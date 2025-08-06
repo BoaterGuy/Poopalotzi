@@ -336,62 +336,64 @@ export default function MemberDashboardNew() {
                   <CardTitle className="text-[#0B1F3A]">Account Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {serviceLevel && (
-                    <div className="space-y-4">
+                  <div className="space-y-4">
+                    {serviceLevel && (
                       <div>
                         <h3 className="font-semibold text-[#0B1F3A] mb-1">Service Plan</h3>
                         <div className="bg-white p-3 rounded border">
                           <h4 className="font-medium text-gray-900">{serviceLevel.name}</h4>
                         </div>
                       </div>
+                    )}
 
-                      {serviceLevel.type === 'one-time' && (
-                        <div>
-                          <h3 className="font-semibold text-[#0B1F3A] mb-1">Credits Available</h3>
-                          <div className="bg-white p-3 rounded border">
-                            <div className="flex items-center text-lg font-semibold">
-                              <span className={`${
-                                ((creditInfo as any)?.availableCredits || 0) > 0 
-                                  ? 'text-green-600' 
-                                  : 'text-red-600'
-                              }`}>
-                                {(creditInfo as any)?.availableCredits !== undefined ? (creditInfo as any).availableCredits : 0}
-                              </span>
-                              <span className="text-gray-600 text-sm ml-2 font-normal">
-                                {((creditInfo as any)?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
-                              </span>
-                            </div>
-
-                          </div>
+                    <div>
+                      <h3 className="font-semibold text-[#0B1F3A] mb-1">Credits Available</h3>
+                      <div className="bg-white p-3 rounded border">
+                        <div className="flex items-center text-lg font-semibold">
+                          <span className={`${
+                            ((creditInfo as any)?.availableCredits || 0) > 0 
+                              ? 'text-green-600' 
+                              : 'text-red-600'
+                          }`}>
+                            {(creditInfo as any)?.availableCredits !== undefined ? (creditInfo as any).availableCredits : 0}
+                          </span>
+                          <span className="text-gray-600 text-sm ml-2 font-normal">
+                            {((creditInfo as any)?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
+                          </span>
                         </div>
-                      )}
+                        {((creditInfo as any)?.availableCredits || 0) === 0 && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            No credits available. Purchase additional pump-outs to add credits.
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                      <Separator />
+                    <Separator />
 
-                      {boats && boats.length > 0 && (
-                        <div>
-                          <h3 className="font-semibold text-[#0B1F3A] mb-2">Registered Boats</h3>
-                          <div className="space-y-2">
-                            {boats.map((boat) => (
-                              <div key={boat.id} className="bg-white p-3 rounded border">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <h4 className="font-medium text-gray-900">{boat.name}</h4>
-                                    <p className="text-sm text-gray-600">{boat.make} {boat.model}</p>
-                                  </div>
+                    {boats && boats.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-[#0B1F3A] mb-2">Registered Boats</h3>
+                        <div className="space-y-2">
+                          {boats.map((boat) => (
+                            <div key={boat.id} className="bg-white p-3 rounded border">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium text-gray-900">{boat.name}</h4>
+                                  <p className="text-sm text-gray-600">{boat.make} {boat.model}</p>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                          <Link href="/member/boats">
-                            <Button variant="outline" size="sm" className="mt-3">
-                              Manage Boats
-                            </Button>
-                          </Link>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
+                        <Link href="/member/boats">
+                          <Button variant="outline" size="sm" className="mt-3">
+                            Manage Boats
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
