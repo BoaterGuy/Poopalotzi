@@ -84,20 +84,9 @@ const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) =>
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  console.log("🔍 ADMIN CHECK:", {
-    isAuthenticated: req.isAuthenticated(),
-    userRole: req.user?.role,
-    userEmail: req.user?.email,
-    userId: req.user?.id,
-    expectedRole: "admin"
-  });
-  
   if (req.isAuthenticated() && (req.user?.role === "admin" || req.user?.role === "super_admin")) {
-    console.log("✅ Admin access granted");
     return next();
   }
-  
-  console.log("❌ Admin access denied");
   res.status(403).json({ message: "Forbidden" });
 };
 
@@ -1392,8 +1381,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { amount, reason, type } = req.body;
 
       // Validate input
-      if (!amount || !reason || !type) {
-        return res.status(400).json({ message: "Amount, reason, and type are required" });
+      if (amount === undefined || amount === null || !type) {
+        return res.status(400).json({ message: "Amount and type are required" });
       }
 
       if (!["add", "set"].includes(type)) {
@@ -1431,7 +1420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Log the adjustment for audit purposes
-      console.log(`Admin credit adjustment: User ${userId} (${user.firstName} ${user.lastName}) - ${type === "add" ? "Added" : "Set to"} ${adjustmentAmount} credits. Reason: ${reason}. Admin: ${req.user?.firstName} ${req.user?.lastName} (ID: ${req.user?.id})`);
+      console.log(`Admin credit adjustment: User ${userId} (${user.firstName} ${user.lastName}) - ${type === "add" ? "Added" : "Set to"} ${adjustmentAmount} credits. ${reason ? `Reason: ${reason}.` : 'No reason provided.'} Admin: ${req.user?.firstName} ${req.user?.lastName} (ID: ${req.user?.id})`);
 
       res.json({
         success: true,
@@ -1439,7 +1428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         previousTotal: currentTotal,
         newTotal: newTotal,
         adjustment: type === "add" ? adjustmentAmount : newTotal - currentTotal,
-        reason: reason
+        reason: reason || null
       });
     } catch (err) {
       console.error("Error adjusting user credits:", err);
