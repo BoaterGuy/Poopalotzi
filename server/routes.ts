@@ -2238,20 +2238,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test the token after saving configuration
       try {
-        // Determine environment based on merchant ID or try both
-        const isSandbox = merchantId.length <= 13; // Sandbox IDs are typically shorter
+        // Always try production first, then sandbox
+        // This ensures live merchants are detected correctly
         const endpoints = [
-          { env: 'sandbox', url: `https://apisandbox.dev.clover.com/v3/merchants/${merchantId}` },
-          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` }
+          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` },
+          { env: 'sandbox', url: `https://apisandbox.dev.clover.com/v3/merchants/${merchantId}` }
         ];
-        
-        // Try sandbox first for shorter merchant IDs, production first for longer ones
-        const orderedEndpoints = isSandbox ? endpoints : endpoints.reverse();
         
         let testResponse = null;
         let workingEnvironment = null;
         
-        for (const endpoint of orderedEndpoints) {
+        for (const endpoint of endpoints) {
           try {
             console.log(`Testing ${endpoint.env} endpoint for merchant ${merchantId}...`);
             const response = await fetch(endpoint.url, {
