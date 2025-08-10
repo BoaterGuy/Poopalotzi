@@ -121,9 +121,21 @@ export class CloverService {
    * Get the Clover OAuth authorization URL
    */
   getAuthorizationUrl(merchantId: string, redirectUri: string): string {
-    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
-    // Clean the environment variable and default to sandbox
-    const environment = rawEnvironment.toLowerCase().includes('production') ? 'production' : 'sandbox';
+    // Auto-detect environment based on merchant ID pattern and env var
+    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'auto';
+    let environment: string;
+    
+    if (rawEnvironment.toLowerCase().includes('production')) {
+      environment = 'production';
+    } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
+      environment = 'sandbox';
+    } else {
+      // Auto-detect: production merchant IDs typically start with uppercase letters and are longer
+      // This is a heuristic - you may need to adjust based on your actual merchant IDs
+      environment = (merchantId.length > 13 || /^[A-Z]/.test(merchantId)) ? 'production' : 'sandbox';
+    }
+    
+    console.log(`OAuth Environment Detection: merchantId=${merchantId}, detected=${environment}, envVar=${rawEnvironment}`);
     const appId = process.env.CLOVER_APP_ID;
     
     if (!appId) {
@@ -153,8 +165,20 @@ export class CloverService {
    * Exchange authorization code for access tokens
    */
   async exchangeCodeForTokens(code: string, merchantId: string): Promise<CloverOAuthTokenResponse> {
-    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
-    const environment = rawEnvironment.toLowerCase().includes('production') ? 'production' : 'sandbox';
+    // Auto-detect environment based on merchant ID pattern and env var
+    const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'auto';
+    let environment: string;
+    
+    if (rawEnvironment.toLowerCase().includes('production')) {
+      environment = 'production';
+    } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
+      environment = 'sandbox';
+    } else {
+      // Auto-detect: production merchant IDs typically start with uppercase letters and are longer
+      environment = (merchantId.length > 13 || /^[A-Z]/.test(merchantId)) ? 'production' : 'sandbox';
+    }
+    
+    console.log(`Token Exchange Environment Detection: merchantId=${merchantId}, detected=${environment}`);
     const appId = process.env.CLOVER_APP_ID;
     const appSecret = process.env.CLOVER_APP_SECRET;
 
