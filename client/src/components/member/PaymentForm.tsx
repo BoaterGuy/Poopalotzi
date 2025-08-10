@@ -227,7 +227,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2">
 
         <div className="p-4 bg-blue-50 rounded-md border border-blue-100 flex items-center space-x-3 mb-6">
           <Lock className="h-5 w-5 text-blue-500" />

@@ -556,7 +556,7 @@ export default function ServiceSubscription() {
       
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={(open) => !open && setShowPayment(false)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
