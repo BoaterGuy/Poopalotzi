@@ -121,22 +121,31 @@ export class CloverService {
    * Get the Clover OAuth authorization URL
    */
   getAuthorizationUrl(merchantId: string, redirectUri: string): string {
-    // Auto-detect environment based on merchant ID pattern and env var
+    // Smart environment detection: prioritize production credentials when available
     const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'auto';
+    const appId = process.env.CLOVER_APP_ID;
     let environment: string;
     
-    if (rawEnvironment.toLowerCase().includes('production')) {
+    // Check if we have production APP_ID (8QSDCRTWSBPWT indicates production)
+    const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
+    
+    if (hasProductionCredentials) {
+      // With production credentials, prefer production unless explicitly set to sandbox
+      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.length <= 13) {
+        environment = 'sandbox';
+      } else {
+        environment = 'production';
+      }
+    } else if (rawEnvironment.toLowerCase().includes('production')) {
       environment = 'production';
     } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
       environment = 'sandbox';
     } else {
       // Auto-detect: production merchant IDs typically start with uppercase letters and are longer
-      // This is a heuristic - you may need to adjust based on your actual merchant IDs
       environment = (merchantId.length > 13 || /^[A-Z]/.test(merchantId)) ? 'production' : 'sandbox';
     }
     
-    console.log(`OAuth Environment Detection: merchantId=${merchantId}, detected=${environment}, envVar=${rawEnvironment}`);
-    const appId = process.env.CLOVER_APP_ID;
+    console.log(`OAuth Environment Detection: merchantId=${merchantId}, detected=${environment}, envVar=${rawEnvironment}, hasProductionCreds=${hasProductionCredentials}`);
     
     if (!appId) {
       throw new Error('CLOVER_APP_ID environment variable is required');
@@ -165,11 +174,22 @@ export class CloverService {
    * Exchange authorization code for access tokens
    */
   async exchangeCodeForTokens(code: string, merchantId: string): Promise<CloverOAuthTokenResponse> {
-    // Auto-detect environment based on merchant ID pattern and env var
+    // Smart environment detection: prioritize production credentials when available
     const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'auto';
+    const appId = process.env.CLOVER_APP_ID;
     let environment: string;
     
-    if (rawEnvironment.toLowerCase().includes('production')) {
+    // Check if we have production APP_ID (8QSDCRTWSBPWT indicates production)
+    const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
+    
+    if (hasProductionCredentials) {
+      // With production credentials, prefer production unless explicitly set to sandbox
+      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.length <= 13) {
+        environment = 'sandbox';
+      } else {
+        environment = 'production';
+      }
+    } else if (rawEnvironment.toLowerCase().includes('production')) {
       environment = 'production';
     } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
       environment = 'sandbox';
@@ -178,8 +198,7 @@ export class CloverService {
       environment = (merchantId.length > 13 || /^[A-Z]/.test(merchantId)) ? 'production' : 'sandbox';
     }
     
-    console.log(`Token Exchange Environment Detection: merchantId=${merchantId}, detected=${environment}`);
-    const appId = process.env.CLOVER_APP_ID;
+    console.log(`Token Exchange Environment Detection: merchantId=${merchantId}, detected=${environment}, envVar=${rawEnvironment}, hasProductionCreds=${hasProductionCredentials}`);
     const appSecret = process.env.CLOVER_APP_SECRET;
 
     if (!appId || !appSecret) {
@@ -222,10 +241,35 @@ export class CloverService {
     environment?: string;
   }): Promise<CloverConfig> {
     const { storage } = await import('./index');
-    // Use provided environment or fall back to env var or default to sandbox
-    const environment = configData.environment || process.env.CLOVER_ENVIRONMENT || 'sandbox';
     const appId = process.env.CLOVER_APP_ID;
     const appSecret = process.env.CLOVER_APP_SECRET;
+    
+    // Smart environment detection: prioritize production credentials when available
+    let environment: string;
+    if (configData.environment) {
+      environment = configData.environment;
+    } else {
+      const rawEnvironment = process.env.CLOVER_ENVIRONMENT || 'auto';
+      const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
+      
+      if (hasProductionCredentials) {
+        // With production credentials, prefer production unless explicitly set to sandbox
+        if (rawEnvironment.toLowerCase() === 'sandbox' && configData.merchantId.length <= 13) {
+          environment = 'sandbox';
+        } else {
+          environment = 'production';
+        }
+      } else if (rawEnvironment.toLowerCase().includes('production')) {
+        environment = 'production';
+      } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
+        environment = 'sandbox';
+      } else {
+        // Auto-detect: production merchant IDs typically start with uppercase letters and are longer
+        environment = (configData.merchantId.length > 13 || /^[A-Z]/.test(configData.merchantId)) ? 'production' : 'sandbox';
+      }
+    }
+    
+    console.log(`Save Config Environment Detection: merchantId=${configData.merchantId}, detected=${environment}, hasProductionCreds=${appId === '8QSDCRTWSBPWT'}`);
 
     if (!appId || !appSecret) {
       throw new Error('CLOVER_APP_ID and CLOVER_APP_SECRET environment variables are required');
