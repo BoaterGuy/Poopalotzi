@@ -354,6 +354,65 @@ export class CloverService {
   }
 
   /**
+   * Validate Clover connection and configuration
+   */
+  async validateConnection(): Promise<{ isValid: boolean; error?: string; environment?: string }> {
+    try {
+      await this.ensureInitialized();
+      
+      if (!this.config) {
+        return { 
+          isValid: false, 
+          error: 'Clover not configured. Please connect your Clover account first.' 
+        };
+      }
+
+      if (!this.config.accessToken) {
+        return { 
+          isValid: false, 
+          error: 'Clover access token missing. Please reconnect your Clover account.' 
+        };
+      }
+
+      // Test the connection by making a simple API call
+      const environment = this.config.environment;
+      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+      
+      const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.config.accessToken}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return { 
+            isValid: false, 
+            error: 'Clover access token expired or invalid. Please reconnect your account.' 
+          };
+        }
+        return { 
+          isValid: false, 
+          error: `Clover API error: ${response.status} ${response.statusText}` 
+        };
+      }
+
+      return { 
+        isValid: true, 
+        environment: this.config.environment 
+      };
+      
+    } catch (error) {
+      return { 
+        isValid: false, 
+        error: error instanceof Error ? error.message : 'Unknown Clover connection error' 
+      };
+    }
+  }
+
+  /**
    * Create an order in Clover with customer and tax information
    */
   private async createOrder(paymentRequest: CloverPaymentRequest): Promise<any> {

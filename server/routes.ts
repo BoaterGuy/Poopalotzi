@@ -1935,12 +1935,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Try to process payment through Clover first, fallback to simulation
+      // Check if Clover is properly configured
+      const cloverStatus = await cloverService.validateConnection();
+      if (!cloverStatus.isValid) {
+        return res.status(400).json({ 
+          message: "Payment processing unavailable: Clover payment system not configured",
+          error: cloverStatus.error,
+          requiresSetup: true
+        });
+      }
+
+      // Process payment through Clover - NO SIMULATION FALLBACK for real payments
       let paymentResult;
-      let paymentMethod = 'simulation';
+      let paymentMethod = 'clover';
       
       try {
-        console.log('Attempting Clover payment for request:', id);
+        console.log('Processing Clover payment for request:', id);
+        console.log('Clover connection status:', cloverStatus);
         
         // Generate a proper test card token for Clover sandbox
         const testCardSource = `clv_1T${Date.now()}${Math.random().toString(36).substr(2, 6)}`;
@@ -1956,21 +1967,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }, req.user.id, id);
         
-        paymentMethod = 'clover';
         console.log('✅ Clover payment successful:', paymentResult.id);
         
       } catch (cloverError) {
-        console.log('❌ Clover payment failed:', cloverError.message);
-        console.log('Using simulation fallback');
+        console.error('❌ Clover payment failed:', cloverError.message);
         
-        // Fallback to simulation
-        paymentResult = {
-          id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          amount: 6000,
-          result: 'APPROVED',
-          currency: 'USD'
-        };
-        paymentMethod = 'simulation';
+        // Return error instead of simulating success
+        return res.status(400).json({
+          message: "Payment processing failed",
+          error: cloverError.message,
+          details: "Please try again or contact support if the problem persists"
+        });
       }
       
       // Update the payment status to paid
@@ -2019,8 +2026,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Processing subscription payment:', { amount, description });
       
+      // Check if Clover is properly configured
+      const cloverStatus = await cloverService.validateConnection();
+      if (!cloverStatus.isValid) {
+        return res.status(400).json({ 
+          message: "Payment processing unavailable: Clover payment system not configured",
+          error: cloverStatus.error,
+          requiresSetup: true
+        });
+      }
+
       try {
-        // Try to use Clover service to process the payment
+        // Process payment through Clover
         const cloverPayment = await cloverService.processPayment({
           amount: amount, // Already in cents
           source: source,
@@ -2040,21 +2057,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           result: cloverPayment.result
         });
       } catch (cloverError) {
-        console.log('Clover payment failed, using simulation:', cloverError.message);
+        console.error('Clover payment failed:', cloverError.message);
         
-        // Fallback to simulation for development
-        const simulatedPayment = {
-          id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          amount: amount,
-          result: 'APPROVED' as const,
-          currency: 'USD'
-        };
-        
-        res.json({
-          message: "Subscription payment processed successfully (simulated)",
-          paymentId: simulatedPayment.id,
-          amount: simulatedPayment.amount,
-          result: simulatedPayment.result
+        // Return error instead of simulating success
+        res.status(400).json({
+          message: "Payment processing failed",
+          error: cloverError.message,
+          details: "Please try again or contact support if the problem persists"
         });
       }
     } catch (err) {
@@ -2481,6 +2490,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!req.user?.id) {
         return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if Clover is properly configured
+      const cloverStatus = await cloverService.validateConnection();
+      if (!cloverStatus.isValid) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Payment processing unavailable: Clover payment system not configured",
+          error: cloverStatus.error,
+          requiresSetup: true
+        });
       }
 
       // Use authenticated user information for customer data
