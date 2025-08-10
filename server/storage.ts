@@ -18,6 +18,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getAdminUsers(): Promise<User[]>;
   createUser(user: InsertUser, passwordHash: string): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   getAllMembers(): Promise<User[]>;
@@ -233,6 +234,10 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.usersData.values()).find(user => user.email === email);
+  }
+
+  async getAdminUsers(): Promise<User[]> {
+    return Array.from(this.usersData.values()).filter(user => user.role === 'admin');
   }
 
   async createUser(user: InsertUser, passwordHash: string): Promise<User> {

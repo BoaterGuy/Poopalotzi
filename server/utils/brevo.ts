@@ -236,3 +236,87 @@ export async function sendServiceStatusEmail(
     text: `Hello ${firstName},\n\n${message}\n\nYou can view the details of your service by logging into your account.\n\nThank you for using Poopalotzi for your boat maintenance needs.\n\nBest regards,\nThe Poopalotzi Team`,
   });
 }
+
+// Function to send admin notifications for pump-out requests
+export async function sendAdminPumpOutNotification(
+  adminEmails: string[],
+  memberInfo: { firstName: string; lastName: string; email: string },
+  boatInfo: { name: string; make?: string; model?: string; pier?: string; dock?: string },
+  requestInfo: { weekStartDate: string; ownerNotes?: string; requestId: number }
+): Promise<boolean> {
+  const subject = `New Pump-Out Request - ${boatInfo.name}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #0B1F3A; color: white; padding: 20px; text-align: center;">
+        <h1>🚤 New Pump-Out Request</h1>
+      </div>
+      
+      <div style="padding: 20px; background-color: #f9f9f9;">
+        <h2 style="color: #0B1F3A;">Request Details</h2>
+        
+        <div style="background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #0B1F3A;">
+          <h3 style="margin-top: 0; color: #0B1F3A;">Member Information</h3>
+          <p><strong>Name:</strong> ${memberInfo.firstName} ${memberInfo.lastName}</p>
+          <p><strong>Email:</strong> ${memberInfo.email}</p>
+        </div>
+        
+        <div style="background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #0B1F3A;">
+          <h3 style="margin-top: 0; color: #0B1F3A;">Boat Information</h3>
+          <p><strong>Boat Name:</strong> ${boatInfo.name}</p>
+          ${boatInfo.make ? `<p><strong>Make/Model:</strong> ${boatInfo.make} ${boatInfo.model || ''}</p>` : ''}
+          ${boatInfo.pier ? `<p><strong>Location:</strong> Pier ${boatInfo.pier}${boatInfo.dock ? `, Dock ${boatInfo.dock}` : ''}</p>` : ''}
+        </div>
+        
+        <div style="background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #0B1F3A;">
+          <h3 style="margin-top: 0; color: #0B1F3A;">Service Request</h3>
+          <p><strong>Week Starting:</strong> ${new Date(requestInfo.weekStartDate).toLocaleDateString()}</p>
+          <p><strong>Request ID:</strong> #${requestInfo.requestId}</p>
+          ${requestInfo.ownerNotes ? `<p><strong>Notes:</strong> ${requestInfo.ownerNotes}</p>` : ''}
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+          <p style="color: #666; font-style: italic;">
+            This is an automated notification from the Poopalotzi Marina Management System.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const text = `
+New Pump-Out Request
+
+Member: ${memberInfo.firstName} ${memberInfo.lastName}
+Email: ${memberInfo.email}
+
+Boat: ${boatInfo.name}
+${boatInfo.make ? `Make/Model: ${boatInfo.make} ${boatInfo.model || ''}` : ''}
+${boatInfo.pier ? `Location: Pier ${boatInfo.pier}${boatInfo.dock ? `, Dock ${boatInfo.dock}` : ''}` : ''}
+
+Week Starting: ${new Date(requestInfo.weekStartDate).toLocaleDateString()}
+Request ID: #${requestInfo.requestId}
+${requestInfo.ownerNotes ? `Notes: ${requestInfo.ownerNotes}` : ''}
+
+This is an automated notification from the Poopalotzi Marina Management System.
+  `;
+  
+  // Send to all admin emails
+  let allSuccess = true;
+  for (const adminEmail of adminEmails) {
+    const success = await sendEmail({
+      to: adminEmail,
+      from: process.env.BREVO_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'notifications@poopalotzi.com',
+      subject,
+      text,
+      html
+    });
+    
+    if (!success) {
+      allSuccess = false;
+      console.error(`Failed to send notification to admin: ${adminEmail}`);
+    }
+  }
+  
+  return allSuccess;
+}

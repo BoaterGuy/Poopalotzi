@@ -5,7 +5,7 @@ import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
 import express from "express";
 import authRoutes from "./routes-auth";
-import { sendServiceStatusEmail, sendContactFormEmail } from "./utils/brevo";
+import { sendServiceStatusEmail, sendContactFormEmail, sendAdminPumpOutNotification } from "./utils/brevo";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
 import { z } from "zod";
@@ -741,6 +741,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: newRequest.id,
           action: 'created'
         });
+        
+        // Send email notifications to all admin users
+        try {
+          const admins = await storage.getAdminUsers();
+          const adminEmails = admins.map(admin => admin.email);
+          
+          if (adminEmails.length > 0) {
+            // Get member and boat information for the email
+            const member = await storage.getUser(req.user.id);
+            const boat = await storage.getBoat(requestData.boatId);
+            
+            if (member && boat) {
+              await sendAdminPumpOutNotification(
+                adminEmails,
+                {
+                  firstName: member.firstName,
+                  lastName: member.lastName,
+                  email: member.email
+                },
+                {
+                  name: boat.name,
+                  make: boat.make || undefined,
+                  model: boat.model || undefined,
+                  pier: boat.pier || undefined,
+                  dock: boat.dock || undefined
+                },
+                {
+                  weekStartDate: requestData.weekStartDate,
+                  ownerNotes: requestData.ownerNotes,
+                  requestId: newRequest.id
+                }
+              );
+              
+              console.log(`📧 Sent pump-out request notifications to ${adminEmails.length} admin(s)`);
+            } else {
+              console.error("❌ Could not retrieve member or boat information for email notification");
+            }
+          } else {
+            console.log("⚠️ No admin users found to send notifications to");
+          }
+        } catch (emailError) {
+          console.error("❌ Failed to send admin email notifications:", emailError);
+          // Don't fail the request if email fails
+        }
         
         // Return the newly created request
         res.status(201).json(newRequest);
