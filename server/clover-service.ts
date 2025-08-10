@@ -23,7 +23,7 @@ const CLOVER_ENDPOINTS = {
     api: 'https://apisandbox.dev.clover.com'
   },
   production: {
-    oauth: 'https://clover.com/oauth',
+    oauth: 'https://www.clover.com/oauth',
     api: 'https://api.clover.com'
   }
 };
