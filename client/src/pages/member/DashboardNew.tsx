@@ -351,19 +351,24 @@ export default function MemberDashboardNew() {
                       <div className="bg-white p-3 rounded border">
                         <div className="flex items-center text-lg font-semibold">
                           <span className={`${
-                            ((creditInfo as any)?.availableCredits || 0) > 0 
+                            (creditInfo?.availableCredits || 0) > 0 
                               ? 'text-green-600' 
                               : 'text-red-600'
                           }`}>
-                            {(creditInfo as any)?.availableCredits !== undefined ? (creditInfo as any).availableCredits : 0}
+                            {creditInfo?.availableCredits ?? 'Loading...'}
                           </span>
                           <span className="text-gray-600 text-sm ml-2 font-normal">
-                            {((creditInfo as any)?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
+                            {(creditInfo?.availableCredits || 0) === 1 ? 'credit' : 'credits'} remaining
                           </span>
                         </div>
-                        {((creditInfo as any)?.availableCredits || 0) === 0 && (
+                        {(creditInfo?.availableCredits || 0) === 0 && (
                           <p className="text-sm text-gray-500 mt-1">
                             No credits available. Purchase additional pump-outs to add credits.
+                          </p>
+                        )}
+                        {creditInfo && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Debug: {JSON.stringify(creditInfo)}
                           </p>
                         )}
                       </div>

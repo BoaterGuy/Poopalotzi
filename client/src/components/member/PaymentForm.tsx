@@ -149,14 +149,15 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             description: "Your subscription payment has been processed successfully.",
           });
         } catch (error) {
-          // If Clover fails, use simulation for development
-          console.log('Clover payment failed, using simulation:', error);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // NO SIMULATION FALLBACK - Real payment required
+          console.error('Clover subscription payment failed:', error);
           
           toast({
-            title: "Payment Successful",
-            description: "Your subscription payment has been processed successfully (simulated).",
+            title: "Payment Failed",
+            description: "Payment processing failed. Please check your card details and try again.",
+            variant: "destructive",
           });
+          throw error; // Propagate error to prevent success flow
         }
       } else {
         // For regular service payments, try Clover first
@@ -191,20 +192,15 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             description: "Your payment has been processed successfully.",
           });
         } catch (error) {
-          console.log('Clover payment failed, falling back to original endpoint:', error);
-          
-          // Fallback to original payment endpoint
-          await apiRequest("POST", `/api/pump-out-requests/${requestId}/payment`, {
-            paymentDetails: {
-              ...data,
-              amount,
-            },
-          });
+          // NO FALLBACK - Real Clover payment required
+          console.error('Clover service payment failed:', error);
           
           toast({
-            title: "Payment Successful",
-            description: "Your payment has been processed successfully.",
+            title: "Payment Failed",
+            description: "Payment processing failed. Please check your card details and try again.",
+            variant: "destructive",
           });
+          throw error; // Propagate error to prevent success flow
         }
       }
       
