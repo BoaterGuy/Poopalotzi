@@ -1953,12 +1953,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Processing Clover payment for request:', id);
         console.log('Clover connection status:', cloverStatus);
         
-        // Generate a proper test card token for Clover sandbox
-        const testCardSource = `clv_1T${Date.now()}${Math.random().toString(36).substr(2, 6)}`;
+        // Use the card token provided by the frontend
+        const cardSource = paymentDetails?.cardToken || `clv_1T${Date.now()}${Math.random().toString(36).substr(2, 6)}`;
         
         paymentResult = await cloverService.processPayment({
           amount: 6000, // $60.00 in cents
-          source: testCardSource,
+          source: cardSource,
           description: `Pump-out service payment for request ${id}`,
           metadata: {
             userId: req.user.id,
