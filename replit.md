@@ -149,3 +149,16 @@ The application is built using React for the frontend, served by Vite. It incorp
      * **APP_ID**: `8QSDCRTWSBPWT` ✓
      * **APP_SECRET**: `e64d0c27-88fa-5b21-08de-976ea7801421` ✓ (UUID format confirmed)
    - **Status**: OAuth flow now correctly routes to production for all live merchant IDs
+
+✅ **CLOVER SIMULATION FALLBACK REMOVED** (August 10, 2025):
+   - **Issue**: Users reporting payments show as successful but no actual charges processed
+   - **Root Cause**: Clover service still had simulation fallback creating fake payment success
+   - **Security Fix Applied**:
+     * **Removed Final Fallback**: Eliminated `simulatedResult` creation in `processPayment()`
+     * **Real Error Messages**: Payment failures now throw proper errors instead of fake success
+     * **No More Fake Payments**: Eliminated `sim_` prefixed payment IDs and mock transaction data
+     * **Transaction Tracking**: Failed payments marked as 'failed' status in database
+   - **Technical Details**:
+     * **Before**: Payment fails → Create simulation → Return fake success → Credits added
+     * **After**: Payment fails → Update transaction as failed → Throw error → No credits added
+   - **Status**: Payment system completely secured - no fake successes possible

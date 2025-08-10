@@ -717,67 +717,24 @@ export class CloverService {
         }
       }
 
-      // Final fallback: Create complete payment simulation and mark order as paid
+      // SECURITY FIX: Remove simulation fallback - payments must be real
       if (!paymentSuccessful) {
-        console.log('Creating complete payment simulation with order completion...');
-
-        // Try to mark the order as paid in Clover to move it from "Open" to "Paid" status
-        try {
-          await this.markOrderAsPaid(order.id, totalAmount);
-          console.log('Order completion attempted - may help with dashboard reporting');
-        } catch (markPaidError) {
-          console.log('Order completion not possible with current permissions:', markPaidError);
-        }
-
-        const simulatedResult: CloverPaymentResponse = {
-          id: `sim_${Date.now()}`,
+        console.log('❌ All Clover payment approaches failed');
+        console.log('Payment failed details:', {
+          orderId: order.id,
           amount: totalAmount,
-          currency: paymentRequest.currency || 'USD',
-          result: 'APPROVED',
-          authCode: `AUTH${Math.floor(Math.random() * 100000)}`,
-          cardTransaction: {
-            last4: '1234',
-            cardType: 'VISA'
-          },
-          createdTime: Date.now()
-        };
-
-        // Update transaction with comprehensive data
-        await storage.updatePaymentTransaction(transaction.id, {
-          cloverPaymentId: simulatedResult.id,
-          status: 'completed',
-          paymentMethod: 'VISA',
-          cardLast4: '1234',
-          cardBrand: 'VISA',
-          cloverResponse: {
-            ...simulatedResult,
-            orderId: order.id,
-            customerInfo: paymentRequest.customer,
-            taxAmount: paymentRequest.taxAmount,
-            totalAmount: totalAmount,
-            cloverOrderDetails: {
-              orderId: order.id,
-              orderTotal: totalAmount,
-              customerName: `${paymentRequest.customer?.firstName} ${paymentRequest.customer?.lastName}`,
-              customerEmail: paymentRequest.customer?.email,
-              description: paymentRequest.description,
-              orderCompletionAttempted: true
-            }
-          },
-          errorMessage: 'Development simulation - Order completion attempted'
+          environment: this.config.environment,
+          merchantId: this.config.merchantId
         });
 
-        console.log('=== CLOVER SANDBOX LIMITATION CONFIRMED ===');
-        console.log('✅ Order Created:', order.id);
-        console.log('✅ Customer Data:', `${paymentRequest.customer?.firstName} ${paymentRequest.customer?.lastName}`);
-        console.log('✅ Total Amount:', totalAmount / 100, 'USD');
-        console.log('✅ Tax Included:', (paymentRequest.taxAmount || 0) / 100, 'USD');
-        console.log('❌ Payment Processing: Sandbox environment blocks real payment completion');
-        console.log('❌ Net Sales Impact: Orders remain Open, not counted in sales reporting');
-        console.log('🎯 Production Solution: Real merchant account will complete payments properly');
-        console.log('============================================================');
+        // Update transaction as failed
+        await storage.updatePaymentTransaction(transaction.id, {
+          status: 'failed',
+          errorMessage: 'All Clover payment processing approaches failed. Please check Clover configuration and merchant account status.'
+        });
 
-        return simulatedResult;
+        // Throw error instead of simulating success
+        throw new Error('Payment processing failed: Clover payment system is not properly configured or merchant account has insufficient permissions. Please contact support to resolve this issue.');
       }
 
       // Process successful payment result
