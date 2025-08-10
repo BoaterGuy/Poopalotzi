@@ -2127,8 +2127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If no merchant ID provided, return instructions
       if (!merchantId) {
         return res.status(400).json({ 
-          message: "Merchant ID is required. Please create a new test merchant in Clover sandbox first.",
-          instructions: "1. Visit https://sandbox.dev.clover.com/developers/ 2. Create new test merchant 3. Copy the merchant ID 4. Send it in the request body"
+          message: "Merchant ID is required. Please provide your Clover Merchant ID.",
+          instructions: "1. For Production: Visit https://clover.com/developers/ 2. For Sandbox: Visit https://sandbox.dev.clover.com/developers/ 3. Select your merchant 4. Copy the merchant ID 5. Send it in the request body"
         });
       }
       
@@ -2223,7 +2223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!merchantId || !apiToken) {
         return res.status(400).json({ 
           error: 'Merchant ID and API token required',
-          instructions: 'Get your API token from: https://sandbox.dev.clover.com/developers -> Select your merchant -> API Tokens'
+          instructions: 'Get your API token from: Production: https://clover.com/developers OR Sandbox: https://sandbox.dev.clover.com/developers -> Select your merchant -> API Tokens'
         });
       }
       
