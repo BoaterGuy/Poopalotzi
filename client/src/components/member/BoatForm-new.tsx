@@ -232,35 +232,36 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             )}
           />
 
-          {/* Dock */}
+          {/* Pier */}
           <FormField
             control={form.control}
             name="dock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Dock</FormLabel>
+                <FormLabel>Pier</FormLabel>
                 <FormControl>
                   <Input 
                     type="text" 
                     placeholder="e.g. A" 
                     {...field} 
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormDescription>
-                  Your dock letter or number
+                  Your pier letter or number
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Slip */}
+          {/* Dock */}
           <FormField
             control={form.control}
             name="slip"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Slip Number</FormLabel>
+                <FormLabel>Dock</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -271,7 +272,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Your assigned slip number
+                  Your assigned dock number
                 </FormDescription>
                 <FormMessage />
               </FormItem>

@@ -56,7 +56,7 @@ const boatFormSchema = insertBoatSchema
     color: z.string().nullable(),
     pumpPortLocations: z.array(z.string()).optional().nullable(),
     pier: z.string().optional().nullable(),
-    dock: z.coerce.number().optional().nullable(),
+    dock: z.string().optional().nullable(),
     notes: z.string().optional().nullable(),
     photoUrl: z.string().optional(),
     marinaId: z.coerce.number().optional().nullable(),
@@ -185,8 +185,8 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           
           // Append other form fields
           Object.keys(data).forEach(key => {
-            if (key !== 'photoUrl' && data[key] !== undefined && data[key] !== null) {
-              formData.append(key, String(data[key]));
+            if (key !== 'photoUrl' && data[key as keyof BoatFormValues] !== undefined && data[key as keyof BoatFormValues] !== null) {
+              formData.append(key, String(data[key as keyof BoatFormValues]));
             }
           });
           
@@ -367,18 +367,17 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             name="dock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Dock Number</FormLabel>
+                <FormLabel>Dock</FormLabel>
                 <FormControl>
                   <Input 
-                    type="number" 
-                    placeholder="e.g. 42" 
+                    type="text" 
+                    placeholder="e.g. 42 or A" 
                     {...field} 
                     value={field.value || ""} 
-                    onChange={(e) => field.onChange(e.target.value === "" ? null : parseInt(e.target.value))}
                   />
                 </FormControl>
                 <FormDescription>
-                  Your assigned dock number
+                  Your assigned dock number or letter
                 </FormDescription>
                 <FormMessage />
               </FormItem>

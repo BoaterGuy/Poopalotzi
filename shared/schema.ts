@@ -75,7 +75,7 @@ export const boat = pgTable('boat', {
   tieUpSide: tieUpSideEnum('tie_up_side'),
   pumpPortLocations: text('pump_port_locations').array(),
   pier: text('pier'),
-  dock: integer('dock'),
+  dock: text('dock'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -96,7 +96,7 @@ export const dockAssignment = pgTable('dock_assignment', {
   boatId: integer('boat_id').notNull().references(() => boat.id),
   marinaId: integer('marina_id').notNull().references(() => marina.id),
   pier: text('pier').notNull(), // Changed from dock to pier
-  dock: integer('dock').notNull(), // Changed from slip to dock
+  dock: text('dock').notNull(), // Changed from slip to dock
   createdAt: timestamp('created_at').defaultNow(),
 });
 
