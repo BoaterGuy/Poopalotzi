@@ -89,6 +89,15 @@ export class CloverService {
   }
 
   /**
+   * Clear the cached configuration (used when disconnecting)
+   */
+  clearConfig(): void {
+    this.config = null;
+    this.initialized = false;
+    console.log('Clover configuration cache cleared');
+  }
+
+  /**
    * Ensure configuration is loaded
    */
   private async ensureInitialized(): Promise<void> {
@@ -186,9 +195,11 @@ export class CloverService {
     refreshToken?: string;
     tokenExpiresAt?: Date;
     webhookSecret?: string;
+    environment?: string;
   }): Promise<CloverConfig> {
     const { storage } = await import('./index');
-    const environment = process.env.CLOVER_ENVIRONMENT || 'sandbox';
+    // Use provided environment or fall back to env var or default to sandbox
+    const environment = configData.environment || process.env.CLOVER_ENVIRONMENT || 'sandbox';
     const appId = process.env.CLOVER_APP_ID;
     const appSecret = process.env.CLOVER_APP_SECRET;
 

@@ -121,3 +121,18 @@ The application is built using React for the frontend, served by Vite. It incorp
    - **Cookie Analysis**: Correct cookie name format, proper HTTPS security headers
    - **Frontend Domain**: `https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev`
    - **Status**: Ready for production deployment with full cross-origin authentication support
+
+✅ **ADMIN EMAIL NOTIFICATIONS & CLOVER DISCONNECT FIXES** (August 10, 2025):
+   - **Admin Email Notifications**:
+     * **System**: Implemented using Brevo API (NOT SendGrid due to previous issues)
+     * **Trigger**: Automatic emails sent to all admin accounts when pump-out requests are created
+     * **Template**: Professional HTML email with member info, boat details, and service request data
+     * **Implementation**: Added `sendAdminPumpOutNotification()` function with error handling
+     * **Fallback**: Graceful degradation to simulation mode if BREVO_API_KEY not configured
+   - **Clover Disconnect Fix**:
+     * **Issue**: Configuration cache not cleared on disconnect, causing merchant ID to persist
+     * **Solution**: Added `clearConfig()` method to CloverService to clear cached configuration
+     * **Environment Detection**: Enhanced to auto-detect sandbox vs production environments
+     * **LIVE Merchant Support**: System now tests both sandbox and production endpoints automatically
+     * **Token Validation**: Improved to handle both environments with proper endpoint selection
+   - **Status**: Admin notifications active, Clover disconnect properly clears all cached data

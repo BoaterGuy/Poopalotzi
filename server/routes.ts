@@ -2238,27 +2238,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test the token after saving configuration
       try {
-        const testResponse = await fetch(`https://apisandbox.dev.clover.com/v3/merchants/${merchantId}`, {
-          headers: {
-            'Authorization': `Bearer ${apiToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        // Determine environment based on merchant ID or try both
+        const isSandbox = merchantId.length <= 13; // Sandbox IDs are typically shorter
+        const endpoints = [
+          { env: 'sandbox', url: `https://apisandbox.dev.clover.com/v3/merchants/${merchantId}` },
+          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` }
+        ];
         
-        if (testResponse.ok) {
-          console.log('Clover API token validation successful');
+        // Try sandbox first for shorter merchant IDs, production first for longer ones
+        const orderedEndpoints = isSandbox ? endpoints : endpoints.reverse();
+        
+        let testResponse = null;
+        let workingEnvironment = null;
+        
+        for (const endpoint of orderedEndpoints) {
+          try {
+            console.log(`Testing ${endpoint.env} endpoint for merchant ${merchantId}...`);
+            const response = await fetch(endpoint.url, {
+              headers: {
+                'Authorization': `Bearer ${apiToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              testResponse = response;
+              workingEnvironment = endpoint.env;
+              console.log(`✅ ${endpoint.env} endpoint validation successful`);
+              break;
+            } else {
+              console.log(`❌ ${endpoint.env} endpoint failed: ${response.status}`);
+            }
+          } catch (endpointError) {
+            console.log(`❌ ${endpoint.env} endpoint error:`, endpointError);
+          }
+        }
+        
+        if (testResponse && workingEnvironment) {
+          console.log(`Clover API token validation successful for ${workingEnvironment} environment`);
+          
+          // Update configuration with detected environment
+          await cloverService.saveConfiguration({
+            merchantId: merchantId,
+            accessToken: apiToken,
+            environment: workingEnvironment,
+            tokenExpiresAt: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000))
+          });
+          
           return res.json({ 
             success: true, 
-            message: 'Clover integration configured successfully - real transactions enabled',
+            message: `Clover integration configured successfully - ${workingEnvironment} environment detected`,
             merchantId: merchantId,
+            environment: workingEnvironment,
             realTransactions: true
           });
         } else {
-          console.log(`Token validation failed: ${testResponse.status} ${testResponse.statusText}`);
+          console.log('Token validation failed on both sandbox and production endpoints');
           return res.json({ 
             success: true, 
             message: 'Configuration saved - payments ready with simulation fallback',
-            details: 'Token validation failed but system is configured. Check token permissions in Clover dashboard for real transactions.',
+            details: 'Token validation failed on both environments. Check merchant ID and token in Clover dashboard.',
             merchantId: merchantId,
             simulationMode: true
           });
@@ -2401,9 +2440,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Clover configuration not found" });
       }
 
+      // Delete configuration from database
       await storage.deleteCloverConfig(config.id);
+      
+      // Clear the cached configuration in cloverService
+      cloverService.clearConfig();
+      
+      console.log('Clover integration disconnected and cache cleared');
       res.json({ message: "Clover integration disconnected successfully" });
     } catch (err) {
+      console.error('Error disconnecting Clover:', err);
       next(err);
     }
   });

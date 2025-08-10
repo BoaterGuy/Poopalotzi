@@ -461,10 +461,12 @@ export default function CloverSettings() {
                     </div>
                     <div className="text-xs text-blue-600 mt-2">
                       <strong>Steps to get API token:</strong><br/>
-                      1. Go to https://sandbox.dev.clover.com/developers/<br/>
-                      2. Select your merchant → Setup → API Tokens<br/>
-                      3. Create token with "Payments" permissions<br/>
-                      4. Copy the token and paste it above
+                      <strong>Sandbox:</strong> https://sandbox.dev.clover.com/developers/<br/>
+                      <strong>Production:</strong> https://clover.com/developers/<br/>
+                      1. Select your merchant → Setup → API Tokens<br/>
+                      2. Create token with "Payments" permissions<br/>
+                      3. Copy the token and paste it above<br/>
+                      <em>System will auto-detect sandbox vs production</em>
                     </div>
                   </div>
 
