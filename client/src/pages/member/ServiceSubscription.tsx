@@ -102,6 +102,25 @@ export default function ServiceSubscription() {
       }
     },
   });
+
+  // Fetch user credits to determine if they can repurchase
+  const { data: userCredits, isLoading: isLoadingCredits } = useQuery({
+    queryKey: ['/api/users/me/credits'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/users/me/credits', {
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch user credits');
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching user credits:', error);
+        return { totalPumpOuts: 0, additionalPumpOuts: 0 };
+      }
+    },
+  });
   
   const filterActiveLevels = (levels: ServiceLevel[]) => {
     return levels.filter(level => level.isActive);
@@ -244,11 +263,48 @@ export default function ServiceSubscription() {
   const ServicePlanCard = ({ plan }: { plan: ServiceLevel }) => {
     const isCurrentPlan = currentServiceLevel?.id === plan.id;
     
+    // Calculate remaining credits - handle both credit types
+    const remainingCredits = (userCredits?.totalPumpOuts || 0) + (userCredits?.additionalPumpOuts || 0);
+    
+    // Allow repurchasing if user has current plan but 0 credits remaining
+    const canPurchase = !isCurrentPlan || (isCurrentPlan && remainingCredits === 0);
+    
+    // Determine button text and styling
+    const getButtonContent = () => {
+      if (isCurrentPlan && remainingCredits > 0) {
+        return (
+          <div className="flex items-center">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Current Plan
+          </div>
+        );
+      } else if (isCurrentPlan && remainingCredits === 0) {
+        return (
+          <div className="flex items-center">
+            {plan.type === 'one-time' ? 'Purchase Again' : 'Renew Plan'}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex items-center">
+            {plan.type === 'one-time' ? 'Purchase' : 'Subscribe'}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </div>
+        );
+      }
+    };
+    
     return (
       <Card className={`overflow-hidden flex flex-col h-full ${isCurrentPlan ? 'border-primary border-2' : ''}`}>
-        {isCurrentPlan && (
+        {isCurrentPlan && remainingCredits > 0 && (
           <div className="bg-primary text-white text-center py-1 text-xs font-semibold">
             Current Plan
+          </div>
+        )}
+        {isCurrentPlan && remainingCredits === 0 && (
+          <div className="bg-orange-500 text-white text-center py-1 text-xs font-semibold">
+            Plan Expired - 0 Credits Remaining
           </div>
         )}
         <CardHeader className="pb-2">
@@ -302,21 +358,11 @@ export default function ServiceSubscription() {
         <CardFooter className="mt-auto">
           <Button 
             className="w-full" 
-            variant={isCurrentPlan ? "outline" : "default"}
-            disabled={isCurrentPlan}
-            onClick={() => !isCurrentPlan && handleSelectPlan(plan)}
+            variant={isCurrentPlan && remainingCredits > 0 ? "outline" : "default"}
+            disabled={!canPurchase}
+            onClick={() => canPurchase && handleSelectPlan(plan)}
           >
-            {isCurrentPlan ? (
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Current Plan
-              </div>
-            ) : (
-              <div className="flex items-center">
-                {plan.type === 'one-time' ? 'Purchase' : 'Subscribe'}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </div>
-            )}
+            {getButtonContent()}
           </Button>
         </CardFooter>
       </Card>
@@ -338,7 +384,7 @@ export default function ServiceSubscription() {
           </p>
         </div>
         
-        {isLoading || isLoadingSubscription ? (
+        {isLoading || isLoadingSubscription || isLoadingCredits ? (
           <div className="text-center py-12">
             <div className="animate-spin h-8 w-8 border-4 border-[#38B2AC] border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-gray-500">Loading service plans...</p>
