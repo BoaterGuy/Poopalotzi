@@ -136,3 +136,16 @@ The application is built using React for the frontend, served by Vite. It incorp
      * **LIVE Merchant Support**: System now tests both sandbox and production endpoints automatically
      * **Token Validation**: Improved to handle both environments with proper endpoint selection
    - **Status**: Admin notifications active, Clover disconnect properly clears all cached data
+
+✅ **PRODUCTION OAUTH ROUTING FIXED** (August 10, 2025):
+   - **Issue**: OAuth flow directing live merchant IDs to sandbox environment instead of production
+   - **Root Cause**: Environment detection logic prioritizing length over production credentials
+   - **Solution Applied**:
+     * **Smart Detection**: Production APP_ID (`8QSDCRTWSBPWT`) now forces production environment
+     * **Override Logic**: All merchant IDs route to production except those starting with "TEST"
+     * **Endpoint Fixed**: Updated OAuth URL to `https://www.clover.com/oauth` (with www.)
+     * **Applied to**: `getAuthorizationUrl()`, `exchangeCodeForTokens()`, `saveConfiguration()`
+   - **Production Credentials Verified**:
+     * **APP_ID**: `8QSDCRTWSBPWT` ✓
+     * **APP_SECRET**: `e64d0c27-88fa-5b21-08de-976ea7801421` ✓ (UUID format confirmed)
+   - **Status**: OAuth flow now correctly routes to production for all live merchant IDs

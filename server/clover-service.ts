@@ -130,8 +130,9 @@ export class CloverService {
     const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
     
     if (hasProductionCredentials) {
-      // With production credentials, prefer production unless explicitly set to sandbox
-      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.length <= 13) {
+      // With production credentials, always use production environment
+      // Only use sandbox for test merchant IDs that start with TEST
+      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.startsWith('TEST')) {
         environment = 'sandbox';
       } else {
         environment = 'production';
@@ -183,8 +184,9 @@ export class CloverService {
     const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
     
     if (hasProductionCredentials) {
-      // With production credentials, prefer production unless explicitly set to sandbox
-      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.length <= 13) {
+      // With production credentials, always use production environment
+      // Only use sandbox for test merchant IDs that start with TEST
+      if (rawEnvironment.toLowerCase() === 'sandbox' && merchantId.startsWith('TEST')) {
         environment = 'sandbox';
       } else {
         environment = 'production';
@@ -253,8 +255,9 @@ export class CloverService {
       const hasProductionCredentials = appId === '8QSDCRTWSBPWT';
       
       if (hasProductionCredentials) {
-        // With production credentials, prefer production unless explicitly set to sandbox
-        if (rawEnvironment.toLowerCase() === 'sandbox' && configData.merchantId.length <= 13) {
+        // With production credentials, always use production environment
+        // Only use sandbox for test merchant IDs that start with TEST
+        if (rawEnvironment.toLowerCase() === 'sandbox' && configData.merchantId.startsWith('TEST')) {
           environment = 'sandbox';
         } else {
           environment = 'production';
