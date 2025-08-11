@@ -366,11 +366,7 @@ export default function MemberDashboardNew() {
                             No credits available. Purchase additional pump-outs to add credits.
                           </p>
                         )}
-                        {creditInfo && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            Debug: {JSON.stringify(creditInfo)}
-                          </p>
-                        )}
+
                       </div>
                     </div>
 
