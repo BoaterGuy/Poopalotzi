@@ -14,12 +14,14 @@ interface UseAuthReturn {
   isAdmin: boolean;
   isEmployee: boolean;
   isMember: boolean;
+}
 
 export function useAuth(): UseAuthReturn {
   const context = useContext(AuthContext);
   
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
+  }
   
   const { user, isLoading, login, register, logout, loginWithGoogle, loginWithFacebook, loginWithApple } = context;
   
@@ -42,3 +44,4 @@ export function useAuth(): UseAuthReturn {
     isEmployee, 
     isMember 
   };
+}

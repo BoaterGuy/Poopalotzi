@@ -5,6 +5,7 @@ import Footer from "../Footer";
 
 interface PageLayoutProps {
   children: ReactNode;
+}
 
 export default function PageLayout({ children }: PageLayoutProps) {
   return (
@@ -14,3 +15,4 @@ export default function PageLayout({ children }: PageLayoutProps) {
       <Footer />
     </div>
   );
+}
