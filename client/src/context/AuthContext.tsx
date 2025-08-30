@@ -11,6 +11,7 @@ export interface User {
   role: 'member' | 'employee' | 'admin';
   serviceLevelId?: number;
   [key: string]: any;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithFacebook: () => Promise<void>;
   loginWithApple: () => Promise<void>;
+}
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -31,6 +33,7 @@ export const AuthContext = createContext<AuthContextType>({
   loginWithGoogle: async () => {},
   loginWithFacebook: async () => {},
   loginWithApple: async () => {},
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -50,6 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
+          }
+        });
 
         console.log('AuthContext: /api/auth/me response status:', response.status);
         console.log('AuthContext: Response headers:', [...response.headers.entries()]);
@@ -62,183 +67,179 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const errorData = await response.json().catch(() => ({}));
           console.log('AuthContext: No valid session found, error:', errorData);
           setUser(null);
+        }
       } catch (error) {
         console.error('AuthContext: Error fetching user:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
+      }
     };
 
     fetchUser();
-
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // When a user signs in with Supabase, we need to create/verify them in our system
-        if (event === 'SIGNED_IN' && session) {
-          try {
-            const supaUser = session.user;
-            
-            // Check if the user exists in our system
-            const response = await fetch('/api/auth/me', {
-              credentials: 'include',
-
-            if (!response.ok) {
-              // User doesn't exist in our system, create them
-              const registerResponse = await apiRequest('POST', '/api/auth/register', {
-                email: supaUser.email,
-                firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
-                lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-                role: 'member',
-                oauthProvider: supaUser.app_metadata.provider,
-                oauthId: supaUser.id,
-                password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
-
-              if (registerResponse.ok) {
-                const userData = await registerResponse.json();
-                setUser(userData);
-            } else {
-              // User exists, get their data
-              const userData = await response.json();
-              setUser(userData);
-          } catch (error) {
-            console.error('Error syncing user after auth state change:', error);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('AuthContext: Attempting login for:', email);
       
-      // Login to our API using direct fetch to avoid apiRequest issues
-      console.log('AuthContext: Attempting login with email:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
         credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
-        console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
-        throw new Error(errorData.message || 'Login failed');
+      const data = await response.json();
+      console.log('AuthContext: Login response:', response.status, data);
 
-      const userData = await response.json();
-      console.log('AuthContext: Login successful, user data:', userData);
-      setUser(userData);
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.firstName}!`,
-      
-      // Use setTimeout to ensure state is set before redirect
-      setTimeout(() => {
-        if (userData.role === 'admin') {
-          window.location.href = '/admin/dashboard';
-        } else if (userData.role === 'employee') {
-          window.location.href = '/employee/schedule';
-        } else {
-          window.location.href = '/member/dashboard';
-      }, 100);
-      
-    } catch (error) {
-      console.error('Login error:', error);
+      if (response.ok) {
+        setUser(data.user);
+        console.log('AuthContext: Login successful, user set:', data.user.email);
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${data.user.firstName}!`,
+        });
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
+    } catch (error: any) {
+      console.error('AuthContext: Login error:', error);
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
+        description: error.message || 'Please check your credentials',
         variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
+    }
   };
 
   const register = async (userData: any) => {
     try {
       setIsLoading(true);
+      console.log('AuthContext: Attempting registration for:', userData.email);
       
-      // Register with our API
-      const response = await apiRequest('POST', '/api/auth/register', userData);
-      
-      const newUser = await response.json();
-      setUser(newUser);
-      
-      toast({
-        title: "Registration successful",
-        description: `Welcome to Poopalotzi, ${newUser.firstName}!`,
-    } catch (error) {
-      console.error('Registration error:', error);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+      console.log('AuthContext: Registration response:', response.status, data);
+
+      if (response.ok) {
+        setUser(data.user);
+        console.log('AuthContext: Registration successful, user set:', data.user.email);
+        toast({
+          title: "Registration successful",
+          description: `Welcome to Poopalotzi, ${data.user.firstName}!`,
+        });
+      } else {
+        throw new Error(data.message || 'Registration failed');
+      }
+    } catch (error: any) {
+      console.error('AuthContext: Registration error:', error);
       toast({
         title: "Registration failed",
-        description: "Please check your information and try again.",
+        description: error.message || 'Please try again',
         variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
+    }
   };
 
   const logout = async () => {
     try {
       setIsLoading(true);
+      console.log('AuthContext: Attempting logout...');
       
-      // Logout from our API
-      await apiRequest('POST', '/api/auth/logout', {});
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      console.log('AuthContext: Logout response:', response.status);
       
-      // Also logout from Supabase if we're using it
-      await signOut();
-      
+      // Always clear user state, even if server request fails
       setUser(null);
+      console.log('AuthContext: User state cleared');
       
       toast({
         title: "Logged out",
-        description: "You have been successfully logged out.",
+        description: "You have been successfully logged out",
+      });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('AuthContext: Logout error:', error);
+      // Still clear user state on error
+      setUser(null);
     } finally {
       setIsLoading(false);
+    }
   };
 
   const loginWithGoogle = async () => {
     try {
+      setIsLoading(true);
+      console.log('AuthContext: Attempting Google login...');
       await signInWithOAuth('google');
-    } catch (error) {
-      console.error('Google login error:', error);
+    } catch (error: any) {
+      console.error('AuthContext: Google login error:', error);
       toast({
         title: "Google login failed",
-        description: "There was an error logging in with Google.",
+        description: error.message || 'Please try again',
         variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loginWithFacebook = async () => {
     try {
+      setIsLoading(true);
+      console.log('AuthContext: Attempting Facebook login...');
       await signInWithOAuth('facebook');
-    } catch (error) {
-      console.error('Facebook login error:', error);
+    } catch (error: any) {
+      console.error('AuthContext: Facebook login error:', error);
       toast({
         title: "Facebook login failed",
-        description: "There was an error logging in with Facebook.",
+        description: error.message || 'Please try again',
         variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loginWithApple = async () => {
     try {
+      setIsLoading(true);
+      console.log('AuthContext: Attempting Apple login...');
       await signInWithOAuth('apple');
-    } catch (error) {
-      console.error('Apple login error:', error);
+    } catch (error: any) {
+      console.error('AuthContext: Apple login error:', error);
       toast({
         title: "Apple login failed",
-        description: "There was an error logging in with Apple.",
+        description: error.message || 'Please try again',
         variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const value = {
@@ -252,5 +253,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginWithApple,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

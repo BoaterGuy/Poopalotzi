@@ -15,7 +15,6 @@ export type ChartConfig = {
   } & (
     | { color?: string; theme?: never }
     | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  )
 
 type ChartContextProps = {
   config: ChartConfig
@@ -58,14 +57,11 @@ const ChartContainer = React.forwardRef<
         </RechartsPrimitive.ResponsiveContainer>
       </div>
     </ChartContext.Provider>
-  )
-})
 ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
-  )
 
   if (!colorConfig.length) {
     return null
@@ -83,14 +79,11 @@ ${colorConfig
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
     return color ? `  --color-${key}: ${color};` : null
-  })
   .join("\n")}
 `
-          )
           .join("\n"),
       }}
     />
-  )
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
@@ -141,7 +134,6 @@ const ChartTooltipContent = React.forwardRef<
           <div className={cn("font-medium", labelClassName)}>
             {labelFormatter(value, payload)}
           </div>
-        )
 
       if (!value) {
         return null
@@ -209,7 +201,6 @@ const ChartTooltipContent = React.forwardRef<
                               "--color-border": indicatorColor,
                             } as React.CSSProperties
                         />
-                      )
                     )}
                     <div
                       className={cn(
@@ -232,12 +223,9 @@ const ChartTooltipContent = React.forwardRef<
                   </>
                 )}
               </div>
-            )
           })}
         </div>
       </div>
-    )
-)
 ChartTooltipContent.displayName = "ChartTooltip"
 
 const ChartLegend = RechartsPrimitive.Legend
@@ -290,11 +278,8 @@ const ChartLegendContent = React.forwardRef<
               )}
               {itemConfig?.label}
             </div>
-          )
         })}
       </div>
-    )
-)
 ChartLegendContent.displayName = "ChartLegend"
 
 // Helper to extract item config from a payload.

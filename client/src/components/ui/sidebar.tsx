@@ -86,7 +86,6 @@ const SidebarProvider = React.forwardRef<
         document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
       [setOpenProp, open]
-    )
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
@@ -124,7 +123,6 @@ const SidebarProvider = React.forwardRef<
         toggleSidebar,
       }),
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
-    )
 
     return (
       <SidebarContext.Provider value={contextValue}>
@@ -147,8 +145,6 @@ const SidebarProvider = React.forwardRef<
           </div>
         </TooltipProvider>
       </SidebarContext.Provider>
-    )
-)
 SidebarProvider.displayName = "SidebarProvider"
 
 const Sidebar = React.forwardRef<
@@ -183,7 +179,6 @@ const Sidebar = React.forwardRef<
         >
           {children}
         </div>
-      )
 
     if (isMobile) {
       return (
@@ -205,7 +200,6 @@ const Sidebar = React.forwardRef<
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
-      )
 
     return (
       <div
@@ -249,8 +243,6 @@ const Sidebar = React.forwardRef<
           </div>
         </div>
       </div>
-    )
-)
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
@@ -275,8 +267,6 @@ const SidebarTrigger = React.forwardRef<
       <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
-  )
-})
 SidebarTrigger.displayName = "SidebarTrigger"
 
 const SidebarRail = React.forwardRef<
@@ -304,8 +294,6 @@ const SidebarRail = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarRail.displayName = "SidebarRail"
 
 const SidebarInset = React.forwardRef<
@@ -322,8 +310,6 @@ const SidebarInset = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarInset.displayName = "SidebarInset"
 
 const SidebarInput = React.forwardRef<
@@ -340,8 +326,6 @@ const SidebarInput = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarInput.displayName = "SidebarInput"
 
 const SidebarHeader = React.forwardRef<
@@ -355,8 +339,6 @@ const SidebarHeader = React.forwardRef<
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
     />
-  )
-})
 SidebarHeader.displayName = "SidebarHeader"
 
 const SidebarFooter = React.forwardRef<
@@ -370,8 +352,6 @@ const SidebarFooter = React.forwardRef<
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
     />
-  )
-})
 SidebarFooter.displayName = "SidebarFooter"
 
 const SidebarSeparator = React.forwardRef<
@@ -385,8 +365,6 @@ const SidebarSeparator = React.forwardRef<
       className={cn("mx-2 w-auto bg-sidebar-border", className)}
       {...props}
     />
-  )
-})
 SidebarSeparator.displayName = "SidebarSeparator"
 
 const SidebarContent = React.forwardRef<
@@ -403,8 +381,6 @@ const SidebarContent = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarContent.displayName = "SidebarContent"
 
 const SidebarGroup = React.forwardRef<
@@ -418,8 +394,6 @@ const SidebarGroup = React.forwardRef<
       className={cn("relative flex w-full min-w-0 flex-col p-2", className)}
       {...props}
     />
-  )
-})
 SidebarGroup.displayName = "SidebarGroup"
 
 const SidebarGroupLabel = React.forwardRef<
@@ -439,8 +413,6 @@ const SidebarGroupLabel = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarGroupLabel.displayName = "SidebarGroupLabel"
 
 const SidebarGroupAction = React.forwardRef<
@@ -462,8 +434,6 @@ const SidebarGroupAction = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarGroupAction.displayName = "SidebarGroupAction"
 
 const SidebarGroupContent = React.forwardRef<
@@ -524,7 +494,6 @@ const sidebarMenuButtonVariants = cva(
       variant: "default",
       size: "default",
     },
-)
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
@@ -558,7 +527,6 @@ const SidebarMenuButton = React.forwardRef<
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
       />
-    )
 
     if (!tooltip) {
       return button
@@ -577,8 +545,6 @@ const SidebarMenuButton = React.forwardRef<
           {...tooltip}
         />
       </Tooltip>
-    )
-)
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
 const SidebarMenuAction = React.forwardRef<
@@ -607,8 +573,6 @@ const SidebarMenuAction = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarMenuAction.displayName = "SidebarMenuAction"
 
 const SidebarMenuBadge = React.forwardRef<
@@ -664,8 +628,6 @@ const SidebarMenuSkeleton = React.forwardRef<
           } as React.CSSProperties
       />
     </div>
-  )
-})
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
 const SidebarMenuSub = React.forwardRef<
@@ -716,8 +678,6 @@ const SidebarMenuSubButton = React.forwardRef<
       )}
       {...props}
     />
-  )
-})
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
 export {

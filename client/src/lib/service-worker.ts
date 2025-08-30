@@ -27,7 +27,6 @@ export function registerSW() {
                   } else {
                     // Show notification in production
                     showUpdateNotification();
-        })
         .catch(error => {
           console.error('ServiceWorker registration failed: ', error);
   } else if (isSafari) {

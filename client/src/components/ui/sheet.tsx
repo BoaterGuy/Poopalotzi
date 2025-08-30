@@ -46,7 +46,6 @@ const sheetVariants = cva(
     defaultVariants: {
       side: "right",
     },
-)
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
@@ -84,7 +83,6 @@ const SheetHeader = ({
     )}
     {...props}
   />
-)
 SheetHeader.displayName = "SheetHeader"
 
 const SheetFooter = ({
@@ -98,7 +96,6 @@ const SheetFooter = ({
     )}
     {...props}
   />
-)
 SheetFooter.displayName = "SheetFooter"
 
 const SheetTitle = React.forwardRef<

@@ -172,7 +172,6 @@ const ContextMenuShortcut = ({
       )}
       {...props}
     />
-  )
 ContextMenuShortcut.displayName = "ContextMenuShortcut"
 
 export {

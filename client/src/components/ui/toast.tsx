@@ -35,6 +35,7 @@ const toastVariants = cva(
     defaultVariants: {
       variant: "default",
     },
+  }
 )
 
 const Toast = React.forwardRef<
@@ -123,3 +124,4 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+}

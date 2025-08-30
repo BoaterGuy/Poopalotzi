@@ -69,7 +69,6 @@ const serviceLevelFormSchema = insertServiceLevelSchema
     basePrice: z.coerce.number().min(0).optional(),
     pricePerAdditional: z.coerce.number().min(0).optional(),
     baseQuantity: z.coerce.number().min(1).optional(),
-  })
   .refine((data) => {
     if (data.type === "bulk") {
       return data.basePrice !== undefined && data.pricePerAdditional !== undefined && data.baseQuantity !== undefined;

@@ -92,7 +92,6 @@ export default function EmployeeSchedule() {
         request.id === requestId 
           ? { ...request, status: newStatus } 
           : request
-      )
     );
     
     // In a production environment, this would make an API call:
@@ -145,7 +144,6 @@ export default function EmployeeSchedule() {
           request.id === requestId 
             ? { ...request, status: status } 
             : request
-        )
       );
       
       // Show success toast
@@ -180,7 +178,6 @@ export default function EmployeeSchedule() {
     items
       .filter(item => 
         isSameDay(new Date(selectedDate), new Date())
-      )
       .forEach(item => {
         if (!item.marina) return;
         

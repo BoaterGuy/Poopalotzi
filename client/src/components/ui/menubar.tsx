@@ -117,8 +117,6 @@ const MenubarContent = React.forwardRef<
         {...props}
       />
     </MenubarPrimitive.Portal>
-  )
-)
 MenubarContent.displayName = MenubarPrimitive.Content.displayName
 
 const MenubarItem = React.forwardRef<
@@ -224,7 +222,6 @@ const MenubarShortcut = ({
       )}
       {...props}
     />
-  )
 MenubarShortcut.displayname = "MenubarShortcut"
 
 export {

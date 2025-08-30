@@ -25,7 +25,6 @@ type FormFieldContextValue<
 
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
-)
 
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
@@ -37,7 +36,6 @@ const FormField = <
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
-  )
 
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
@@ -64,7 +62,6 @@ type FormItemContextValue = {
 
 const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
-)
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
@@ -76,8 +73,6 @@ const FormItem = React.forwardRef<
     <FormItemContext.Provider value={{ id }}>
       <div ref={ref} className={cn("space-y-2", className)} {...props} />
     </FormItemContext.Provider>
-  )
-})
 FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
@@ -93,8 +88,6 @@ const FormLabel = React.forwardRef<
       htmlFor={formItemId}
       {...props}
     />
-  )
-})
 FormLabel.displayName = "FormLabel"
 
 const FormControl = React.forwardRef<
@@ -114,8 +107,6 @@ const FormControl = React.forwardRef<
       aria-invalid={!!error}
       {...props}
     />
-  )
-})
 FormControl.displayName = "FormControl"
 
 const FormDescription = React.forwardRef<
@@ -131,8 +122,6 @@ const FormDescription = React.forwardRef<
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
-  )
-})
 FormDescription.displayName = "FormDescription"
 
 const FormMessage = React.forwardRef<
@@ -154,8 +143,6 @@ const FormMessage = React.forwardRef<
     >
       {body}
     </p>
-  )
-})
 FormMessage.displayName = "FormMessage"
 
 export {

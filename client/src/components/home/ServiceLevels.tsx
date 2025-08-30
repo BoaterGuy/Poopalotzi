@@ -21,7 +21,6 @@ export default function ServiceLevels() {
       .then(data => {
         setServiceLevels(data);
         setIsLoading(false);
-      })
       .catch(() => setIsLoading(false));
   }, []);
 

@@ -36,11 +36,9 @@ export function useServiceRequests(boatId?: number) {
       .then(data => {
         setRequests(data);
         setError(null);
-      })
       .catch(err => {
         setError(err.message);
         setRequests([]);
-      })
       .finally(() => setIsLoading(false));
   }, [boatId]);
   

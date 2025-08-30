@@ -354,7 +354,6 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
                                       : field.onChange(
                                           currentValues.filter(
                                             (value) => value !== option.id
-                                          )
                                         );
                                   }}
                                 />

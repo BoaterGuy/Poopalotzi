@@ -171,7 +171,6 @@ export default function ServiceSubscription() {
           additionalPumpOuts: bulkPlanDetails.additionalPumpOuts,
           totalPumpOuts: (selectedPlan.baseQuantity || 0) + bulkPlanDetails.additionalPumpOuts,
           bulkPlanYear: new Date().getFullYear()
-        })
       };
       
       // Update user subscription after payment

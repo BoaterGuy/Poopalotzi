@@ -89,11 +89,9 @@ export default function NotificationPreferences() {
       .then(data => {
         setPreferences(data);
         setPreferencesError(null);
-      })
       .catch(err => {
         setPreferencesError(err.message);
         setPreferences(null);
-      })
       .finally(() => setPreferencesLoading(false));
   }, []);
 
@@ -106,11 +104,9 @@ export default function NotificationPreferences() {
         .then(data => {
           setHistory(data);
           setHistoryError(null);
-        })
         .catch(err => {
           setHistoryError(err.message);
           setHistory(null);
-        })
         .finally(() => setHistoryLoading(false));
   }, [activeTab, history]);
 

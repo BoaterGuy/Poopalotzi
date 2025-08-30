@@ -125,7 +125,6 @@ export default function CloverSettingsSimple() {
         body: JSON.stringify({
           code: manualCode.trim(),
           merchantId: merchantId.trim()
-        })
 
       const data = await response.json();
 
