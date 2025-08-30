@@ -372,11 +372,50 @@ export default function CloverSettings() {
                     </AlertDescription>
                   </Alert>
 
-                  {/* Direct Token Setup - Primary Method */}
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
-                    <p className="text-sm text-blue-700 mb-3">
-                      Set up Clover directly using API tokens from your merchant dashboard:
+                  {/* Production OAuth Setup - Primary Method */}
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h4 className="font-medium text-green-800 mb-2">🚀 Production OAuth Setup (Recommended)</h4>
+                    <p className="text-sm text-green-700 mb-3">
+                      Connect to your live Clover merchant account for real payment processing:
+                    </p>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="merchantId">Clover Merchant ID</Label>
+                        <Input
+                          id="merchantId"
+                          placeholder="PFHDQ8MSX5F81"
+                          value={merchantId}
+                          onChange={(e) => setMerchantId(e.target.value)}
+                          disabled={isConnecting}
+                        />
+                        <p className="text-xs text-green-700 mt-1">
+                          Your production merchant ID from https://clover.com
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleConnectClover}
+                        disabled={isConnecting || !merchantId.trim()}
+                        className="w-full bg-green-700 hover:bg-green-800"
+                      >
+                        {isConnecting ? (
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                        )}
+                        Connect to Live Clover Account
+                      </Button>
+                      <div className="text-xs text-green-600 mt-2">
+                        <strong>This will redirect to:</strong> https://www.clover.com/oauth/authorize<br/>
+                        <strong>For production payments,</strong> not sandbox testing
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sandbox/Manual Token Setup - Secondary Method */}
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h4 className="font-medium text-yellow-800 mb-2">⚠️ Manual Token Setup (Sandbox Only)</h4>
+                    <p className="text-sm text-yellow-700 mb-3">
+                      Only use for sandbox testing. Production requires OAuth above:
                     </p>
                     <div className="space-y-3">
                       <div>
@@ -459,14 +498,10 @@ export default function CloverSettings() {
                         Set Up Clover Integration
                       </Button>
                     </div>
-                    <div className="text-xs text-blue-600 mt-2">
-                      <strong>Steps to get API token:</strong><br/>
-                      <strong>Sandbox:</strong> https://sandbox.dev.clover.com/developers/<br/>
-                      <strong>Production:</strong> https://clover.com/developers/<br/>
-                      1. Select your merchant → Setup → API Tokens<br/>
-                      2. Create token with "Payments" permissions<br/>
-                      3. Copy the token and paste it above<br/>
-                      <em>System will auto-detect sandbox vs production</em>
+                    <div className="text-xs text-orange-600 mt-2">
+                      <strong>⚠️ DEPRECATED:</strong> Manual API tokens are for sandbox testing only.<br/>
+                      <strong>For Production:</strong> Use OAuth connection (blue "Connect to Clover" button below)<br/>
+                      <em>This method is not recommended for live payments</em>
                     </div>
                   </div>
 
@@ -563,10 +598,10 @@ export default function CloverSettings() {
                     </Button>
                     
                     {/* Manual OAuth completion for stuck scenarios */}
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-800 mb-2">Direct Token Setup (Recommended)</h4>
-                      <p className="text-sm text-blue-700 mb-3">
-                        Set up Clover directly using API tokens from your merchant dashboard:
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h4 className="font-medium text-yellow-800 mb-2">⚠️ Manual Token Setup (Sandbox Only)</h4>
+                      <p className="text-sm text-yellow-700 mb-3">
+                        Only use this for sandbox testing. Production requires OAuth (button above):
                       </p>
                       <div className="space-y-2">
                         <input
