@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
 import { CalendarPlus, History, AlertCircle, Check, X, Trash2 } from "lucide-react";

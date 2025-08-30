@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { format, startOfWeek, addDays, parseISO, isSameDay } from "date-fns";
 import {

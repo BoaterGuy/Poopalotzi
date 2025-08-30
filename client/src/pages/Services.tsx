@@ -2,7 +2,6 @@ import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";

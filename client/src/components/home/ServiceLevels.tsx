@@ -4,7 +4,6 @@ import { Check, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { AuthModal } from "../auth/AuthModal";
-import { useQuery } from "@tanstack/react-query";
 import { ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
 

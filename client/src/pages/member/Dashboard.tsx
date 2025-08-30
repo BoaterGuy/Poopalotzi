@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatWeekRange } from "@/lib/utils";
 import { Boat, PumpOutRequest, ServiceLevel, DockAssignment, Marina } from "@shared/schema";
 import { CalendarPlus, History, AlertCircle, Check, X } from "lucide-react";
