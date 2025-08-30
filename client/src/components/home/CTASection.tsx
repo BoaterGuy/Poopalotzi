@@ -56,3 +56,4 @@ export default function CTASection() {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </section>
   );
+}

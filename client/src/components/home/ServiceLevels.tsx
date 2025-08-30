@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthModal } from "../auth/AuthModal";
 import { ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
@@ -11,18 +11,9 @@ export default function ServiceLevels() {
   const { isLoggedIn } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  // Simplified data fetching without React Query
-  const [serviceLevels, setServiceLevels] = useState<ServiceLevel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/service-levels', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        setServiceLevels(data);
-        setIsLoading(false);
-      .catch(() => setIsLoading(false));
-  }, []);
+  const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
+    queryKey: ['/api/service-levels'],
+  });
 
   const getFormattedPrice = (plan: ServiceLevel) => {
     if (plan.type === "one-time") return `${formatCurrency(plan.price)}/service`;
@@ -35,6 +26,7 @@ export default function ServiceLevels() {
   const handleChoosePlan = () => {
     if (!isLoggedIn) {
       setAuthModalOpen(true);
+    }
   };
 
   return (
@@ -130,3 +122,4 @@ export default function ServiceLevels() {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </section>
   );
+}

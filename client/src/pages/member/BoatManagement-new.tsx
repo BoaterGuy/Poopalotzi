@@ -35,17 +35,21 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function BoatManagement() {
   const { toast } = useToast();
-  // React Query removed
+  const queryClient = useQueryClient();
   const [isAddingBoat, setIsAddingBoat] = useState(false);
   const [editingBoat, setEditingBoat] = useState<Boat | null>(null);
   const [deletingBoat, setDeletingBoat] = useState<Boat | null>(null);
   const [assigningMarina, setAssigningMarina] = useState<Boat | null>(null);
 
   // Fetch boats
-  // React Query removed
+  const { data: boats = [], isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
+    queryKey: ['/api/boats'],
+  });
 
   // Fetch marinas for the dropdown
-  // React Query removed
+  const { data: marinas = [] } = useQuery<Marina[]>({
+    queryKey: ['/api/marinas'],
+  });
 
   // Delete a boat
   const handleDeleteBoat = async (boatId: number) => {
@@ -55,7 +59,9 @@ export default function BoatManagement() {
       toast({
         title: "Boat deleted",
         description: "Your boat has been successfully removed.",
+      });
       
+      queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
       setDeletingBoat(null);
     } catch (error) {
       console.error('Error deleting boat:', error);
@@ -63,6 +69,8 @@ export default function BoatManagement() {
         title: "Error",
         description: "There was a problem deleting your boat.",
         variant: "destructive",
+      });
+    }
   };
 
   // Get dock assignment for a boat
@@ -70,13 +78,16 @@ export default function BoatManagement() {
     try {
       const res = await fetch(`/api/dock-assignments/boat/${boatId}`, {
         credentials: 'include',
+      });
       
       if (res.ok) {
         return await res.json();
+      }
       return null;
     } catch (error) {
       console.error('Error fetching dock assignment:', error);
       return null;
+    }
   }, []);
 
   // Get marina info
@@ -84,13 +95,16 @@ export default function BoatManagement() {
     try {
       const res = await fetch(`/api/marinas/${marinaId}`, {
         credentials: 'include',
+      });
       
       if (res.ok) {
         return await res.json();
+      }
       return null;
     } catch (error) {
       console.error('Error fetching marina info:', error);
       return null;
+    }
   }, []);
 
   // Get boat location details
@@ -270,6 +284,7 @@ export default function BoatManagement() {
               toast({
                 title: "Boat added",
                 description: "Your boat has been successfully registered.",
+              });
             }}
           />
         </DialogContent>
@@ -288,10 +303,12 @@ export default function BoatManagement() {
             <BoatForm 
               boat={editingBoat}
               onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
                 setEditingBoat(null);
                 toast({
                   title: "Boat updated",
                   description: "Your boat information has been updated successfully.",
+                });
               }}
             />
           )}
@@ -333,10 +350,13 @@ export default function BoatManagement() {
             <MarinaSelection
               boat={assigningMarina}
               onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
                 setAssigningMarina(null);
                 toast({
                   title: "Marina assigned",
                   description: "Your boat's marina and dock information has been updated.",
+                });
               }}
             />
           )}
@@ -344,3 +364,4 @@ export default function BoatManagement() {
       </Dialog>
     </>
   );
+}

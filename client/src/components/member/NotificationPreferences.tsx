@@ -1,56 +1,88 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Bell, CreditCard, RefreshCw, Calendar, Mail, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Mail, 
+  Bell, 
+  CreditCard, 
+  Calendar, 
+  UserCheck, 
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  Info
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface NotificationPreferences {
+  id: number;
+  userId: number;
   emailNotifications: boolean;
-  smsNotifications: boolean;
-  serviceEmails: boolean;
+  welcomeEmails: boolean;
+  subscriptionEmails: boolean;
   paymentEmails: boolean;
   renewalReminders: boolean;
   scheduleEmails: boolean;
-
-interface NotificationHistoryItem {
-  id: number;
-  type: string;
-  subject: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+interface EmailNotificationLog {
+  id: number;
+  userId: number;
+  emailType: string;
+  subject: string;
+  recipientEmail: string;
   status: 'sent' | 'failed' | 'pending';
+  error?: string;
+  sentAt: string;
+  createdAt: string;
+}
 
 interface NotificationHistoryResponse {
-  notifications: NotificationHistoryItem[];
-  total: number;
-  page: number;
-  limit: number;
+  data: EmailNotificationLog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
 
-const notificationTypes = {
+const notificationTypeDescriptions = {
   emailNotifications: {
     title: "Email Notifications",
-    description: "Receive notifications via email",
+    description: "Master toggle for all email notifications",
     icon: <Mail className="h-4 w-4" />,
     category: "general"
   },
-  smsNotifications: {
-    title: "SMS Notifications", 
-    description: "Receive notifications via text message",
-    icon: <MessageSquare className="h-4 w-4" />,
-    category: "general"
+  welcomeEmails: {
+    title: "Welcome Emails",
+    description: "Account setup and welcome messages",
+    icon: <UserCheck className="h-4 w-4" />,
+    category: "account"
   },
-  serviceEmails: {
-    title: "Service Emails",
-    description: "Updates about your pump-out service status",
+  subscriptionEmails: {
+    title: "Subscription Emails",
+    description: "Service plan confirmations and updates",
     icon: <Bell className="h-4 w-4" />,
     category: "account"
   },
   paymentEmails: {
     title: "Payment Emails",
-    description: "Payment receipts and transaction confirmations", 
+    description: "Payment receipts and transaction confirmations",
     icon: <CreditCard className="h-4 w-4" />,
     category: "financial"
   },
@@ -65,217 +97,372 @@ const notificationTypes = {
     description: "Pump-out service scheduling confirmations and updates",
     icon: <Calendar className="h-4 w-4" />,
     category: "service"
+  }
 };
 
 export default function NotificationPreferences() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("preferences");
   const [isUpdating, setIsUpdating] = useState(false);
-  
-  // State for preferences
-  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
-  const [preferencesLoading, setPreferencesLoading] = useState(true);
-  const [preferencesError, setPreferencesError] = useState<string | null>(null);
-  
-  // State for history
-  const [history, setHistory] = useState<NotificationHistoryResponse | null>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
 
   // Fetch notification preferences
-  useEffect(() => {
-    fetch('/api/notifications/preferences', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        setPreferences(data);
-        setPreferencesError(null);
-      .catch(err => {
-        setPreferencesError(err.message);
-        setPreferences(null);
-      .finally(() => setPreferencesLoading(false));
-  }, []);
+  const { data: preferences, isLoading: preferencesLoading, error: preferencesError } = useQuery<NotificationPreferences>({
+    queryKey: ['/api/notifications/preferences'],
+  });
 
-  // Fetch notification history when tab changes
-  useEffect(() => {
-    if (activeTab === "history" && !history) {
-      setHistoryLoading(true);
-      fetch('/api/notifications/history', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          setHistory(data);
-          setHistoryError(null);
-        .catch(err => {
-          setHistoryError(err.message);
-          setHistory(null);
-        .finally(() => setHistoryLoading(false));
-  }, [activeTab, history]);
+  // Fetch notification history
+  const { data: history, isLoading: historyLoading, error: historyError } = useQuery<NotificationHistoryResponse>({
+    queryKey: ['/api/notifications/history'],
+    enabled: activeTab === "history",
+  });
+
+  // Update preferences mutation
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (updates: Partial<NotificationPreferences>) => {
+      return apiRequest('PUT', '/api/notifications/preferences', updates);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Preferences Updated",
+        description: "Your notification preferences have been saved successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/preferences'] });
+    },
+    onError: (error: any) => {
+      console.error('Preference update error:', error);
+      toast({
+        title: "Update Failed",
+        description: "There was a problem updating your preferences. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
     if (!preferences) return;
 
     setIsUpdating(true);
-
     try {
       const updates = { [key]: value };
-      const response = await fetch('/api/notifications/preferences', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updates)
-
-      if (!response.ok) {
-        throw new Error('Failed to update preferences');
-
-      setPreferences({ ...preferences, [key]: value });
-      toast({
-        title: "Preferences Updated",
-        description: "Your notification preferences have been saved successfully.",
-    } catch (error: any) {
-      console.error('Preference update error:', error);
-      toast({
-        title: "Update Failed", 
-        description: "There was a problem updating your preferences. Please try again.",
-        variant: "destructive",
+      
+      // If turning off master toggle, turn off all others
+      if (key === 'emailNotifications' && !value) {
+        updates.welcomeEmails = false;
+        updates.subscriptionEmails = false;
+        updates.paymentEmails = false;
+        updates.renewalReminders = false;
+        updates.scheduleEmails = false;
+      }
+      
+      await updatePreferencesMutation.mutateAsync(updates);
+    } catch (error) {
+      // Error is handled by mutation
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'pending': return <Clock className="h-4 w-4 text-yellow-500" />;
+      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+    }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'sent':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Sent</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      case 'sent': return <Badge variant="outline" className="text-green-600 border-green-600">Sent</Badge>;
+      case 'failed': return <Badge variant="outline" className="text-red-600 border-red-600">Failed</Badge>;
+      case 'pending': return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Pending</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  const formatEmailType = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      'welcome': 'Welcome',
+      'subscription': 'Subscription',
+      'payment': 'Payment',
+      'renewal': 'Renewal Reminder',
+      'schedule': 'Schedule Confirmation'
+    };
+    return typeMap[type] || type;
   };
-
-  const categoryMap = {
-    general: "General",
-    account: "Account",
-    financial: "Financial", 
-    service: "Service"
-  };
-
-  const groupedNotifications = Object.entries(notificationTypes).reduce((acc, [key, config]) => {
-    const category = config.category;
-    if (!acc[category]) {
-      acc[category] = [];
-    acc[category].push({ key: key as keyof NotificationPreferences, ...config });
-    return acc;
-  }, {} as Record<string, any[]>);
 
   if (preferencesLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>Loading your notification settings...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <RefreshCw className="h-6 w-6 animate-spin" />
+          <span className="ml-2">Loading notification preferences...</span>
+        </div>
+      </div>
     );
+  }
 
-  if (preferencesError || !preferences) {
+  if (preferencesError) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>Failed to load notification preferences.</CardDescription>
-        </CardHeader>
-      </Card>
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Unable to load notification preferences. {preferencesError.message}. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
     );
+  }
+
+  if (!preferences) {
+    return (
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Unable to load notification preferences. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Notification Preferences</CardTitle>
-        <CardDescription>
-          Manage how and when you receive notifications about your pump-out services.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="preferences" className="space-y-6">
-            {Object.entries(groupedNotifications).map(([category, notifications]) => (
-              <div key={category} className="space-y-4">
-                <h3 className="text-lg font-medium">{categoryMap[category as keyof typeof categoryMap]}</h3>
-                <div className="space-y-4">
-                  {notifications.map((notification) => (
-                    <div key={notification.key} className="flex items-center justify-between space-x-4 rounded-lg border p-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="mt-1">
-                          {notification.icon}
-                        </div>
-                        <div className="space-y-1">
-                          <Label 
-                            htmlFor={notification.key}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {notification.title}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.description}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        id={notification.key}
-                        checked={preferences[notification.key] || false}
-                        onCheckedChange={(checked) => handlePreferenceChange(notification.key, checked)}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                  ))}
+    <div className="space-y-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-[#0B1F3A]">Email Notifications</h2>
+        <p className="text-gray-600">
+          Manage how and when you receive email notifications from Poopalotzi.
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="preferences">
+            <Bell className="h-4 w-4 mr-2" />
+            Preferences
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            <Clock className="h-4 w-4 mr-2" />
+            Email History
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="preferences" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Mail className="h-5 w-5 mr-2" />
+                Email Notification Settings
+              </CardTitle>
+              <CardDescription>
+                Control which types of emails you receive. You can always change these settings later.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Master Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  {notificationTypeDescriptions.emailNotifications.icon}
+                  <div>
+                    <Label htmlFor="emailNotifications" className="text-base font-medium">
+                      {notificationTypeDescriptions.emailNotifications.title}
+                    </Label>
+                    <p className="text-sm text-gray-600">
+                      {notificationTypeDescriptions.emailNotifications.description}
+                    </p>
+                  </div>
                 </div>
+                <Switch
+                  id="emailNotifications"
+                  checked={preferences.emailNotifications}
+                  onCheckedChange={(checked) => handlePreferenceChange('emailNotifications', checked)}
+                  disabled={isUpdating}
+                />
               </div>
-            ))}
-          </TabsContent>
-          
-          <TabsContent value="history" className="space-y-4">
-            {historyLoading ? (
-              <div className="text-center py-4">Loading notification history...</div>
-            ) : historyError ? (
-              <div className="text-center py-4 text-destructive">Failed to load notification history.</div>
-            ) : history && history.notifications.length > 0 ? (
+
+              <Separator />
+
+              {/* Account Notifications */}
               <div className="space-y-4">
-                {history.notifications.map((notification) => (
-                  <div key={notification.id} className="flex items-center justify-between space-x-4 rounded-lg border p-4">
-                    <div className="space-y-1">
-                      <div className="font-medium">{notification.subject}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatDate(notification.createdAt)}
+                <h3 className="text-lg font-semibold text-gray-900">Account Notifications</h3>
+                
+                {(['welcomeEmails', 'subscriptionEmails'] as const).map((key) => (
+                  <div key={key} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-3">
+                      {notificationTypeDescriptions[key].icon}
+                      <div>
+                        <Label htmlFor={key} className="text-base">
+                          {notificationTypeDescriptions[key].title}
+                        </Label>
+                        <p className="text-sm text-gray-600">
+                          {notificationTypeDescriptions[key].description}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{notification.type}</Badge>
-                      {getStatusBadge(notification.status)}
-                    </div>
+                    <Switch
+                      id={key}
+                      checked={preferences[key] && preferences.emailNotifications}
+                      onCheckedChange={(checked) => handlePreferenceChange(key, checked)}
+                      disabled={isUpdating || !preferences.emailNotifications}
+                    />
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No notification history found.
+
+              <Separator />
+
+              {/* Financial Notifications */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Financial Notifications</h3>
+                
+                {(['paymentEmails', 'renewalReminders'] as const).map((key) => (
+                  <div key={key} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-3">
+                      {notificationTypeDescriptions[key].icon}
+                      <div>
+                        <Label htmlFor={key} className="text-base">
+                          {notificationTypeDescriptions[key].title}
+                        </Label>
+                        <p className="text-sm text-gray-600">
+                          {notificationTypeDescriptions[key].description}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id={key}
+                      checked={preferences[key] && preferences.emailNotifications}
+                      onCheckedChange={(checked) => handlePreferenceChange(key, checked)}
+                      disabled={isUpdating || !preferences.emailNotifications}
+                    />
+                  </div>
+                ))}
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+
+              <Separator />
+
+              {/* Service Notifications */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Service Notifications</h3>
+                
+                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  <div className="flex items-center space-x-3">
+                    {notificationTypeDescriptions.scheduleEmails.icon}
+                    <div>
+                      <Label htmlFor="scheduleEmails" className="text-base">
+                        {notificationTypeDescriptions.scheduleEmails.title}
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        {notificationTypeDescriptions.scheduleEmails.description}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="scheduleEmails"
+                    checked={preferences.scheduleEmails && preferences.emailNotifications}
+                    onCheckedChange={(checked) => handlePreferenceChange('scheduleEmails', checked)}
+                    disabled={isUpdating || !preferences.emailNotifications}
+                  />
+                </div>
+              </div>
+
+              {!preferences.emailNotifications && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Email notifications are currently disabled. Enable the master toggle above to receive any email notifications.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Clock className="h-5 w-5 mr-2" />
+                Email History
+              </CardTitle>
+              <CardDescription>
+                View recent email notifications sent to your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Loading email history...</span>
+                </div>
+              ) : !history?.data?.length ? (
+                <div className="text-center py-8">
+                  <Mail className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">No email notifications sent yet.</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Email notifications will appear here once they are sent.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {history.data.map((email) => (
+                    <div key={email.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3">
+                          {getStatusIcon(email.status)}
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-gray-900">{email.subject}</span>
+                              {getStatusBadge(email.status)}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {formatEmailType(email.emailType)} • {email.recipientEmail}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {format(new Date(email.sentAt), 'MMM d, yyyy h:mm a')}
+                            </p>
+                            {email.error && (
+                              <p className="text-xs text-red-600 mt-1">
+                                Error: {email.error}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {history.pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-2 pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!history.pagination.hasPrev}
+                        onClick={() => {
+                          // Implement pagination if needed
+                        }}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-gray-600">
+                        Page {history.pagination.page} of {history.pagination.totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!history.pagination.hasNext}
+                        onClick={() => {
+                          // Implement pagination if needed
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
+}

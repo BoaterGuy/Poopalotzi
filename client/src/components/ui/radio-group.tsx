@@ -14,6 +14,8 @@ const RadioGroup = React.forwardRef<
       {...props}
       ref={ref}
     />
+  )
+})
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
 const RadioGroupItem = React.forwardRef<
@@ -33,6 +35,8 @@ const RadioGroupItem = React.forwardRef<
         <Circle className="h-2.5 w-2.5 fill-current text-current" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
+  )
+})
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
 export { RadioGroup, RadioGroupItem }

@@ -20,6 +20,7 @@ export default function Testimonials() {
       quote: "As a marina manager, I've seen the difference Poopalotzi makes. Our boaters love the convenience, and our environment stays cleaner. It's a win-win solution.",
       name: "David Rodriguez",
       title: "Marina Manager"
+    }
   ];
 
   const renderStars = (rating: number) => {
@@ -29,9 +30,11 @@ export default function Testimonials() {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(<Star key={`full-${i}`} className="fill-current" />);
+    }
 
     if (hasHalfStar) {
       stars.push(<StarHalf key="half" className="fill-current" />);
+    }
 
     return stars;
   };
@@ -73,3 +76,4 @@ export default function Testimonials() {
       </div>
     </section>
   );
+}

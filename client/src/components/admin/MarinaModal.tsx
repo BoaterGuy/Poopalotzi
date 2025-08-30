@@ -16,6 +16,7 @@ interface MarinaModalProps {
     phone?: string;
     isActive: boolean;
   };
+}
 
 export default function MarinaModal({ isOpen, onClose, existingMarina }: MarinaModalProps) {
   const isEditing = !!existingMarina;
@@ -32,3 +33,4 @@ export default function MarinaModal({ isOpen, onClose, existingMarina }: MarinaM
       </DialogContent>
     </Dialog>
   );
+}

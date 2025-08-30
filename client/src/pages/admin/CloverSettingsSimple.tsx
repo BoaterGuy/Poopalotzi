@@ -23,6 +23,7 @@ interface CloverStatus {
   merchantId?: string;
   environment?: string;
   tokenExpiry?: string;
+}
 
 export default function CloverSettingsSimple() {
   const [merchantId, setMerchantId] = useState('PFHDQ8MSX5F81');
@@ -37,13 +38,16 @@ export default function CloverSettingsSimple() {
     try {
       const response = await fetch('/api/admin/clover/status', {
         credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setCloverStatus(data);
+      }
     } catch (error) {
       console.error('Failed to fetch Clover status:', error);
     } finally {
       setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -58,6 +62,7 @@ export default function CloverSettingsSimple() {
       toast({
         title: "Clover Connected",
         description: "Your Clover account has been successfully connected!",
+      });
       window.history.replaceState({}, '', '/admin/clover-settings');
       fetchCloverStatus();
     } else if (error) {
@@ -67,7 +72,9 @@ export default function CloverSettingsSimple() {
                     error === 'missing_params' ? "Missing authorization parameters." :
                     "Failed to connect your Clover account. Please try again.",
         variant: "destructive",
+      });
       window.history.replaceState({}, '', '/admin/clover-settings');
+    }
   }, [toast]);
 
   // Handle OAuth connection
@@ -77,7 +84,9 @@ export default function CloverSettingsSimple() {
         title: "Error",
         description: "Please enter a Merchant ID",
         variant: "destructive",
+      });
       return;
+    }
 
     setIsConnecting(true);
     try {
@@ -88,10 +97,12 @@ export default function CloverSettingsSimple() {
         },
         body: JSON.stringify({ merchantId: merchantId.trim() }),
         credentials: 'include'
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`OAuth initiation failed: ${response.status}`);
+      }
 
       const data = await response.json();
       
@@ -104,6 +115,8 @@ export default function CloverSettingsSimple() {
         title: "Error",
         description: error instanceof Error ? error.message : "OAuth initiation failed",
         variant: "destructive",
+      });
+    }
   };
 
   // Handle manual OAuth completion
@@ -113,7 +126,9 @@ export default function CloverSettingsSimple() {
         title: "Error",
         description: "Please enter both merchant ID and authorization code",
         variant: "destructive",
+      });
       return;
+    }
 
     setIsConnecting(true);
     try {
@@ -125,6 +140,8 @@ export default function CloverSettingsSimple() {
         body: JSON.stringify({
           code: manualCode.trim(),
           merchantId: merchantId.trim()
+        })
+      });
 
       const data = await response.json();
 
@@ -132,17 +149,21 @@ export default function CloverSettingsSimple() {
         toast({
           title: "Success",
           description: "Clover connected successfully!",
+        });
         setManualCode('');
         fetchCloverStatus();
       } else {
         throw new Error(data.error || 'Manual completion failed');
+      }
     } catch (error) {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Manual completion failed",
         variant: "destructive",
+      });
     } finally {
       setIsConnecting(false);
+    }
   };
 
   const getStatusDisplay = () => {
@@ -153,6 +174,7 @@ export default function CloverSettingsSimple() {
           <span>Checking status...</span>
         </div>
       );
+    }
 
     if (cloverStatus?.isConfigured) {
       return (
@@ -163,6 +185,7 @@ export default function CloverSettingsSimple() {
           </Badge>
         </div>
       );
+    }
 
     return (
       <div className="flex items-center">
@@ -325,3 +348,4 @@ export default function CloverSettingsSimple() {
       </Card>
     </div>
   );
+}

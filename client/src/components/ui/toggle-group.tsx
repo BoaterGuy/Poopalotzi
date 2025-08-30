@@ -12,6 +12,7 @@ const ToggleGroupContext = React.createContext<
 >({
   size: "default",
   variant: "default",
+})
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
@@ -52,6 +53,8 @@ const ToggleGroupItem = React.forwardRef<
     >
       {children}
     </ToggleGroupPrimitive.Item>
+  )
+})
 
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
 

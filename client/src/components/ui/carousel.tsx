@@ -17,6 +17,7 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+}
 
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0]
@@ -34,8 +35,10 @@ function useCarousel() {
 
   if (!context) {
     throw new Error("useCarousel must be used within a <Carousel />")
+  }
 
   return context
+}
 
 const Carousel = React.forwardRef<
   HTMLDivElement,
@@ -59,12 +62,14 @@ const Carousel = React.forwardRef<
         axis: orientation === "horizontal" ? "x" : "y",
       },
       plugins
+    )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
+      }
 
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
@@ -86,12 +91,15 @@ const Carousel = React.forwardRef<
         } else if (event.key === "ArrowRight") {
           event.preventDefault()
           scrollNext()
+        }
       },
       [scrollPrev, scrollNext]
+    )
 
     React.useEffect(() => {
       if (!api || !setApi) {
         return
+      }
 
       setApi(api)
     }, [api, setApi])
@@ -99,6 +107,7 @@ const Carousel = React.forwardRef<
     React.useEffect(() => {
       if (!api) {
         return
+      }
 
       onSelect(api)
       api.on("reInit", onSelect)
@@ -106,6 +115,7 @@ const Carousel = React.forwardRef<
 
       return () => {
         api?.off("select", onSelect)
+      }
     }, [api, onSelect])
 
     return (
@@ -133,6 +143,9 @@ const Carousel = React.forwardRef<
           {children}
         </div>
       </CarouselContext.Provider>
+    )
+  }
+)
 Carousel.displayName = "Carousel"
 
 const CarouselContent = React.forwardRef<
@@ -153,6 +166,8 @@ const CarouselContent = React.forwardRef<
         {...props}
       />
     </div>
+  )
+})
 CarouselContent.displayName = "CarouselContent"
 
 const CarouselItem = React.forwardRef<
@@ -173,6 +188,8 @@ const CarouselItem = React.forwardRef<
       )}
       {...props}
     />
+  )
+})
 CarouselItem.displayName = "CarouselItem"
 
 const CarouselPrevious = React.forwardRef<
@@ -200,6 +217,8 @@ const CarouselPrevious = React.forwardRef<
       <ArrowLeft className="h-4 w-4" />
       <span className="sr-only">Previous slide</span>
     </Button>
+  )
+})
 CarouselPrevious.displayName = "CarouselPrevious"
 
 const CarouselNext = React.forwardRef<
@@ -227,6 +246,8 @@ const CarouselNext = React.forwardRef<
       <ArrowRight className="h-4 w-4" />
       <span className="sr-only">Next slide</span>
     </Button>
+  )
+})
 CarouselNext.displayName = "CarouselNext"
 
 export {
@@ -236,3 +257,4 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+}

@@ -43,6 +43,7 @@ const profileFormSchema = z.object({
     message: "Please enter a valid email address.",
   }),
   phone: z.string().optional(),
+});
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(8, {
@@ -55,6 +56,7 @@ const passwordFormSchema = z.object({
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords do not match.",
   path: ["confirmPassword"],
+});
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
@@ -62,16 +64,337 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
-  // React Query removed
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState("profile");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Get current subscription data
-  // React Query removed
+  const { data: subscription } = useQuery({
+    queryKey: ['/api/users/me/subscription'],
     queryFn: async () => {
       try {
         // First try to get from subscription endpoint
         const response = await fetch('/api/users/me/subscription', {
           credentials: 'include'
+        });
         
         if (response.ok) {
+          return response.json();
+        }
+        
+        // If that fails, create a fallback subscription from user data
+        if (user?.serviceLevelId) {
+          return {
+            userId: user.id,
+            serviceLevelId: user.serviceLevelId,
+            startDate: new Date().toISOString()
+          };
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+        // Still create fallback from user data if possible
+        if (user?.serviceLevelId) {
+          return {
+            userId: user.id,
+            serviceLevelId: user.serviceLevelId,
+            startDate: new Date().toISOString()
+          };
+        }
+        return null;
+      }
+    },
+  });
+
+  // Get all service levels
+  const { data: serviceLevels } = useQuery<ServiceLevel[]>({
+    queryKey: ['/api/service-levels'],
+    queryFn: undefined,
+  });
+
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    },
+  });
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  async function onProfileSubmit(data: ProfileFormValues) {
+    setIsUpdating(true);
+    try {
+      // This would be a real API call in a production app
+      await apiRequest('PUT', '/api/users/profile', data);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been updated successfully.",
+      });
+      
+      // Update the cached user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function onPasswordSubmit(data: PasswordFormValues) {
+    setIsUpdating(true);
+    try {
+      // This would be a real API call in a production app
+      await apiRequest('PUT', '/api/users/password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      
+      passwordForm.reset();
+    } catch (error) {
+      console.error('Password update error:', error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your password. Please ensure your current password is correct.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleServiceLevelChange(serviceLevelId: string) {
+    setIsUpdating(true);
+    try {
+      // This would be a real API call in a production app
+      await apiRequest('PUT', '/api/users/service-level', {
+        serviceLevelId: parseInt(serviceLevelId),
+      });
+      
+      toast({
+        title: "Service level updated",
+        description: "Your service level has been updated successfully.",
+      });
+      
+      // Update the cached user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+    } catch (error) {
+      console.error('Service level update error:', error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your service level.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>Profile - Poopalotzi</title>
+        <meta name="description" content="Manage your account profile and preferences" />
+      </Helmet>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#0B1F3A]">Account Settings</h1>
+          <p className="text-gray-600">
+            Manage your profile information, password, and notification preferences.
+          </p>
+        </div>
+
+        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+          <TabsList className="grid w-full md:w-auto grid-cols-3">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>
+                  Update your personal information and contact details.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...profileForm}>
+                  <form className="space-y-6" onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={profileForm.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={profileForm.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={profileForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email Address</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled={!!user?.oauthProvider} />
+                            </FormControl>
+                            {user?.oauthProvider && (
+                              <FormDescription>
+                                Email managed by {user.oauthProvider} account.
+                              </FormDescription>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={profileForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Used for service notifications (optional).
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <Button type="submit" className="bg-[#38B2AC]" disabled={isUpdating}>
+                      {isUpdating ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Password Tab */}
+          <TabsContent value="password" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>
+                  Update your password to maintain account security.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {user?.oauthProvider ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <p className="text-yellow-800">
+                      Your account uses {user.oauthProvider} for authentication. Password management is handled by your {user.oauthProvider} account.
+                    </p>
+                  </div>
+                ) : (
+                  <Form {...passwordForm}>
+                    <form className="space-y-6" onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}>
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Separator />
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Must be at least 8 characters.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="bg-[#38B2AC]" disabled={isUpdating}>
+                        {isUpdating ? "Updating..." : "Update Password"}
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <NotificationPreferences />
+          </TabsContent>
+
+        </Tabs>
+      </div>
+    </>
+  );
+}

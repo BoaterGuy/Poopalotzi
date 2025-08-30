@@ -37,6 +37,8 @@ const AuthPage = () => {
         navigate('/employee/schedule');
       } else {
         navigate('/member/dashboard');
+      }
+    }
   }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -51,6 +53,7 @@ const AuthPage = () => {
       // Toast is handled in the AuthContext
     } finally {
       setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -61,7 +64,9 @@ const AuthPage = () => {
         title: "Passwords don't match",
         description: "Please make sure both passwords match.",
         variant: "destructive",
+      });
       return;
+    }
     
     setIsLoading(true);
     
@@ -72,12 +77,14 @@ const AuthPage = () => {
         firstName,
         lastName,
         role: 'member',
+      });
       // No need to navigate here, the useEffect will handle it
     } catch (error) {
       console.error('Registration error:', error);
       // Toast is handled in the AuthContext
     } finally {
       setIsLoading(false);
+    }
   };
 
   return (

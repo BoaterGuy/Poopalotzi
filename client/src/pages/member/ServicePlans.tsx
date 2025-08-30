@@ -27,33 +27,44 @@ import { calculateMaxAdditionalPumpOuts } from "@shared/bulk-plan-utils";
 export default function ServicePlans() {
   const { user } = useAuth();
   const { toast } = useToast();
-  // React Query removed
+  const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showBulkPlanForm, setShowBulkPlanForm] = useState(false);
   const [bulkPlanDetails, setBulkPlanDetails] = useState<{additionalPumpOuts: number; totalCost: number} | null>(null);
 
-  // React Query removed
+  const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
+    queryKey: ['/api/service-levels'],
     refetchOnMount: true,
     staleTime: 0,
+  });
 
-  // React Query removed
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery<{userId: number, serviceLevelId: number}>({
+    queryKey: ['/api/users/me/subscription'],
+    enabled: !!user,
     refetchOnMount: true,
     staleTime: 0,
+  });
 
   // Fetch user credits to determine if they can repurchase
-  // React Query removed
+  const { data: userCredits, isLoading: isLoadingCredits } = useQuery({
+    queryKey: ['/api/users/me/credits'],
+    enabled: !!user,
     queryFn: async () => {
       try {
         const response = await fetch('/api/users/me/credits', {
           credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch user credits');
+        }
         return await response.json();
       } catch (error) {
         console.error('Error fetching user credits:', error);
         return { totalPumpOuts: 0, additionalPumpOuts: 0 };
+      }
     },
+  });
 
   const handleSelectPlan = (plan: ServiceLevel) => {
     setSelectedPlan(plan);
@@ -62,6 +73,7 @@ export default function ServicePlans() {
       setShowBulkPlanForm(true);
     } else {
       setShowPayment(true);
+    }
   };
 
   const handleBulkPlanPurchase = (additionalPumpOuts: number, totalCost: number) => {
@@ -81,7 +93,9 @@ export default function ServicePlans() {
       toast({
         title: "Success!",
         description: "Your service plan has been activated successfully.",
+      });
       
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
       setShowPayment(false);
       setSelectedPlan(null);
       setBulkPlanDetails(null);
@@ -91,6 +105,8 @@ export default function ServicePlans() {
         title: "Error",
         description: "Payment was successful, but there was a problem updating your subscription. Please contact support.",
         variant: "destructive",
+      });
+    }
   };
 
   const getCurrentServiceLevel = () => {
@@ -436,3 +452,4 @@ export default function ServicePlans() {
       </Dialog>
     </>
   );
+}

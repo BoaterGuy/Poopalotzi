@@ -67,14 +67,16 @@ interface RequestType {
   beforeImageUrl: string | null;
   duringImageUrl: string | null;
   afterImageUrl: string | null;
+}
 
 interface MarinaType {
   id: number;
   name: string;
+}
 
 export default function RequestManagement() {
   const { toast } = useToast();
-  // React Query removed
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekFilter, setWeekFilter] = useState<string>("all");
@@ -109,13 +111,16 @@ export default function RequestManagement() {
           
           if (data.type === 'pump_out_request_created') {
             // Invalidate queries to refetch fresh data
+            queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
             
             // Show notification
             toast({
               title: "New Service Request",
               description: "A new pump-out request has been submitted and requires attention.",
+            });
           } else if (data.type === 'pump_out_request_updated') {
             // Invalidate queries to refetch fresh data
+            queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
             
             // Show notification for status changes
             const statusMessage = data.status === 'Canceled' ? 'A service request has been canceled.' :
@@ -126,8 +131,11 @@ export default function RequestManagement() {
             toast({
               title: "Request Updated",
               description: statusMessage,
+            });
+          }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
+        }
       };
       
       wsRef.current.onclose = () => {
@@ -147,20 +155,26 @@ export default function RequestManagement() {
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
+      }
     };
   }, [queryClient, toast]);
 
   // Fetch marinas from the database
-  // React Query removed
+  const { data: marinasData, isLoading: marinasLoading } = useQuery({
+    queryKey: ["/api/marinas"],
     queryFn: async () => {
       const response = await fetch('/api/marinas');
       if (!response.ok) throw new Error('Failed to fetch marinas');
       return await response.json();
+    }
+  });
   
   const marinas: MarinaType[] = marinasData || [];
   
   // Fetch pump-out requests from the database
-  // React Query removed
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/pump-out-requests"]
+  });
   
   // Get unique weeks for the filter from the actual data
   const uniqueWeeks = Array.from(new Set((data || []).map(r => r.weekStartDate))).sort();
@@ -172,14 +186,17 @@ export default function RequestManagement() {
   // Apply status filter
   if (statusFilter !== "all") {
     filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+  }
   
   // Apply week filter
   if (weekFilter !== "all") {
     filteredRequests = filteredRequests.filter(r => r.weekStartDate === weekFilter);
+  }
   
   // Apply marina filter
   if (marinaFilter !== "all") {
     filteredRequests = filteredRequests.filter(r => r.marinaId === Number(marinaFilter));
+  }
   
   // Apply search filter
   filteredRequests = filteredRequests.filter(
@@ -202,6 +219,7 @@ export default function RequestManagement() {
         return "bg-yellow-500";
       default:
         return "bg-gray-500";
+    }
   };
 
   const getPaymentStatusColor = (status: PaymentStatusType) => {
@@ -216,6 +234,7 @@ export default function RequestManagement() {
         return "bg-purple-500";
       default:
         return "bg-gray-500";
+    }
   };
 
   const formatWeekDate = (dateStr: string) => {
@@ -230,16 +249,20 @@ export default function RequestManagement() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to update status: ${response.statusText}`);
+      }
       
       // Invalidate and refetch the data from the server
+      queryClient.invalidateQueries({ queryKey: ["/api/pump-out-requests"] });
       
       // Show success message
       toast({
         title: "Status Updated",
         description: `Request #${id} status changed to ${newStatus}`,
+      });
     } catch (error) {
       console.error('Error updating status:', error);
       
@@ -248,12 +271,15 @@ export default function RequestManagement() {
         title: "Update Failed",
         description: "Failed to update the request status. Please try again.",
         variant: "destructive",
+      });
+    }
   };
 
   const handleAssignEmployee = (id: number) => {
     toast({
       title: "Assign Employee",
       description: `Assigning employee to request #${id}`,
+    });
     // Will be replaced with actual UI for employee assignment
   };
 
@@ -267,6 +293,8 @@ export default function RequestManagement() {
         title: "Request Not Found",
         description: `Could not find request #${id}`,
         variant: "destructive",
+      });
+    }
   };
 
   const handleViewImage = (url: string | null, type: string) => {
@@ -278,6 +306,8 @@ export default function RequestManagement() {
         title: "No Image Available",
         description: `No ${type} image has been uploaded yet.`,
         variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -728,3 +758,4 @@ export default function RequestManagement() {
       </Dialog>
     </>
   );
+}

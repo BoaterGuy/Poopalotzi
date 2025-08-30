@@ -35,6 +35,7 @@ const paymentFormSchema = z.object({
     .max(4, { message: "CVV must not exceed 4 digits." })
     .regex(/^[0-9]+$/, { message: "CVV must contain only digits." }),
   zipCode: z.string().min(5, { message: "Zip code must be at least 5 characters." }),
+});
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
@@ -63,15 +64,20 @@ async function generateCloverCardToken(cardData: PaymentFormValues): Promise<str
       // In production, use Clover.js to generate real tokens
       // This would require loading the Clover SDK and calling their tokenization API
       throw new Error('Production card tokenization requires Clover.js SDK implementation');
+    }
   } catch (error) {
     console.error('Card tokenization failed:', error);
     // Fallback to a basic test token for development
     return `clv_test_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+  }
+}
 
 interface PaymentFormProps {
   requestId: number;
   amount: number;
+  onSuccess: () => void;
   isSubscriptionPayment?: boolean;
+}
 
 export default function PaymentForm({ requestId, amount, onSuccess, isSubscriptionPayment = false }: PaymentFormProps) {
   const { toast } = useToast();
@@ -91,6 +97,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
       cvv: "",
       zipCode: "",
     },
+  });
 
   const onSubmit = async (data: PaymentFormValues) => {
     setIsSubmitting(true);
@@ -104,8 +111,10 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
         title: "Payment Error",
         description: "Invalid request ID. Please refresh the page and try again.",
         variant: "destructive",
+      });
       setIsSubmitting(false);
       return;
+    }
     
     try {
       if (isSubscriptionPayment) {
@@ -131,12 +140,14 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
               ...data,
               amount: totalAmount,
             },
+          });
           
           console.log('Clover subscription payment response:', response);
           
           toast({
             title: "Payment Successful",
             description: "Your subscription payment has been processed successfully.",
+          });
         } catch (error) {
           // NO SIMULATION FALLBACK - Real payment required
           console.error('Clover subscription payment failed:', error);
@@ -145,7 +156,9 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             title: "Payment Failed",
             description: "Payment processing failed. Please check your card details and try again.",
             variant: "destructive",
+          });
           throw error; // Propagate error to prevent success flow
+        }
       } else {
         // For regular service payments, try Clover first
         console.log('Processing regular service payment with requestId:', requestId);
@@ -170,12 +183,14 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
               ...data,
               amount: totalAmount,
             },
+          });
           
           console.log('Clover payment response:', response);
           
           toast({
             title: "Payment Successful",
             description: "Your payment has been processed successfully.",
+          });
         } catch (error) {
           // NO FALLBACK - Real Clover payment required
           console.error('Clover service payment failed:', error);
@@ -184,7 +199,10 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
             title: "Payment Failed",
             description: "Payment processing failed. Please check your card details and try again.",
             variant: "destructive",
+          });
           throw error; // Propagate error to prevent success flow
+        }
+      }
       
       onSuccess();
     } catch (error) {
@@ -193,8 +211,10 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
         title: "Payment Failed",
         description: "There was a problem processing your payment. Please try again.",
         variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
+    }
   };
 
   // Format card number with spaces for readability
@@ -206,11 +226,13 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
 
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4));
+    }
 
     if (parts.length) {
       return parts.join(" ");
     } else {
       return value;
+    }
   };
 
   // Generate array of months for select
@@ -220,6 +242,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
       value: month.toString().padStart(2, "0"),
       label: month.toString().padStart(2, "0"),
     };
+  });
 
   // Generate array of years for select
   const currentYear = new Date().getFullYear();
@@ -229,6 +252,7 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
       value: year.toString(),
       label: year.toString(),
     };
+  });
 
   return (
     <Form {...form}>
@@ -405,3 +429,4 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
       </form>
     </Form>
   );
+}

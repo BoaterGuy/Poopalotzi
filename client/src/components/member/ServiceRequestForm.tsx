@@ -44,13 +44,16 @@ const serviceRequestFormSchema = insertPumpOutRequestSchema
     weekStartDate: z.date({
       required_error: "Please select a week",
     }),
+  });
 
 type ServiceRequestFormValues = z.infer<typeof serviceRequestFormSchema>;
 
 interface ServiceRequestFormProps {
   boats: any[]; // The user's boats
   serviceLevel: any; // The service level details
+  onSuccess: (request: any) => void; // Callback when form is successfully submitted
   quotaInfo?: { used: number; total: number; remaining: number } | null; // Monthly quota information
+}
 
 export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quotaInfo }: ServiceRequestFormProps) {
   const { toast } = useToast();
@@ -69,6 +72,8 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
       options.push({
         value: weekStart,
         label: `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`,
+      });
+    }
     
     return options;
   };
@@ -84,6 +89,7 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
       paymentStatus: "Pending",
       ownerNotes: "",
     },
+  });
 
   const onSubmit = async (data: ServiceRequestFormValues) => {
     setIsSubmitting(true);
@@ -100,11 +106,13 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formattedData),
         credentials: "include"
+      });
       
       if (response.ok) {
         toast({
           title: "Service Requested",
           description: "Your pump-out service request has been submitted successfully.",
+        });
         
         // Call the onSuccess callback with the created request
         const createdRequest = await response.json();
@@ -112,14 +120,17 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
       } else {
         const errorText = await response.text();
         throw new Error(`Failed to submit request: ${errorText}`);
+      }
     } catch (error) {
       console.error("Error submitting service request:", error);
       toast({
         title: "Error",
         description: "There was a problem submitting your service request. Please try again.",
         variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
+    }
   };
 
   // Find the selected boat for displaying details
@@ -196,6 +207,7 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
                         selectedBoat.pumpPortLocation === 'port_side' ? 'Port Side' :
                         selectedBoat.pumpPortLocation === 'starboard_side' ? 'Starboard Side' :
                         selectedBoat.pumpPortLocation === 'cabin_roof' ? 'Cabin Roof' : 'Not specified'
+                      }
                     </p>
                   </div>
                 </div>
@@ -326,3 +338,4 @@ export default function ServiceRequestForm({ boats, serviceLevel, onSuccess, quo
       </form>
     </Form>
   );
+}

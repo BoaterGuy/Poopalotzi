@@ -10,8 +10,15 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       ...options.headers,
     },
     ...options,
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
     throw new Error(errorData.message || 'Request failed');
+  }
 
+  return response.json();
+};
+
+// Legacy export for compatibility
+export const queryClient = null;

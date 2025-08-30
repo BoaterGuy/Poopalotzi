@@ -59,18 +59,21 @@ const manualEntrySchema = z.object({
   notes: z.string().optional(),
   isSingleHead: z.boolean().default(true),
   paymentReceived: z.boolean().default(false),
+});
 
 type ManualEntryFormValues = z.infer<typeof manualEntrySchema>;
 
 export default function ManualEntry() {
   const { toast } = useToast();
-  // React Query removed
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pumpOutPorts, setPumpOutPorts] = useState<string[]>([]);
 
   // Fetch all marinas
-  // React Query removed
+  const { data: marinas = [], isLoading: isLoadingMarinas } = useQuery({
+    queryKey: ['/api/marinas'],
     queryFn: undefined,
+  });
 
   // The list of possible pump-out port locations
   const pumpOutPortOptions = [
@@ -90,6 +93,7 @@ export default function ManualEntry() {
       paymentReceived: false,
       pumpOutPorts: [],
     },
+  });
 
   // Handle adding or removing pump-out ports
   const togglePumpOutPort = (port: string) => {
@@ -102,6 +106,8 @@ export default function ManualEntry() {
         const newPorts = [...prev, port];
         form.setValue("pumpOutPorts", newPorts);
         return newPorts;
+      }
+    });
   };
 
   const onSubmit = async (data: ManualEntryFormValues) => {
@@ -143,13 +149,16 @@ export default function ManualEntry() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
         credentials: "include"
+      });
       
       if (response.ok) {
         toast({
           title: "Service Entry Created",
           description: "The manual service entry has been recorded successfully.",
+        });
         
         // Invalidate relevant queries to refresh any data
+        queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
         
         // Reset form and selected values
         form.reset();
@@ -157,14 +166,17 @@ export default function ManualEntry() {
       } else {
         const errorText = await response.text();
         throw new Error(`Failed to create entry: ${errorText}`);
+      }
     } catch (error) {
       console.error("Error creating manual entry:", error);
       toast({
         title: "Error",
         description: "There was a problem creating the service entry. Please try again.",
         variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
+    }
   };
 
   return (
@@ -577,3 +589,4 @@ export default function ManualEntry() {
       </div>
     </>
   );
+}

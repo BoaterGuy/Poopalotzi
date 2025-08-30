@@ -54,6 +54,7 @@ const AlertDialogHeader = ({
     )}
     {...props}
   />
+)
 AlertDialogHeader.displayName = "AlertDialogHeader"
 
 const AlertDialogFooter = ({
@@ -67,6 +68,7 @@ const AlertDialogFooter = ({
     )}
     {...props}
   />
+)
 AlertDialogFooter.displayName = "AlertDialogFooter"
 
 const AlertDialogTitle = React.forwardRef<
@@ -134,3 +136,4 @@ export {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
+}

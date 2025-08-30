@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Helmet } from "react-helmet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Calendar, Ship, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,36 +42,27 @@ export default function RequestServiceMinimal() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [boats, setBoats] = useState<any[]>([]);
-  const [credits, setCredits] = useState<any>(null);
 
-  // Fetch boats and credits on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [boatsResponse, creditsResponse] = await Promise.all([
-          fetch('/api/boats', { credentials: 'include' }),
-          fetch('/api/users/me/credits', { credentials: 'include' })
-        ]);
-        
-        if (boatsResponse.ok) {
-          const boatsData = await boatsResponse.json();
-          setBoats(boatsData);
-        }
-        
-        if (creditsResponse.ok) {
-          const creditsData = await creditsResponse.json();
-          setCredits(creditsData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      }
-    };
-    
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
+  // Fetch boats
+  const { data: boats, isLoading: isLoadingBoats } = useQuery({
+    queryKey: ['/api/boats'],
+    queryFn: async () => {
+      const response = await fetch('/api/boats', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch boats');
+      return response.json();
+    },
+  });
+
+  // Fetch credits
+  const { data: creditsData, isLoading: isLoadingCredits } = useQuery({
+    queryKey: ['/api/users/me/credits'],
+    queryFn: async () => {
+      const response = await fetch('/api/users/me/credits', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch credits');
+      return response.json();
+    },
+    enabled: !!user,
+  });
 
   // Generate week options
   const generateWeekOptions = () => {
@@ -111,23 +103,34 @@ export default function RequestServiceMinimal() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          status: "Requested",
+          paymentStatus: "Pending",
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to submit request');
+        throw new Error('Failed to submit request');
       }
 
-      setIsSuccess(true);
       toast({
-        title: "Request Submitted!",
-        description: "Your pump-out service request has been submitted successfully.",
+        title: "Service Requested",
+        description: "Your pump-out service has been scheduled successfully.",
       });
-    } catch (error: any) {
+
+      setIsSuccess(true);
+      
+      // Redirect after short delay
+      setTimeout(() => {
+        window.location.href = '/member/dashboard';
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error submitting request:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit request. Please try again.",
+        description: "Failed to submit service request. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -135,153 +138,227 @@ export default function RequestServiceMinimal() {
     }
   };
 
-  if (!user) {
+  if (isLoadingBoats || isLoadingCredits) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Login Required</AlertTitle>
-            <AlertDescription>
-              Please log in to request pump-out services.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
+        <div className="animate-pulse space-y-6">
+          <div className="h-12 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
     );
   }
 
+  // Success state
   if (isSuccess) {
     return (
-      <Card>
-        <CardContent className="pt-6 text-center">
-          <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Request Submitted!</h2>
-          <p className="text-gray-600 mb-4">
-            Your pump-out service request has been submitted successfully.
-          </p>
-          <div className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href="/member/dashboard">Go to Dashboard</Link>
-            </Button>
-            <Button variant="outline" onClick={() => setIsSuccess(false)} className="w-full">
-              Submit Another Request
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        <Helmet>
+          <title>Request Submitted - Poopalotzi</title>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-700 mb-2">Request Submitted!</h2>
+              <p className="text-gray-600 mb-6">
+                Your pump-out service has been scheduled. You'll be redirected to your dashboard shortly.
+              </p>
+              <Link to="/member/dashboard">
+                <Button className="bg-[#38B2AC]">Go to Dashboard</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  // No boats check
+  if (boats && boats.length === 0) {
+    return (
+      <>
+        <Helmet>
+          <title>Request Service - Poopalotzi</title>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Ship className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-700 mb-2">No Boats Found</h2>
+              <p className="text-gray-600 mb-6">
+                You need to register a boat before you can request pump-out services.
+              </p>
+              <Link to="/member/boats">
+                <Button className="bg-[#38B2AC]">Add Your Boat</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  // No credits check
+  if (creditsData && creditsData.availableCredits === 0) {
+    return (
+      <>
+        <Helmet>
+          <title>Request Service - Poopalotzi</title>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-[#0B1F3A] mb-8">Request Pump-Out Service</h1>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-700 mb-2">No Credits Available</h2>
+              <p className="text-gray-600 mb-6">
+                You have used all your available pump-out service credits. Purchase additional services to continue.
+              </p>
+              <Link to="/member/service-plans">
+                <Button className="bg-[#38B2AC]">Purchase Service Credits</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Ship className="h-5 w-5" />
-            Request Pump-Out Service
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {boats?.length === 0 ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No Boats Found</AlertTitle>
-              <AlertDescription>
-                You need to add a boat before requesting services.{" "}
-                <Link href="/member/boats" className="underline">
-                  Add a boat here
-                </Link>
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="boatId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Boat</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose your boat" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {boats?.map((boat) => (
-                            <SelectItem key={boat.id} value={boat.id.toString()}>
-                              {boat.name} - {boat.marina?.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <>
+      <Helmet>
+        <title>Request Service - Poopalotzi</title>
+        <meta name="description" content="Schedule your boat pump-out service" />
+      </Helmet>
 
-                <FormField
-                  control={form.control}
-                  name="weekStartDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Week</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose service week" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {weekOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-[#0B1F3A] mb-4">Request Pump-Out Service</h1>
+        <p className="text-gray-600 mb-8">Schedule a pump-out service for your boat</p>
 
-                <FormField
-                  control={form.control}
-                  name="ownerNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes (Optional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Any special instructions or notes..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {creditsData && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <AlertCircle className="h-4 w-4 text-green-500" />
+            <AlertTitle>Credits Available</AlertTitle>
+            <AlertDescription>
+              You have {creditsData.availableCredits} pump-out service{creditsData.availableCredits > 1 ? 's' : ''} available.
+            </AlertDescription>
+          </Alert>
+        )}
 
-                {credits && (
-                  <Alert>
-                    <Calendar className="h-4 w-4" />
-                    <AlertTitle>Available Credits</AlertTitle>
-                    <AlertDescription>
-                      You have {credits.totalPumpOuts} pump-out credits remaining.
-                    </AlertDescription>
-                  </Alert>
-                )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader className="bg-[#F4EBD0]">
+                <CardTitle>Schedule a Pump-Out</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="boatId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Select Boat</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Choose your boat" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {boats?.map((boat: any) => (
+                                <SelectItem key={boat.id} value={boat.id.toString()}>
+                                  {boat.name} - {boat.make} {boat.model}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Submitting..." : "Submit Request"}
-                </Button>
-              </form>
-            </Form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                    <FormField
+                      control={form.control}
+                      name="weekStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Select Week</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Choose service week" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {weekOptions.map((week) => (
+                                <SelectItem key={week.value} value={week.value}>
+                                  {week.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="ownerNotes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Additional Notes (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Any special instructions or requests..."
+                              {...field}
+                              rows={3}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-[#38B2AC] hover:bg-opacity-90"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Submitting..." : "Schedule Service"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="bg-[#F4EBD0]">
+                <CardTitle>Service Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Available Credits:</span>
+                    <span className="font-semibold">{creditsData?.availableCredits || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Registered Boats:</span>
+                    <span className="font-semibold">{boats?.length || 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

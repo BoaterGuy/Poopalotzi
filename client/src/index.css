@@ -82,6 +82,7 @@
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='2' viewBox='0 0 40 2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v1H0z' fill='%23718096' fill-opacity='.1' fill-rule='evenodd'/%3E%3C/svg%3E");
   background-repeat: repeat-x;
 }
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500;600;700&display=swap');
 
 *, ::before, ::after{
   --tw-border-spacing-x: 0;

@@ -45,3 +45,4 @@ export default function HeroSection() {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </section>
   );
+}

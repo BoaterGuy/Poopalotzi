@@ -11,6 +11,7 @@ interface BulkPlanPurchaseFormProps {
   onPurchase: (additionalPumpOuts: number, totalCost: number) => void;
   onCancel: () => void;
   isLoading?: boolean;
+}
 
 export default function BulkPlanPurchaseForm({ 
   serviceLevel, 
@@ -161,3 +162,4 @@ export default function BulkPlanPurchaseForm({
       </CardContent>
     </Card>
   );
+}

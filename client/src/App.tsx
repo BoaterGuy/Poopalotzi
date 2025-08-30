@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/use-auth";
 // Removed React Query to fix vendor module TypeScript errors
 import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,6 +40,7 @@ import CloverSettingsSimple from "@/pages/admin/CloverSettingsSimple";
 import CloverConnect from "@/pages/admin/CloverConnect";
 
 import PageLayout from "./components/layout/PageLayout";
+import { useAuth } from "./hooks/use-auth";
 import { Redirect } from "wouter";
 
 // Role-based route guards
@@ -96,8 +96,8 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="poopalotzi-theme">
-        <TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
           <AuthProvider>
             <PageLayout>
               <Switch>
@@ -107,12 +107,10 @@ function App() {
                 <Route path="/about" component={About} />
                 <Route path="/contact" component={Contact} />
                 <Route path="/auth" component={AuthPage} />
-                <Route path="/login" component={AuthPage} />
-                <Route path="/register" component={AuthPage} />
                 
                 {/* Member Routes */}
                 <Route path="/member/dashboard">
-                  <MemberRoute component={MemberDashboard} path="/member/dashboard" />
+                  <MemberRoute component={MemberDashboardNew} path="/member/dashboard" />
                 </Route>
                 <Route path="/member/dashboard-new">
                   <MemberRoute component={MemberDashboardNew} path="/member/dashboard-new" />
@@ -126,17 +124,21 @@ function App() {
                 <Route path="/member/request-service">
                   <MemberRoute component={MemberRequestService} path="/member/request-service" />
                 </Route>
+                {/* Add support for /member/request as an alternative URL */}
+                <Route path="/member/request">
+                  <MemberRoute component={MemberRequestService} path="/member/request" />
+                </Route>
                 <Route path="/member/service-history">
                   <MemberRoute component={MemberServiceHistory} path="/member/service-history" />
                 </Route>
-                <Route path="/member/service-subscription">
-                  <MemberRoute component={MemberServiceSubscription} path="/member/service-subscription" />
+                <Route path="/member/subscription">
+                  <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
                 </Route>
                 <Route path="/member/service-plans">
                   <MemberRoute component={MemberServicePlans} path="/member/service-plans" />
                 </Route>
-                <Route path="/member/payment-history">
-                  <MemberRoute component={MemberPaymentHistory} path="/member/payment-history" />
+                <Route path="/member/payments">
+                  <MemberRoute component={MemberPaymentHistory} path="/member/payments" />
                 </Route>
                 
                 {/* Employee Routes */}

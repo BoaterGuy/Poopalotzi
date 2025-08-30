@@ -16,6 +16,7 @@ const ResizablePanelGroup = ({
     )}
     {...props}
   />
+)
 
 const ResizablePanel = ResizablePrimitive.Panel
 
@@ -39,5 +40,6 @@ const ResizableHandle = ({
       </div>
     )}
   </ResizablePrimitive.PanelResizeHandle>
+)
 
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle }

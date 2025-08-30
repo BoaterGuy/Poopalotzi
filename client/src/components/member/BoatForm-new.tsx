@@ -55,11 +55,14 @@ const boatFormSchema = insertBoatSchema
     // Adding form-only fields (not in database schema)
     dock: z.string().optional(),
     slip: z.coerce.number().optional(),
+  });
 
 type BoatFormValues = z.infer<typeof boatFormSchema>;
 
 interface BoatFormProps {
   boat?: any; // The existing boat data if editing
+  onSuccess: () => void; // Callback when form is successfully submitted
+}
 
 export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const { toast } = useToast();
@@ -84,6 +87,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const form = useForm<BoatFormValues>({
     resolver: zodResolver(boatFormSchema),
     defaultValues,
+  });
 
   const onSubmit = async (data: BoatFormValues) => {
     setIsSubmitting(true);
@@ -99,12 +103,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         await apiRequest("POST", "/api/boats", {
           ...data,
           ownerId: 2
+        });
+      }
       
       toast({
         title: boat ? "Boat Updated" : "Boat Added",
         description: boat ? 
           "Your boat information has been updated successfully." : 
           "Your boat has been added successfully.",
+      });
       
       onSuccess();
     } catch (error) {
@@ -113,8 +120,10 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         title: "Error",
         description: "There was a problem saving your boat information. Please try again.",
         variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
+    }
   };
 
   return (
@@ -354,6 +363,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
                                       : field.onChange(
                                           currentValues.filter(
                                             (value) => value !== option.id
+                                          )
                                         );
                                   }}
                                 />
@@ -411,3 +421,4 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       </form>
     </Form>
   );
+}

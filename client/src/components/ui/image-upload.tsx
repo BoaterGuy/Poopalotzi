@@ -6,6 +6,7 @@ interface ImageUploadProps {
   value?: string;
   onChange: (value: string) => void;
   className?: string;
+}
 
 export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null);
@@ -34,6 +35,7 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
     onChange("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -108,3 +110,4 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
       </div>
     </div>
   );
+}
