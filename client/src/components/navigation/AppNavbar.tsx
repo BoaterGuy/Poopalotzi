@@ -382,4 +382,3 @@ export default function AppNavbar() {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>
   );
-}

@@ -22,7 +22,6 @@ export default function HowItWorks() {
       number: 4,
       title: "Enjoy Clean Boating",
       description: "Receive notifications when service is completed and enjoy your time on the water."
-    }
   ];
 
   return (
@@ -72,4 +71,3 @@ export default function HowItWorks() {
       </div>
     </section>
   );
-}

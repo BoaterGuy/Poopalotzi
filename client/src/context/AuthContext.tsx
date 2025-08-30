@@ -11,7 +11,6 @@ export interface User {
   role: 'member' | 'employee' | 'admin';
   serviceLevelId?: number;
   [key: string]: any;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +21,6 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithFacebook: () => Promise<void>;
   loginWithApple: () => Promise<void>;
-}
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -33,7 +31,6 @@ export const AuthContext = createContext<AuthContextType>({
   loginWithGoogle: async () => {},
   loginWithFacebook: async () => {},
   loginWithApple: async () => {},
-});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,8 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          }
-        });
 
         console.log('AuthContext: /api/auth/me response status:', response.status);
         console.log('AuthContext: Response headers:', [...response.headers.entries()]);
@@ -67,13 +62,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const errorData = await response.json().catch(() => ({}));
           console.log('AuthContext: No valid session found, error:', errorData);
           setUser(null);
-        }
       } catch (error) {
         console.error('AuthContext: Error fetching user:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
-      }
     };
 
     fetchUser();
@@ -89,7 +82,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Check if the user exists in our system
             const response = await fetch('/api/auth/me', {
               credentials: 'include',
-            });
 
             if (!response.ok) {
               // User doesn't exist in our system, create them
@@ -101,24 +93,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 oauthProvider: supaUser.app_metadata.provider,
                 oauthId: supaUser.id,
                 password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
-              });
 
               if (registerResponse.ok) {
                 const userData = await registerResponse.json();
                 setUser(userData);
-              }
             } else {
               // User exists, get their data
               const userData = await response.json();
               setUser(userData);
-            }
           } catch (error) {
             console.error('Error syncing user after auth state change:', error);
-          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
-        }
-      }
     );
 
     return () => {
@@ -142,13 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password,
         }),
         credentials: 'include',
-      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
         console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
         throw new Error(errorData.message || 'Login failed');
-      }
 
       const userData = await response.json();
       console.log('AuthContext: Login successful, user data:', userData);
@@ -157,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName}!`,
-      });
       
       // Use setTimeout to ensure state is set before redirect
       setTimeout(() => {
@@ -167,7 +150,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           window.location.href = '/employee/schedule';
         } else {
           window.location.href = '/member/dashboard';
-        }
       }, 100);
       
     } catch (error) {
@@ -176,11 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Login failed",
         description: error instanceof Error ? error.message : "Please check your credentials and try again.",
         variant: "destructive",
-      });
       throw error;
     } finally {
       setIsLoading(false);
-    }
   };
 
   const register = async (userData: any) => {
@@ -196,18 +176,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Registration successful",
         description: `Welcome to Poopalotzi, ${newUser.firstName}!`,
-      });
     } catch (error) {
       console.error('Registration error:', error);
       toast({
         title: "Registration failed",
         description: "Please check your information and try again.",
         variant: "destructive",
-      });
       throw error;
     } finally {
       setIsLoading(false);
-    }
   };
 
   const logout = async () => {
@@ -225,12 +202,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
-      });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setIsLoading(false);
-    }
   };
 
   const loginWithGoogle = async () => {
@@ -242,8 +217,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Google login failed",
         description: "There was an error logging in with Google.",
         variant: "destructive",
-      });
-    }
   };
 
   const loginWithFacebook = async () => {
@@ -255,8 +228,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Facebook login failed",
         description: "There was an error logging in with Facebook.",
         variant: "destructive",
-      });
-    }
   };
 
   const loginWithApple = async () => {
@@ -268,8 +239,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Apple login failed",
         description: "There was an error logging in with Apple.",
         variant: "destructive",
-      });
-    }
   };
 
   const value = {

@@ -35,7 +35,6 @@ export function ThemeProvider({
     // Use stored theme if available, otherwise use default
     if (storedTheme) {
       setTheme(storedTheme);
-    }
     
     // Apply theme to document
     if (typeof window !== 'undefined') {
@@ -49,13 +48,10 @@ export function ThemeProvider({
             : "light";
           root.classList.add(systemTheme);
           return;
-        }
 
         root.classList.add(theme);
       } catch (error) {
         console.error("Theme application error:", error);
-      }
-    }
   }, [theme, storageKey]);
 
   const value = {
@@ -71,7 +67,6 @@ export function ThemeProvider({
       {children}
     </ThemeProviderContext.Provider>
   );
-}
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);

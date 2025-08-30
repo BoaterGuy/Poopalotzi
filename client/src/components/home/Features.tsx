@@ -34,7 +34,6 @@ export default function Features() {
       icon: <Headset className="h-8 w-8" />,
       title: "Dedicated Support",
       description: "Get help when you need it with our responsive customer support team available through the app."
-    }
   ];
 
   return (
@@ -65,4 +64,3 @@ export default function Features() {
       </div>
     </section>
   );
-}

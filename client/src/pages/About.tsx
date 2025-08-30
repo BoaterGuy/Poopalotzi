@@ -25,7 +25,6 @@ export default function About() {
       icon: <Droplet className="h-8 w-8 mb-4 text-[#0B1F3A]" />,
       title: "Clean Water Advocacy",
       description: "Beyond our services, we advocate for policies and practices that keep our waters clean for future generations."
-    }
   ];
 
   const teamMembers = [
@@ -38,7 +37,6 @@ export default function About() {
       name: "Pam Griebel",
       role: "Founder & Co-Owner",
       bio: "Pam shares a lifelong love for Lake Erie boating and co-piloted the 'Take Five' around America's Great Loop. She's committed to providing service that enhances everyone's boating experience."
-    }
   ];
 
   return (
@@ -229,4 +227,3 @@ export default function About() {
       </div>
     </>
   );
-}

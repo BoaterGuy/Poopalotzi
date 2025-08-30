@@ -56,16 +56,12 @@ export default function AdminDashboard() {
       sessionStorage.clear();
     } catch (e) {
       console.log('Cache clear attempt:', e);
-    }
   }, []);
 
-  const { data: metrics } = useQuery({
-    queryKey: ['/api/analytics/metrics'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/analytics/metrics');
       return res.json();
-    }
-  });
 
   const {
     totalCustomers = 0,
@@ -77,38 +73,26 @@ export default function AdminDashboard() {
   } = metrics || {};
 
   // Fetch analytics data
-  const { data: usersByServiceLevel, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['/api/analytics/users-by-service-level'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/analytics/users-by-service-level');
       return res.json();
-    }
-  });
 
-  const { data: serviceCounts, isLoading: isLoadingCounts } = useQuery({
-    queryKey: ['/api/analytics/service-counts'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/analytics/service-counts');
       return res.json();
-    }
-  });
 
-  const { data: arpuData, isLoading: isLoadingArpu } = useQuery({
-    queryKey: ['/api/analytics/arpu'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/analytics/arpu');
       return res.json();
-    }
-  });
 
   // Fetch real pump-out data grouped by week
-  const { data: revenueData = [], isLoading: isLoadingRevenue } = useQuery({
-    queryKey: ['/api/analytics/pump-out-weekly'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/analytics/pump-out-weekly');
       return res.json();
-    }
-  });
 
   const isLoading = isLoadingUsers || isLoadingCounts || isLoadingArpu || isLoadingRevenue;
 
@@ -499,7 +483,6 @@ export default function AdminDashboard() {
       </div>
     </>
   );
-}
 
 // Edit User Form Schema
 const editUserSchema = z.object({
@@ -508,14 +491,13 @@ const editUserSchema = z.object({
   email: z.string().email("Invalid email format"),
   phone: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
-});
 
 type EditUserFormData = z.infer<typeof editUserSchema>;
 
 // User Management Table Component
 function UserManagementTable() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // React Query removed
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -535,83 +517,61 @@ function UserManagementTable() {
       phone: "",
       password: "",
     },
-  });
 
   // Fetch all users
-  const { data: users = [], isLoading, error } = useQuery({
-    queryKey: ['/api/admin/users'],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch('/api/admin/users', {
         credentials: 'include' // Include cookies for authentication
-      });
       if (!res.ok) throw new Error(`Failed to fetch users: ${res.status}`);
       return res.json();
-    }
-  });
 
   // Role change mutation
-  const roleChangeMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+  // React Query mutation removed
       const res = await fetch(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ role }),
-      });
       if (!res.ok) throw new Error('Failed to update role');
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
         title: "Role Updated",
         description: "User role has been updated successfully.",
-      });
       setIsRoleChangeDialogOpen(false);
       setPendingRoleChange(null);
     },
-    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to update user role. Please try again.",
         variant: "destructive",
-      });
     },
-  });
 
   // Edit user mutation
-  const editUserMutation = useMutation({
-    mutationFn: async (formData: EditUserFormData) => {
+  // React Query mutation removed
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(formData),
-      });
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || 'Failed to update user');
-      }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
         title: "User Updated",
         description: "User details have been updated successfully.",
-      });
       setIsEditDialogOpen(false);
       setEditingUser(null);
       editForm.reset();
     },
-    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update user. Please try again.",
         variant: "destructive",
-      });
     },
-  });
 
   const handleRoleChange = (userId: number, userName: string, currentRole: string, newRole: string) => {
     if (currentRole === newRole) return;
@@ -621,7 +581,6 @@ function UserManagementTable() {
       userName,
       currentRole,
       newRole,
-    });
     setIsRoleChangeDialogOpen(true);
   };
 
@@ -630,8 +589,6 @@ function UserManagementTable() {
       roleChangeMutation.mutate({
         userId: pendingRoleChange.userId,
         role: pendingRoleChange.newRole,
-      });
-    }
   };
 
   const handleEditUser = (user: any) => {
@@ -642,7 +599,6 @@ function UserManagementTable() {
       email: user.email || "",
       phone: user.phone || "",
       password: "", // Always empty for security
-    });
     setIsEditDialogOpen(true);
   };
 
@@ -651,7 +607,6 @@ function UserManagementTable() {
     const dataToSubmit = { ...formData };
     if (!dataToSubmit.password || dataToSubmit.password.trim() === "") {
       delete dataToSubmit.password;
-    }
     editUserMutation.mutate(dataToSubmit);
   };
 
@@ -660,7 +615,6 @@ function UserManagementTable() {
       case 'admin': return <Shield className="h-4 w-4" />;
       case 'employee': return <Settings className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
-    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -668,16 +622,13 @@ function UserManagementTable() {
       case 'admin': return 'bg-red-100 text-red-800';
       case 'employee': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
-    }
   };
 
   if (isLoading) {
     return <div className="text-center py-8 bg-yellow-100 border border-yellow-300 rounded">Loading users...</div>;
-  }
 
   if (error) {
     return <div className="text-center py-8 bg-red-100 border border-red-300 rounded text-red-600">Error loading users: {error.message}</div>;
-  }
 
   return (
     <>
@@ -896,4 +847,3 @@ function UserManagementTable() {
       </Dialog>
     </>
   );
-}

@@ -25,13 +25,10 @@ const signUpSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
-});
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 interface SignUpFormProps {
-  onSuccess: () => void;
-}
 
 export default function SignUpForm({ onSuccess }: SignUpFormProps) {
   const { register, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
@@ -46,7 +43,6 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
       password: "",
       confirmPassword: "",
     },
-  });
 
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
@@ -58,14 +54,12 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         email: values.email,
         password: values.password,
         role: "member", // Default role for new sign-ups
-      });
       
       onSuccess();
     } catch (error) {
       console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
-    }
   };
 
   const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
@@ -80,11 +74,9 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         case "apple":
           await loginWithApple();
           break;
-      }
       // Success will be handled by auth state change in AuthContext
     } catch (error) {
       console.error(`${provider} login error:`, error);
-    }
   };
 
   return (
@@ -221,4 +213,3 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
       </div>
     </div>
   );
-}

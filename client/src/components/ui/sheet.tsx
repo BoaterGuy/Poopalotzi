@@ -46,7 +46,6 @@ const sheetVariants = cva(
     defaultVariants: {
       side: "right",
     },
-  }
 )
 
 interface SheetContentProps
@@ -137,4 +136,3 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-}

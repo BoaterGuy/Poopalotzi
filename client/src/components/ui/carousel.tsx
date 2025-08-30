@@ -17,7 +17,6 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
-}
 
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0]
@@ -35,10 +34,8 @@ function useCarousel() {
 
   if (!context) {
     throw new Error("useCarousel must be used within a <Carousel />")
-  }
 
   return context
-}
 
 const Carousel = React.forwardRef<
   HTMLDivElement,
@@ -69,7 +66,6 @@ const Carousel = React.forwardRef<
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
-      }
 
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
@@ -91,7 +87,6 @@ const Carousel = React.forwardRef<
         } else if (event.key === "ArrowRight") {
           event.preventDefault()
           scrollNext()
-        }
       },
       [scrollPrev, scrollNext]
     )
@@ -99,7 +94,6 @@ const Carousel = React.forwardRef<
     React.useEffect(() => {
       if (!api || !setApi) {
         return
-      }
 
       setApi(api)
     }, [api, setApi])
@@ -107,7 +101,6 @@ const Carousel = React.forwardRef<
     React.useEffect(() => {
       if (!api) {
         return
-      }
 
       onSelect(api)
       api.on("reInit", onSelect)
@@ -115,7 +108,6 @@ const Carousel = React.forwardRef<
 
       return () => {
         api?.off("select", onSelect)
-      }
     }, [api, onSelect])
 
     return (
@@ -144,7 +136,6 @@ const Carousel = React.forwardRef<
         </div>
       </CarouselContext.Provider>
     )
-  }
 )
 Carousel.displayName = "Carousel"
 
@@ -257,4 +248,3 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-}

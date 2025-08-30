@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,18 +22,11 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   subject: z.string().min(2, "Subject must be at least 2 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
-});
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export default function Contact() {
   const { toast } = useToast();
-  
-  // Fetch marinas from API for contact page
-  const { data: marinas = [] } = useQuery({
-    queryKey: ["/api/marinas"],
-    select: (data: any[]) => data.map(marina => ({ id: marina.id, name: marina.name }))
-  });
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -44,43 +37,31 @@ export default function Contact() {
       subject: "",
       message: "",
     },
-  });
 
-  const contactMutation = useMutation({
-    mutationFn: async (values: ContactFormValues) => {
+  // Handle form submission with simple fetch
+  const onSubmit = async (values: ContactFormValues) => {
+    try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(values),
-      });
       
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to send message');
-      }
       
-      return response.json();
-    },
-    onSuccess: () => {
       toast({
         title: "Message Sent!",
         description: "We've received your message and will get back to you soon.",
-      });
       form.reset();
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = async (values: ContactFormValues) => {
-    contactMutation.mutate(values);
   };
 
   return (
@@ -104,191 +85,171 @@ export default function Contact() {
         </div>
       </div>
 
-      <div className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-2xl font-bold text-[#0B1F3A] mb-6">Send Us a Message</h2>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="your@email.com" type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="(555) 123-4567" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="subject"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Subject</FormLabel>
-                        <FormControl>
-                          <Input placeholder="How can we help you?" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Message</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell us what you need..." 
-                            rows={5}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    className="bg-[#FF6B6B] hover:bg-opacity-90 w-full"
-                    disabled={contactMutation.isPending}
-                  >
-                    {contactMutation.isPending ? "Sending..." : "Send Message"}
-                  </Button>
-                </form>
-              </Form>
-            </div>
-            
-            <div>
-              <h2 className="text-2xl font-bold text-[#0B1F3A] mb-6">Contact Information</h2>
-              
-              <div className="bg-[#F4EBD0] rounded-lg p-6 mb-8">
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
-                      <FaMapMarkerAlt className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-[#0B1F3A] mb-1">Our Office</h3>
-                      <p className="text-gray-700">711 W. Lakeshore Dr #402<br />Port Clinton, OH 43452-9311</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
-                      <FaPhoneAlt className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-[#0B1F3A] mb-1">Phone</h3>
-                      <p className="text-gray-700">(567) 262-6270</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
-                      <FaEnvelope className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-[#0B1F3A] mb-1">Email</h3>
-                      <p className="text-gray-700">poopalotzillc@gmail.com</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="bg-[#0B1F3A] rounded-full p-3 text-white mr-4">
-                      <FaClock className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-[#0B1F3A] mb-1">Hours</h3>
-                      <p className="text-gray-700">Monday - Friday: 9am - 5pm<br />Saturday & Sunday: By Appointment</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-bold text-[#0B1F3A] mb-4">Frequently Asked Questions</h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-bold text-[#0B1F3A]">How quickly can I expect a response?</h4>
-                    <p className="text-gray-700">We typically respond to all inquiries within 24 business hours.</p>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#0B1F3A]">Do you offer emergency services?</h4>
-                    <p className="text-gray-700">Yes, for urgent situations please call our direct line for immediate assistance.</p>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#0B1F3A]">Can I schedule a demonstration?</h4>
-                    <p className="text-gray-700">Absolutely! Contact us to arrange a demonstration of our pump-out services at your marina.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid lg:grid-cols-2 gap-16">
+          {/* Contact Form */}
+          <div>
+            <h2 className="text-3xl font-bold text-[#0B1F3A] mb-6">Send us a message</h2>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="your@email.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="What's this about?" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message *</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us how we can help you..."
+                          className="min-h-[120px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#1B5DB8] hover:bg-[#174ea0]"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Sending..." : "Send Message"}
+                </Button>
+              </form>
+            </Form>
           </div>
-        </div>
-      </div>
-      
-      <div className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-[#0B1F3A] mb-4">Our Service Areas</h2>
-            <p className="text-gray-700 mb-8">
-              Currently serving marinas throughout the region:
-            </p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {marinas.map((marina) => (
-                <div key={marina.id} className="bg-white p-4 rounded shadow-sm">
-                  <h3 className="font-bold text-[#0B1F3A]">{marina.name}</h3>
+
+          {/* Contact Information */}
+          <div>
+            <h2 className="text-3xl font-bold text-[#0B1F3A] mb-6">Get in touch</h2>
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-[#1B5DB8] rounded-lg flex items-center justify-center">
+                  <FaMapMarkerAlt className="text-white text-lg" />
                 </div>
-              ))}
+                <div>
+                  <h3 className="font-semibold text-[#0B1F3A] mb-1">Our Location</h3>
+                  <p className="text-gray-600">
+                    Rhode Island<br />
+                    Serving marinas throughout the region
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-[#1B5DB8] rounded-lg flex items-center justify-center">
+                  <FaPhoneAlt className="text-white text-lg" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#0B1F3A] mb-1">Phone</h3>
+                  <p className="text-gray-600">
+                    Available for emergency services<br />
+                    Contact us through the app for scheduling
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-[#1B5DB8] rounded-lg flex items-center justify-center">
+                  <FaEnvelope className="text-white text-lg" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#0B1F3A] mb-1">Email</h3>
+                  <p className="text-gray-600">
+                    We'll respond to your message<br />
+                    within 24 hours
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-[#1B5DB8] rounded-lg flex items-center justify-center">
+                  <FaClock className="text-white text-lg" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#0B1F3A] mb-1">Service Hours</h3>
+                  <p className="text-gray-600">
+                    Monday - Friday: 8:00 AM - 6:00 PM<br />
+                    Saturday: 9:00 AM - 4:00 PM<br />
+                    Sunday: Emergency services only
+                  </p>
+                </div>
+              </div>
             </div>
-            
-            <p className="mt-8 text-gray-700">
-              Don't see your marina? Contact us to discuss expanding our service to your location!
-            </p>
+
+            <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-[#0B1F3A] mb-3">Quick Questions?</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                For immediate assistance with scheduling or existing services, 
+                log into your account and use our in-app messaging system.
+              </p>
+              <Button 
+                className="bg-[#1B5DB8] hover:bg-[#174ea0]"
+                onClick={() => window.location.href = '/login'}
+              >
+                Go to Account
+              </Button>
+            </div>
           </div>
         </div>
       </div>
     </>
   );
-}

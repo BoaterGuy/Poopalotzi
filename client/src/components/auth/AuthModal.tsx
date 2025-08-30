@@ -14,7 +14,6 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab?: "signin" | "signup";
-}
 
 export function AuthModal({ isOpen, onClose, defaultTab = "signin" }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
@@ -22,7 +21,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "signin" }: AuthModalP
   useEffect(() => {
     if (isOpen) {
       setActiveTab(defaultTab);
-    }
   }, [isOpen, defaultTab]);
 
   const handleSuccess = () => {
@@ -60,4 +58,3 @@ export function AuthModal({ isOpen, onClose, defaultTab = "signin" }: AuthModalP
       </DialogContent>
     </Dialog>
   );
-}

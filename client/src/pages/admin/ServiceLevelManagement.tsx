@@ -73,12 +73,10 @@ const serviceLevelFormSchema = insertServiceLevelSchema
   .refine((data) => {
     if (data.type === "bulk") {
       return data.basePrice !== undefined && data.pricePerAdditional !== undefined && data.baseQuantity !== undefined;
-    }
     return true;
   }, {
     message: "Base price, price per additional, and base quantity are required for bulk service types.",
     path: ["basePrice"],
-  });
 
 type ServiceLevelFormValues = z.infer<typeof serviceLevelFormSchema>;
 
@@ -86,29 +84,24 @@ type ServiceLevelFormValues = z.infer<typeof serviceLevelFormSchema>;
 
 export default function ServiceLevelManagement() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // React Query removed
   const [isAddingLevel, setIsAddingLevel] = useState(false);
   const [editingLevel, setEditingLevel] = useState<ServiceLevel | null>(null);
   const [deletingLevel, setDeletingLevel] = useState<ServiceLevel | null>(null);
 
   // Fetch service levels
-  const { data: serviceLevels = [], isLoading } = useQuery({
-    queryKey: ['/api/service-levels'],
+  // React Query removed
     queryFn: async () => {
       try {
         const response = await fetch('/api/service-levels', {
           credentials: 'include',
-        });
         if (!response.ok) {
           throw new Error('Failed to fetch service levels');
-        }
         return await response.json();
       } catch (error) {
         console.error('Error fetching service levels:', error);
         return [];
-      }
     },
-  });
 
   // Form handling for add/edit service level
   const ServiceLevelForm = ({ level, onSuccess }: { level?: ServiceLevel, onSuccess: () => void }) => {
@@ -130,7 +123,6 @@ export default function ServiceLevelManagement() {
     const form = useForm<ServiceLevelFormValues>({
       resolver: zodResolver(serviceLevelFormSchema),
       defaultValues,
-    });
     
     const serviceType = form.watch("type");
     
@@ -143,17 +135,13 @@ export default function ServiceLevelManagement() {
           toast({
             title: "Service Level Updated",
             description: "The service level has been updated successfully.",
-          });
         } else {
           // Create new service level
           await apiRequest("POST", "/api/service-levels", data);
           toast({
             title: "Service Level Created",
             description: "The new service level has been created successfully.",
-          });
-        }
         
-        queryClient.invalidateQueries({ queryKey: ['/api/service-levels'] });
         onSuccess();
       } catch (error) {
         console.error("Error submitting service level:", error);
@@ -161,10 +149,8 @@ export default function ServiceLevelManagement() {
           title: "Error",
           description: "There was a problem saving the service level. Please try again.",
           variant: "destructive",
-        });
       } finally {
         setIsSubmitting(false);
-      }
     };
     
     return (
@@ -435,9 +421,7 @@ export default function ServiceLevelManagement() {
       toast({
         title: "Service Level Deactivated",
         description: "The service level has been deactivated successfully.",
-      });
       
-      queryClient.invalidateQueries({ queryKey: ['/api/service-levels'] });
       setDeletingLevel(null);
     } catch (error) {
       console.error('Error deactivating service level:', error);
@@ -445,8 +429,6 @@ export default function ServiceLevelManagement() {
         title: "Error",
         description: "There was a problem deactivating the service level.",
         variant: "destructive",
-      });
-    }
   };
 
   const getTypeLabel = (type: string): string => {
@@ -456,7 +438,6 @@ export default function ServiceLevelManagement() {
       case 'seasonal': return 'Seasonal';
       case 'bulk': return 'Bulk';
       default: return type;
-    }
   };
 
   const getServiceTypeColor = (type: string): string => {
@@ -466,7 +447,6 @@ export default function ServiceLevelManagement() {
       case 'seasonal': return 'bg-purple-500';
       case 'bulk': return 'bg-orange-500';
       default: return 'bg-gray-500';
-    }
   };
 
   return (
@@ -634,4 +614,3 @@ export default function ServiceLevelManagement() {
       </Dialog>
     </>
   );
-}

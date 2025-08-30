@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// React Query removed - using simple fetch instead
 import { apiRequest } from '@/lib/queryClient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import { useToast } from './use-toast';
 
@@ -19,51 +19,51 @@ export interface PumpOutRequest {
   boat?: any;
   slipAssignment?: any;
   marina?: any;
-}
 
 export function useServiceRequests(boatId?: number) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [requests, setRequests] = useState<PumpOutRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Get service requests for a specific boat
-  const { data: requests, isLoading, error } = useQuery({
-    queryKey: [`/api/pump-out-requests/boat/${boatId}`],
-    queryFn: undefined,
-    enabled: !!boatId,
-    staleTime: 0, // Consider data always stale
-    cacheTime: 0  // Don't cache the data
-  });
+  // Fetch service requests for a specific boat
+  useEffect(() => {
+    if (!boatId) return;
+    
+    setIsLoading(true);
+    fetch(`/api/pump-out-requests/boat/${boatId}`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setRequests(data);
+        setError(null);
+      })
+      .catch(err => {
+        setError(err.message);
+        setRequests([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [boatId]);
   
   // Create a new service request
-  const createServiceRequest = useMutation({
-    mutationFn: async (requestData: any) => {
+  // React Query mutation removed
       const res = await apiRequest('POST', '/api/pump-out-requests', requestData);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/pump-out-requests/boat/${boatId}`] });
       toast({
         title: 'Service Request Created',
         description: 'Your pump-out service request has been submitted successfully.',
-      });
     },
-    onError: (error: any) => {
       toast({
         title: 'Error Creating Request',
         description: error.message || 'There was a problem submitting your request.',
         variant: 'destructive',
-      });
     },
-  });
   
   // Update service request status
-  const updateServiceStatus = useMutation({
-    mutationFn: async ({ requestId, status }: { requestId: number, status: string }) => {
+  // React Query mutation removed
       const res = await apiRequest('PATCH', `/api/pump-out-requests/${requestId}/status`, { status });
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/pump-out-requests/boat/${boatId}`] });
       
       const statusMessages = {
         Scheduled: 'Service has been scheduled.',
@@ -75,16 +75,12 @@ export function useServiceRequests(boatId?: number) {
       toast({
         title: `Status Updated: ${data.status}`,
         description: statusMessages[data.status as keyof typeof statusMessages] || 'Status updated successfully.',
-      });
     },
-    onError: (error: any) => {
       toast({
         title: 'Error Updating Status',
         description: error.message || 'There was a problem updating the status.',
         variant: 'destructive',
-      });
     },
-  });
   
   return {
     requests,
@@ -93,32 +89,27 @@ export function useServiceRequests(boatId?: number) {
     createServiceRequest,
     updateServiceStatus,
   };
-}
 
 export function useEmployeeSchedule() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const queryClient = useQueryClient();
+  // React Query removed
   
   // Get service requests for a specific week
-  const { data: weekRequests, isLoading, error } = useQuery({
-    queryKey: [`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch(`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`);
       if (!res.ok) {
         throw new Error('Failed to fetch requests');
-      }
       return res.json();
     },
     staleTime: 0,
     refetchOnMount: true
-  });
 
   return {
     requests: data || [],
     isLoading,
     fetch
   };
-}
 
 // Mock data for development - this should come from API
 const mockRequests = [
@@ -138,8 +129,6 @@ const mockRequests = [
       },
       marina: {
         name: "Harbor Bay Marina"
-      }
-    }
   },
   {
     id: 2,
@@ -162,7 +151,6 @@ const mockRequests = [
     slipAssignment: {
       dock: "C",
       slip: 5
-    }
   },
   {
     id: 3,
@@ -187,24 +175,20 @@ const mockRequests = [
       slip: 8
     },
     ownerNotes: "Call ahead"
-  }
 ];
 
 export function useWeeklyServiceRequests() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
-  const { data: weekRequests, isLoading, error } = useQuery({
-    queryKey: ['/api/pump-out-requests/week', selectedDate.toISOString().split('T')[0]],
+  // React Query removed
     queryFn: async () => {
       const res = await fetch(`/api/pump-out-requests/week/${selectedDate.toISOString().split('T')[0]}`);
       if (!res.ok) {
         throw new Error('Failed to fetch requests');
-      }
       return res.json();
     },
     staleTime: 0,
     refetchOnMount: true
-  });
 
   return {
     weekRequests: weekRequests || [],
@@ -213,19 +197,15 @@ export function useWeeklyServiceRequests() {
     selectedDate,
     setSelectedDate,
   };
-}
 
 export function useAdminServiceRequests() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
-  const queryClient = useQueryClient();
+  // React Query removed
   
   // Get all service requests with optional status filter
-  const { data: requests, isLoading, error } = useQuery({
-    queryKey: statusFilter ? [`/api/pump-out-requests/status/${statusFilter}`] : ['/api/pump-out-requests'],
+  // React Query removed
     queryFn: undefined,
-    enabled: !!(statusFilter || (!dateRange[0] && !dateRange[1])),
-  });
   
   return {
     requests,
@@ -236,4 +216,3 @@ export function useAdminServiceRequests() {
     dateRange,
     setDateRange,
   };
-}

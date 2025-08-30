@@ -20,13 +20,10 @@ import { useToast } from "@/hooks/use-toast";
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-});
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 interface SignInFormProps {
-  onSuccess: () => void;
-}
 
 export default function SignInForm({ onSuccess }: SignInFormProps) {
   const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
@@ -39,7 +36,6 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
       email: "",
       password: "",
     },
-  });
 
   const onSubmit = async (values: SignInFormValues) => {
     setIsLoading(true);
@@ -53,10 +49,8 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
         title: "Login Failed",
         description: message,
         variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
-    }
   };
 
   const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
@@ -71,11 +65,9 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
         case "apple":
           await loginWithApple();
           break;
-      }
       // Success will be handled by auth state change in AuthContext
     } catch (error) {
       console.error(`${provider} login error:`, error);
-    }
   };
 
   return (
@@ -166,4 +158,3 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
       </div>
     </div>
   );
-}

@@ -39,7 +39,7 @@ export default function ServiceSubscription() {
 
   const { toast } = useToast();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  // React Query removed
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -54,72 +54,55 @@ export default function ServiceSubscription() {
     return currentMonth >= 4 && currentMonth <= 9 
       ? (currentMonth + 1).toString().padStart(2, '0') 
       : '05'; // May
-  });
   const [autoRenew, setAutoRenew] = useState(false);
   
   // Fetch service levels
-  const { data: serviceLevels = [], isLoading } = useQuery({
-    queryKey: ['/api/service-levels'],
+  // React Query removed
     refetchOnMount: true,
     staleTime: 0,
     queryFn: async () => {
       try {
         const response = await fetch('/api/service-levels', {
           credentials: 'include',
-        });
         if (!response.ok) {
           throw new Error('Failed to fetch service levels');
-        }
         return await response.json();
       } catch (error) {
         console.error('Error fetching service levels:', error);
         // Return empty array to prevent errors
         return [];
-      }
     },
-  });
   
   // Fetch current subscription
-  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ['/api/users/me/subscription'],
+  // React Query removed
     queryFn: async () => {
       try {
         const response = await fetch('/api/users/me/subscription', {
           credentials: 'include',
-        });
         if (!response.ok) {
           // User may not have a subscription yet
           if (response.status === 404) {
             return null;
-          }
           throw new Error('Failed to fetch subscription');
-        }
         return await response.json();
       } catch (error) {
         console.error('Error fetching subscription:', error);
         return null;
-      }
     },
-  });
 
   // Fetch user credits to determine if they can repurchase
-  const { data: userCredits, isLoading: isLoadingCredits } = useQuery({
-    queryKey: ['/api/users/me/credits'],
+  // React Query removed
     queryFn: async () => {
       try {
         const response = await fetch('/api/users/me/credits', {
           credentials: 'include',
-        });
         if (!response.ok) {
           throw new Error('Failed to fetch user credits');
-        }
         return await response.json();
       } catch (error) {
         console.error('Error fetching user credits:', error);
         return { totalPumpOuts: 0, additionalPumpOuts: 0 };
-      }
     },
-  });
   
   const filterActiveLevels = (levels: ServiceLevel[]) => {
     return levels.filter(level => level.isActive);
@@ -152,7 +135,6 @@ export default function ServiceSubscription() {
     } else {
       setIsSubscribing(true);
       setShowBulkPlanForm(false); // Ensure bulk form doesn't show
-    }
   };
 
   const handleBulkPlanPurchase = (additionalPumpOuts: number, totalCost: number) => {
@@ -206,17 +188,14 @@ export default function ServiceSubscription() {
         periodText = `for ${monthNames[monthIndex]}`;
         if (autoRenew) {
           periodText += ' with auto-renewal';
-        }
       } else if (selectedPlan.type === 'seasonal') {
         periodText = 'for the season (May-October)';
       } else if (selectedPlan.type === 'one-time') {
         periodText = 'giving you 1 pump-out credit for this year';
-      }
       
       toast({
         title: "Payment Successful",
         description: `Your payment for ${selectedPlan.name} ${periodText} has been processed successfully.`,
-      });
       
       // Save subscription to local storage for persistence across pages
       import("@/lib/utils").then(utils => {
@@ -233,12 +212,8 @@ export default function ServiceSubscription() {
           autoRenew: selectedPlan.type === 'monthly' ? autoRenew : undefined,
         };
         utils.saveSubscriptionToLocal(subscriptionData);
-      });
       
       // Invalidate all relevant queries to refresh dashboard data
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       setShowPayment(false);
       setIsSubscribing(false);
       setSelectedPlan(null);
@@ -248,8 +223,6 @@ export default function ServiceSubscription() {
         title: "Error",
         description: "Payment was successful, but there was a problem updating your subscription. Please contact support.",
         variant: "destructive",
-      });
-    }
   };
   
   const getCurrentServiceLevel = () => {
@@ -291,7 +264,6 @@ export default function ServiceSubscription() {
             <ArrowRight className="h-4 w-4 ml-2" />
           </div>
         );
-      }
     };
     
     return (
@@ -587,7 +559,6 @@ export default function ServiceSubscription() {
                   setShowBulkPlanForm(true);
                 } else {
                   handleConfirmSubscription();
-                }
               }} 
               className="bg-[#0B1F3A] hover:bg-opacity-90"
             >
@@ -642,4 +613,3 @@ export default function ServiceSubscription() {
       </Dialog>
     </>
   );
-}

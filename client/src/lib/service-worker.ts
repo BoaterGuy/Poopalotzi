@@ -12,7 +12,6 @@ export function registerSW() {
           // Force update immediately in development
           if (isDev) {
             registration.update();
-          }
           
           // Listen for updates
           registration.addEventListener('updatefound', () => {
@@ -28,20 +27,11 @@ export function registerSW() {
                   } else {
                     // Show notification in production
                     showUpdateNotification();
-                  }
-                }
-              });
-            }
-          });
         })
         .catch(error => {
           console.error('ServiceWorker registration failed: ', error);
-        });
-    });
   } else if (isSafari) {
     console.log('Service worker registration skipped for Safari browser');
-  }
-}
 
 function showUpdateNotification() {
   // Create a simple notification for new version
@@ -93,9 +83,7 @@ function showUpdateNotification() {
   setTimeout(() => {
     if (notification.parentElement) {
       notification.remove();
-    }
   }, 10000);
-}
 
 // Utility function to manually clear service worker cache
 export function clearServiceWorkerCache(): Promise<boolean> {
@@ -112,9 +100,6 @@ export function clearServiceWorkerCache(): Promise<boolean> {
       );
     } else {
       resolve(false);
-    }
-  });
-}
 
 // Utility function to unregister service worker completely
 export function unregisterServiceWorker(): Promise<boolean> {
@@ -123,9 +108,7 @@ export function unregisterServiceWorker(): Promise<boolean> {
       const promises = registrations.map(registration => registration.unregister());
       return Promise.all(promises).then(() => true);
     }).catch(() => false);
-  }
   return Promise.resolve(false);
-}
 
 // Development helper - adds cache debugging panel
 export function addCacheDebugPanel() {
@@ -198,7 +181,6 @@ export function addCacheDebugPanel() {
     setTimeout(() => {
       if (statusEl) statusEl.textContent = '';
     }, 2000);
-  });
   
   document.getElementById('unregister-sw-btn')?.addEventListener('click', async () => {
     const statusEl = document.getElementById('debug-status');
@@ -210,19 +192,15 @@ export function addCacheDebugPanel() {
     setTimeout(() => {
       if (statusEl) statusEl.textContent = '';
     }, 2000);
-  });
   
   document.getElementById('reload-btn')?.addEventListener('click', () => {
     window.location.reload();
-  });
   
   // Auto-hide after 30 seconds
   setTimeout(() => {
     if (debugPanel.parentElement) {
       debugPanel.remove();
-    }
   }, 30000);
-}
 
 // Check if the app can be installed (PWA)
 export function checkInstallability() {
@@ -234,7 +212,6 @@ export function checkInstallability() {
       e.preventDefault();
       // Stash the event so it can be triggered later
       deferredPrompt = e;
-    });
 
     return {
       isInstallable: !!deferredPrompt,
@@ -247,16 +224,10 @@ export function checkInstallability() {
               console.log('User accepted the install prompt');
             } else {
               console.log('User dismissed the install prompt');
-            }
             deferredPrompt = null;
-          });
-        }
-      }
     };
-  }
   
   return {
     isInstallable: false,
     showInstallPrompt: () => {}
   };
-}

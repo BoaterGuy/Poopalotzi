@@ -21,7 +21,6 @@ export default function CloverConnect() {
     if (!merchantId.trim()) {
       alert('Please enter your Clover Merchant ID');
       return;
-    }
 
     setIsConnecting(true);
     
@@ -115,4 +114,3 @@ export default function CloverConnect() {
       </div>
     </div>
   );
-}

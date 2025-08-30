@@ -34,14 +34,12 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function BoatManagement() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // React Query removed
   const [isAddingBoat, setIsAddingBoat] = useState(false);
   const [editingBoat, setEditingBoat] = useState<Boat | null>(null);
   const [deletingBoat, setDeletingBoat] = useState<Boat | null>(null);
 
-  const { data: boats, isLoading: isLoadingBoats, refetch: refetchBoats } = useQuery<Boat[]>({
-    queryKey: ['/api/boats'],
-  });
+  // React Query removed
 
   // This query will be replaced by our marinasMap query
 
@@ -52,9 +50,7 @@ export default function BoatManagement() {
       toast({
         title: "Boat deleted",
         description: "Your boat has been successfully removed.",
-      });
       
-      queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
       setDeletingBoat(null);
     } catch (error) {
       console.error('Error deleting boat:', error);
@@ -62,13 +58,10 @@ export default function BoatManagement() {
         title: "Error",
         description: "There was a problem deleting your boat.",
         variant: "destructive",
-      });
-    }
   };
 
   // Use React Query to efficiently fetch all dock assignments and marina data
-  const { data: dockAssignments = {}, isLoading: isLoadingDocks, refetch: refetchDockAssignments } = useQuery<Record<number, DockAssignment>>({
-    queryKey: ['/api/dock-assignments'],
+  // React Query removed
     queryFn: async () => {
       if (!boats || boats.length === 0) return {};
       
@@ -84,33 +77,25 @@ export default function BoatManagement() {
             headers: {
               'Cache-Control': 'no-cache',
               'Pragma': 'no-cache'
-            }
-          });
           
           if (!res.ok) {
             if (res.status !== 404) {
               console.error(`Error fetching dock assignment for boat ${boat.id}: ${res.statusText}`);
-            }
             return;
-          }
           
           const data = await res.json();
           assignments[boat.id] = data;
         } catch (error) {
           console.error(`Error fetching dock assignment for boat ${boat.id}:`, error);
-        }
       }));
       
       return assignments;
     },
-    enabled: !!boats && boats.length > 0,
     // Don't cache the results, always fetch fresh data
     staleTime: 0,
-  });
   
   // Fetch all marinas
-  const { data: marinasMap = {}, isLoading: isLoadingMarinas, refetch: refetchMarinas } = useQuery<Record<number, Marina>>({
-    queryKey: ['/api/marinas/all'],
+  // React Query removed
     queryFn: async () => {
       try {
         const res = await fetch('/api/marinas', {
@@ -119,12 +104,9 @@ export default function BoatManagement() {
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          }
-        });
         
         if (!res.ok) {
           throw new Error('Failed to fetch marinas');
-        }
         
         const marinas: Marina[] = await res.json();
         
@@ -136,14 +118,12 @@ export default function BoatManagement() {
       } catch (error) {
         console.error('Error fetching marinas:', error);
         return {};
-      }
     },
     // Don't cache the results, always fetch fresh data
     staleTime: 0,
     // Force refetch on focus and reconnect
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-  });
   
   // Helper function to get formatted boat location info
   const getBoatLocationInfo = (boatId: number) => {
@@ -323,7 +303,6 @@ export default function BoatManagement() {
               toast({
                 title: "Boat added",
                 description: "Your boat has been successfully registered.",
-              });
             }}
           />
         </DialogContent>
@@ -343,11 +322,6 @@ export default function BoatManagement() {
               boat={editingBoat}
               onSuccess={() => {
                 // Refresh all data completely to ensure displays are updated
-                queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
-                queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${editingBoat.id}`] });
                 
                 // Reset the edit boat state to close the dialog
                 setEditingBoat(null);
@@ -389,4 +363,3 @@ export default function BoatManagement() {
 
     </>
   );
-}

@@ -44,7 +44,6 @@ interface EditRequestFormProps {
   boat?: Boat;
   onClose: () => void;
   onSave: (updatedRequest: Partial<PumpOutRequest>) => void;
-}
 
 const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProps) => {
   const { toast } = useToast();
@@ -52,7 +51,6 @@ const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProp
   const [formData, setFormData] = useState({
     weekStartDate: request.weekStartDate,
     ownerNotes: request.ownerNotes || '',
-  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -65,12 +63,10 @@ const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProp
         },
         body: JSON.stringify(formData),
         credentials: 'include'
-      });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update request');
-      }
 
       const updatedRequest = await response.json();
       onSave(updatedRequest);
@@ -78,7 +74,6 @@ const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProp
       toast({
         title: "Request Updated",
         description: "Your pump-out service request has been successfully updated.",
-      });
       
       onClose();
     } catch (error) {
@@ -87,10 +82,8 @@ const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProp
         title: "Update Failed",
         description: error instanceof Error ? error.message : "There was a problem updating your request. Please try again.",
         variant: "destructive",
-      });
     } finally {
       setIsSubmitting(false);
-    }
   };
 
   const statusColor = {
@@ -224,7 +217,7 @@ const EditRequestForm = ({ request, boat, onClose, onSave }: EditRequestFormProp
 
 export default function ServiceHistory() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // React Query removed
   const [selectedRequest, setSelectedRequest] = useState<PumpOutRequest | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
@@ -234,14 +227,11 @@ export default function ServiceHistory() {
   const [cancelRequestId, setCancelRequestId] = useState<number | null>(null);
 
   // Fetch boats first
-  const { data: boats } = useQuery<Boat[]>({
-    queryKey: ['/api/boats'],
+  // React Query removed
     queryFn: undefined,
-  });
 
   // Fetch service history for all boats owned by the member
-  const { data: requests, isLoading } = useQuery<PumpOutRequest[]>({
-    queryKey: ['/api/pump-out-requests/boat', boats?.map(b => b.id).join(',')],
+  // React Query removed
     queryFn: async () => {
       if (!boats || boats.length === 0) return [];
       
@@ -251,23 +241,16 @@ export default function ServiceHistory() {
       for (const boat of boats) {
         const response = await fetch(`/api/pump-out-requests/boat/${boat.id}`, {
           credentials: 'include'
-        });
         if (response.ok) {
           const boatRequests = await response.json();
           allRequests.push(...boatRequests);
-        }
-      }
       
       return allRequests;
     },
-    enabled: !!boats && boats.length > 0,
-  });
 
   // Fetch service levels for payment
-  const { data: serviceLevel } = useQuery({
-    queryKey: ['/api/service-levels/current'],
+  // React Query removed
     queryFn: undefined,
-  });
 
   const filteredRequests = requests?.filter(request => {
     // Apply text search if any
@@ -286,7 +269,6 @@ export default function ServiceHistory() {
     toast({
       title: "Payment Successful",
       description: "Your payment has been processed successfully.",
-    });
     setShowPaymentModal(false);
   };
 
@@ -304,34 +286,26 @@ export default function ServiceHistory() {
         },
         body: JSON.stringify({ status: 'Canceled' }),
         credentials: 'include'
-      });
 
       const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to cancel request');
-      }
       
       toast({
         title: "Request Canceled",
         description: "Your pump-out service request has been successfully canceled.",
-      });
       
       // Refresh the data
-      queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/member'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me/credits'] });
       
     } catch (err: any) {
       toast({
         title: "Cancellation Failed",
         description: err.message || "There was a problem canceling your request. Please try again.",
         variant: "destructive",
-      });
     } finally {
       setIsCanceling(false);
       setCancelRequestId(null);
-    }
   };
 
   return (
@@ -562,7 +536,6 @@ export default function ServiceHistory() {
                 setSelectedRequest(null);
               }}
               onSave={() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/pump-out-requests/boat'] });
                 setShowEditModal(false);
                 setSelectedRequest(null);
               }}
@@ -592,4 +565,3 @@ export default function ServiceHistory() {
       </Dialog>
     </>
   );
-}

@@ -38,10 +38,7 @@ export default function AdminManualServiceEntry() {
   const [paymentReceived, setPaymentReceived] = useState(false);
 
   // Fetch marinas from API instead of hardcoded list
-  const { data: marinas = [], isLoading: marinasLoading } = useQuery({
-    queryKey: ["/api/marinas"],
-    select: (data: any[]) => data.map(marina => ({ id: marina.id.toString(), name: marina.name }))
-  });
+  // React Query removed
 
   // Port location options
   const portLocations = [
@@ -58,8 +55,6 @@ export default function AdminManualServiceEntry() {
         return prev.filter(p => p !== port);
       } else {
         return [...prev, port];
-      }
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,22 +64,18 @@ export default function AdminManualServiceEntry() {
     if (!selectedMarina) {
       toast({ title: "Missing information", description: "Please select a marina", variant: "destructive" });
       return;
-    }
     
     if (!boatName) {
       toast({ title: "Missing information", description: "Please enter a boat name", variant: "destructive" });
       return;
-    }
     
     if (!ownerName) {
       toast({ title: "Missing information", description: "Please enter the owner's name", variant: "destructive" });
       return;
-    }
     
     if (selectedPorts.length === 0) {
       toast({ title: "Missing information", description: "Please select at least one pump-out port", variant: "destructive" });
       return;
-    }
 
     setIsSubmitting(true);
     
@@ -135,13 +126,11 @@ export default function AdminManualServiceEntry() {
           paymentReceived
         }),
         credentials: "include"
-      });
       
       if (response.ok) {
         toast({
           title: "Service Entry Created",
           description: "The manual service entry has been recorded successfully.",
-        });
         
         // Reset form
         setSelectedMarina("");
@@ -159,17 +148,14 @@ export default function AdminManualServiceEntry() {
       } else {
         const errorText = await response.text();
         throw new Error(`Failed to create entry: ${errorText}`);
-      }
     } catch (error) {
       console.error("Error creating manual entry:", error);
       toast({
         title: "Error",
         description: "There was a problem creating the service entry. Please try again.",
         variant: "destructive",
-      });
     } finally {
       setIsSubmitting(false);
-    }
   };
 
   return (
@@ -447,4 +433,3 @@ export default function AdminManualServiceEntry() {
       </div>
     </>
   );
-}

@@ -44,13 +44,11 @@ interface ScheduleItem {
   requestedDate?: string;
   weekStartDate?: string;
   pumpOutPorts?: string[];
-}
 
 interface MarinaGroup {
   marinaId: number;
   name: string;
   requests: ScheduleItem[];
-}
 
 export default function EmployeeSchedule() {
   const { toast } = useToast();
@@ -62,7 +60,6 @@ export default function EmployeeSchedule() {
     before: null as File | null,
     during: null as File | null,
     after: null as File | null
-  });
   
   // Status colors function
   const getStatusColor = (status: string): string => {
@@ -79,7 +76,6 @@ export default function EmployeeSchedule() {
         return "bg-orange-500";
       default:
         return "bg-gray-500";
-    }
   };
   
   // Function to handle status changes
@@ -89,8 +85,6 @@ export default function EmployeeSchedule() {
       setSelectedRequest({
         ...selectedRequest,
         status: newStatus
-      });
-    }
     
     // Update the local requests state to reflect the change
     setLocalRequests(prevRequests => 
@@ -119,7 +113,6 @@ export default function EmployeeSchedule() {
   useEffect(() => {
     if (initialRequests) {
       setLocalRequests(initialRequests);
-    }
   }, [initialRequests]);
 
   const handlePrevDay = () => {
@@ -160,7 +153,6 @@ export default function EmployeeSchedule() {
         title: "Status Updated",
         description: `Service for ${selectedRequest.boat.name} has been updated to: ${status}`,
         duration: 3000 // Auto-close after 3 seconds
-      });
       
       // Close dialog immediately
       setSelectedRequest(null);
@@ -170,7 +162,6 @@ export default function EmployeeSchedule() {
         before: null,
         during: null,
         after: null
-      });
     } catch (error) {
       console.error("Error updating service:", error);
       toast({
@@ -178,10 +169,8 @@ export default function EmployeeSchedule() {
         description: "There was a problem updating the service. Please try again.",
         variant: "destructive",
         duration: 3000
-      });
     } finally {
       setIsCompleting(false);
-    }
   };
 
   // Group requests by marina
@@ -202,10 +191,8 @@ export default function EmployeeSchedule() {
             name: item.marina.name,
             requests: []
           };
-        }
         
         groups[marinaId].requests.push(item);
-      });
     
     // Sort requests by pier and dock
     Object.values(groups).forEach(group => {
@@ -222,12 +209,9 @@ export default function EmployeeSchedule() {
         // First sort by pier (ascending)
         if (pierA !== pierB) {
           return pierA - pierB;
-        }
         
         // Then sort by dock number (ascending)
         return a.dockAssignment.dock - b.dockAssignment.dock;
-      });
-    });
     
     return Object.values(groups);
   };
@@ -288,7 +272,6 @@ export default function EmployeeSchedule() {
                     if (date) {
                       setSelectedDate(date);
                       setShowCalendar(false);
-                    }
                   }}
                   initialFocus
                 />
@@ -456,7 +439,6 @@ export default function EmployeeSchedule() {
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             setPhotoUpload({...photoUpload, before: e.target.files[0]});
-                          }
                         }}
                       />
                       {photoUpload.before ? (
@@ -490,7 +472,6 @@ export default function EmployeeSchedule() {
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             setPhotoUpload({...photoUpload, during: e.target.files[0]});
-                          }
                         }}
                       />
                       {photoUpload.during ? (
@@ -524,7 +505,6 @@ export default function EmployeeSchedule() {
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             setPhotoUpload({...photoUpload, after: e.target.files[0]});
-                          }
                         }}
                       />
                       {photoUpload.after ? (
@@ -586,4 +566,3 @@ export default function EmployeeSchedule() {
       </Dialog>
     </>
   );
-}

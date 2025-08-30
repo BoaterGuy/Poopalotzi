@@ -49,11 +49,9 @@ const MemberRoute = ({ component: Component, ...rest }: { component: React.FC<an
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
   
   if (!user) {
     return <Redirect to="/auth" />;
-  }
   
   return <Component {...rest} />;
 };
@@ -63,15 +61,12 @@ const EmployeeRoute = ({ component: Component, ...rest }: { component: React.FC<
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
   
   if (!user) {
     return <Redirect to="/auth" />;
-  }
   
   if (user.role !== 'employee' && user.role !== 'admin') {
     return <Redirect to="/" />;
-  }
   
   return <Component {...rest} />;
 };
@@ -81,15 +76,12 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
   
   if (!user) {
     return <Redirect to="/auth" />;
-  }
   
   if (user.role !== 'admin') {
     return <Redirect to="/" />;
-  }
   
   return <Component {...rest} />;
 };
@@ -195,6 +187,5 @@ function App() {
         </TooltipProvider>
     </ThemeProvider>
   );
-}
 
 export default App;

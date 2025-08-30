@@ -24,7 +24,6 @@ interface PaymentTransaction {
   createdAt: string;
   updatedAt: string;
   requestId: number | null;
-}
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -40,7 +39,6 @@ const formatDate = (dateString: string) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  });
 };
 
 const getStatusIcon = (status: string) => {
@@ -53,7 +51,6 @@ const getStatusIcon = (status: string) => {
       return <Clock className="h-4 w-4 text-yellow-500" />;
     default:
       return <Clock className="h-4 w-4 text-gray-500" />;
-  }
 };
 
 const getStatusColor = (status: string) => {
@@ -66,7 +63,6 @@ const getStatusColor = (status: string) => {
       return 'bg-yellow-500';
     default:
       return 'bg-gray-500';
-  }
 };
 
 export default function PaymentHistory() {
@@ -74,9 +70,7 @@ export default function PaymentHistory() {
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
-  const { data: payments, isLoading } = useQuery<PaymentTransaction[]>({
-    queryKey: ['/api/payments/history'],
-  });
+  // React Query removed
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -84,14 +78,11 @@ export default function PaymentHistory() {
       toast({
         title: "Copied!",
         description: `${label} copied to clipboard`,
-      });
     } catch (err) {
       toast({
         title: "Copy failed",
         description: "Unable to copy to clipboard",
         variant: "destructive",
-      });
-    }
   };
 
   const filteredPayments = payments?.filter(payment => {
@@ -118,7 +109,6 @@ export default function PaymentHistory() {
         </div>
       </div>
     );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -290,4 +280,3 @@ export default function PaymentHistory() {
       )}
     </div>
   );
-}

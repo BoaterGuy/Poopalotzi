@@ -18,7 +18,6 @@ export function formatPhoneDisplay(phone: string | null | undefined): string {
   
   // Format as (###) ###-####
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-}
 
 /**
  * Formats a phone number as the user types with input mask
@@ -39,7 +38,6 @@ export function formatPhoneInput(value: string): string {
   if (limitedDigits.length <= 3) return `(${limitedDigits}`;
   if (limitedDigits.length <= 6) return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3)}`;
   return `(${limitedDigits.slice(0, 3)}) ${limitedDigits.slice(3, 6)}-${limitedDigits.slice(6)}`;
-}
 
 /**
  * Cleans a phone number for storage (digits only)
@@ -55,7 +53,6 @@ export function cleanPhoneForStorage(phone: string | null | undefined): string |
   if (digits.length !== 10) return null;
   
   return digits;
-}
 
 /**
  * Validates if a phone number is complete and valid
@@ -66,4 +63,3 @@ export function isValidPhone(phone: string | null | undefined): boolean {
   if (!phone) return false;
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10;
-}
