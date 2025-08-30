@@ -502,88 +502,16 @@ export default function CloverSettings() {
                     </Button>
                     
                     {/* Manual OAuth completion for stuck scenarios */}
-                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="font-medium text-yellow-800 mb-2">⚠️ Manual Token Setup (Sandbox Only)</h4>
-                      <p className="text-sm text-yellow-700 mb-3">
-                        Only use this for sandbox testing. Production requires OAuth (button above):
-                      </p>
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Enter your Clover API Token (from Clover Dashboard > Setup > API Tokens)"
-                          className="w-full px-3 py-2 border border-blue-300 rounded text-sm"
-                          value={manualCode}
-                          onChange={(e) => setManualCode(e.target.value)}
-                        />
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={async () => {
-                            if (!manualCode.trim() || !merchantId.trim()) {
-                              toast({
-                                title: "Error",
-                                description: "Please enter both merchant ID and API token",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            
-                            try {
-                              const response = await fetch('/api/admin/clover/token-setup', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }, 
-                                body: JSON.stringify({
-                                  merchantId: merchantId.trim(),
-                                  apiToken: manualCode.trim()
-                                })
-                              });
-                              
-                              const data = await response.json();
-                              
-                              if (response.ok) {
-                                toast({
-                                  title: "Success",
-                                  description: "Clover connected successfully using API token!",
-                                });
-                                setManualCode('');
-                                setIsConnecting(false);
-                                queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
-                              } else {
-                                throw new Error(data.error || 'Token setup failed');
-                              }
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description: error instanceof Error ? error.message : "Token setup failed",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                          disabled={!manualCode.trim() || !merchantId.trim()}
-                        >
-                          Configure Clover Manually
-                        </Button>
-                      </div>
-                      <div className="mt-2 text-xs text-blue-600">
-                        <strong>How to get your API Token:</strong><br/>
-                        1. Go to your Clover Sandbox Dashboard<br/>
-                        2. Setup → API Tokens<br/>
-                        3. Create a new token with "Payments" permissions<br/>
-                        4. Copy the token and paste it above
-                      </div>
-                    </div>
-                    
                     {isConnecting && (
-                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h4 className="font-medium text-yellow-800 mb-2">OAuth Stuck on Loading?</h4>
-                        <p className="text-sm text-yellow-700 mb-3">
-                          You can also try to complete OAuth manually if you see an authorization code:
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="font-medium text-blue-800 mb-2">OAuth Taking Too Long?</h4>
+                        <p className="text-sm text-blue-700 mb-3">
+                          If OAuth gets stuck, you can complete it manually with the authorization code:
                         </p>
                         <div className="space-y-2">
-                          <input
+                          <Input
                             type="text"
-                            placeholder="Paste the authorization code from the URL (starts with 'code=')"
-                            className="w-full px-3 py-2 border border-yellow-300 rounded text-sm"
+                            placeholder="Paste authorization code from OAuth callback URL"
                             value={manualCode}
                             onChange={(e) => setManualCode(e.target.value)}
                           />
@@ -599,7 +527,7 @@ export default function CloverSettings() {
                                 });
                                 return;
                               }
-
+                              
                               try {
                                 const response = await fetch('/api/admin/clover/oauth/manual-complete', {
                                   method: 'POST',
@@ -609,12 +537,12 @@ export default function CloverSettings() {
                                     merchantId: merchantId.trim()
                                   })
                                 });
-
+                                
                                 const data = await response.json();
                                 
                                 if (response.ok) {
                                   toast({
-                                    title: "Success",
+                                    title: "Success", 
                                     description: "Clover connected successfully!",
                                   });
                                   setManualCode('');
@@ -636,6 +564,12 @@ export default function CloverSettings() {
                             Complete Connection Manually
                           </Button>
                         </div>
+                        <div className="mt-2 text-xs text-blue-600">
+                          <strong>Instructions:</strong><br/>
+                          1. Complete Clover authorization in the popup/tab<br/>
+                          2. Copy the "code=" parameter from the final URL<br/>
+                          3. Paste it above and click "Complete Connection Manually"
+                        </div>
                       </div>
                     )}
 
@@ -655,9 +589,9 @@ export default function CloverSettings() {
             <CardContent>
               <div className="space-y-3">
                 <div className="font-mono text-sm bg-muted p-3 rounded">
-                  <div>CLOVER_APP_ID=your_clover_app_id</div>
+                  <div>CLOVER_APP_ID=8QSDCRTWSBPWT</div>
                   <div>CLOVER_APP_SECRET=your_clover_app_secret</div>
-                  <div>CLOVER_ENVIRONMENT=sandbox # or 'production'</div>
+                  <div>CLOVER_ENVIRONMENT=production</div>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   These must be set in your environment before connecting to Clover. 
