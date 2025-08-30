@@ -1,5 +1,4 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
+// Removed React Query to fix vendor module TypeScript errors
 import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
@@ -98,8 +97,7 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
 function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
+      <TooltipProvider>
           <AuthProvider>
             <PageLayout>
               <Switch>
@@ -195,7 +193,6 @@ function App() {
             </PageLayout>
           </AuthProvider>
         </TooltipProvider>
-      </QueryClientProvider>
     </ThemeProvider>
   );
 }
