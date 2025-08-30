@@ -126,7 +126,7 @@ export class CloverService {
     // Force production environment - no sandbox support
     const environment = 'production';
     
-    console.log(`OAuth Environment Detection: merchantId=${merchantId}, detected=${environment}, envVar=${rawEnvironment}, hasProductionCreds=${hasProductionCredentials}`);
+    console.log(`OAuth Environment: merchantId=${merchantId}, environment=${environment}`);
     
     if (!appId) {
       throw new Error('CLOVER_APP_ID environment variable is required');
