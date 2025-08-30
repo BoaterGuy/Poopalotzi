@@ -2144,7 +2144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!merchantId) {
         return res.status(400).json({ 
           message: "Merchant ID is required. Please provide your Clover Merchant ID.",
-          instructions: "1. For Production: Visit https://clover.com/developers/ 2. For Sandbox: Visit https://sandbox.dev.clover.com/developers/ 3. Select your merchant 4. Copy the merchant ID 5. Send it in the request body"
+          instructions: "1. Visit https://clover.com/developers/ 2. Select your merchant 3. Copy the merchant ID 4. Send it in the request body"
         });
       }
       

@@ -406,111 +406,15 @@ export default function CloverSettings() {
                       </Button>
                       <div className="text-xs text-green-600 mt-2">
                         <strong>This will redirect to:</strong> https://www.clover.com/oauth/authorize<br/>
-                        <strong>For production payments,</strong> not sandbox testing
+                        <strong>For production payments only</strong>
                       </div>
                     </div>
                   </div>
-
-                  {/* Sandbox/Manual Token Setup - Secondary Method */}
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <h4 className="font-medium text-yellow-800 mb-2">⚠️ Manual Token Setup (Sandbox Only)</h4>
-                    <p className="text-sm text-yellow-700 mb-3">
-                      Only use for sandbox testing. Production requires OAuth above:
-                    </p>
-                    <div className="space-y-3">
-                      <div>
-                        <Label htmlFor="merchantId">Clover Merchant ID</Label>
-                        <Input
-                          id="merchantId"
-                          placeholder="e.g., R6BSXSAY96KW1 (not the MID number)"
-                          value={merchantId}
-                          onChange={(e) => setMerchantId(e.target.value)}
-                          disabled={isConnecting}
-                        />
-                        <p className="text-xs text-gray-600 mt-1">
-                          Use the Merchant ID (like R6BSXSAY96KW1), not the MID number
-                        </p>
-                      </div>
-                      <div>
-                        <Label htmlFor="apiToken">API Token</Label>
-                        <Input
-                          id="apiToken"
-                          type="password"
-                          placeholder="Enter your Clover API Token"
-                          value={manualCode}
-                          onChange={(e) => setManualCode(e.target.value)}
-                          disabled={isConnecting}
-                        />
-                      </div>
-                      <Button 
-                        onClick={async () => {
-                          if (!manualCode.trim() || !merchantId.trim()) {
-                            toast({
-                              title: "Error",
-                              description: "Please enter both merchant ID and API token",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          
-                          setIsConnecting(true);
-                          try {
-                            const response = await fetch('/api/admin/clover/token-setup', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' }, 
-                              body: JSON.stringify({
-                                merchantId: merchantId.trim(),
-                                apiToken: manualCode.trim()
-                              })
-                            });
-                            
-                            const data = await response.json();
-                            
-                            if (response.ok) {
-                              toast({
-                                title: "Success",
-                                description: "Clover connected successfully using API token!",
-                              });
-                              setManualCode('');
-                              setMerchantId('');
-                              queryClient.invalidateQueries({ queryKey: ['/api/admin/clover/status'] });
-                            } else {
-                              throw new Error(data.error || 'Token setup failed');
-                            }
-                          } catch (error) {
-                            toast({
-                              title: "Error",
-                              description: error instanceof Error ? error.message : "Token setup failed",
-                              variant: "destructive",
-                            });
-                          } finally {
-                            setIsConnecting(false);
-                          }
-                        }}
-                        disabled={!manualCode.trim() || !merchantId.trim() || isConnecting}
-                        className="w-full"
-                      >
-                        {isConnecting ? (
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                        )}
-                        Set Up Clover Integration
-                      </Button>
-                    </div>
-                    <div className="text-xs text-orange-600 mt-2">
-                      <strong>⚠️ DEPRECATED:</strong> Manual API tokens are for sandbox testing only.<br/>
-                      <strong>For Production:</strong> Use OAuth connection (blue "Connect to Clover" button below)<br/>
-                      <em>This method is not recommended for live payments</em>
-                    </div>
-                  </div>
-
-
 
                   <div className="space-y-4">
                     <div className="text-center">
                       <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-mono">
-                        v2.9 - Multiple Merchants
+                        v2.9 - Production Only
                       </span>
                     </div>
                     
