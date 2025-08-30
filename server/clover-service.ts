@@ -1063,14 +1063,25 @@ export class CloverService {
     environment?: string;
     tokenExpiry?: Date;
   }> {
-    await this.ensureInitialized();
-    
-    return {
-      isConfigured: !!this.config,
-      merchantId: this.config?.merchantId,
-      environment: this.config?.environment,
-      tokenExpiry: this.config?.tokenExpiresAt || undefined
-    };
+    try {
+      await this.ensureInitialized();
+      
+      return {
+        isConfigured: !!this.config,
+        merchantId: this.config?.merchantId,
+        environment: this.config?.environment,
+        tokenExpiry: this.config?.tokenExpiresAt || undefined
+      };
+    } catch (error) {
+      // If no configuration exists, return unconfigured status instead of throwing
+      console.log('Clover not configured:', error instanceof Error ? error.message : error);
+      return {
+        isConfigured: false,
+        merchantId: undefined,
+        environment: undefined,
+        tokenExpiry: undefined
+      };
+    }
   }
 }
 

@@ -2118,7 +2118,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const status = await cloverService.getConfigurationStatus();
       res.json(status);
     } catch (err) {
-      next(err);
+      // If Clover is not configured, return a default status instead of error
+      console.log('Clover status check failed (likely not configured):', err instanceof Error ? err.message : err);
+      res.json({
+        isConfigured: false,
+        merchantId: undefined,
+        environment: undefined,
+        tokenExpiry: undefined
+      });
     }
   });
 
