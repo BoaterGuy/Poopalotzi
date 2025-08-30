@@ -10,9 +10,11 @@ const isDev = self.location.hostname === 'localhost' ||
 
 console.log(`Service Worker ${CACHE_VERSION} starting - Environment: ${isDev ? 'Development' : 'Production'}`);
 
-// In development, disable all caching by self-destructing
+// Configure behavior based on environment
 if (isDev) {
   console.log('Development mode detected - Service Worker will not cache anything');
+  
+  // Development event listeners
   self.addEventListener('install', () => {
     self.skipWaiting();
   });
@@ -29,20 +31,15 @@ if (isDev) {
   self.addEventListener('fetch', event => {
     event.respondWith(fetch(event.request));
   });
-  
-  // Exit early - don't register any other event listeners
-  return;
+} else {
+  // Production event listeners
+  console.log('Production mode - Service Worker will cache assets');
 }
 
-// Install event - skip waiting in development
-self.addEventListener('install', event => {
-  console.log(`Service Worker ${CACHE_VERSION} installing`);
-  
-  if (isDev) {
-    // In development, skip waiting and activate immediately
-    self.skipWaiting();
-    console.log('Development mode: Skipping waiting');
-  } else {
+// Production-only install event
+if (!isDev) {
+  self.addEventListener('install', event => {
+    console.log(`Service Worker ${CACHE_VERSION} installing`);
     // In production, cache essential assets
     event.waitUntil(
       caches.open(CACHE_NAME).then(cache => {
@@ -56,12 +53,13 @@ self.addEventListener('install', event => {
         });
       })
     );
-  }
-});
+  });
+}
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  console.log(`Service Worker ${CACHE_VERSION} activating`);
+// Production-only activate event
+if (!isDev) {
+  self.addEventListener('activate', event => {
+    console.log(`Service Worker ${CACHE_VERSION} activating`);
   
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -77,9 +75,10 @@ self.addEventListener('activate', event => {
       return self.clients.claim();
     })
   );
-});
+  });
+}
 
-// Fetch event - network-first strategy with environment awareness
+// Fetch event - network-first strategy with environment awareness  
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
