@@ -196,25 +196,26 @@ export default function CloverSettingsSimple() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Clover Payment Settings</h1>
-        <p className="text-muted-foreground">
-          Connect your Clover merchant account to process payments
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Clover Payment Settings</h1>
+          <p className="text-lg text-gray-600">
+            Connect your Clover merchant account to process payments
+          </p>
+        </div>
 
-      {/* Connection Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Connection Status</span>
-            {getStatusDisplay()}
-          </CardTitle>
-          <CardDescription>
-            Current status of your Clover integration
-          </CardDescription>
-        </CardHeader>
+        {/* Connection Status */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center justify-between text-xl font-semibold text-gray-800">
+              <span>Connection Status</span>
+              {getStatusDisplay()}
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Current status of your Clover integration
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           {cloverStatus?.isConfigured ? (
             <div className="space-y-3">
@@ -235,23 +236,23 @@ export default function CloverSettingsSimple() {
         </CardContent>
       </Card>
 
-      {/* OAuth Setup */}
-      {!cloverStatus?.isConfigured && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <ExternalLink className="h-5 w-5 mr-2" />
-              Connect Your Clover Account
-            </CardTitle>
-            <CardDescription>
-              Use OAuth to securely connect your live Clover merchant account
-            </CardDescription>
-          </CardHeader>
+        {/* OAuth Setup */}
+        {!cloverStatus?.isConfigured && (
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-xl font-semibold text-gray-800">
+                <ExternalLink className="h-5 w-5 mr-2 text-blue-600" />
+                Connect Your Clover Account
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                Use OAuth to securely connect your live Clover merchant account
+              </CardDescription>
+            </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h3 className="font-medium text-green-800 mb-2">Production OAuth Setup</h3>
-                <p className="text-sm text-green-700 mb-4">
+                <h3 className="font-semibold text-green-800 mb-2 text-lg">Production OAuth Setup</h3>
+                <p className="text-green-700 mb-4">
                   Connect your live Clover account for real payment processing
                 </p>
                 
@@ -321,17 +322,17 @@ export default function CloverSettingsSimple() {
               )}
             </div>
           </CardContent>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      {/* Environment Variables */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Environment Variables</CardTitle>
-          <CardDescription>
-            Required environment variables for Clover integration
-          </CardDescription>
-        </CardHeader>
+        {/* Environment Variables */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-gray-800">Environment Variables</CardTitle>
+            <CardDescription className="text-gray-600">
+              Required environment variables for Clover integration
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="font-mono text-sm bg-muted p-3 rounded">
@@ -346,6 +347,7 @@ export default function CloverSettingsSimple() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
