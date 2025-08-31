@@ -13,140 +13,116 @@ type Subscription = {
 export function useServiceSubscription() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Get subscription from API
-  const { 
-    data: subscription, 
-    isLoading: isLoadingSubscription,
-    isError: isSubscriptionError,
-    error: subscriptionError
-  } = useQuery<Subscription>({
-    queryKey: ['/api/users/me/subscription'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/users/me/subscription', {
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          return response.json();
-        }
-        
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [serviceLevels, setServiceLevels] = useState<ServiceLevel[]>([]);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
+  const [isLoadingServiceLevels, setIsLoadingServiceLevels] = useState(false);
+
+  // Fetch subscription from API
+  const fetchSubscription = async () => {
+    if (!user || !isLoaded) return;
+    
+    setIsLoadingSubscription(true);
+    try {
+      const response = await fetch('/api/users/me/subscription', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSubscription(data);
+      } else {
         // If no subscription is found, check local storage
         const localSubscription = getSubscriptionFromLocal();
         if (localSubscription) {
           // If found in local storage, try to save it to the API
           await saveSubscriptionToAPI(localSubscription.serviceLevelId);
-          return localSubscription;
+          setSubscription(localSubscription);
         }
-        
-        throw new Error('No subscription found');
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-        throw error;
       }
-    },
-    retry: false,
-    enabled: !!user && isLoaded,
-  });
-  
-  // Get all service levels (for reference)
-  const { 
-    data: serviceLevels, 
-    isLoading: isLoadingServiceLevels
-  } = useQuery<ServiceLevel[]>({
-    queryKey: ['/api/service-levels'],
-    queryFn: async () => {
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  };
+
+  // Fetch service levels
+  const fetchServiceLevels = async () => {
+    setIsLoadingServiceLevels(true);
+    try {
       const response = await fetch('/api/service-levels', {
         credentials: 'include'
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch service levels');
+      if (response.ok) {
+        const data = await response.json();
+        setServiceLevels(data);
       }
-      
-      return response.json();
-    },
-  });
-  
-  // Save subscription mutation
-  const saveSubscription = useMutation({
-    mutationFn: async (serviceLevelId: number) => {
-      return saveSubscriptionToAPI(serviceLevelId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me/subscription'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error Saving Subscription",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Helper function to save subscription to API
-  const saveSubscriptionToAPI = async (serviceLevelId: number) => {
-    try {
-      const response = await fetch('/api/users/me/subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ serviceLevelId })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save subscription');
-      }
-      
-      // Find the service level to save locally
-      const serviceLevel = serviceLevels?.find(level => level.id === serviceLevelId);
-      if (serviceLevel) {
-        const subscriptionData = {
-          userId: user?.id || 0,
-          serviceLevelId,
-          startDate: new Date().toISOString(),
-          serviceLevel: serviceLevel
-        };
-        
-        // Save to local storage for persistence
-        saveSubscriptionToLocal(subscriptionData);
-        return subscriptionData;
-      }
-      
-      return await response.json();
     } catch (error) {
-      console.error('Error saving subscription:', error);
-      throw error;
+      console.error('Error fetching service levels:', error);
+    } finally {
+      setIsLoadingServiceLevels(false);
     }
   };
-  
-  // Load local subscription on mount (only once)
-  useEffect(() => {
-    const localSubscription = getSubscriptionFromLocal();
-    setIsLoaded(true);
-    
-    // If we have a local subscription but no API subscription
-    if (localSubscription && !subscription && user) {
-      // Try to save the local subscription to the API
-      saveSubscription.mutate(localSubscription.serviceLevelId);
+
+  // Save subscription to API
+  const saveSubscriptionToAPI = async (serviceLevelId: number) => {
+    const response = await fetch('/api/users/me/subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ serviceLevelId })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save subscription');
     }
-  }, [user]);
-  
-  // Get the service level details for the current subscription
-  const currentServiceLevel = serviceLevels && subscription ? 
-    serviceLevels.find(level => level.id === subscription.serviceLevelId) : null;
-  
+
+    return response.json();
+  };
+
+  // Save subscription mutation
+  const saveSubscription = {
+    mutateAsync: async (serviceLevelId: number) => {
+      try {
+        await saveSubscriptionToAPI(serviceLevelId);
+        await fetchSubscription(); // Refresh data
+        toast({
+          title: "Success",
+          description: "Subscription saved successfully"
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save subscription",
+          variant: "destructive"
+        });
+        throw error;
+      }
+    },
+    isPending: false
+  };
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      fetchSubscription();
+      fetchServiceLevels();
+    }
+  }, [user, isLoaded]);
+
   return {
     subscription,
-    currentServiceLevel,
-    saveSubscription: (serviceLevelId: number) => saveSubscription.mutate(serviceLevelId),
-    isLoading: isLoadingSubscription || isLoadingServiceLevels || saveSubscription.isPending,
-    error: subscriptionError
+    serviceLevels,
+    isLoadingSubscription,
+    isLoadingServiceLevels,
+    saveSubscription
   };
 }
