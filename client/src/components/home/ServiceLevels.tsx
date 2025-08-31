@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthModal } from "../auth/AuthModal";
 import { ServiceLevel } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
@@ -11,9 +11,29 @@ export default function ServiceLevels() {
   const { isLoggedIn } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const { data: serviceLevels, isLoading } = useQuery<ServiceLevel[]>({
-    queryKey: ['/api/service-levels'],
-  });
+  // Fetch service levels with useState instead of React Query
+  const [serviceLevels, setServiceLevels] = useState<ServiceLevel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServiceLevels = async () => {
+      try {
+        const response = await fetch('/api/service-levels', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setServiceLevels(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch service levels:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchServiceLevels();
+  }, []);
 
   const getFormattedPrice = (plan: ServiceLevel) => {
     if (plan.type === "one-time") return `${formatCurrency(plan.price)}/service`;
