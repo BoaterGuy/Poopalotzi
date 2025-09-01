@@ -102,42 +102,74 @@ const notificationTypeDescriptions = {
 
 export default function NotificationPreferences() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("preferences");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [history, setHistory] = useState<NotificationHistoryResponse | null>(null);
+  const [preferencesLoading, setPreferencesLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch notification preferences
-  const { data: preferences, isLoading: preferencesLoading, error: preferencesError } = useQuery<NotificationPreferences>({
-    queryKey: ['/api/notifications/preferences'],
-  });
+  const fetchPreferences = async () => {
+    try {
+      const data = await apiRequest('/api/notifications/preferences');
+      setPreferences(data);
+    } catch (error) {
+      console.error('Error fetching preferences:', error);
+    } finally {
+      setPreferencesLoading(false);
+    }
+  };
 
   // Fetch notification history
-  const { data: history, isLoading: historyLoading, error: historyError } = useQuery<NotificationHistoryResponse>({
-    queryKey: ['/api/notifications/history'],
-    enabled: activeTab === "history",
-  });
+  const fetchHistory = async () => {
+    if (activeTab !== "history") return;
+    
+    setHistoryLoading(true);
+    try {
+      const data = await apiRequest('/api/notifications/history');
+      setHistory(data);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
-  // Update preferences mutation
-  const updatePreferencesMutation = useMutation({
-    mutationFn: async (updates: Partial<NotificationPreferences>) => {
-      return apiRequest('PUT', '/api/notifications/preferences', updates);
-    },
-    onSuccess: () => {
+  useEffect(() => {
+    fetchPreferences();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "history") {
+      fetchHistory();
+    }
+  }, [activeTab]);
+
+  // Update preferences
+  const updatePreferences = async (updates: Partial<NotificationPreferences>) => {
+    try {
+      await apiRequest('/api/notifications/preferences', {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+      
       toast({
         title: "Preferences Updated",
         description: "Your notification preferences have been saved successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/preferences'] });
-    },
-    onError: (error: any) => {
+      
+      // Refresh preferences after update
+      await fetchPreferences();
+    } catch (error: any) {
       console.error('Preference update error:', error);
       toast({
         title: "Update Failed",
         description: "There was a problem updating your preferences. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
     if (!preferences) return;
@@ -155,7 +187,8 @@ export default function NotificationPreferences() {
         updates.scheduleEmails = false;
       }
       
-      await updatePreferencesMutation.mutateAsync(updates);
+      // Update preferences
+      await updatePreferences(updates);
     } catch (error) {
       // Error is handled by mutation
     } finally {

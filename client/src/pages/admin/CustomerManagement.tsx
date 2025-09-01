@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import {
@@ -52,27 +52,38 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [localCredits, setLocalCredits] = useState<number | null>(null);
-  const queryClient = useQueryClient();
+  const [creditInfo, setCreditInfo] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  const { data: creditInfo, isLoading } = useQuery({
-    queryKey: ['/api/admin/users', customerId, 'credits'],
-    queryFn: async () => {
+  // Fetch credit info
+  const fetchCreditInfo = async () => {
+    try {
       const response = await fetch(`/api/admin/users/${customerId}/credits`, {
         credentials: 'include'
       });
       if (response.ok) {
-        return response.json();
+        const data = await response.json();
+        setCreditInfo(data);
       }
-      return null;
-    },
-    enabled: !!serviceLevelId,
-    refetchInterval: 5000, // Refresh every 5 seconds for live data
-    refetchIntervalInBackground: true,
-  });
+    } catch (error) {
+      console.error('Error fetching credit info:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (serviceLevelId) {
+      fetchCreditInfo();
+      // Refresh every 5 seconds for live data
+      const interval = setInterval(fetchCreditInfo, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [customerId, serviceLevelId]);
 
-  const creditAdjustmentMutation = useMutation({
-    mutationFn: async ({ amount, type }: { amount: number, type: "add" | "set" }) => {
+  const adjustCredits = async (amount: number, type: "add" | "set") => {
+    try {
       const res = await fetch(`/api/admin/users/${customerId}/credits/adjust`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,81 +98,44 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to adjust credits');
       }
-      return res.json();
-    },
-    onMutate: async ({ amount, type }) => {
-      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
       
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(['/api/admin/users', customerId, 'credits']);
-      
-      // Optimistically update to the new value
-      if (creditInfo) {
-        const newTotal = type === "add" ? creditInfo.totalCredits + amount : amount;
-        setLocalCredits(newTotal);
-        
-        // Update the query cache with new data
-        queryClient.setQueryData(['/api/admin/users', customerId, 'credits'], {
-          ...creditInfo,
-          totalCredits: newTotal,
-          availableCredits: Math.max(0, newTotal - (creditInfo.totalCredits - creditInfo.availableCredits))
-        });
-      }
-      
-      // Return context with previous data for rollback
-      return { previousData };
-    },
-    onSuccess: (data) => {
-      // Invalidate the specific user's credit query
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
-      // Invalidate the members list to refresh the table
-      queryClient.invalidateQueries({ queryKey: ['/api/users/members'] });
-      // Force immediate refetch after a short delay to ensure backend has updated
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['/api/admin/users', customerId, 'credits'] });
-      }, 100);
+      // Refresh credit info after successful adjustment
+      await fetchCreditInfo();
       setIsEditing(false);
       setEditValue("");
       setLocalCredits(null);
       toast({
         title: "Success",
-        description: data.message || "Credits updated successfully",
+        description: "Credits updated successfully",
       });
-    },
-    onError: (error, variables, context) => {
-      // Rollback optimistic update
-      setLocalCredits(null);
-      if (context?.previousData) {
-        queryClient.setQueryData(['/api/admin/users', customerId, 'credits'], context.previousData);
-      }
+    } catch (error: any) {
       console.error('Credit adjustment error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update credits",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const handleQuickAdjust = (action: "add" | "subtract") => {
-    if (!creditInfo || creditAdjustmentMutation.isPending) return;
+    if (!creditInfo || isLoading) return;
     
     if (action === "add") {
-      creditAdjustmentMutation.mutate({ amount: 1, type: "add" });
+      adjustCredits(1, "add");
     } else if (action === "subtract" && (localCredits ?? creditInfo.availableCredits) > 0) {
       const currentAvailable = localCredits ?? creditInfo.availableCredits;
       const newAvailable = Math.max(0, currentAvailable - 1);
-      creditAdjustmentMutation.mutate({ amount: newAvailable, type: "set" });
+      adjustCredits(newAvailable, "set");
     }
   };
 
   const handleSetValue = () => {
-    if (creditAdjustmentMutation.isPending) return;
+    if (isLoading) return;
     
     const value = parseInt(editValue);
     if (!isNaN(value) && value >= 0) {
-      creditAdjustmentMutation.mutate({ amount: value, type: "set" });
+      adjustCredits(value, "set");
     } else {
       // Reset to current value if invalid input
       setEditValue(creditInfo?.availableCredits?.toString() || "0");
@@ -169,7 +143,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
   };
 
   const handleCreditClick = () => {
-    if (creditAdjustmentMutation.isPending) return;
+    if (isLoading) return;
     setIsEditing(true);
     setEditValue(creditInfo?.availableCredits?.toString() || "0");
   };
