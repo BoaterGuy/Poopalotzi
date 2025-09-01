@@ -22,10 +22,15 @@ https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/
    - Find your app with ID: `8QSDCRTWSBPWT`
    - Click on the app to edit its settings
 
-3. **Update Redirect URIs**
-   - Look for "Redirect URIs" or "OAuth Redirect URIs" section
+3. **Navigate to OAuth Settings**
+   - Click on your app to open app details
+   - Look for one of these sections:
+     * "OAuth Settings" tab
+     * "App Settings" or "Configuration" 
+     * "Redirect URIs" field
+     * "OAuth Redirect URLs" section
    - Add the exact redirect URI above
-   - Save the configuration
+   - Click "Save" or "Update"
 
 4. **Verify App Permissions**
    - Ensure the app has the following permissions:
