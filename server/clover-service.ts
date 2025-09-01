@@ -10,22 +10,16 @@
  * Required Environment Variables:
  * - CLOVER_APP_ID: Your Clover app ID
  * - CLOVER_APP_SECRET: Your Clover app secret
- * - CLOVER_ENVIRONMENT: 'sandbox' or 'production'
+ * - CLOVER_ENVIRONMENT: 'production' (sandbox removed)
  */
 
 import { storage } from './index';
 import type { CloverConfig, InsertCloverConfig, InsertPaymentTransaction } from '@shared/schema';
 
-// Clover API endpoints
+// Production-only Clover API endpoints
 const CLOVER_ENDPOINTS = {
-  sandbox: {
-    oauth: 'https://sandbox.dev.clover.com/oauth',
-    api: 'https://apisandbox.dev.clover.com'
-  },
-  production: {
-    oauth: 'https://www.clover.com/oauth',
-    api: 'https://api.clover.com'
-  }
+  oauth: 'https://www.clover.com/oauth',
+  api: 'https://api.clover.com'
 };
 
 export interface CloverPaymentRequest {
@@ -132,15 +126,10 @@ export class CloverService {
       throw new Error('CLOVER_APP_ID environment variable is required');
     }
 
-    const endpoints = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS];
-    if (!endpoints) {
-      throw new Error(`Invalid Clover environment: ${environment}`);
-    }
-    
     // Ensure redirect URI uses HTTPS for Clover compatibility
     const secureRedirectUri = redirectUri.replace(/^http:/, 'https:');
     
-    const baseUrl = endpoints.oauth;
+    const baseUrl = CLOVER_ENDPOINTS.oauth;
     const params = new URLSearchParams({
       client_id: appId,
       merchant_id: merchantId,
@@ -167,8 +156,7 @@ export class CloverService {
       throw new Error('CLOVER_APP_ID and CLOVER_APP_SECRET environment variables are required');
     }
 
-    const endpoints = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS];
-    const baseUrl = endpoints.oauth;
+    const baseUrl = CLOVER_ENDPOINTS.oauth;
     
     const response = await fetch(`${baseUrl}/token`, {
       method: 'POST',
@@ -216,19 +204,10 @@ export class CloverService {
       
       if (hasProductionCredentials) {
         // With production credentials, always use production environment
-        // Only use sandbox for test merchant IDs that start with TEST
-        if (rawEnvironment.toLowerCase() === 'sandbox' && configData.merchantId.startsWith('TEST')) {
-          environment = 'sandbox';
-        } else {
-          environment = 'production';
-        }
-      } else if (rawEnvironment.toLowerCase().includes('production')) {
         environment = 'production';
-      } else if (rawEnvironment.toLowerCase().includes('sandbox')) {
-        environment = 'sandbox';
       } else {
-        // Auto-detect: production merchant IDs typically start with uppercase letters and are longer
-        environment = (configData.merchantId.length > 13 || /^[A-Z]/.test(configData.merchantId)) ? 'production' : 'sandbox';
+        // Default to production for all cases
+        environment = 'production';
       }
     }
     
@@ -265,8 +244,7 @@ export class CloverService {
       throw new Error('No refresh token available');
     }
 
-    const environment = this.config.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].oauth;
+    const baseUrl = CLOVER_ENDPOINTS.oauth;
 
     const response = await fetch(`${baseUrl}/token`, {
       method: 'POST',
@@ -335,8 +313,7 @@ export class CloverService {
       }
 
       // Test the connection by making a simple API call
-      const environment = this.config.environment;
-      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+      const baseUrl = CLOVER_ENDPOINTS.api;
       
       const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}`, {
         method: 'GET',
@@ -376,8 +353,7 @@ export class CloverService {
    * Create an order in Clover with customer and tax information
    */
   private async createOrder(paymentRequest: CloverPaymentRequest): Promise<any> {
-    const environment = this.config!.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
     
     // Calculate total including tax
     const subtotal = paymentRequest.amount;
@@ -433,8 +409,7 @@ export class CloverService {
    * Add customer information to order
    */
   private async addCustomerToOrder(orderId: string, customer: any): Promise<void> {
-    const environment = this.config!.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
     
     try {
       // First, create or find customer
@@ -478,8 +453,7 @@ export class CloverService {
    * Add line items to order with tax breakdown
    */
   private async addLineItemsToOrder(orderId: string, subtotal: number, taxAmount: number, description?: string): Promise<void> {
-    const environment = this.config!.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
     
     try {
       // Add main line item
@@ -561,8 +535,7 @@ export class CloverService {
       const order = await this.createOrder(paymentRequest);
       console.log('Order created:', order.id);
 
-      const environment = this.config!.environment;
-      const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+      const baseUrl = CLOVER_ENDPOINTS.api;
       
       // Create payment transaction record
       const transactionData: InsertPaymentTransaction = {
@@ -590,9 +563,7 @@ export class CloverService {
       // Approach 1: Try ecommerce API first
       try {
         console.log('Attempting ecommerce API payment...');
-        const ecommerceUrl = environment === 'sandbox' 
-          ? 'https://scl-sandbox.dev.clover.com/v1/charges'
-          : 'https://scl.clover.com/v1/charges';
+        const ecommerceUrl = 'https://scl.clover.com/v1/charges';
 
         const ecomPaymentData = {
           amount: totalAmount,
@@ -774,8 +745,7 @@ export class CloverService {
    * Create manual payment record to complete order
    */
   private async createManualPaymentRecord(orderId: string, amount: number, paymentRequest: CloverPaymentRequest): Promise<any> {
-    const environment = this.config!.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
     
     try {
       const paymentData = {
@@ -808,8 +778,7 @@ export class CloverService {
    * Mark order as paid to complete the transaction
    */
   private async markOrderAsPaid(orderId: string, amount: number): Promise<void> {
-    const environment = this.config!.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
     
     try {
       // Try multiple approaches to mark order as paid
@@ -830,45 +799,7 @@ export class CloverService {
         console.log('Order state updated to paid');
       }
 
-      // Approach 2: Use hardcoded tender IDs for sandbox environment
-      const sandboxTenderIds = [
-        '13ABXRCBZQVRY', // Common Clover sandbox tender ID for Credit Card
-        'Q2GQRKCBZQVRY', // Common Clover sandbox tender ID for Cash
-        'NKXXRCBZQVRY',  // Alternative sandbox tender
-      ];
-
-      for (const tenderId of sandboxTenderIds) {
-        try {
-          console.log(`Attempting payment with tender ID: ${tenderId}`);
-          
-          const manualPaymentResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/payments`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${this.config!.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              amount: amount,
-              tender: { id: tenderId },
-              result: 'SUCCESS',
-              note: 'Development payment completion'
-            })
-          });
-
-          if (manualPaymentResponse.ok) {
-            const paymentResult = await manualPaymentResponse.json();
-            console.log('✅ Payment created successfully:', paymentResult.id);
-            return;
-          } else {
-            const errorText = await manualPaymentResponse.text();
-            console.log(`❌ Payment failed with tender ${tenderId}:`, manualPaymentResponse.status, errorText);
-          }
-        } catch (error) {
-          console.log(`Error with tender ${tenderId}:`, error);
-        }
-      }
-
-      // Final attempt: Try to fetch merchant's actual tenders despite 401
+      // Production approach: Get merchant's actual tenders for real payments
       try {
         const tendersResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/tenders`, {
           method: 'GET',
@@ -924,8 +855,7 @@ export class CloverService {
       throw new Error('Clover not configured');
     }
 
-    const environment = this.config.environment;
-    const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
+    const baseUrl = CLOVER_ENDPOINTS.api;
 
     const refundData: any = {};
     if (amount) {

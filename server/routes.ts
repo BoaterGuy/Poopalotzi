@@ -2239,7 +2239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!merchantId || !apiToken) {
         return res.status(400).json({ 
           error: 'Merchant ID and API token required',
-          instructions: 'Get your API token from: Production: https://clover.com/developers OR Sandbox: https://sandbox.dev.clover.com/developers -> Select your merchant -> API Tokens'
+          instructions: 'Get your API token from: https://clover.com/developers -> Select your merchant -> API Tokens (Production only)'
         });
       }
       
@@ -2254,11 +2254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test the token after saving configuration
       try {
-        // Always try production first, then sandbox
-        // This ensures live merchants are detected correctly
+        // Production-only environment - no sandbox support
         const endpoints = [
-          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` },
-          { env: 'sandbox', url: `https://apisandbox.dev.clover.com/v3/merchants/${merchantId}` }
+          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` }
         ];
         
         let testResponse = null;

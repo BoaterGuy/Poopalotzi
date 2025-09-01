@@ -21,7 +21,7 @@ if (!process.env.CLOVER_APP_SECRET) {
   process.env.CLOVER_APP_SECRET = "f0e16559-c836-f25b-b536-b03ed7e95ae9";
 }
 if (!process.env.CLOVER_ENVIRONMENT) {
-  process.env.CLOVER_ENVIRONMENT = "sandbox";
+  process.env.CLOVER_ENVIRONMENT = "production";
 }
 
 const app = express();

@@ -164,7 +164,7 @@ export const cloverConfig = pgTable('clover_config', {
   accessToken: text('access_token'),
   refreshToken: text('refresh_token'),
   tokenExpiresAt: timestamp('token_expires_at'),
-  environment: text('environment').notNull().default('sandbox'), // 'sandbox' or 'production'
+  environment: text('environment').notNull().default('production'), // production-only
   isActive: boolean('is_active').default(true),
   webhookSecret: text('webhook_secret'),
   createdAt: timestamp('created_at').defaultNow(),

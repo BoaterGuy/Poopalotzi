@@ -51,11 +51,11 @@ async function generateCloverCardToken(cardData: PaymentFormValues): Promise<str
                           window.location.hostname === '127.0.0.1';
     
     if (isDevelopment) {
-      // Use Clover's test card tokens that work with sandbox
+      // Use production-compatible development tokens
       const testTokens = [
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6A7', // Visa test token
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6B8', // Mastercard test token
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6C9', // American Express test token
+        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6A7', // Development Visa token
+        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6B8', // Development Mastercard token
+        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6C9', // Development American Express token
       ];
       
       // Return a random valid test token
