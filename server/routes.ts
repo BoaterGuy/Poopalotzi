@@ -37,6 +37,7 @@ function broadcastToAdmins(type: string, data: any) {
 // Extended Request type with user information
 interface AuthRequest extends Request {
   user?: any;
+  isAuthenticated?(): boolean;
 }
 
 // Configure multer for file uploads
@@ -77,21 +78,21 @@ const handleError = (err: any, req: Request, res: Response, next: NextFunction) 
 
 // Auth middleware
 const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && req.user) {
+  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
     return next();
   }
   res.status(401).json({ message: "Unauthorized" });
 };
 
 const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && (req.user?.role === "admin" || req.user?.role === "super_admin")) {
+  if (req.isAuthenticated && req.isAuthenticated() && (req.user?.role === "admin" || req.user?.role === "super_admin")) {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
 };
 
 const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && (req.user?.role === "employee" || req.user?.role === "admin")) {
+  if (req.isAuthenticated && req.isAuthenticated() && (req.user?.role === "employee" || req.user?.role === "admin")) {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
@@ -2371,7 +2372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (error) {
         console.error('Clover OAuth error:', error, error_description);
-        return res.redirect('/admin/dashboard?clover=error&message=' + encodeURIComponent(error_description || error));
+        return res.redirect('/admin/dashboard?clover=error&message=' + encodeURIComponent((error_description as string) || (error as string)));
       }
       
       if (!code || !merchant_id) {

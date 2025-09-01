@@ -7,8 +7,8 @@ import { storage as memStorage, IStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import { setupAuth } from "./auth";
 
-// Export storage for other modules
-export const storage = memStorage;
+// Export storage for other modules - Use database storage for persistence
+export const storage = new DatabaseStorage();
 
 // Simple logging function
 const log = console.log;
