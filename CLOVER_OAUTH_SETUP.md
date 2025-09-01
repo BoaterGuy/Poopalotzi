@@ -60,9 +60,12 @@ https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/
 - **OAuth Endpoint**: https://www.clover.com/oauth/authorize
 - **Callback Endpoint**: /api/admin/clover/oauth/callback
 
-## Next Steps
-Now you need to register this redirect URI in your Clover app settings:
-`https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback`
+## Status: CONFIGURED ✅
+
+**Great News!** The redirect URI is already properly configured in your Clover app:
+- **Site URL**: `https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback`
+
+The OAuth connection should now work. Try connecting to Clover from your admin panel.
 
 ## Notes
 
