@@ -2168,7 +2168,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('- redirect_uri:', redirectUri);
       console.log('=== END OAUTH DEBUG ===');
       
-      res.json({ authUrl, merchantId });
+      res.json({ 
+        authUrl, 
+        merchantId,
+        redirectUri,
+        troubleshooting: {
+          message: "If Clover rejects the connection, ensure this redirect URI is registered in your Clover app settings",
+          requiredRedirectUri: redirectUri,
+          appId: process.env.CLOVER_APP_ID,
+          setupInstructions: "Visit https://www.clover.com/developers/ -> Find your app -> Add redirect URI -> Save"
+        }
+      });
     } catch (err) {
       next(err);
     }
