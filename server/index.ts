@@ -13,12 +13,12 @@ export const storage = memStorage;
 // Simple logging function
 const log = console.log;
 
-// Set Clover environment variables if not already set
+// Set Clover environment variables if not already set - Production configuration
 if (!process.env.CLOVER_APP_ID) {
-  process.env.CLOVER_APP_ID = "31D3CVCYAW57J";
+  process.env.CLOVER_APP_ID = "8QSDCRTWSBPWT";
 }
 if (!process.env.CLOVER_APP_SECRET) {
-  process.env.CLOVER_APP_SECRET = "f0e16559-c836-f25b-b536-b03ed7e95ae9";
+  process.env.CLOVER_APP_SECRET = "e64d0c27-88fa-5b21-08de-976ea7801421";
 }
 if (!process.env.CLOVER_ENVIRONMENT) {
   process.env.CLOVER_ENVIRONMENT = "production";

@@ -40,13 +40,24 @@ https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/
 5. **Test the Connection**
    - After saving, try the OAuth connection again from the admin panel
 
+## Configuration Status - UPDATED
+
+✅ **Credentials Now Configured**:
+- App ID: `8QSDCRTWSBPWT` 
+- App Secret: `e64d0c27-88fa-5b21-08de-976ea7801421`
+- Merchant ID: `PFHDQ8MSX5F81`
+
 ## Current Configuration Details
 
-- **App ID**: 8QSDCRTWSBPWT
-- **Merchant ID**: PFHDQ8MSX5F81
+- **App ID**: 8QSDCRTWSBPWT (production app)
+- **Merchant ID**: PFHDQ8MSX5F81 
 - **Environment**: Production only
 - **OAuth Endpoint**: https://www.clover.com/oauth/authorize
 - **Callback Endpoint**: /api/admin/clover/oauth/callback
+
+## Next Steps
+Now you need to register this redirect URI in your Clover app settings:
+`https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback`
 
 ## Notes
 
