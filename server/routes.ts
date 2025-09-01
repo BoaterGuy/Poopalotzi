@@ -2371,12 +2371,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (error) {
         console.error('Clover OAuth error:', error, error_description);
-        return res.redirect('/admin/clover-settings?error=' + encodeURIComponent(error_description || error));
+        return res.redirect('/admin/dashboard?clover=error&message=' + encodeURIComponent(error_description || error));
       }
       
       if (!code || !merchant_id) {
         console.error('Missing code or merchant_id:', { code, merchant_id });
-        return res.redirect('/admin/clover-settings?error=missing_params');
+        return res.redirect('/admin/dashboard?clover=error&message=missing_oauth_params');
       }
 
       console.log('Exchanging code for tokens...');
@@ -2394,12 +2394,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log('Clover configuration saved successfully');
-      console.log('Clover configuration saved successfully');
-      // Redirect to clover settings page with success message
-      res.redirect('/admin/clover-settings?success=connected');
+      
+      // Return a success page instead of redirecting to avoid blank page issues
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Clover Connected Successfully</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
+                .success { color: green; background: #f0f8f0; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                .button { background: #0B1F3A; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <h1>🎉 Clover Integration Successful!</h1>
+            <div class="success">
+                <p><strong>Merchant ID:</strong> ${merchant_id}</p>
+                <p><strong>Status:</strong> Connected to Clover Production</p>
+                <p><strong>Ready for:</strong> Real payment processing</p>
+            </div>
+            <a href="/admin/dashboard" class="button">Go to Admin Dashboard</a>
+            <script>
+                // Auto-redirect after 3 seconds
+                setTimeout(function() {
+                    window.location.href = '/admin/dashboard?clover=connected&success=true';
+                }, 3000);
+            </script>
+        </body>
+        </html>
+      `);
     } catch (err) {
       console.error('Clover OAuth callback error:', err);
-      res.redirect('/admin/clover-settings?error=oauth_failed');
+      res.redirect('/admin/dashboard?clover=error&message=oauth_callback_failed');
     }
   });
 

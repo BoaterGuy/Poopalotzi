@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clover OAuth Callback Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .success { color: green; background: #f0f8f0; padding: 10px; border-radius: 5px; }
+        .error { color: red; background: #fff0f0; padding: 10px; border-radius: 5px; }
+        .debug { background: #f5f5f5; padding: 10px; border-radius: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Clover OAuth Callback Test</h1>
+    
+    <div id="status"></div>
+    
+    <h2>URL Parameters:</h2>
+    <div id="params" class="debug"></div>
+    
+    <h2>Next Steps:</h2>
+    <p>If you see parameters above, the OAuth callback is working. The blank page issue might be:</p>
+    <ul>
+        <li>Missing route for the redirect URL</li>
+        <li>Frontend not loading after redirect</li>
+        <li>Session or authentication issue</li>
+    </ul>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const params = {};
+        
+        for (const [key, value] of urlParams) {
+            params[key] = value;
+        }
+        
+        document.getElementById('params').textContent = JSON.stringify(params, null, 2);
+        
+        if (params.code && params.merchant_id) {
+            document.getElementById('status').innerHTML = '<div class="success">✅ OAuth callback successful! Authorization code received.</div>';
+        } else if (params.error) {
+            document.getElementById('status').innerHTML = '<div class="error">❌ OAuth error: ' + params.error + '</div>';
+        } else {
+            document.getElementById('status').innerHTML = '<div class="error">❌ No OAuth parameters found</div>';
+        }
+    </script>
+</body>
+</html>
