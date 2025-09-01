@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthModal } from "../auth/AuthModal";
-// Use a relative path that should work better in production
-import logoImage from "../../assets/logo.png";
+import logoImage from "@assets/logo.png";
 
 export default function AppNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
