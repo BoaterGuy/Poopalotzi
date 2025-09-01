@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,15 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DialogFooter } from "@/components/ui/dialog";
-import { insertDockAssignmentSchema, Marina } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Create the form schema based on the dock assignment schema from DB
-const marinaFormSchema = insertDockAssignmentSchema.extend({
+interface Marina {
+  id: number;
+  name: string;
+}
+
+const marinaFormSchema = z.object({
+  boatId: z.number(),
   marinaId: z.coerce.number({
     required_error: "Please select a marina",
   }),
@@ -45,55 +46,66 @@ const marinaFormSchema = insertDockAssignmentSchema.extend({
 type MarinaFormValues = z.infer<typeof marinaFormSchema>;
 
 interface MarinaSelectionProps {
-  boat: any; // The boat we're assigning a marina/dock to
-  onSuccess: () => void; // Callback when form is successfully submitted
+  boat: any;
+  onSuccess: () => void;
 }
 
 export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingAssignment, setExistingAssignment] = useState<any>(null);
+  const [marinas, setMarinas] = useState<Marina[]>([]);
+  const [isLoadingAssignment, setIsLoadingAssignment] = useState(true);
+  const [isLoadingMarinas, setIsLoadingMarinas] = useState(true);
 
-  // Fetch existing dock assignment for this boat
-  const { data: existingAssignment, isLoading: isLoadingAssignment } = useQuery({
-    queryKey: [`/api/dock-assignments/boat/${boat.id}`],
-    queryFn: async () => {
+  // Fetch existing dock assignment
+  useEffect(() => {
+    const fetchAssignment = async () => {
       try {
         const response = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
           credentials: 'include'
         });
         
-        if (!response.ok) {
-          if (response.status === 404) {
-            return null; // No assignment exists yet
-          }
-          throw new Error('Failed to fetch dock assignment');
+        if (response.ok) {
+          const data = await response.json();
+          setExistingAssignment(data);
+        } else if (response.status === 404) {
+          setExistingAssignment(null);
         }
-        
-        return response.json();
       } catch (error) {
         console.error("Error fetching dock assignment:", error);
-        return null;
+      } finally {
+        setIsLoadingAssignment(false);
       }
-    },
-  });
+    };
 
-  // Fetch list of marinas
-  const { data: marinas = [], isLoading: isLoadingMarinas } = useQuery<Marina[]>({
-    queryKey: ['/api/marinas'],
-    queryFn: async () => {
-      const response = await fetch('/api/marinas', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch marinas');
+    if (boat?.id) {
+      fetchAssignment();
+    }
+  }, [boat?.id]);
+
+  // Fetch marinas
+  useEffect(() => {
+    const fetchMarinas = async () => {
+      try {
+        const response = await fetch('/api/marinas', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setMarinas(data);
+        }
+      } catch (error) {
+        console.error("Error fetching marinas:", error);
+      } finally {
+        setIsLoadingMarinas(false);
       }
-      
-      return response.json();
-    },
-  });
+    };
 
-  // Set default values based on existing assignment
+    fetchMarinas();
+  }, []);
+
   const defaultValues: Partial<MarinaFormValues> = {
     boatId: boat.id,
     marinaId: existingAssignment?.marinaId || undefined,
@@ -106,8 +118,7 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
     defaultValues,
   });
 
-  // Update form values when existing assignment loads
-  useState(() => {
+  useEffect(() => {
     if (existingAssignment) {
       form.reset({
         boatId: boat.id,
@@ -116,105 +127,110 @@ export default function MarinaSelection({ boat, onSuccess }: MarinaSelectionProp
         dock: existingAssignment.dock,
       });
     }
-  });
+  }, [existingAssignment, boat.id, form]);
 
-  const onSubmit = async (data: MarinaFormValues) => {
+  async function onSubmit(values: MarinaFormValues) {
     setIsSubmitting(true);
     try {
-      // Create or update dock assignment
-      await apiRequest("POST", "/api/dock-assignments", data);
-      
+      const method = existingAssignment ? 'PUT' : 'POST';
+      const url = existingAssignment 
+        ? `/api/dock-assignments/${existingAssignment.id}`
+        : '/api/dock-assignments';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save marina assignment');
+      }
+
+      toast({
+        title: "Success",
+        description: `Marina assignment ${existingAssignment ? 'updated' : 'created'} successfully`,
+        variant: "default",
+      });
+
       onSuccess();
     } catch (error) {
-      console.error("Error submitting marina assignment:", error);
+      console.error('Error submitting form:', error);
       toast({
         title: "Error",
-        description: "There was a problem saving your marina assignment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save marina assignment",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   if (isLoadingAssignment || isLoadingMarinas) {
-    return <div className="flex justify-center p-8">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6">
-          {/* Marina Selection */}
-          <FormField
-            control={form.control}
-            name="marinaId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Marina *</FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                  defaultValue={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a marina" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {marinas.map((marina) => (
-                      <SelectItem key={marina.id} value={marina.id.toString()}>
-                        {marina.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  The marina where your boat is docked
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="marinaId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Marina</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a marina" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {marinas.map((marina) => (
+                    <SelectItem key={marina.id} value={marina.id.toString()}>
+                      {marina.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Pier Designation */}
-            <FormField
-              control={form.control}
-              name="pier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pier *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. A, B, C" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <FormField
+          control={form.control}
+          name="pier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Pier</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., A, B, North" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Dock Number */}
-            <FormField
-              control={form.control}
-              name="dock"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dock Number *</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g. 42" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <FormField
+          control={form.control}
+          name="dock"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Dock Number</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g., 15" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <DialogFooter>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#38B2AC] hover:bg-opacity-90">
-            {isSubmitting ? 'Saving...' : existingAssignment ? 'Update Assignment' : 'Assign Marina'}
-          </Button>
-        </DialogFooter>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? 'Saving...' : existingAssignment ? 'Update Assignment' : 'Assign Marina'}
+        </Button>
       </form>
     </Form>
   );
