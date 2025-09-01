@@ -858,7 +858,7 @@ export class CloverService {
           if (manualPaymentResponse.ok) {
             const paymentResult = await manualPaymentResponse.json();
             console.log('✅ Payment created successfully:', paymentResult.id);
-            return true;
+            return;
           } else {
             const errorText = await manualPaymentResponse.text();
             console.log(`❌ Payment failed with tender ${tenderId}:`, manualPaymentResponse.status, errorText);
@@ -879,7 +879,7 @@ export class CloverService {
 
         if (tendersResponse.ok) {
           const tenders = await tendersResponse.json();
-          console.log('✅ Found merchant tenders:', tenders.elements?.map(t => ({ id: t.id, label: t.label })));
+          console.log('✅ Found merchant tenders:', tenders.elements?.map((t: any) => ({ id: t.id, label: t.label })));
           
           const tender = tenders.elements?.[0]; // Use first available tender
           if (tender) {
@@ -900,7 +900,7 @@ export class CloverService {
             if (finalPaymentResponse.ok) {
               const paymentResult = await finalPaymentResponse.json();
               console.log('✅ Payment created with merchant tender:', paymentResult.id);
-              return true;
+              return;
             }
           }
         }
