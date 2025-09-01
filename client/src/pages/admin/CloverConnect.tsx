@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExternalLink, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function CloverConnect() {
-  const [merchantId, setMerchantId] = useState('RCTSTAVI0010002');
+  const [merchantId, setMerchantId] = useState('PFHDQ8MSX5F81');
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = () => {
@@ -29,9 +29,9 @@ export default function CloverConnect() {
     sessionStorage.clear();
     localStorage.clear();
     
-    // Use HTTPS redirect URI - Clover requires secure callbacks
+    // Use production Clover configuration
     const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
-    const cloverUrl = `https://sandbox.dev.clover.com/oauth/authorize?client_id=0S0NEMDA19CJW&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${Date.now()}`;
+    const cloverUrl = `https://www.clover.com/oauth/authorize?client_id=8QSDCRTWSBPWT&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${Date.now()}`;
     
     console.log('Redirecting to Clover OAuth:', cloverUrl);
     
@@ -46,7 +46,7 @@ export default function CloverConnect() {
           <h1 className="text-2xl font-bold text-gray-900">Connect to Clover</h1>
           <p className="text-gray-600 mt-2">Isolated connection flow</p>
           <div className="text-xs text-blue-600 font-mono">
-            v2.1 - HTTPS OAuth Fixed
+            v2.2 - Production Clover Integration
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function CloverConnect() {
               Clover OAuth Connection
             </CardTitle>
             <CardDescription>
-              Direct connection to Clover without any browser interference
+              Production Clover OAuth with clean vendor modules
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
