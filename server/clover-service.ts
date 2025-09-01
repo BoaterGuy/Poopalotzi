@@ -543,6 +543,10 @@ export class CloverService {
     await this.ensureInitialized();
     const { storage } = await import('./index');
     
+    if (!this.config) {
+      throw new Error('Clover configuration not loaded. Please configure Clover integration first.');
+    }
+    
     console.log('Processing Clover payment with config:', {
       merchantId: this.config.merchantId,
       environment: this.config.environment,
@@ -557,7 +561,7 @@ export class CloverService {
       const order = await this.createOrder(paymentRequest);
       console.log('Order created:', order.id);
 
-      const environment = this.config.environment;
+      const environment = this.config!.environment;
       const baseUrl = CLOVER_ENDPOINTS[environment as keyof typeof CLOVER_ENDPOINTS].api;
       
       // Create payment transaction record
@@ -606,7 +610,7 @@ export class CloverService {
         const ecomResponse = await fetch(ecommerceUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.config.accessToken}`,
+            'Authorization': `Bearer ${this.config!.accessToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(ecomPaymentData)
@@ -638,10 +642,10 @@ export class CloverService {
             externalPaymentId: paymentRequest.source
           };
 
-          const manualResponse = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${order.id}/payments`, {
+          const manualResponse = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${order.id}/payments`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${this.config.accessToken}`,
+              'Authorization': `Bearer ${this.config!.accessToken}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(manualPaymentData)
@@ -683,8 +687,8 @@ export class CloverService {
         console.log('Payment failed details:', {
           orderId: order.id,
           amount: totalAmount,
-          environment: this.config.environment,
-          merchantId: this.config.merchantId
+          environment: this.config!.environment,
+          merchantId: this.config!.merchantId
         });
 
         // Update transaction as failed
