@@ -168,11 +168,38 @@ export class CloverService {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to exchange code for tokens: ${error}`);
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorText = await response.text();
+        if (errorText) {
+          errorMessage += ` - ${errorText}`;
+        }
+      } catch (e) {
+        // Ignore error parsing
+      }
+      throw new Error(`Failed to exchange code for tokens: ${errorMessage}`);
     }
 
-    return await response.json();
+    let tokenData: any = null;
+    try {
+      const responseText = await response.text();
+      if (!responseText || responseText.trim() === '') {
+        throw new Error('Empty response from Clover OAuth endpoint');
+      }
+      tokenData = JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON response from Clover OAuth: ${parseError instanceof Error ? parseError.message : 'Parsing failed'}`);
+    }
+
+    if (!tokenData || typeof tokenData !== 'object') {
+      throw new Error('Invalid token response format from Clover');
+    }
+
+    if (!tokenData.access_token) {
+      throw new Error('Missing access_token in Clover OAuth response');
+    }
+
+    return tokenData;
   }
 
   /**
@@ -372,13 +399,38 @@ export class CloverService {
         };
       }
 
-      // Validate response contains expected merchant data
+      // Validate response contains expected merchant data  
       try {
-        const merchantData = await response.json();
-        if (!merchantData || !merchantData.id) {
+        let merchantData: any = null;
+        const responseText = await response.text();
+        
+        if (!responseText || responseText.trim() === '') {
           return {
             isValid: false,
-            error: 'Invalid response from Clover API - missing merchant data'
+            error: 'Empty response from Clover API'
+          };
+        }
+        
+        try {
+          merchantData = JSON.parse(responseText);
+        } catch (jsonError) {
+          return {
+            isValid: false,
+            error: `Invalid JSON response from Clover API: ${responseText.substring(0, 100)}...`
+          };
+        }
+        
+        if (!merchantData || typeof merchantData !== 'object') {
+          return {
+            isValid: false,
+            error: 'Invalid response format from Clover API - expected object'
+          };
+        }
+        
+        if (!merchantData.id) {
+          return {
+            isValid: false,
+            error: 'Invalid response from Clover API - missing merchant ID'
           };
         }
         
@@ -391,7 +443,7 @@ export class CloverService {
       } catch (parseError) {
         return {
           isValid: false,
-          error: 'Invalid JSON response from Clover API'
+          error: `Failed to parse Clover API response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`
         };
       }
       
@@ -490,18 +542,34 @@ export class CloverService {
       });
 
       if (customerResponse.ok) {
-        const cloverCustomer = await customerResponse.json();
-        
-        // Associate customer with order
-        await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders/${orderId}/customers/${cloverCustomer.id}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.config!.accessToken}`,
-            'Content-Type': 'application/json',
+        let cloverCustomer: any = null;
+        try {
+          const responseText = await customerResponse.text();
+          if (responseText && responseText.trim() !== '') {
+            cloverCustomer = JSON.parse(responseText);
           }
-        });
+        } catch (parseError) {
+          console.log('Failed to parse customer response:', parseError);
+          return;
+        }
         
-        console.log('Customer added to order:', cloverCustomer.id);
+        if (cloverCustomer && cloverCustomer.id && this.config?.merchantId && this.config?.accessToken) {
+          // Associate customer with order
+          try {
+            await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders/${orderId}/customers/${cloverCustomer.id}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${this.config.accessToken}`,
+                'Content-Type': 'application/json',
+              }
+            });
+            console.log('Customer added to order:', cloverCustomer.id);
+          } catch (linkError) {
+            console.log('Failed to link customer to order:', linkError);
+          }
+        } else {
+          console.log('Invalid customer data or missing config');
+        }
       }
     } catch (error) {
       console.log('Customer creation failed (non-critical):', error);
@@ -824,7 +892,17 @@ export class CloverService {
       });
 
       if (response.ok) {
-        return await response.json();
+        try {
+          const responseText = await response.text();
+          if (!responseText || responseText.trim() === '') {
+            console.log('Empty response from manual payment creation');
+            return null;
+          }
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          console.log('Failed to parse manual payment response:', parseError);
+          return null;
+        }
       }
       return null;
     } catch (error) {
