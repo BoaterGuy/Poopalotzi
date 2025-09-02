@@ -92,10 +92,10 @@ export class CloverService {
   }
 
   /**
-   * Ensure configuration is loaded
+   * Ensure configuration is loaded and force reload if needed
    */
-  private async ensureInitialized(): Promise<void> {
-    if (!this.initialized) {
+  private async ensureInitialized(forceReload: boolean = false): Promise<void> {
+    if (!this.initialized || forceReload) {
       await this.loadConfig();
     }
     
@@ -105,10 +105,6 @@ export class CloverService {
       hasAccessToken: !!this.config?.accessToken,
       environment: this.config?.environment
     });
-    
-    if (!this.config) {
-      throw new Error('Clover configuration not found. Please set up Clover integration first.');
-    }
   }
 
   /**
@@ -230,6 +226,16 @@ export class CloverService {
     };
 
     this.config = await storage.createCloverConfig(insertData);
+    
+    // Force reload to ensure the service has the latest config
+    await this.loadConfig();
+    
+    console.log('✅ Clover configuration saved and reloaded:', {
+      merchantId: this.config?.merchantId,
+      hasAccessToken: !!this.config?.accessToken,
+      environment: this.config?.environment
+    });
+    
     return this.config;
   }
 
@@ -240,8 +246,8 @@ export class CloverService {
     await this.ensureInitialized();
     const { storage } = await import('./index');
     
-    if (!this.config || !this.config.refreshToken) {
-      throw new Error('No refresh token available');
+    if (!this.config?.refreshToken || !this.config?.appId || !this.config?.appSecret) {
+      throw new Error('Cannot refresh token - missing refresh token or app credentials');
     }
 
     const baseUrl = CLOVER_ENDPOINTS.oauth;
@@ -296,7 +302,8 @@ export class CloverService {
    */
   async validateConnection(): Promise<{ isValid: boolean; error?: string; environment?: string }> {
     try {
-      await this.ensureInitialized();
+      // Force reload config to get latest changes
+      await this.ensureInitialized(true);
       
       if (!this.config) {
         return { 
@@ -312,36 +319,84 @@ export class CloverService {
         };
       }
 
+      if (!this.config.merchantId) {
+        return { 
+          isValid: false, 
+          error: 'Clover merchant ID missing. Configuration incomplete.' 
+        };
+      }
+
       // Test the connection by making a simple API call
       const baseUrl = CLOVER_ENDPOINTS.api;
+      
+      console.log(`🔍 Testing Clover API connection: ${baseUrl}/v3/merchants/${this.config.merchantId}`);
       
       const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.config.accessToken}`,
           'Content-Type': 'application/json',
-        }
-      });
+        },
+        timeout: 10000 // 10 second timeout
+      } as RequestInit);
+
+      console.log(`📡 Clover API Response: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorBody = await response.text();
+          if (errorBody) {
+            errorMessage += ` - ${errorBody}`;
+          }
+        } catch (e) {
+          // Ignore parsing errors for error body
+        }
+        
         if (response.status === 401) {
           return { 
             isValid: false, 
             error: 'Clover access token expired or invalid. Please reconnect your account.' 
           };
         }
+        if (response.status === 404) {
+          return { 
+            isValid: false, 
+            error: `Merchant ID '${this.config.merchantId}' not found. Please verify your merchant ID.` 
+          };
+        }
         return { 
           isValid: false, 
-          error: `Clover API error: ${response.status} ${response.statusText}` 
+          error: `Clover API error: ${errorMessage}` 
         };
       }
 
-      return { 
-        isValid: true, 
-        environment: this.config.environment 
-      };
+      // Validate response contains expected merchant data
+      try {
+        const merchantData = await response.json();
+        if (!merchantData || !merchantData.id) {
+          return {
+            isValid: false,
+            error: 'Invalid response from Clover API - missing merchant data'
+          };
+        }
+        
+        console.log(`✅ Clover API connection successful for merchant: ${merchantData.name || merchantData.id}`);
+        
+        return { 
+          isValid: true, 
+          environment: this.config.environment || 'production'
+        };
+      } catch (parseError) {
+        return {
+          isValid: false,
+          error: 'Invalid JSON response from Clover API'
+        };
+      }
       
     } catch (error) {
+      console.error('🚨 Clover connection validation failed:', error);
       return { 
         isValid: false, 
         error: error instanceof Error ? error.message : 'Unknown Clover connection error' 
@@ -372,10 +427,14 @@ export class CloverService {
       manualTransaction: false
     };
 
-    const response = await fetch(`${baseUrl}/v3/merchants/${this.config!.merchantId}/orders`, {
+    if (!this.config?.merchantId || !this.config?.accessToken) {
+      throw new Error('Clover configuration incomplete - missing merchant ID or access token');
+    }
+
+    const response = await fetch(`${baseUrl}/v3/merchants/${this.config.merchantId}/orders`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.config!.accessToken}`,
+        'Authorization': `Bearer ${this.config.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(orderData)
@@ -517,8 +576,8 @@ export class CloverService {
     await this.ensureInitialized();
     const { storage } = await import('./index');
     
-    if (!this.config) {
-      throw new Error('Clover configuration not loaded. Please configure Clover integration first.');
+    if (!this.config?.merchantId || !this.config?.accessToken) {
+      throw new Error('Clover configuration incomplete. Please reconnect your Clover account.');
     }
     
     console.log('Processing Clover payment with config:', {

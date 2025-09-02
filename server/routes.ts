@@ -2130,6 +2130,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Clover API connection with detailed diagnostics (admin only)
+  app.get("/api/admin/clover/test-connection", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      console.log('🧪 Running comprehensive Clover API test...');
+      
+      const isConfigured = await cloverService.isConfigured();
+      if (!isConfigured) {
+        return res.json({
+          success: false,
+          message: 'Clover not configured',
+          tests: {
+            configuration: { status: 'failed', message: 'No Clover configuration found' }
+          }
+        });
+      }
+
+      const connectionTest = await cloverService.validateConnection();
+      
+      const testResults = {
+        configuration: { 
+          status: 'passed', 
+          message: 'Clover configuration loaded successfully' 
+        },
+        apiConnection: {
+          status: connectionTest.isValid ? 'passed' : 'failed',
+          message: connectionTest.error || 'API connection successful',
+          environment: connectionTest.environment
+        }
+      };
+
+      res.json({
+        success: connectionTest.isValid,
+        message: connectionTest.isValid ? 'All Clover tests passed!' : 'Clover tests failed',
+        tests: testResults,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('🚨 Clover test connection failed:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Test failed with error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Initiate Clover OAuth flow (admin only)
   app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
