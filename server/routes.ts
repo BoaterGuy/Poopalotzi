@@ -2241,7 +2241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "If Clover rejects the connection, ensure this redirect URI is registered in your Clover app settings",
           requiredRedirectUri: redirectUri,
           appId: process.env.CLOVER_APP_ID,
-          setupInstructions: "Visit https://www.clover.com/developers/ -> Find your app -> Add redirect URI -> Save"
+          setupInstructions: "Visit Clover Developer Dashboard -> Configure your app -> Add redirect URI -> Save"
         }
       });
     } catch (err) {

@@ -283,7 +283,7 @@ export default function CloverSettingsSimple() {
                     Connect to Live Clover Account
                   </Button>
                   <div className="text-xs text-green-600 mt-2">
-                    <strong>This will redirect to:</strong> https://www.clover.com/oauth/authorize<br/>
+                    <strong>This will redirect to:</strong> Clover OAuth (production)<br/>
                     <strong>For production payments only</strong>
                   </div>
                 </div>
