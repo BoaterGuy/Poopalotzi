@@ -125,22 +125,30 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
           const taxAmount = amount * 0.0675; // 6.75% tax
           const totalAmount = amount + taxAmount;
           
-          const response = await apiRequest("POST", "/api/payments/subscription", {
-            amount: Math.round(amount * 100), // Convert to cents  
-            taxAmount: Math.round(taxAmount * 100), // Tax in cents
-            source: await generateCloverCardToken(data), // Real card token
-            description: `Subscription payment - $${amount.toFixed(2)}`,
-            customer: {
-              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
-              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
-              email: "customer@marina.com", // You might want to get this from user context
-              phone: "555-0123"
-            },
-            paymentDetails: {
-              ...data,
-              amount: totalAmount,
-            },
+          const response = await apiRequest("/api/payments/subscription", {
+            method: "POST",
+            body: JSON.stringify({
+              amount: Math.round(amount * 100), // Convert to cents  
+              taxAmount: Math.round(taxAmount * 100), // Tax in cents
+              source: await generateCloverCardToken(data), // Real card token
+              description: `Subscription payment - $${amount.toFixed(2)}`,
+              customer: {
+                firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+                lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+                email: "customer@marina.com", // You might want to get this from user context
+                phone: "555-0123"
+              },
+              paymentDetails: {
+                ...data,
+                amount: totalAmount,
+              },
+            })
           });
+          
+          // Null-safe response handling
+          if (!response) {
+            throw new Error('Empty response from payment API');
+          }
           
           console.log('Clover subscription payment response:', response);
           
@@ -167,23 +175,31 @@ export default function PaymentForm({ requestId, amount, onSuccess, isSubscripti
           const taxAmount = amount * 0.0675; // 6.75% tax
           const totalAmount = amount + taxAmount;
           
-          const response = await apiRequest("POST", "/api/payments/clover", {
-            amount: Math.round(amount * 100), // Convert to cents
-            taxAmount: Math.round(taxAmount * 100), // Tax in cents
-            requestId: requestId,
-            source: await generateCloverCardToken(data), // Real card token
-            description: `Service payment for request #${requestId} - $${amount.toFixed(2)}`,
-            customer: {
-              firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
-              lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
-              email: "customer@marina.com", // You might want to get this from user context
-              phone: "555-0123"
-            },
-            paymentDetails: {
-              ...data,
-              amount: totalAmount,
-            },
+          const response = await apiRequest("/api/payments/clover", {
+            method: "POST",
+            body: JSON.stringify({
+              amount: Math.round(amount * 100), // Convert to cents
+              taxAmount: Math.round(taxAmount * 100), // Tax in cents
+              requestId: requestId,
+              source: await generateCloverCardToken(data), // Real card token
+              description: `Service payment for request #${requestId} - $${amount.toFixed(2)}`,
+              customer: {
+                firstName: data.cardholderName.split(' ')[0] || data.cardholderName,
+                lastName: data.cardholderName.split(' ').slice(1).join(' ') || '',
+                email: "customer@marina.com", // You might want to get this from user context
+                phone: "555-0123"
+              },
+              paymentDetails: {
+                ...data,
+                amount: totalAmount,
+              },
+            })
           });
+          
+          // Null-safe response handling
+          if (!response) {
+            throw new Error('Empty response from payment API');
+          }
           
           console.log('Clover payment response:', response);
           
