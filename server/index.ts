@@ -55,9 +55,9 @@ if (!process.env.CLOVER_ENVIRONMENT) {
   process.env.CLOVER_ENVIRONMENT = "production";
 }
 
-// ENABLE HARD-CODING: Bypass OAuth completely
+// DISABLE HARD-CODING: Test OAuth flow with correct redirect URI
 // Set this to true to enable hard-coded Clover connection
-process.env.ENABLE_HARDCODED_CLOVER = "true";
+process.env.ENABLE_HARDCODED_CLOVER = "false";
 
 // Hard-code merchant credentials (bypasses OAuth)
 if (!process.env.CLOVER_MERCHANT_ID && process.env.ENABLE_HARDCODED_CLOVER === "true") {
