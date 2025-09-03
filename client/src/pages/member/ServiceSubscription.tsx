@@ -21,7 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sailboat, CheckCircle, ArrowRight, Clock, DollarSign, CalendarClock, Repeat } from "lucide-react";
 import PaymentForm from "@/components/member/PaymentForm";
 import BulkPlanPurchaseForm from "@/components/member/BulkPlanPurchaseForm";

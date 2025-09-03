@@ -108,7 +108,9 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           method: 'POST',
           body: JSON.stringify({
             ...data,
-          ownerId: 2
+            ownerId: 2
+          }),
+          headers: { 'Content-Type': 'application/json' }
         });
       }
       
