@@ -153,8 +153,6 @@ export default function NotificationPreferences() {
     try {
       await apiRequest('/api/notifications/preferences', {
         method: 'PUT',
-        body: JSON.stringify(preferences),
-        headers: { 'Content-Type': 'application/json' }
         body: JSON.stringify(updates),
         headers: { 'Content-Type': 'application/json' }
       });
