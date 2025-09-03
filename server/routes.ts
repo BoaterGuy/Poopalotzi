@@ -2130,6 +2130,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NEW: Clover redirect URI test endpoint 
+  app.get("/api/admin/clover/test-redirect", isAdmin, async (req: AuthRequest, res, next) => {
+    try {
+      const currentDomain = `${req.protocol}://${req.get('host')}`;
+      const hardcodedRedirect = 'https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback';
+      const computedRedirect = `${currentDomain}/api/admin/clover/oauth/callback`;
+      
+      res.json({
+        title: "🔧 Clover Redirect URI Diagnostics",
+        issue: "OAuth callbacks failing - redirect URI mismatch suspected",
+        currentDomain,
+        redirectUris: {
+          hardcoded: hardcodedRedirect,
+          computed: computedRedirect,
+          match: hardcodedRedirect === computedRedirect
+        },
+        cloverAppSettings: {
+          appId: process.env.CLOVER_APP_ID,
+          hasAppSecret: !!process.env.CLOVER_APP_SECRET,
+          environment: 'production'
+        },
+        nextSteps: [
+          "1. Go to https://www.clover.com/developers/",
+          "2. Select your app (ID: " + process.env.CLOVER_APP_ID + ")",
+          "3. Go to 'App Settings' -> 'Web Configuration'",
+          "4. Ensure this redirect URI is registered: " + hardcodedRedirect,
+          "5. Save changes and test OAuth again"
+        ],
+        testUrl: `${currentDomain}/api/admin/clover/oauth/callback?test=true`
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Test Clover API connection with detailed diagnostics (admin only)
   app.get("/api/admin/clover/test-connection", isAdmin, async (req: AuthRequest, res, next) => {
     try {
@@ -2425,12 +2460,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     try {
-      console.log('=== CLOVER OAUTH CALLBACK RECEIVED ===');
-      console.log('Query params:', req.query);
-      console.log('Full URL:', req.url);
-      console.log('Headers:', req.headers);
-      console.log('Request host:', req.get('host'));
-      console.log('Request protocol:', req.protocol);
+      console.log('🎯 === CLOVER OAUTH CALLBACK RECEIVED ===');
+      console.log('🎯 THIS MEANS CLOVER IS CALLING US BACK!');
+      console.log('🎯 Query params:', req.query);
+      console.log('🎯 Full URL:', req.url);
+      console.log('🎯 Headers:', req.headers);
+      console.log('🎯 Request host:', req.get('host'));
+      console.log('🎯 Request protocol:', req.protocol);
+      console.log('🎯 Timestamp:', new Date().toISOString());
       
       const { code, merchant_id, error, error_description } = req.query;
       
