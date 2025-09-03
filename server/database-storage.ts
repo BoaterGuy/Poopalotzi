@@ -16,7 +16,7 @@ import pg from 'pg';
 const { Pool } = pg;
 
 // Create a new pool instance for session store
-let sessionPool;
+let sessionPool: any;
 
 try {
   // First try with connection string
@@ -51,6 +51,11 @@ if (!process.env.SESSION_SECRET) {
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
+  // Add the missing getAdminUsers method
+  async getAdminUsers(): Promise<User[]> {
+    return await db.select().from(schema.users).where(eq(schema.users.role, 'admin'));
+  }
+  
   // Add the missing deleteMarina method
   async deleteMarina(id: number): Promise<boolean> {
     try {
@@ -492,7 +497,7 @@ export class DatabaseStorage implements IStorage {
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(schema.cloverConfig.id, id));
     
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Payment Transaction Methods
@@ -612,10 +617,13 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(schema.emailNotificationLog);
     
     if (userId) {
-      query = query.where(eq(schema.emailNotificationLog.userId, userId));
+      return await db.select().from(schema.emailNotificationLog)
+        .where(eq(schema.emailNotificationLog.userId, userId))
+        .orderBy(desc(schema.emailNotificationLog.sentAt))
+        .limit(limit);
     }
     
-    return await query
+    return await db.select().from(schema.emailNotificationLog)
       .orderBy(desc(schema.emailNotificationLog.sentAt))
       .limit(limit);
   }

@@ -1,5 +1,4 @@
 import { Pool } from 'pg';
-import { log } from './vite';
 
 // Function to set up all required tables
 export async function setupFullDatabase() {
