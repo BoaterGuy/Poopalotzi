@@ -23,8 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { insertBoatSchema, Marina } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -72,50 +71,51 @@ interface BoatFormProps {
 export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const queryClient = useQueryClient();
+  const [existingAssignment, setExistingAssignment] = useState<any>(null);
+  const [marinas, setMarinas] = useState<Marina[]>([]);
   
   // Fetch existing dock assignment for this boat
-  const { data: existingAssignment } = useQuery({
-    queryKey: [`/api/dock-assignments/boat/${boat?.id}`],
-    queryFn: async () => {
-      if (!boat?.id) return null;
+  useEffect(() => {
+    const fetchAssignment = async () => {
+      if (!boat?.id) return;
       
       try {
         const response = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
           credentials: 'include'
         });
         
-        if (!response.ok) {
-          if (response.status === 404) {
-            return null; // No assignment exists yet
-          }
-          throw new Error('Failed to fetch dock assignment');
+        if (response.ok) {
+          const data = await response.json();
+          setExistingAssignment(data);
         }
-        
-        return response.json();
       } catch (error) {
         console.error("Error fetching dock assignment:", error);
-        return null;
       }
-    },
-    enabled: !!boat?.id,
-  });
+    };
+    
+    fetchAssignment();
+  }, [boat?.id]);
+  
+  // Fetch marinas
+  useEffect(() => {
+    const fetchMarinas = async () => {
+      try {
+        const response = await fetch('/api/marinas/all', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setMarinas(data);
+        }
+      } catch (error) {
+        console.error("Error fetching marinas:", error);
+      }
+    };
+    
+    fetchMarinas();
+  }, []);
 
-  // Fetch list of marinas
-  const { data: marinas = [] } = useQuery<Marina[]>({
-    queryKey: ['/api/marinas'],
-    queryFn: async () => {
-      const response = await fetch('/api/marinas', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch marinas');
-      }
-      
-      return response.json();
-    },
-  });
 
   // Set default values based on whether we're editing or creating
   const defaultValues: Partial<BoatFormValues> = {

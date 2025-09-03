@@ -21,8 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Sailboat, CheckCircle, ArrowRight, Clock, DollarSign, CalendarClock, Repeat } from "lucide-react";
 import PaymentForm from "@/components/member/PaymentForm";
 import BulkPlanPurchaseForm from "@/components/member/BulkPlanPurchaseForm";
@@ -37,10 +36,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export default function ServiceSubscription() {
-
   const { toast } = useToast();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -58,12 +55,12 @@ export default function ServiceSubscription() {
   });
   const [autoRenew, setAutoRenew] = useState(false);
   
+  const [serviceLevels, setServiceLevels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Fetch service levels
-  const { data: serviceLevels = [], isLoading } = useQuery({
-    queryKey: ['/api/service-levels'],
-    refetchOnMount: true,
-    staleTime: 0,
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchServiceLevels = async () => {
       try {
         const response = await fetch('/api/service-levels', {
           credentials: 'include',
@@ -71,56 +68,54 @@ export default function ServiceSubscription() {
         if (!response.ok) {
           throw new Error('Failed to fetch service levels');
         }
-        return await response.json();
+        const data = await response.json();
+        setServiceLevels(data);
       } catch (error) {
         console.error('Error fetching service levels:', error);
-        // Return empty array to prevent errors
-        return [];
+      } finally {
+        setIsLoading(false);
       }
-    },
-  });
+    };
+    
+    fetchServiceLevels();
+  }, []);
   
-  // Fetch current subscription
-  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ['/api/users/me/subscription'],
-    queryFn: async () => {
+  const [subscription, setSubscription] = useState(null);
+  const [userCredits, setUserCredits] = useState(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true);
+  
+  // Fetch subscription and user data
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/users/me/subscription', {
+        // Fetch subscription
+        const subResponse = await fetch('/api/users/me/subscription', {
           credentials: 'include',
         });
-        if (!response.ok) {
-          // User may not have a subscription yet
-          if (response.status === 404) {
-            return null;
-          }
-          throw new Error('Failed to fetch subscription');
+        if (subResponse.ok) {
+          const subData = await subResponse.json();
+          setSubscription(subData);
         }
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-        return null;
-      }
-    },
-  });
-
-  // Fetch user credits to determine if they can repurchase
-  const { data: userCredits, isLoading: isLoadingCredits } = useQuery({
-    queryKey: ['/api/users/me/credits'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/users/me/credits', {
+        
+        // Fetch user credits
+        const creditsResponse = await fetch('/api/users/me/credits', {
           credentials: 'include',
         });
-        if (!response.ok) {
-          throw new Error('Failed to fetch user credits');
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          setUserCredits(creditsData);
         }
-        return await response.json();
       } catch (error) {
-        console.error('Error fetching user credits:', error);
-        return { totalPumpOuts: 0, additionalPumpOuts: 0 };
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoadingSubscription(false);
+        setIsLoadingCredits(false);
       }
-    },
-  });
+    };
+    
+    fetchData();
+  }, []);
   
   const filterActiveLevels = (levels: ServiceLevel[]) => {
     return levels.filter(level => level.isActive);

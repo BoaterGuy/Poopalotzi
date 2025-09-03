@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -153,7 +153,10 @@ export default function NotificationPreferences() {
     try {
       await apiRequest('/api/notifications/preferences', {
         method: 'PUT',
+        body: JSON.stringify(preferences),
+        headers: { 'Content-Type': 'application/json' }
         body: JSON.stringify(updates),
+        headers: { 'Content-Type': 'application/json' }
       });
       
       toast({
