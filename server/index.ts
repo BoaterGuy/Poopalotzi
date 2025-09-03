@@ -55,14 +55,17 @@ if (!process.env.CLOVER_ENVIRONMENT) {
   process.env.CLOVER_ENVIRONMENT = "production";
 }
 
-// Optional: Hard-code merchant credentials (bypasses OAuth)
-// WARNING: Only enable for testing - use secrets management in production
+// ENABLE HARD-CODING: Bypass OAuth completely
+// Set this to true to enable hard-coded Clover connection
+process.env.ENABLE_HARDCODED_CLOVER = "true";
+
+// Hard-code merchant credentials (bypasses OAuth)
 if (!process.env.CLOVER_MERCHANT_ID && process.env.ENABLE_HARDCODED_CLOVER === "true") {
   process.env.CLOVER_MERCHANT_ID = "PFHDQ8MSX5F81";
   console.log("🔧 Hard-coded Clover Merchant ID set");
 }
 if (!process.env.CLOVER_ACCESS_TOKEN && process.env.ENABLE_HARDCODED_CLOVER === "true") {
-  process.env.CLOVER_ACCESS_TOKEN = "YOUR_PRODUCTION_ACCESS_TOKEN_HERE";
+  process.env.CLOVER_ACCESS_TOKEN = "PASTE_YOUR_PRODUCTION_TOKEN_HERE";
   console.log("🔧 Hard-coded Clover Access Token set");
 }
 
