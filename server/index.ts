@@ -10,6 +10,37 @@ import { setupAuth } from "./auth";
 // Export storage for other modules - Use database storage for persistence
 export const storage = new DatabaseStorage();
 
+// Function to create hardcoded Clover configuration
+async function setupHardcodedClover() {
+  if (process.env.ENABLE_HARDCODED_CLOVER === "true" && 
+      process.env.CLOVER_MERCHANT_ID && 
+      process.env.CLOVER_ACCESS_TOKEN) {
+    
+    try {
+      // Check if config already exists
+      const existingConfig = await storage.getCloverConfig();
+      if (existingConfig) {
+        console.log('🔧 Clover already configured, skipping hardcoded setup');
+        return;
+      }
+
+      // Create hardcoded configuration
+      await storage.createCloverConfig({
+        merchantId: process.env.CLOVER_MERCHANT_ID,
+        appId: process.env.CLOVER_APP_ID!,
+        appSecret: process.env.CLOVER_APP_SECRET!,
+        accessToken: process.env.CLOVER_ACCESS_TOKEN,
+        environment: process.env.CLOVER_ENVIRONMENT || 'production',
+        isActive: true
+      });
+      
+      console.log('✅ Hardcoded Clover configuration created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create hardcoded Clover configuration:', error);
+    }
+  }
+}
+
 // Simple logging function
 const log = console.log;
 
@@ -22,6 +53,15 @@ if (!process.env.CLOVER_APP_SECRET) {
 }
 if (!process.env.CLOVER_ENVIRONMENT) {
   process.env.CLOVER_ENVIRONMENT = "production";
+}
+
+// Optional: Hard-code merchant credentials (bypasses OAuth)
+// WARNING: Only enable for testing - use secrets management in production
+if (!process.env.CLOVER_MERCHANT_ID && process.env.ENABLE_HARDCODED_CLOVER === "true") {
+  process.env.CLOVER_MERCHANT_ID = "YOUR_MERCHANT_ID_HERE";
+}
+if (!process.env.CLOVER_ACCESS_TOKEN && process.env.ENABLE_HARDCODED_CLOVER === "true") {
+  process.env.CLOVER_ACCESS_TOKEN = "YOUR_ACCESS_TOKEN_HERE";
 }
 
 const app = express();
@@ -105,6 +145,9 @@ async function setupDatabaseConnection() {
 async function startServer() {
   try {
     await setupDatabaseConnection();
+    
+    // Set up hardcoded Clover configuration if enabled
+    await setupHardcodedClover();
 
     // Health check endpoint - must be before other routes
     app.get('/api/health', (req: Request, res: Response) => {
