@@ -54,7 +54,9 @@ export default function BoatManagement() {
   // Delete a boat
   const handleDeleteBoat = async (boatId: number) => {
     try {
-      await apiRequest('DELETE', `/api/boats/${boatId}`);
+      await apiRequest(`/api/boats/${boatId}`, {
+        method: 'DELETE'
+      });
       
       toast({
         title: "Boat deleted",

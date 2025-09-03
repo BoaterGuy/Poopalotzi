@@ -136,7 +136,10 @@ export default function Profile() {
     setIsUpdating(true);
     try {
       // This would be a real API call in a production app
-      await apiRequest('PUT', '/api/users/profile', data);
+      await apiRequest('/api/users/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
       
       toast({
         title: "Profile updated",
@@ -161,9 +164,12 @@ export default function Profile() {
     setIsUpdating(true);
     try {
       // This would be a real API call in a production app
-      await apiRequest('PUT', '/api/users/password', {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+      await apiRequest('/api/users/password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        })
       });
       
       toast({
@@ -188,8 +194,11 @@ export default function Profile() {
     setIsUpdating(true);
     try {
       // This would be a real API call in a production app
-      await apiRequest('PUT', '/api/users/service-level', {
-        serviceLevelId: parseInt(serviceLevelId),
+      await apiRequest('/api/users/service-level', {
+        method: 'PUT',
+        body: JSON.stringify({
+          serviceLevelId: parseInt(serviceLevelId),
+        })
       });
       
       toast({

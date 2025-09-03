@@ -430,7 +430,9 @@ export default function ServiceLevelManagement() {
 
   const handleDeleteServiceLevel = async (id: number) => {
     try {
-      await apiRequest('DELETE', `/api/service-levels/${id}`);
+      await apiRequest(`/api/service-levels/${id}`, {
+        method: 'DELETE'
+      });
       
       toast({
         title: "Service Level Deactivated",

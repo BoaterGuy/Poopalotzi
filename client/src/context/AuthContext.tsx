@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         console.log('AuthContext: /api/auth/me response status:', response.status);
-        console.log('AuthContext: Response headers:', [...response.headers.entries()]);
+        console.log('AuthContext: Response headers:', Array.from(response.headers.entries()));
 
         if (response.ok) {
           const userData = await response.json();
@@ -93,14 +93,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (!response.ok) {
               // User doesn't exist in our system, create them
-              const registerResponse = await apiRequest('POST', '/api/auth/register', {
-                email: supaUser.email,
-                firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
-                lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-                role: 'member',
-                oauthProvider: supaUser.app_metadata.provider,
-                oauthId: supaUser.id,
-                password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
+              const registerResponse = await apiRequest('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                  email: supaUser.email,
+                  firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
+                  lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+                  role: 'member',
+                  oauthProvider: supaUser.app_metadata.provider,
+                  oauthId: supaUser.id,
+                  password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
+                })
               });
 
               if (registerResponse.ok) {
@@ -188,7 +191,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Register with our API
-      const response = await apiRequest('POST', '/api/auth/register', userData);
+      const response = await apiRequest('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
       
       const newUser = await response.json();
       setUser(newUser);
@@ -215,7 +221,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Logout from our API
-      await apiRequest('POST', '/api/auth/logout', {});
+      await apiRequest('/api/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
       
       // Also logout from Supabase if we're using it
       await signOut();
