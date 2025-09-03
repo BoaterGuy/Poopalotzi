@@ -138,6 +138,14 @@ export class MemStorage implements IStorage {
   private currentPumpOutRequestId: number;
   private currentPumpOutLogId: number;
   private currentEmployeeAssignmentId: number;
+  private cloverConfigsData: Map<number, CloverConfig>;
+  private paymentTransactionsData: Map<number, PaymentTransaction>;
+  private notificationPreferencesData: Map<number, NotificationPreferences>;
+  private emailNotificationLogsData: Map<number, EmailNotificationLog>;
+  private currentCloverConfigId: number;
+  private currentPaymentTransactionId: number;
+  private currentNotificationPreferencesId: number;
+  private currentEmailNotificationLogId: number;
 
   constructor() {
     this.sessionStore = new MemoryStore({
@@ -153,6 +161,10 @@ export class MemStorage implements IStorage {
     this.pumpOutRequestsData = new Map();
     this.pumpOutLogsData = new Map();
     this.employeeAssignmentsData = new Map();
+    this.cloverConfigsData = new Map();
+    this.paymentTransactionsData = new Map();
+    this.notificationPreferencesData = new Map();
+    this.emailNotificationLogsData = new Map();
     
     this.currentUserId = 1;
     this.currentBoatOwnerId = 1;
@@ -163,6 +175,10 @@ export class MemStorage implements IStorage {
     this.currentPumpOutRequestId = 1;
     this.currentPumpOutLogId = 1;
     this.currentEmployeeAssignmentId = 1;
+    this.currentCloverConfigId = 1;
+    this.currentPaymentTransactionId = 1;
+    this.currentNotificationPreferencesId = 1;
+    this.currentEmailNotificationLogId = 1;
 
     // Service levels are now initialized in server/index.ts
 
@@ -183,7 +199,14 @@ export class MemStorage implements IStorage {
       oauthId: null,
       createdAt: new Date(),
       serviceLevelId: null,
-      emailVerified: true
+      emailVerified: true,
+      subscriptionStartDate: null,
+      subscriptionEndDate: null,
+      activeMonth: null,
+      autoRenew: false,
+      bulkPlanYear: null,
+      additionalPumpOuts: 0,
+      totalPumpOuts: 0
     });
     this.currentUserId++;
 
@@ -201,7 +224,14 @@ export class MemStorage implements IStorage {
       oauthId: null,
       createdAt: new Date(),
       serviceLevelId: null,
-      emailVerified: true
+      emailVerified: true,
+      subscriptionStartDate: null,
+      subscriptionEndDate: null,
+      activeMonth: null,
+      autoRenew: false,
+      bulkPlanYear: null,
+      additionalPumpOuts: 0,
+      totalPumpOuts: 0
     });
     this.currentUserId++;
 
@@ -219,7 +249,14 @@ export class MemStorage implements IStorage {
       oauthId: null,
       createdAt: new Date(),
       serviceLevelId: null,
-      emailVerified: true
+      emailVerified: true,
+      subscriptionStartDate: null,
+      subscriptionEndDate: null,
+      activeMonth: null,
+      autoRenew: false,
+      bulkPlanYear: null,
+      additionalPumpOuts: 0,
+      totalPumpOuts: 0
     });
     
     // Create boat owner for member
@@ -243,7 +280,22 @@ export class MemStorage implements IStorage {
   async createUser(user: InsertUser, passwordHash: string): Promise<User> {
     const id = this.currentUserId++;
     const newUser: User = {
-      ...user,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone ?? null,
+      role: user.role ?? 'member',
+      oauthProvider: user.oauthProvider ?? null,
+      oauthId: user.oauthId ?? null,
+      serviceLevelId: user.serviceLevelId ?? null,
+      subscriptionStartDate: user.subscriptionStartDate ?? null,
+      subscriptionEndDate: user.subscriptionEndDate ?? null,
+      activeMonth: user.activeMonth ?? null,
+      autoRenew: user.autoRenew ?? false,
+      bulkPlanYear: user.bulkPlanYear ?? null,
+      additionalPumpOuts: user.additionalPumpOuts ?? 0,
+      totalPumpOuts: user.totalPumpOuts ?? 0,
+      emailVerified: user.emailVerified ?? false,
       id,
       passwordHash,
       createdAt: new Date()
@@ -310,7 +362,21 @@ export class MemStorage implements IStorage {
   async createBoat(boatData: InsertBoat): Promise<Boat> {
     const id = this.currentBoatId++;
     const newBoat: Boat = {
-      ...boatData,
+      ownerId: boatData.ownerId,
+      name: boatData.name,
+      year: boatData.year ?? null,
+      make: boatData.make ?? null,
+      model: boatData.model ?? null,
+      length: boatData.length ?? null,
+      color: boatData.color ?? null,
+      photoUrl: boatData.photoUrl ?? null,
+      pieringDirection: boatData.pieringDirection ?? null,
+      dockingDirection: boatData.dockingDirection ?? null,
+      tieUpSide: boatData.tieUpSide ?? null,
+      pumpPortLocations: boatData.pumpPortLocations ?? null,
+      pier: boatData.pier ?? null,
+      dock: boatData.dock ?? null,
+      notes: boatData.notes ?? null,
       id,
       createdAt: new Date()
     };
@@ -344,7 +410,10 @@ export class MemStorage implements IStorage {
   async createMarina(marinaData: InsertMarina): Promise<Marina> {
     const id = this.currentMarinaId++;
     const newMarina: Marina = {
-      ...marinaData,
+      name: marinaData.name,
+      address: marinaData.address ?? null,
+      phone: marinaData.phone ?? null,
+      isActive: marinaData.isActive ?? null,
       id,
       createdAt: new Date()
     };
@@ -407,7 +476,19 @@ export class MemStorage implements IStorage {
   async createServiceLevel(serviceLevelData: InsertServiceLevel): Promise<ServiceLevel> {
     const id = this.currentServiceLevelId++;
     const newServiceLevel: ServiceLevel = {
-      ...serviceLevelData,
+      name: serviceLevelData.name,
+      price: serviceLevelData.price,
+      description: serviceLevelData.description ?? null,
+      headCount: serviceLevelData.headCount ?? null,
+      type: serviceLevelData.type,
+      seasonStart: serviceLevelData.seasonStart ?? null,
+      seasonEnd: serviceLevelData.seasonEnd ?? null,
+      monthlyQuota: serviceLevelData.monthlyQuota ?? null,
+      onDemandQuota: serviceLevelData.onDemandQuota ?? null,
+      basePrice: serviceLevelData.basePrice ?? null,
+      pricePerAdditional: serviceLevelData.pricePerAdditional ?? null,
+      baseQuantity: serviceLevelData.baseQuantity ?? null,
+      isActive: serviceLevelData.isActive ?? null,
       id,
       createdAt: new Date()
     };
@@ -432,7 +513,7 @@ export class MemStorage implements IStorage {
   async getPumpOutRequestsByBoatId(boatId: number): Promise<PumpOutRequest[]> {
     return Array.from(this.pumpOutRequestsData.values())
       .filter(request => request.boatId === boatId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => (b.createdAt || new Date(0)).getTime() - (a.createdAt || new Date(0)).getTime());
   }
 
   async getPumpOutRequestsByWeek(weekStartDate: Date): Promise<PumpOutRequest[]> {
@@ -455,7 +536,13 @@ export class MemStorage implements IStorage {
     const id = this.currentPumpOutRequestId++;
     const now = new Date();
     const newRequest: PumpOutRequest = {
-      ...requestData,
+      boatId: requestData.boatId,
+      weekStartDate: requestData.weekStartDate,
+      status: requestData.status ?? 'Requested',
+      ownerNotes: requestData.ownerNotes ?? null,
+      adminNotes: requestData.adminNotes ?? null,
+      paymentStatus: requestData.paymentStatus ?? 'Pending',
+      paymentId: requestData.paymentId ?? null,
       id,
       createdAt: now,
       updatedAt: now
@@ -508,16 +595,21 @@ export class MemStorage implements IStorage {
   async getPumpOutLogsByRequestId(requestId: number): Promise<PumpOutLog[]> {
     return Array.from(this.pumpOutLogsData.values())
       .filter(log => log.requestId === requestId)
-      .sort((a, b) => b.changeTimestamp.getTime() - a.changeTimestamp.getTime());
+      .sort((a, b) => (b.changeTimestamp || new Date(0)).getTime() - (a.changeTimestamp || new Date(0)).getTime());
   }
 
   async createPumpOutLog(logData: InsertPumpOutLog): Promise<PumpOutLog> {
     const id = this.currentPumpOutLogId++;
     const now = new Date();
     const newLog: PumpOutLog = {
-      ...logData,
+      requestId: logData.requestId,
+      prevStatus: logData.prevStatus ?? null,
+      newStatus: logData.newStatus,
+      beforeUrl: logData.beforeUrl ?? null,
+      duringUrl: logData.duringUrl ?? null,
+      afterUrl: logData.afterUrl ?? null,
       id,
-      changeTimestamp: now,
+      changeTimestamp: logData.changeTimestamp ?? now,
       createdAt: now
     };
     this.pumpOutLogsData.set(id, newLog);
@@ -584,8 +676,8 @@ export class MemStorage implements IStorage {
     return Array.from(this.pumpOutRequestsData.values())
       .filter(request => 
         request.status === 'Completed' && 
-        request.updatedAt >= startOfWeek && 
-        request.updatedAt < endOfWeek
+        request.updatedAt && request.updatedAt >= startOfWeek && 
+        request.updatedAt && request.updatedAt < endOfWeek
       ).length;
   }
 
@@ -610,6 +702,215 @@ export class MemStorage implements IStorage {
     }
     
     return totalRevenue / activeUsers.length;
+  }
+
+  // Clover Configuration operations
+  async getCloverConfig(): Promise<CloverConfig | undefined> {
+    return Array.from(this.cloverConfigsData.values()).find(config => config.isActive) || undefined;
+  }
+
+  async createCloverConfig(config: InsertCloverConfig): Promise<CloverConfig> {
+    const id = this.currentCloverConfigId++;
+    const newConfig: CloverConfig = {
+      merchantId: config.merchantId,
+      appId: config.appId,
+      appSecret: config.appSecret,
+      accessToken: config.accessToken ?? null,
+      refreshToken: config.refreshToken ?? null,
+      tokenExpiresAt: config.tokenExpiresAt ?? null,
+      environment: config.environment ?? 'production',
+      webhookSecret: config.webhookSecret ?? null,
+      id,
+      isActive: config.isActive ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.cloverConfigsData.set(id, newConfig);
+    return newConfig;
+  }
+
+  async updateCloverConfig(id: number, configData: Partial<CloverConfig>): Promise<CloverConfig | undefined> {
+    const existingConfig = this.cloverConfigsData.get(id);
+    if (!existingConfig) return undefined;
+    
+    const updatedConfig = { ...existingConfig, ...configData, updatedAt: new Date() };
+    this.cloverConfigsData.set(id, updatedConfig);
+    return updatedConfig;
+  }
+
+  async deleteCloverConfig(id: number): Promise<boolean> {
+    return this.cloverConfigsData.delete(id);
+  }
+
+  // Payment Transaction operations
+  async getPaymentTransaction(id: number): Promise<PaymentTransaction | undefined> {
+    return this.paymentTransactionsData.get(id);
+  }
+
+  async getPaymentTransactionByCloverPaymentId(cloverPaymentId: string): Promise<PaymentTransaction | undefined> {
+    return Array.from(this.paymentTransactionsData.values())
+      .find(transaction => transaction.cloverPaymentId === cloverPaymentId);
+  }
+
+  async getPaymentTransactionsByUserId(userId: number): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactionsData.values())
+      .filter(transaction => transaction.userId === userId)
+      .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
+  }
+
+  async getPaymentTransactionsByRequestId(requestId: number): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactionsData.values())
+      .filter(transaction => transaction.requestId === requestId)
+      .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
+  }
+
+  async createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const id = this.currentPaymentTransactionId++;
+    const newTransaction: PaymentTransaction = {
+      cloverPaymentId: transaction.cloverPaymentId,
+      orderId: transaction.orderId ?? null,
+      requestId: transaction.requestId ?? null,
+      userId: transaction.userId,
+      amount: transaction.amount,
+      currency: transaction.currency ?? 'USD',
+      status: transaction.status,
+      paymentMethod: transaction.paymentMethod ?? null,
+      cardLast4: transaction.cardLast4 ?? null,
+      cardBrand: transaction.cardBrand ?? null,
+      cloverResponse: transaction.cloverResponse ?? null,
+      errorMessage: transaction.errorMessage ?? null,
+      refundAmount: transaction.refundAmount ?? null,
+      refundedAt: transaction.refundedAt ?? null,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.paymentTransactionsData.set(id, newTransaction);
+    return newTransaction;
+  }
+
+  async updatePaymentTransaction(id: number, transactionData: Partial<PaymentTransaction>): Promise<PaymentTransaction | undefined> {
+    const existingTransaction = this.paymentTransactionsData.get(id);
+    if (!existingTransaction) return undefined;
+    
+    const updatedTransaction = { ...existingTransaction, ...transactionData, updatedAt: new Date() };
+    this.paymentTransactionsData.set(id, updatedTransaction);
+    return updatedTransaction;
+  }
+
+  async updatePaymentTransactionStatus(cloverPaymentId: string, status: string, errorMessage?: string): Promise<PaymentTransaction | undefined> {
+    const transaction = Array.from(this.paymentTransactionsData.values())
+      .find(t => t.cloverPaymentId === cloverPaymentId);
+    
+    if (!transaction) return undefined;
+    
+    const updatedTransaction = {
+      ...transaction,
+      status,
+      errorMessage: errorMessage || transaction.errorMessage,
+      updatedAt: new Date()
+    };
+    this.paymentTransactionsData.set(transaction.id, updatedTransaction);
+    return updatedTransaction;
+  }
+
+  async getAllPaymentTransactions(): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactionsData.values())
+      .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
+  }
+
+  async getPaymentTransactionsByStatus(status: string): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactionsData.values())
+      .filter(transaction => transaction.status === status)
+      .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
+  }
+
+  // Notification Preferences operations
+  async createNotificationPreferences(preferences: InsertNotificationPreferences): Promise<NotificationPreferences> {
+    const id = this.currentNotificationPreferencesId++;
+    const newPreferences: NotificationPreferences = {
+      ...preferences,
+      id,
+      emailNotifications: preferences.emailNotifications ?? true,
+      welcomeEmails: preferences.welcomeEmails ?? true,
+      subscriptionEmails: preferences.subscriptionEmails ?? true,
+      paymentEmails: preferences.paymentEmails ?? true,
+      renewalReminders: preferences.renewalReminders ?? true,
+      scheduleEmails: preferences.scheduleEmails ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.notificationPreferencesData.set(id, newPreferences);
+    return newPreferences;
+  }
+
+  async getNotificationPreferences(userId: number): Promise<NotificationPreferences | undefined> {
+    return Array.from(this.notificationPreferencesData.values())
+      .find(preferences => preferences.userId === userId);
+  }
+
+  async updateNotificationPreferences(userId: number, preferencesData: Partial<NotificationPreferences>): Promise<NotificationPreferences | undefined> {
+    const existingPreferences = Array.from(this.notificationPreferencesData.values())
+      .find(preferences => preferences.userId === userId);
+    
+    if (!existingPreferences) return undefined;
+    
+    const updatedPreferences = { ...existingPreferences, ...preferencesData, updatedAt: new Date() };
+    this.notificationPreferencesData.set(existingPreferences.id, updatedPreferences);
+    return updatedPreferences;
+  }
+
+  async getOrCreateNotificationPreferences(userId: number): Promise<NotificationPreferences> {
+    const existing = await this.getNotificationPreferences(userId);
+    if (existing) return existing;
+    
+    return await this.createNotificationPreferences({ userId });
+  }
+
+  // Email Notification Log operations
+  async createEmailNotificationLog(log: InsertEmailNotificationLog): Promise<EmailNotificationLog> {
+    const id = this.currentEmailNotificationLogId++;
+    const newLog: EmailNotificationLog = {
+      userId: log.userId,
+      emailType: log.emailType,
+      recipientEmail: log.recipientEmail,
+      subject: log.subject,
+      status: log.status,
+      sendgridMessageId: log.sendgridMessageId ?? null,
+      errorMessage: log.errorMessage ?? null,
+      id,
+      sentAt: new Date()
+    };
+    this.emailNotificationLogsData.set(id, newLog);
+    return newLog;
+  }
+
+  async getEmailNotificationLogs(userId?: number, limit: number = 50): Promise<EmailNotificationLog[]> {
+    let logs = Array.from(this.emailNotificationLogsData.values());
+    
+    if (userId !== undefined) {
+      logs = logs.filter(log => log.userId === userId);
+    }
+    
+    return logs
+      .sort((a, b) => b.sentAt!.getTime() - a.sentAt!.getTime())
+      .slice(0, limit);
+  }
+
+  async getEmailNotificationLogsByType(emailType: string, limit: number = 50): Promise<EmailNotificationLog[]> {
+    return Array.from(this.emailNotificationLogsData.values())
+      .filter(log => log.emailType === emailType)
+      .sort((a, b) => b.sentAt!.getTime() - a.sentAt!.getTime())
+      .slice(0, limit);
+  }
+
+  async updateEmailNotificationLog(id: number, logData: Partial<EmailNotificationLog>): Promise<EmailNotificationLog | undefined> {
+    const existingLog = this.emailNotificationLogsData.get(id);
+    if (!existingLog) return undefined;
+    
+    const updatedLog = { ...existingLog, ...logData };
+    this.emailNotificationLogsData.set(id, updatedLog);
+    return updatedLog;
   }
 }
 
