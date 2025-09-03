@@ -112,7 +112,8 @@ export default function NotificationPreferences() {
   // Fetch notification preferences
   const fetchPreferences = async () => {
     try {
-      const data = await apiRequest('/api/notifications/preferences');
+      const response = await apiRequest('/api/notifications/preferences');
+      const data = await response.json();
       setPreferences(data);
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -127,7 +128,8 @@ export default function NotificationPreferences() {
     
     setHistoryLoading(true);
     try {
-      const data = await apiRequest('/api/notifications/history');
+      const response = await apiRequest('/api/notifications/history');
+      const data = await response.json();
       setHistory(data);
     } catch (error) {
       console.error('Error fetching history:', error);

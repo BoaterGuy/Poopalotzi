@@ -197,12 +197,20 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           savedBoat = await response.json();
         } else {
           // No image upload needed
-          const response = await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+          const response = await apiRequest(`/api/boats/${boat.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+          });
           savedBoat = await response.json();
         }
       } else {
         // Create new boat
-        const response = await apiRequest("POST", "/api/boats", data);
+        const response = await apiRequest('/api/boats', {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        });
         savedBoat = await response.json();
       }
       
@@ -225,10 +233,14 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
               const existingDock = await dockResponse.json();
               
               // Ensure pier is sent as a string and dock as a number
-              await apiRequest("PUT", `/api/dock-assignments/${existingDock.id}`, {
-                marinaId: Number(data.marinaId),
-                pier: String(data.pier || existingDock.pier),
-                dock: Number(data.dock || existingDock.dock)
+              await apiRequest(`/api/dock-assignments/${existingDock.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  marinaId: Number(data.marinaId),
+                  pier: String(data.pier || existingDock.pier),
+                  dock: Number(data.dock || existingDock.dock)
+                }),
+                headers: { 'Content-Type': 'application/json' }
               });
             }
           }
@@ -242,7 +254,11 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
               dock: data.dock || 1
             };
             
-            await apiRequest("POST", "/api/dock-assignments", dockData);
+            await apiRequest('/api/dock-assignments', {
+              method: 'POST',
+              body: JSON.stringify(dockData),
+              headers: { 'Content-Type': 'application/json' }
+            });
           }
         } catch (dockError) {
           console.error("Error updating dock assignment:", dockError);

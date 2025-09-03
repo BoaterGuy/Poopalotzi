@@ -139,14 +139,22 @@ export default function ServiceLevelManagement() {
       try {
         if (level) {
           // Update existing service level
-          await apiRequest("PUT", `/api/service-levels/${level.id}`, data);
+          await apiRequest(`/api/service-levels/${level.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+          });
           toast({
             title: "Service Level Updated",
             description: "The service level has been updated successfully.",
           });
         } else {
           // Create new service level
-          await apiRequest("POST", "/api/service-levels", data);
+          await apiRequest('/api/service-levels', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+          });
           toast({
             title: "Service Level Created",
             description: "The new service level has been created successfully.",

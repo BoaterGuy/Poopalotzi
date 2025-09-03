@@ -92,7 +92,11 @@ export default function MarinaManagement() {
 
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const response = await apiRequest("PUT", `/api/marinas/${id}`, { isActive: !isActive });
+      const response = await apiRequest(`/api/marinas/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: !isActive }),
+        headers: { 'Content-Type': 'application/json' }
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -109,7 +113,9 @@ export default function MarinaManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/marinas/${id}`);
+      await apiRequest(`/api/marinas/${id}`, {
+        method: 'DELETE'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marinas"] });

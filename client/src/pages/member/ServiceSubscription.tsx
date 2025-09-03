@@ -193,7 +193,11 @@ export default function ServiceSubscription() {
       };
       
       // Update user subscription after payment
-      const response = await apiRequest("POST", "/api/users/me/subscription", subscriptionRequest);
+      const response = await apiRequest('/api/users/me/subscription', {
+        method: 'POST',
+        body: JSON.stringify(subscriptionRequest),
+        headers: { 'Content-Type': 'application/json' }
+      });
       
       // Credits are automatically updated in the subscription endpoint for one-time services
       

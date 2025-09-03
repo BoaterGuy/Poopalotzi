@@ -94,14 +94,20 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
     try {
       if (boat) {
         // Update existing boat
-        await apiRequest("PUT", `/api/boats/${boat.id}`, data);
+        await apiRequest(`/api/boats/${boat.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        });
       } else {
         // For testing, we'll use a simplified approach with a hardcoded owner ID
         // In the real app, we would need to fetch the current user's boat owner ID
         
         // Now create the boat with the fixed owner ID (using 2 for the sample data)
-        await apiRequest("POST", "/api/boats", {
-          ...data,
+        await apiRequest('/api/boats', {
+          method: 'POST',
+          body: JSON.stringify({
+            ...data,
           ownerId: 2
         });
       }

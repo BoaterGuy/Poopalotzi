@@ -54,7 +54,11 @@ export default function MarinaForm({ onClose, existingMarina }: MarinaFormProps)
 
   const createMarina = useMutation({
     mutationFn: async (data: MarinaFormValues) => {
-      const response = await apiRequest("POST", "/api/marinas", data);
+      const response = await apiRequest('/api/marinas', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -76,7 +80,11 @@ export default function MarinaForm({ onClose, existingMarina }: MarinaFormProps)
 
   const updateMarina = useMutation({
     mutationFn: async (data: MarinaFormValues) => {
-      const response = await apiRequest("PUT", `/api/marinas/${existingMarina?.id}`, data);
+      const response = await apiRequest(`/api/marinas/${existingMarina?.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
       return response.json();
     },
     onSuccess: () => {
