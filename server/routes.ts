@@ -2532,6 +2532,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🧪 TEST ENDPOINT: Simulate OAuth callback for testing without real merchant
+  app.get("/api/admin/clover/oauth/test-callback", async (req, res, next) => {
+    try {
+      console.log('🧪 === TESTING OAUTH CALLBACK SIMULATION ===');
+      console.log('🧪 This simulates what Clover would send during real OAuth');
+      
+      // Simulate realistic OAuth callback parameters
+      const simulatedQuery = {
+        code: 'test_auth_code_' + Math.random().toString(36).substring(7),
+        merchant_id: 'PFHDQ8MSX5F81', // Your test merchant ID
+        state: Date.now().toString()
+      };
+      
+      console.log('🧪 Simulated query params:', simulatedQuery);
+      
+      // Create a mock request object with simulated parameters
+      const mockReq = {
+        ...req,
+        query: simulatedQuery,
+        url: `/api/admin/clover/oauth/callback?code=${simulatedQuery.code}&merchant_id=${simulatedQuery.merchant_id}&state=${simulatedQuery.state}`
+      };
+      
+      // Call the real OAuth callback logic by redirecting internally
+      console.log('🧪 Redirecting to real OAuth callback with simulated data...');
+      
+      // For testing, we'll simulate successful token exchange
+      const mockTokenData = {
+        access_token: 'test_token_' + Math.random().toString(36).substring(7),
+        refresh_token: 'test_refresh_' + Math.random().toString(36).substring(7),
+        expires_in: 3600 // 1 hour
+      };
+      
+      console.log('🧪 Simulating token exchange:', { expires_in: mockTokenData.expires_in });
+      
+      // Save test configuration
+      const expiresAt = new Date(Date.now() + (mockTokenData.expires_in * 1000));
+      await cloverService.saveConfiguration({
+        merchantId: simulatedQuery.merchant_id,
+        accessToken: mockTokenData.access_token,
+        refreshToken: mockTokenData.refresh_token,
+        tokenExpiresAt: expiresAt
+      });
+      
+      console.log('🧪 Test Clover configuration saved successfully');
+      
+      // Return success page similar to real OAuth
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>🧪 Test OAuth Success</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
+                .success { color: green; background: #f0f8f0; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                .test-note { color: orange; background: #fff8e1; padding: 15px; border-radius: 10px; margin: 20px 0; }
+                .button { background: #0B1F3A; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <h1>🧪 Test OAuth Completed!</h1>
+            <div class="test-note">
+                <p><strong>Note:</strong> This is a simulated OAuth flow for testing purposes</p>
+                <p>Real payments will require actual Clover OAuth</p>
+            </div>
+            <div class="success">
+                <p><strong>Merchant ID:</strong> ${simulatedQuery.merchant_id}</p>
+                <p><strong>Status:</strong> Test Configuration Saved</p>
+                <p><strong>Test Token:</strong> ${mockTokenData.access_token.substring(0, 20)}...</p>
+                <p><strong>Ready for:</strong> Payment simulation testing</p>
+            </div>
+            <a href="/admin/dashboard" class="button">Go to Admin Dashboard</a>
+            <script>
+                // Auto-redirect after 5 seconds  
+                setTimeout(function() {
+                    window.location.href = '/admin/dashboard?clover=test-connected&success=true';
+                }, 5000);
+            </script>
+        </body>
+        </html>
+      `);
+      
+    } catch (err) {
+      console.error('🧪 Test OAuth callback error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).send(`
+        <h1>🧪 Test OAuth Error</h1>
+        <p>Error testing OAuth flow: ${errorMessage}</p>
+        <a href="/admin/dashboard">Back to Dashboard</a>
+      `);
+    }
+  });
+
   // Create or update Clover configuration (admin only)
   app.put("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
     try {
