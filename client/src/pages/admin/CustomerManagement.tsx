@@ -212,7 +212,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
         <Button
           size="sm"
           onClick={handleSetValue}
-          disabled={creditAdjustmentMutation.isPending}
+          disabled={isLoading}
           className="h-6 px-2 text-xs"
         >
           ✓
@@ -239,7 +239,7 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
         variant="ghost"
         size="sm"
         onClick={() => handleQuickAdjust("subtract")}
-        disabled={displayAvailable <= 0 || creditAdjustmentMutation.isPending}
+        disabled={displayAvailable <= 0 || isLoading}
         className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
         title="Remove 1 credit"
       >
@@ -251,18 +251,18 @@ function CustomerCreditDisplay({ customerId, serviceLevelId, serviceLevels }: { 
           displayAvailable > 0 
             ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
             : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-        } font-normal ${creditAdjustmentMutation.isPending ? 'opacity-60' : ''}`}
+        } font-normal ${isLoading ? 'opacity-60' : ''}`}
         onClick={handleCreditClick}
         title="Click to edit available credits"
       >
         {displayAvailable}
-        {creditAdjustmentMutation.isPending && <span className="ml-1 animate-spin">⟳</span>}
+        {isLoading && <span className="ml-1 animate-spin">⟳</span>}
       </Badge>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => handleQuickAdjust("add")}
-        disabled={creditAdjustmentMutation.isPending}
+        disabled={isLoading}
         className="h-6 w-6 p-0 text-gray-400 hover:text-green-600 hover:bg-green-50"
         title="Add 1 credit"
       >
