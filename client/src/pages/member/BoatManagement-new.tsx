@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import BoatForm from "@/components/member/BoatForm-new";
 import MarinaSelection from "@/components/member/MarinaSelection";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, useQuery, useQueryClient } from "@/lib/queryClient";
 
 export default function BoatManagement() {
   const { toast } = useToast();

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@/lib/queryClient";
 
 // Simple form schema
 const requestSchema = z.object({

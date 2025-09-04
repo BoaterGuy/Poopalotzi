@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, apiRequest } from "@/lib/queryClient";
 import { Users, UserPlus, Shield, User, Settings } from "lucide-react";
 import {
   Dialog,
