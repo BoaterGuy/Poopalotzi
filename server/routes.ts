@@ -13,7 +13,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { format, addDays } from "date-fns";
 import { setupAuth } from "./auth";
-import multer from "multer";
+import multer, { type Multer } from "multer";
 import path from "path";
 import { db } from "./db";
 import { pumpOutRequest } from "@shared/schema";
@@ -42,10 +42,10 @@ interface AuthRequest extends Request {
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
+  destination: function (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
     cb(null, 'uploads/');
   },
-  filename: function (req: any, file: any, cb: any) {
+  filename: function (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
     // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'boat-' + uniqueSuffix + path.extname(file.originalname));
