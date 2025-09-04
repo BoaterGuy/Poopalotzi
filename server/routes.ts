@@ -102,6 +102,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
   
+  // 🔧 DIAGNOSTIC ROUTES: Added at the beginning to avoid middleware conflicts
+  app.get("/api/clover/simple", (req, res) => {
+    console.log('🔧 Simple test endpoint accessed');
+    res.send("SIMPLE TEST WORKS - Routes are functioning!");
+  });
+
+  app.get("/api/clover/test-basic", (req, res) => {
+    console.log('🔧 Basic test endpoint accessed');
+    res.json({
+      success: true,
+      message: 'Basic endpoint working',
+      timestamp: new Date().toISOString(),
+      url: req.url
+    });
+  });
+
+  app.get("/api/clover/test-env", (req, res) => {
+    console.log('🔧 Environment test endpoint accessed');
+    const appId = process.env.CLOVER_APP_ID;
+    const appSecret = process.env.CLOVER_APP_SECRET;
+    
+    res.json({
+      success: true,
+      message: 'Environment test completed',
+      hasAppId: !!appId,
+      hasAppSecret: !!appSecret,
+      appIdLength: appId ? appId.length : 0,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
   // We'll keep using the existing authentication in auth.ts
   // Commenting out this line to prevent route conflicts
   // app.use('/api/auth', authRoutes);
@@ -2540,73 +2571,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 ULTRA SIMPLE TEST: Just returns text
-  app.get("/api/clover/simple", (req, res) => {
-    res.send("SIMPLE TEST WORKS");
-  });
-
-  // 🔧 STEP 1: Basic connectivity test (no auth required)
-  app.get("/api/clover/test-basic", async (req, res, next) => {
-    try {
-      console.log('🔧 === BASIC TEST ===');
-      res.json({
-        success: true,
-        message: 'Basic endpoint working',
-        timestamp: new Date().toISOString(),
-        url: req.url
-      });
-    } catch (err) {
-      console.error('🔧 Basic test error:', err);
-      res.status(500).json({ error: 'Basic test failed' });
-    }
-  });
-
-  // 🔧 STEP 2: Environment variables test (no auth required)
-  app.get("/api/clover/test-env", async (req, res, next) => {
-    try {
-      console.log('🔧 === ENV TEST ===');
-      const appId = process.env.CLOVER_APP_ID;
-      const appSecret = process.env.CLOVER_APP_SECRET;
-      
-      res.json({
-        success: true,
-        message: 'Environment test completed',
-        hasAppId: !!appId,
-        hasAppSecret: !!appSecret,
-        appIdLength: appId ? appId.length : 0,
-        timestamp: new Date().toISOString()
-      });
-    } catch (err) {
-      console.error('🔧 Environment test error:', err);
-      res.status(500).json({ error: 'Environment test failed' });
-    }
-  });
-
-  // 🔧 STEP 3: OAuth URL generation test (no auth required)
-  app.get("/api/clover/test-oauth-url", async (req, res, next) => {
-    try {
-      console.log('🔧 === OAUTH URL TEST ===');
-      const testMerchant = 'PFHDQ8MSX5F81';
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
-      
-      console.log('Testing OAuth URL generation...');
-      const oauthUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
-      
-      res.json({
-        success: true,
-        message: 'OAuth URL test completed',
-        redirectUri,
-        oauthUrl,
-        timestamp: new Date().toISOString()
-      });
-    } catch (err) {
-      console.error('🔧 OAuth URL test error:', err);
-      res.status(500).json({ 
-        success: false,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      });
-    }
-  });
 
   // 🔧 STEP 4A: Simple token exchange setup test (no auth required)  
   app.get("/api/clover/test-token-setup", async (req, res, next) => {
