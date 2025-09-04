@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         version: "1.0.0"
       });
     } catch (err) {
-      res.status(500).json({ message: "Error checking users", error: err.message });
+      res.status(500).json({ message: "Error checking users", error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -635,6 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Count requests for this month
               const monthRequests = (await storage.getPumpOutRequestsByBoatId(requestData.boatId))
                 .filter(r => {
+                  if (!r.createdAt) return false;
                   const requestDate = new Date(r.createdAt);
                   return requestDate >= firstDayOfMonth && requestDate <= lastDayOfMonth;
                 });
@@ -857,7 +858,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (pierCompare !== 0) return pierCompare;
           
           // Sort by dock number
-          return a.dockAssignment.dock - b.dockAssignment.dock;
+          const aDock = typeof a.dockAssignment.dock === 'number' ? a.dockAssignment.dock : parseInt(String(a.dockAssignment.dock)) || 0;
+          const bDock = typeof b.dockAssignment.dock === 'number' ? b.dockAssignment.dock : parseInt(String(b.dockAssignment.dock)) || 0;
+          return aDock - bDock;
         }
         
         return 0;
@@ -1025,7 +1028,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (scheduledCount < 90) {
           const waitlistedRequests = weekRequests
             .filter(r => r.status === "Waitlisted")
-            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+            .sort((a, b) => {
+              const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+              const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+              return aTime - bTime;
+            });
           
           if (waitlistedRequests.length > 0) {
             const nextRequest = waitlistedRequests[0];
@@ -1241,7 +1248,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         phone: phone || null,
         serviceLevelId: serviceLevelId && serviceLevelId !== "" ? parseInt(serviceLevelId) : null,
-        role: 'member' as const
+        role: 'member' as const,
+        password: password // Add the password field for schema validation
       };
       
       // Create the user
@@ -1971,12 +1979,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ Clover payment successful:', paymentResult.id);
         
       } catch (cloverError) {
-        console.error('❌ Clover payment failed:', cloverError.message);
+        console.error('❌ Clover payment failed:', cloverError instanceof Error ? cloverError.message : String(cloverError));
         
         // Return error instead of simulating success
         return res.status(400).json({
           message: "Payment processing failed",
-          error: cloverError.message,
+          error: cloverError instanceof Error ? cloverError.message : String(cloverError),
           details: "Please try again or contact support if the problem persists"
         });
       }
@@ -2058,18 +2066,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           result: cloverPayment.result
         });
       } catch (cloverError) {
-        console.error('Clover payment failed:', cloverError.message);
+        console.error('Clover payment failed:', cloverError instanceof Error ? cloverError.message : String(cloverError));
         
         // Return error instead of simulating success
         res.status(400).json({
           message: "Payment processing failed",
-          error: cloverError.message,
+          error: cloverError instanceof Error ? cloverError.message : String(cloverError),
           details: "Please try again or contact support if the problem persists"
         });
       }
     } catch (err) {
       console.error("Error processing subscription payment:", err);
-      res.status(500).json({ message: "Payment processing failed", error: err.message });
+      res.status(500).json({ message: "Payment processing failed", error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -3143,6 +3151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: validatedData.email,
         phone: validatedData.phone || null,
         role: validatedData.role,
+        password: validatedData.password // Add the password field for schema validation
       }, hashedPassword);
       
       // Remove passwordHash from response
@@ -3252,8 +3261,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedUser = await storage.updateUser(userId, updateData);
       
-      // Remove password from response
-      const { password: _, ...userResponse } = updatedUser;
+      // Remove passwordHash from response
+      const { passwordHash: _, ...userResponse } = updatedUser;
       res.json(userResponse);
     } catch (error) {
       console.error('Error updating user:', error);
