@@ -2540,6 +2540,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🔧 ULTRA SIMPLE TEST: Just returns text
+  app.get("/api/clover/simple", (req, res) => {
+    res.send("SIMPLE TEST WORKS");
+  });
+
   // 🔧 STEP 1: Basic connectivity test (no auth required)
   app.get("/api/clover/test-basic", async (req, res, next) => {
     try {
