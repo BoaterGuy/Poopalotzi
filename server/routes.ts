@@ -2540,6 +2540,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🔧 DIAGNOSTIC: Test OAuth URL generation and credentials
+  app.get("/api/admin/clover/oauth/test-diagnostics", async (req, res, next) => {
+    try {
+      console.log('🔧 === OAUTH DIAGNOSTICS TEST ===');
+      
+      const appId = process.env.CLOVER_APP_ID;
+      const appSecret = process.env.CLOVER_APP_SECRET;
+      const testMerchant = 'PFHDQ8MSX5F81';
+      
+      // Test OAuth URL generation
+      const testUrl = await cloverService.createOAuthUrl(testMerchant);
+      
+      // Test environment detection
+      const configData = {
+        merchantId: testMerchant,
+        accessToken: 'test_token'
+      };
+      
+      const diagnostics = {
+        hasAppId: !!appId,
+        hasAppSecret: !!appSecret,
+        appIdLength: appId ? appId.length : 0,
+        oauthUrl: testUrl,
+        redirectUri: testUrl.includes('redirect_uri=') ? decodeURIComponent(testUrl.split('redirect_uri=')[1].split('&')[0]) : 'not found',
+        timestamp: new Date().toISOString()
+      };
+      
+      res.json({
+        success: true,
+        message: 'OAuth diagnostics completed',
+        diagnostics
+      });
+      
+    } catch (err) {
+      console.error('🔧 OAuth diagnostics error:', err);
+      res.status(500).json({ 
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+        diagnostics: {
+          hasAppId: !!process.env.CLOVER_APP_ID,
+          hasAppSecret: !!process.env.CLOVER_APP_SECRET
+        }
+      });
+    }
+  });
+
   // 🧪 TEST ENDPOINT: Simulate OAuth callback for testing without real merchant
   app.get("/api/admin/clover/oauth/test-callback", async (req, res, next) => {
     try {
