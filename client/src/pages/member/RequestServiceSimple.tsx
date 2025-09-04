@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import ServiceRequestForm from "@/components/member/ServiceRequestForm";
 import { Boat } from "@shared/schema";
+import { useQuery } from "@/lib/queryClient";
 
 export default function RequestServiceSimple() {
   const { user } = useAuth();

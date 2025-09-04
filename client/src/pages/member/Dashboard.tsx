@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import BulkPlanStatus from "@/components/member/BulkPlanStatus";
+import { useQuery } from "@/lib/queryClient";
 
 export default function MemberDashboard() {
   const { user } = useAuth();
