@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./index";
 import { insertServiceLevelSchema } from "@shared/schema";
-import express from "express";
+import * as express from "express";
 import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail, sendContactFormEmail, sendAdminPumpOutNotification } from "./utils/brevo";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
@@ -42,10 +42,10 @@ interface AuthRequest extends Request {
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: function (req: any, file: any, cb: any) {
     cb(null, 'uploads/');
   },
-  filename: function (req, file, cb) {
+  filename: function (req: any, file: any, cb: any) {
     // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'boat-' + uniqueSuffix + path.extname(file.originalname));
@@ -3333,6 +3333,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
       
       // Remove passwordHash from response
       const { passwordHash: _, ...userResponse } = updatedUser;
