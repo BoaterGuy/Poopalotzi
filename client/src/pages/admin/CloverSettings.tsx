@@ -15,6 +15,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useQuery, useMutation } from '@/lib/queryClient';
 
 interface CloverStatus {
   isConfigured: boolean;

@@ -79,5 +79,14 @@ export const useMutation = ({ mutationFn, onSuccess, onError }: any) => {
   return { mutate, isPending };
 };
 
+// Add useQueryClient stub
+export const useQueryClient = () => {
+  return {
+    invalidateQueries: () => {},
+    setQueryData: () => {},
+    getQueryData: () => null,
+  };
+};
+
 // Add missing imports for the stubs
 import { useState, useEffect } from 'react';

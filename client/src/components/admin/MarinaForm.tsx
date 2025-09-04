@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient, useMutation } from "@/lib/queryClient";
 
 const marinaSchema = z.object({
   name: z.string().min(2, { message: "Marina name must be at least 2 characters" }),

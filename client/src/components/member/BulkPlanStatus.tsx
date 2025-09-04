@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@/lib/queryClient";
 import { ServiceLevel, User } from "@shared/schema";
 import { getOctoberCutoff, getAvailableMondays } from "@shared/bulk-plan-utils";
 
