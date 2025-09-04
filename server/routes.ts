@@ -2549,8 +2549,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const appSecret = process.env.CLOVER_APP_SECRET;
       const testMerchant = 'PFHDQ8MSX5F81';
       
-      // Test OAuth URL generation
-      const testUrl = await cloverService.createOAuthUrl(testMerchant);
+      // Test OAuth URL generation  
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      const testUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
       
       // Test environment detection
       const configData = {
