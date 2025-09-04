@@ -1097,8 +1097,11 @@ export class CloverService {
     try {
       await this.ensureInitialized();
       
+      // Check if properly configured with access token
+      const hasValidConfig = !!(this.config && this.config.accessToken && this.config.merchantId);
+      
       return {
-        isConfigured: !!this.config,
+        isConfigured: hasValidConfig,
         merchantId: this.config?.merchantId,
         environment: this.config?.environment,
         tokenExpiry: this.config?.tokenExpiresAt || undefined
