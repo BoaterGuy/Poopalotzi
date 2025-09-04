@@ -2603,20 +2603,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 STEP 4: Test token exchange with mock data (no auth required)
+  // 🔧 STEP 4A: Simple token exchange setup test (no auth required)  
+  app.get("/api/clover/test-token-setup", async (req, res, next) => {
+    try {
+      console.log('🔧 === TOKEN SETUP TEST ===');
+      
+      const testCode = 'fake_authorization_code_123';
+      const testMerchant = 'PFHDQ8MSX5F81';
+      const appId = process.env.CLOVER_APP_ID;
+      const appSecret = process.env.CLOVER_APP_SECRET;
+      
+      // Test the setup without making the API call
+      res.json({
+        success: true,
+        message: 'Token exchange setup test',
+        setup: {
+          hasAppId: !!appId,
+          hasAppSecret: !!appSecret,
+          testCode,
+          testMerchant,
+          cloverOAuthUrl: 'https://www.clover.com/oauth/token',
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (err) {
+      console.error('🔧 Token setup test error:', err);
+      res.status(500).json({ 
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
+    }
+  });
+
+  // 🔧 STEP 4B: Token exchange with timeout (no auth required)
   app.get("/api/clover/test-token-exchange", async (req, res, next) => {
     try {
       console.log('🔧 === TOKEN EXCHANGE TEST ===');
       
-      // This will fail with a real error from Clover, showing us what's wrong
       const testCode = 'fake_authorization_code_123';
       const testMerchant = 'PFHDQ8MSX5F81';
       
-      console.log('Testing token exchange with fake data...');
-      console.log('This should fail and show us the exact error users see');
+      console.log('Testing token exchange with fake data and 5-second timeout...');
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Token exchange timeout after 5 seconds')), 5000);
+      });
+      
+      const exchangePromise = cloverService.exchangeCodeForTokens(testCode, testMerchant);
       
       try {
-        const tokenData = await cloverService.exchangeCodeForTokens(testCode, testMerchant);
+        const tokenData = await Promise.race([exchangePromise, timeoutPromise]);
         
         // This shouldn't happen with fake data
         res.json({
@@ -2635,6 +2672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expectedError: true,
           errorMessage,
           analysis: {
+            isTimeout: errorMessage.includes('timeout'),
             isRedirectUriError: errorMessage.includes('redirect_uri') || errorMessage.includes('invalid_grant'),
             isCredentialsError: errorMessage.includes('client_id') || errorMessage.includes('client_secret'),
             isNetworkError: errorMessage.includes('fetch') || errorMessage.includes('network'),
