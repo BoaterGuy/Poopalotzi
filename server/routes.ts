@@ -107,78 +107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Commenting out this line to prevent route conflicts
   // app.use('/api/auth', authRoutes);
 
-  // Debug route to check if admin user is available
-  app.get("/api/debug/users", async (req, res) => {
-    try {
-      const adminUser = await storage.getUserByEmail("admin@poopalotzi.com");
-      const employeeUser = await storage.getUserByEmail("employee@poopalotzi.com");
-      const memberUser = await storage.getUserByEmail("member@poopalotzi.com");
 
-      res.json({
-        adminExists: !!adminUser,
-        employeeExists: !!employeeUser,
-        memberExists: !!memberUser,
-        message: "Use admin@poopalotzi.com / admin123 to login as admin",
-        version: "1.0.0"
-      });
-    } catch (err) {
-      res.status(500).json({ message: "Error checking users", error: err instanceof Error ? err.message : String(err) });
-    }
-  });
 
-  // Test route placed next to working route
-  app.get("/api/debug/simple-test", (req, res) => {
-    console.log('🔧 Simple test route accessed!');
-    res.json({
-      success: true,
-      message: "Simple test working!",
-      timestamp: new Date().toISOString()
-    });
-  });
 
-  // Clover environment test
-  app.get("/api/debug/clover-env", (req, res) => {
-    console.log('🔧 Clover environment test accessed!');
-    const appId = process.env.CLOVER_APP_ID;
-    const appSecret = process.env.CLOVER_APP_SECRET;
-    
-    res.json({
-      success: true,
-      message: 'Clover environment test',
-      hasAppId: !!appId,
-      hasAppSecret: !!appSecret,
-      appIdLength: appId ? appId.length : 0,
-      timestamp: new Date().toISOString()
-    });
-  });
-
-  // Clover OAuth URL test  
-  app.get("/api/debug/clover-oauth-url", async (req, res) => {
-    console.log('🔧 Clover OAuth URL test accessed!');
-    
-    try {
-      // Import from correct file where cloverService is exported
-      const { cloverService } = await import('./clover-service');
-      const testMerchant = 'PFHDQ8MSX5F81';
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
-      
-      const oauthUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
-      
-      res.json({
-        success: true,
-        message: 'OAuth URL generation test - WORKING!',
-        redirectUri,
-        oauthUrl,
-        timestamp: new Date().toISOString()
-      });
-    } catch (err) {
-      res.json({
-        success: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
 
   // Service Levels routes
   app.get("/api/service-levels", async (req, res, next) => {
