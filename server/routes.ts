@@ -2540,8 +2540,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 STEP 1: Basic connectivity test
-  app.get("/api/admin/clover/test-basic", async (req, res, next) => {
+  // 🔧 STEP 1: Basic connectivity test (no auth required)
+  app.get("/api/clover/test-basic", async (req, res, next) => {
     try {
       console.log('🔧 === BASIC TEST ===');
       res.json({
@@ -2556,8 +2556,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 STEP 2: Environment variables test  
-  app.get("/api/admin/clover/test-env", async (req, res, next) => {
+  // 🔧 STEP 2: Environment variables test (no auth required)
+  app.get("/api/clover/test-env", async (req, res, next) => {
     try {
       console.log('🔧 === ENV TEST ===');
       const appId = process.env.CLOVER_APP_ID;
@@ -2577,8 +2577,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 STEP 3: OAuth URL generation test
-  app.get("/api/admin/clover/test-oauth-url", async (req, res, next) => {
+  // 🔧 STEP 3: OAuth URL generation test (no auth required)
+  app.get("/api/clover/test-oauth-url", async (req, res, next) => {
     try {
       console.log('🔧 === OAUTH URL TEST ===');
       const testMerchant = 'PFHDQ8MSX5F81';
