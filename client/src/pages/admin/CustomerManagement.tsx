@@ -309,6 +309,7 @@ const MOCK_CUSTOMERS = [
 export default function CustomerManagement() {
   const { toast } = useToast();
   const [location] = useLocation();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedCustomerId, setHighlightedCustomerId] = useState<number | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -449,6 +450,32 @@ export default function CustomerManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to update customer",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Credit adjustment mutation
+  const creditAdjustmentMutation = useMutation({
+    mutationFn: async ({ userId, adjustment }: { userId: number, adjustment: number }) => {
+      const res = await fetch(`/api/users/${userId}/adjust-credits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adjustment }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to adjust credits');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/members"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to adjust credits",
         variant: "destructive",
       });
     },

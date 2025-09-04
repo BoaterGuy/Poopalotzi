@@ -56,7 +56,7 @@ export const useQuery = ({ queryKey, queryFn, select }: any) => {
     fetchData();
   }, [JSON.stringify(queryKey)]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch: () => {} };
 };
 
 export const useMutation = ({ mutationFn, onSuccess, onError }: any) => {
@@ -87,6 +87,3 @@ export const useQueryClient = () => {
     getQueryData: () => null,
   };
 };
-
-// Add missing imports for the stubs
-import { useState, useEffect } from 'react';
