@@ -24,6 +24,7 @@ import {
   Edit
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useQuery } from "@/lib/queryClient";
 import { format, subMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -59,13 +60,12 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const { data: metrics } = useQuery({
-    queryKey: ['/api/analytics/metrics'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/metrics');
-      return res.json();
-    }
-  });
+  const [metrics, setMetrics] = useState<any>({});
+  const [usersByServiceLevel, setUsersByServiceLevel] = useState<any>([]);
+  const [serviceCounts, setServiceCounts] = useState<any>([]);
+  const [arpuData, setArpuData] = useState<any>([]);
+  const [revenueData, setRevenueData] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     totalCustomers = 0,
@@ -76,41 +76,35 @@ export default function AdminDashboard() {
     customerSatisfaction = 0
   } = metrics || {};
 
-  // Fetch analytics data
-  const { data: usersByServiceLevel, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['/api/analytics/users-by-service-level'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/users-by-service-level');
-      return res.json();
-    }
-  });
+  // Fetch all analytics data
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        setIsLoading(true);
+        
+        const [metricsRes, usersRes, countsRes, arpuRes, revenueRes] = await Promise.all([
+          fetch('/api/analytics/metrics', { credentials: 'include' }),
+          fetch('/api/analytics/users-by-service-level', { credentials: 'include' }),
+          fetch('/api/analytics/service-counts', { credentials: 'include' }),
+          fetch('/api/analytics/arpu', { credentials: 'include' }),
+          fetch('/api/analytics/pump-out-weekly', { credentials: 'include' })
+        ]);
 
-  const { data: serviceCounts, isLoading: isLoadingCounts } = useQuery({
-    queryKey: ['/api/analytics/service-counts'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/service-counts');
-      return res.json();
-    }
-  });
+        if (metricsRes.ok) setMetrics(await metricsRes.json());
+        if (usersRes.ok) setUsersByServiceLevel(await usersRes.json());
+        if (countsRes.ok) setServiceCounts(await countsRes.json());
+        if (arpuRes.ok) setArpuData(await arpuRes.json());
+        if (revenueRes.ok) setRevenueData(await revenueRes.json());
 
-  const { data: arpuData, isLoading: isLoadingArpu } = useQuery({
-    queryKey: ['/api/analytics/arpu'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/arpu');
-      return res.json();
-    }
-  });
+      } catch (error) {
+        console.error('Failed to fetch analytics data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fetch real pump-out data grouped by week
-  const { data: revenueData = [], isLoading: isLoadingRevenue } = useQuery({
-    queryKey: ['/api/analytics/pump-out-weekly'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics/pump-out-weekly');
-      return res.json();
-    }
-  });
-
-  const isLoading = isLoadingUsers || isLoadingCounts || isLoadingArpu || isLoadingRevenue;
+    fetchAnalyticsData();
+  }, []);
 
   return (
     <>

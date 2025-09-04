@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaClock } from "react-icons/fa";
+import { useQuery, useMutation } from "@/lib/queryClient";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,10 +31,22 @@ export default function Contact() {
   const { toast } = useToast();
   
   // Fetch marinas from API for contact page
-  const { data: marinas = [] } = useQuery({
-    queryKey: ["/api/marinas"],
-    select: (data: any[]) => data.map(marina => ({ id: marina.id, name: marina.name }))
-  });
+  const [marinas, setMarinas] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMarinas = async () => {
+      try {
+        const res = await fetch('/api/marinas', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setMarinas(data.map((marina: any) => ({ id: marina.id, name: marina.name })));
+        }
+      } catch (error) {
+        console.error('Failed to fetch marinas:', error);
+      }
+    };
+    fetchMarinas();
+  }, []);
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -46,13 +59,17 @@ export default function Contact() {
     },
   });
 
-  const contactMutation = useMutation({
-    mutationFn: async (values: ContactFormValues) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (values: ContactFormValues) => {
+    setIsSubmitting(true);
+    try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(values),
       });
       
@@ -61,26 +78,24 @@ export default function Contact() {
         throw new Error(error.message || 'Failed to send message');
       }
       
-      return response.json();
-    },
-    onSuccess: () => {
       toast({
         title: "Message Sent!",
         description: "We've received your message and will get back to you soon.",
       });
       form.reset();
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const onSubmit = async (values: ContactFormValues) => {
-    contactMutation.mutate(values);
+    await handleSubmit(values);
   };
 
   return (
