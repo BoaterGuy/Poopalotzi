@@ -2540,49 +2540,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔧 DIAGNOSTIC: Test OAuth URL generation and credentials
-  app.get("/api/admin/clover/oauth/test-diagnostics", async (req, res, next) => {
+  // 🔧 STEP 1: Basic connectivity test
+  app.get("/api/admin/clover/test-basic", async (req, res, next) => {
     try {
-      console.log('🔧 === OAUTH DIAGNOSTICS TEST ===');
-      
+      console.log('🔧 === BASIC TEST ===');
+      res.json({
+        success: true,
+        message: 'Basic endpoint working',
+        timestamp: new Date().toISOString(),
+        url: req.url
+      });
+    } catch (err) {
+      console.error('🔧 Basic test error:', err);
+      res.status(500).json({ error: 'Basic test failed' });
+    }
+  });
+
+  // 🔧 STEP 2: Environment variables test  
+  app.get("/api/admin/clover/test-env", async (req, res, next) => {
+    try {
+      console.log('🔧 === ENV TEST ===');
       const appId = process.env.CLOVER_APP_ID;
       const appSecret = process.env.CLOVER_APP_SECRET;
-      const testMerchant = 'PFHDQ8MSX5F81';
-      
-      // Test OAuth URL generation  
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
-      const testUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
-      
-      // Test environment detection
-      const configData = {
-        merchantId: testMerchant,
-        accessToken: 'test_token'
-      };
-      
-      const diagnostics = {
-        hasAppId: !!appId,
-        hasAppSecret: !!appSecret,
-        appIdLength: appId ? appId.length : 0,
-        oauthUrl: testUrl,
-        redirectUri: testUrl.includes('redirect_uri=') ? decodeURIComponent(testUrl.split('redirect_uri=')[1].split('&')[0]) : 'not found',
-        timestamp: new Date().toISOString()
-      };
       
       res.json({
         success: true,
-        message: 'OAuth diagnostics completed',
-        diagnostics
+        message: 'Environment test completed',
+        hasAppId: !!appId,
+        hasAppSecret: !!appSecret,
+        appIdLength: appId ? appId.length : 0,
+        timestamp: new Date().toISOString()
       });
-      
     } catch (err) {
-      console.error('🔧 OAuth diagnostics error:', err);
+      console.error('🔧 Environment test error:', err);
+      res.status(500).json({ error: 'Environment test failed' });
+    }
+  });
+
+  // 🔧 STEP 3: OAuth URL generation test
+  app.get("/api/admin/clover/test-oauth-url", async (req, res, next) => {
+    try {
+      console.log('🔧 === OAUTH URL TEST ===');
+      const testMerchant = 'PFHDQ8MSX5F81';
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      
+      console.log('Testing OAuth URL generation...');
+      const oauthUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
+      
+      res.json({
+        success: true,
+        message: 'OAuth URL test completed',
+        redirectUri,
+        oauthUrl,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error('🔧 OAuth URL test error:', err);
       res.status(500).json({ 
         success: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-        diagnostics: {
-          hasAppId: !!process.env.CLOVER_APP_ID,
-          hasAppSecret: !!process.env.CLOVER_APP_SECRET
-        }
+        error: err instanceof Error ? err.message : 'Unknown error'
       });
     }
   });
