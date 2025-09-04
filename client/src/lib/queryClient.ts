@@ -28,7 +28,9 @@ export const queryClient = null;
 
 // Temporary stubs to prevent "not defined" errors until components are fully migrated
 export const useQuery = ({ queryKey, queryFn, select }: any) => {
-  const [data, setData] = useState(null);
+  // Default to empty array for array-type queries to prevent .filter() errors
+  const defaultValue = queryKey && queryKey[0] && (queryKey[0].includes('/marinas') || queryKey[0].includes('/customers') || queryKey[0].includes('/users') || queryKey[0].includes('/service-levels') || queryKey[0].includes('/boats') || queryKey[0].includes('/requests')) ? [] : null;
+  const [data, setData] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,14 +43,15 @@ export const useQuery = ({ queryKey, queryFn, select }: any) => {
           result = await queryFn();
         } else if (typeof queryKey[0] === 'string') {
           const response = await fetch(queryKey[0], { credentials: 'include' });
-          result = response.ok ? await response.json() : null;
+          result = response.ok ? await response.json() : defaultValue;
         }
         if (select && result) {
           result = select(result);
         }
-        setData(result);
+        setData(result || defaultValue);
       } catch (err: any) {
         setError(err);
+        setData(defaultValue);
       } finally {
         setIsLoading(false);
       }
