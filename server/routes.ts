@@ -2603,6 +2603,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🔧 STEP 4: Test token exchange with mock data (no auth required)
+  app.get("/api/clover/test-token-exchange", async (req, res, next) => {
+    try {
+      console.log('🔧 === TOKEN EXCHANGE TEST ===');
+      
+      // This will fail with a real error from Clover, showing us what's wrong
+      const testCode = 'fake_authorization_code_123';
+      const testMerchant = 'PFHDQ8MSX5F81';
+      
+      console.log('Testing token exchange with fake data...');
+      console.log('This should fail and show us the exact error users see');
+      
+      try {
+        const tokenData = await cloverService.exchangeCodeForTokens(testCode, testMerchant);
+        
+        // This shouldn't happen with fake data
+        res.json({
+          success: true,
+          message: 'Unexpected success with fake token',
+          tokenData
+        });
+      } catch (tokenError) {
+        // This is expected - the error will tell us what's wrong
+        const errorMessage = tokenError instanceof Error ? tokenError.message : 'Unknown error';
+        console.log('Token exchange error (expected):', errorMessage);
+        
+        res.json({
+          success: false,
+          message: 'Token exchange test completed',
+          expectedError: true,
+          errorMessage,
+          analysis: {
+            isRedirectUriError: errorMessage.includes('redirect_uri') || errorMessage.includes('invalid_grant'),
+            isCredentialsError: errorMessage.includes('client_id') || errorMessage.includes('client_secret'),
+            isNetworkError: errorMessage.includes('fetch') || errorMessage.includes('network'),
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    } catch (err) {
+      console.error('🔧 Token exchange setup error:', err);
+      res.status(500).json({ 
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
+    }
+  });
+
   // 🧪 TEST ENDPOINT: Simulate OAuth callback for testing without real merchant
   app.get("/api/admin/clover/oauth/test-callback", async (req, res, next) => {
     try {
