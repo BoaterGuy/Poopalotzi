@@ -102,36 +102,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication (session, passport, etc)
   setupAuth(app);
   
-  // 🔧 DIAGNOSTIC ROUTES: Added at the beginning to avoid middleware conflicts
-  app.get("/api/clover/simple", (req, res) => {
-    console.log('🔧 Simple test endpoint accessed');
-    res.send("SIMPLE TEST WORKS - Routes are functioning!");
-  });
-
-  app.get("/api/clover/test-basic", (req, res) => {
-    console.log('🔧 Basic test endpoint accessed');
-    res.json({
-      success: true,
-      message: 'Basic endpoint working',
-      timestamp: new Date().toISOString(),
-      url: req.url
-    });
-  });
-
-  app.get("/api/clover/test-env", (req, res) => {
-    console.log('🔧 Environment test endpoint accessed');
-    const appId = process.env.CLOVER_APP_ID;
-    const appSecret = process.env.CLOVER_APP_SECRET;
-    
-    res.json({
-      success: true,
-      message: 'Environment test completed',
-      hasAppId: !!appId,
-      hasAppSecret: !!appSecret,
-      appIdLength: appId ? appId.length : 0,
-      timestamp: new Date().toISOString()
-    });
-  });
   
   // We'll keep using the existing authentication in auth.ts
   // Commenting out this line to prevent route conflicts
@@ -153,6 +123,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (err) {
       res.status(500).json({ message: "Error checking users", error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
+  // Test route placed next to working route
+  app.get("/api/debug/simple-test", (req, res) => {
+    console.log('🔧 Simple test route accessed!');
+    res.json({
+      success: true,
+      message: "Simple test working!",
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Clover environment test
+  app.get("/api/debug/clover-env", (req, res) => {
+    console.log('🔧 Clover environment test accessed!');
+    const appId = process.env.CLOVER_APP_ID;
+    const appSecret = process.env.CLOVER_APP_SECRET;
+    
+    res.json({
+      success: true,
+      message: 'Clover environment test',
+      hasAppId: !!appId,
+      hasAppSecret: !!appSecret,
+      appIdLength: appId ? appId.length : 0,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Clover OAuth URL test  
+  app.get("/api/debug/clover-oauth-url", async (req, res) => {
+    console.log('🔧 Clover OAuth URL test accessed!');
+    
+    try {
+      // Import from correct file where cloverService is exported
+      const { cloverService } = await import('./clover-service');
+      const testMerchant = 'PFHDQ8MSX5F81';
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/admin/clover/oauth/callback`;
+      
+      const oauthUrl = cloverService.getAuthorizationUrl(testMerchant, redirectUri);
+      
+      res.json({
+        success: true,
+        message: 'OAuth URL generation test - WORKING!',
+        redirectUri,
+        oauthUrl,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      res.json({
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
