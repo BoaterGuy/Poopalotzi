@@ -42,6 +42,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient, useMutation } from "@/lib/queryClient";
 import { Search, Calendar, MoreHorizontal, Camera, Anchor, MapPin, User } from "lucide-react";
 import { format } from "date-fns";
 

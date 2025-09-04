@@ -48,7 +48,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertServiceLevelSchema, ServiceLevel } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, useQuery, useQueryClient, useMutation } from "@/lib/queryClient";
 import { Pencil, Trash2, Plus, DollarSign } from "lucide-react";
 
 // Define service level types and validate price as a number

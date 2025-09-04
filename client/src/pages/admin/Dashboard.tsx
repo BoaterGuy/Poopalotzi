@@ -24,7 +24,7 @@ import {
   Edit
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useQuery } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@/lib/queryClient";
 import { format, subMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";

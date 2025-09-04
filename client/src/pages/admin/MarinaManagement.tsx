@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, MapPin, Search, Plus } from "lucide-react";
 import MarinaModal from "@/components/admin/MarinaModal";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, useQuery, useQueryClient, useMutation } from "@/lib/queryClient";
 import {
   AlertDialog,
   AlertDialogAction,
