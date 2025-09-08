@@ -129,7 +129,7 @@ export class CloverService {
     const params = new URLSearchParams({
       client_id: appId,
       merchant_id: merchantId,
-      redirect_uri: redirectUri,
+      redirect_uri: secureRedirectUri,
       response_type: 'code'
     });
 
