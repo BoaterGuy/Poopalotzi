@@ -1086,7 +1086,7 @@ export class CloverService {
   }
 
   /**
-   * Get current configuration status
+   * Get current configuration status with actual connection validation
    */
   async getConfigurationStatus(): Promise<{
     isConfigured: boolean;
@@ -1097,11 +1097,23 @@ export class CloverService {
     try {
       await this.ensureInitialized();
       
-      // Check if properly configured with access token
-      const hasValidConfig = !!(this.config && this.config.accessToken && this.config.merchantId);
+      // First check if we have basic configuration
+      const hasConfig = !!(this.config && this.config.accessToken && this.config.merchantId);
+      
+      if (!hasConfig) {
+        return {
+          isConfigured: false,
+          merchantId: undefined,
+          environment: undefined,
+          tokenExpiry: undefined
+        };
+      }
+      
+      // Now actually validate the connection works
+      const connectionStatus = await this.validateConnection();
       
       return {
-        isConfigured: hasValidConfig,
+        isConfigured: connectionStatus.isValid,
         merchantId: this.config?.merchantId,
         environment: this.config?.environment,
         tokenExpiry: this.config?.tokenExpiresAt || undefined
