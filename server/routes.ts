@@ -2110,6 +2110,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get Clover configuration status (admin only)
   app.get("/api/admin/clover/status", isAdmin, async (req: AuthRequest, res, next) => {
     try {
+      // Prevent caching of status responses
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       const status = await cloverService.getConfigurationStatus();
       res.json(status);
     } catch (err) {
