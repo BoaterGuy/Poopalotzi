@@ -58,7 +58,7 @@ export function setupAuth(app: Express) {
       secure: useSecure, // false for localhost, true for Replit
       httpOnly: true, // Security - keep cookies server-only
       sameSite: sameSitePolicy as 'none' | 'lax', // lax for localhost, none for cross-origin
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 2 * 60 * 60 * 1000, // 2 hours - better security for payment processing
       path: '/',
       domain: undefined // Let browser handle domain automatically
     },
