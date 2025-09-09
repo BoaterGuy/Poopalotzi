@@ -2089,14 +2089,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🎯 Tokenizing card for payment processing...');
       
-      // Use Clover ecommerce tokenization endpoint
-      const cloverTokenResponse = await fetch('https://token.clover.com/v1/tokens', {
+      // Use Clover ecommerce tokenization endpoint with correct API
+      const cloverTokenResponse = await fetch('https://scl.clover.com/v1/tokens', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.CLOVER_PUBLIC_KEY || 'pk_test_123'}`, // Use public key for tokenization
         },
         body: JSON.stringify({
+          apikey: process.env.CLOVER_PUBLIC_KEY,
           card: {
             number: card.number,
             exp_month: card.exp_month,
