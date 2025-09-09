@@ -2076,6 +2076,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Card tokenization endpoint
+  app.post("/api/payments/tokenize-card", isAuthenticated, async (req: AuthRequest, res, next) => {
+    try {
+      const { card } = req.body;
+      
+      if (!card || !card.number || !card.exp_month || !card.exp_year || !card.cvc) {
+        return res.status(400).json({ 
+          message: "Missing required card information" 
+        });
+      }
+
+      console.log('🎯 Tokenizing card for payment processing...');
+      
+      // Use Clover ecommerce tokenization endpoint
+      const cloverTokenResponse = await fetch('https://token.clover.com/v1/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.CLOVER_PUBLIC_KEY || 'pk_test_123'}`, // Use public key for tokenization
+        },
+        body: JSON.stringify({
+          card: {
+            number: card.number,
+            exp_month: card.exp_month,
+            exp_year: card.exp_year,
+            cvc: card.cvc,
+            name: card.name,
+            address_zip: card.address_zip,
+          }
+        })
+      });
+
+      if (!cloverTokenResponse.ok) {
+        const error = await cloverTokenResponse.text();
+        console.error('❌ Clover tokenization failed:', error);
+        return res.status(400).json({ 
+          message: "Card tokenization failed. Please check your card details." 
+        });
+      }
+
+      const tokenData = await cloverTokenResponse.json();
+      console.log('✅ Card tokenization successful');
+      
+      res.json({ 
+        token: tokenData.id,
+        message: "Card tokenized successfully" 
+      });
+      
+    } catch (err) {
+      console.error("Error tokenizing card:", err);
+      res.status(500).json({ 
+        message: "Card tokenization failed", 
+        error: err instanceof Error ? err.message : String(err) 
+      });
+    }
+  });
+
   // Error handling middleware
   app.use(handleError);
 

@@ -42,33 +42,39 @@ type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 // Generate real Clover card token from card data
 async function generateCloverCardToken(cardData: PaymentFormValues): Promise<string> {
   try {
-    // For production: Use Clover.js SDK to tokenize the card
-    // For development: Create a valid test token format that Clover recognizes
+    console.log('🎯 Generating Clover card token for payment...');
     
-    // Check if we're in a test/development environment
-    const isDevelopment = window.location.hostname.includes('replit') || 
-                          window.location.hostname === 'localhost' ||
-                          window.location.hostname === '127.0.0.1';
-    
-    if (isDevelopment) {
-      // Use production-compatible development tokens
-      const testTokens = [
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6A7', // Development Visa token
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6B8', // Development Mastercard token
-        'clv_1TSTcYS22Y8a8ppBvHQlOdpI0i6C9', // Development American Express token
-      ];
-      
-      // Return a random valid test token
-      return testTokens[Math.floor(Math.random() * testTokens.length)];
-    } else {
-      // In production, use Clover.js to generate real tokens
-      // This would require loading the Clover SDK and calling their tokenization API
-      throw new Error('Production card tokenization requires Clover.js SDK implementation');
+    // Call our backend to tokenize the card using Clover's API
+    const tokenResponse = await fetch('/api/payments/tokenize-card', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        card: {
+          number: cardData.cardNumber.replace(/\s/g, ''), // Remove spaces
+          exp_month: cardData.expiryMonth.padStart(2, '0'), // Ensure 2 digits
+          exp_year: cardData.expiryYear,
+          cvc: cardData.cvv,
+          name: cardData.cardholderName,
+          address_zip: cardData.zipCode,
+        }
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const errorData = await tokenResponse.json();
+      throw new Error(errorData.message || 'Card tokenization failed');
     }
+
+    const { token } = await tokenResponse.json();
+    console.log('✅ Card tokenization successful');
+    return token;
+    
   } catch (error) {
-    console.error('Card tokenization failed:', error);
-    // Fallback to a basic test token for development
-    return `clv_test_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    console.error('❌ Card tokenization failed:', error);
+    throw new Error('Unable to process payment. Please check your card details and try again.');
   }
 }
 
