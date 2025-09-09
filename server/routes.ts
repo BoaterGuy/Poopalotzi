@@ -2019,9 +2019,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New endpoint for subscription payments through Clover
   app.post("/api/payments/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
-      const { amount, source, description, paymentDetails } = req.body;
+      const { amount, taxAmount, source, description, customer, paymentDetails } = req.body;
       
-      console.log('Processing subscription payment:', { amount, description });
+      console.log('Processing subscription payment:', { 
+        amount, 
+        taxAmount, 
+        description, 
+        userId: req.user.id 
+      });
       
       // Check if Clover is properly configured
       const cloverStatus = await cloverService.validateConnection();
@@ -2034,11 +2039,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Process payment through Clover
+        // Process payment through Clover with all required parameters
         const cloverPayment = await cloverService.processPayment({
           amount: amount, // Already in cents
+          taxAmount: taxAmount || 0, // Tax amount in cents
           source: source,
           description: description,
+          customer: customer, // Customer information
           metadata: {
             userId: req.user.id,
             paymentType: 'subscription'
