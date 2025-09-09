@@ -8,6 +8,8 @@ import authRoutes from "./routes-auth";
 import { sendServiceStatusEmail, sendContactFormEmail, sendAdminPumpOutNotification } from "./utils/brevo";
 import { insertUserSchema, insertBoatSchema, insertMarinaSchema, insertDockAssignmentSchema, insertPumpOutRequestSchema, insertCloverConfigSchema, insertPaymentTransactionSchema } from "@shared/schema";
 import { cloverService } from "./clover-service";
+import { cloverApiBase, CLOVER_OAUTH_AUTHORIZE, type CloverRegion } from "../src/config/clover";
+import { getMerchant } from "./services/clover-helpers";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -2127,6 +2129,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
         merchantId: undefined,
         environment: undefined,
         tokenExpiry: undefined
+      });
+    }
+  });
+
+  // Clover health endpoint - check connection by testing API call
+  app.get("/health/clover", async (req: Request, res: Response) => {
+    try {
+      // Load stored merchantId and accessToken
+      const config = await cloverService.getConfigurationStatus();
+      
+      if (!config.isConfigured || !config.merchantId) {
+        return res.json({
+          ok: false,
+          status: 'not_configured',
+          url: 'N/A',
+          bodyPreview: 'Clover not configured - missing merchant ID or access token'
+        });
+      }
+
+      // Get the stored configuration details  
+      const cloverConfig = await storage.getCloverConfig();
+      
+      if (!cloverConfig?.accessToken) {
+        return res.json({
+          ok: false,
+          status: 'no_token',
+          url: 'N/A', 
+          bodyPreview: 'No access token available'
+        });
+      }
+
+      // Test API call to Clover
+      const apiBase = cloverApiBase(process.env.CLOVER_REGION as CloverRegion);
+      const testUrl = `${apiBase}/v3/merchants/${config.merchantId}`;
+      
+      try {
+        const merchant = await getMerchant(config.merchantId, cloverConfig.accessToken, process.env.CLOVER_REGION as CloverRegion);
+        
+        // Success case
+        res.json({
+          ok: true,
+          merchantId: config.merchantId,
+          region: process.env.CLOVER_REGION || 'NA'
+        });
+      } catch (apiError) {
+        // API call failed
+        let status = 'unknown';
+        let bodyPreview = 'Unknown error';
+        
+        if (apiError instanceof Error) {
+          const errorMessage = apiError.message;
+          if (errorMessage.includes('401')) {
+            status = '401';
+            bodyPreview = 'Unauthorized - token may be expired or invalid';
+          } else if (errorMessage.includes('403')) {
+            status = '403';
+            bodyPreview = 'Forbidden - insufficient permissions';
+          } else if (errorMessage.includes('404')) {
+            status = '404';
+            bodyPreview = 'Merchant not found';
+          } else {
+            const match = errorMessage.match(/(\d{3})/);
+            status = match ? match[1] : 'error';
+            bodyPreview = errorMessage.substring(0, 400);
+          }
+        }
+        
+        res.json({
+          ok: false,
+          status,
+          url: testUrl,
+          bodyPreview
+        });
+      }
+    } catch (error) {
+      console.error('Clover health check error:', error);
+      res.json({
+        ok: false,
+        status: 'internal_error',
+        url: 'N/A',
+        bodyPreview: error instanceof Error ? error.message.substring(0, 400) : 'Internal server error'
+      });
+    }
+  });
+
+  // Debug environment endpoint (development only)
+  app.get("/debug/env", async (req: Request, res: Response) => {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    
+    try {
+      const apiBase = cloverApiBase(process.env.CLOVER_REGION as CloverRegion);
+      
+      res.json({
+        apiBase,
+        oauthAuthorize: CLOVER_OAUTH_AUTHORIZE
+      });
+    } catch (error) {
+      console.error('Debug env error:', error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : 'Failed to get environment info'
       });
     }
   });
