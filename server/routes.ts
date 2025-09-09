@@ -2288,11 +2288,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const apiBase = cloverApiBase(process.env.CLOVER_REGION as CloverRegion);
+      const region = (process.env.CLOVER_REGION || 'NA') as CloverRegion;
+      const apiBase = cloverApiBase(region);
       
       res.json({
         apiBase,
-        oauthAuthorize: CLOVER_OAUTH_AUTHORIZE
+        region
       });
     } catch (error) {
       console.error('Debug env error:', error);

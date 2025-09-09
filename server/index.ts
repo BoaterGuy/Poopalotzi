@@ -149,6 +149,10 @@ async function setupDatabaseConnection() {
 
 async function startServer() {
   try {
+    // Validate environment variables at startup
+    const { validateStartupConfig } = await import('../src/config/index');
+    validateStartupConfig();
+    
     await setupDatabaseConnection();
     
     // Set up hardcoded Clover configuration if enabled

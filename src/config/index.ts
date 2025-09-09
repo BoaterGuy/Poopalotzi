@@ -14,7 +14,7 @@ export interface CloverConfig {
 
 /**
  * Validates and returns Clover configuration
- * Throws error if required environment variables are missing
+ * Warns about missing environment variables but doesn't crash the app
  */
 export function validateCloverConfig(): CloverConfig {
   const missing: string[] = [];
@@ -35,14 +35,23 @@ export function validateCloverConfig(): CloverConfig {
   }
   
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required Clover environment variables: ${missing.join(', ')}\n\n` +
-      `Please add to .env file:\n` +
-      `CLOVER_APP_ID=your_app_id\n` +
-      `CLOVER_APP_SECRET=your_app_secret\n` +
-      `CLOVER_REDIRECT_URI=https://yourdomain.com/auth/clover/callback\n` +
-      `CLOVER_REGION=NA (optional, defaults to NA)`
+    console.warn(
+      `⚠️  Missing Clover environment variables: ${missing.join(', ')}\n` +
+      `   Clover payment functionality will be disabled.\n` +
+      `   To enable Clover integration, add to your environment:\n` +
+      `   CLOVER_APP_ID=your_app_id\n` +
+      `   CLOVER_APP_SECRET=your_app_secret\n` +
+      `   CLOVER_REDIRECT_URI=https://yourdomain.com/auth/clover/callback\n` +
+      `   CLOVER_REGION=NA (optional, defaults to NA)`
     );
+    
+    // Return default values to prevent crashes
+    return {
+      appId: appId || 'not_configured',
+      appSecret: appSecret || 'not_configured', 
+      redirectUri: redirectUri || 'not_configured',
+      region: 'NA'
+    };
   }
   
   // Default CLOVER_REGION to 'NA' if unset
