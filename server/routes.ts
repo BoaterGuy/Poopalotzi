@@ -2240,43 +2240,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log('🔄 Attempting token refresh...');
           
-          // Call the clover service refresh method
-          await cloverService.refreshAccessToken();
+          // Call the standalone refresh function
+          const { CloverService } = await import('./clover-service');
+          const newTokens = await CloverService.refreshToken(merchantId);
+          accessToken = newTokens.access_token;
           
-          // Get the new token
-          const refreshedConfig = await storage.getCloverConfig();
-          if (refreshedConfig?.accessToken && refreshedConfig.accessToken !== accessToken) {
-            accessToken = refreshedConfig.accessToken;
-            
-            // Retry with new token
-            const refreshResult = await testMerchantEndpoint(apiBase, accessToken);
-            
-            if (refreshResult.success) {
-              return res.json({
-                ok: true,
-                step: 'afterRefresh',
-                status: refreshResult.status,
-                urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-                region,
-                merchantId,
-                tokenTail: accessToken.substring(accessToken.length - 6),
-                hint: 'success'
-              });
-            }
-            
-            // Still failed after refresh, continue to EU probe
-            if (refreshResult.status !== 401) {
-              return res.json({
-                ok: false,
-                step: 'afterRefresh',
-                status: refreshResult.status,
-                urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-                region,
-                merchantId,
-                tokenTail: accessToken.substring(accessToken.length - 6),
-                hint: getHint(refreshResult.status, refreshResult.error)
-              });
-            }
+          // Retry with new token
+          const refreshResult = await testMerchantEndpoint(apiBase, accessToken);
+          
+          if (refreshResult.success) {
+            return res.json({
+              ok: true,
+              step: 'afterRefresh',
+              status: refreshResult.status,
+              urlTried: `${apiBase}/v3/merchants/${merchantId}`,
+              region,
+              merchantId,
+              tokenTail: accessToken.substring(accessToken.length - 6),
+              hint: 'success'
+            });
+          }
+          
+          // Still failed after refresh, continue to EU probe
+          if (refreshResult.status !== 401) {
+            return res.json({
+              ok: false,
+              step: 'afterRefresh',
+              status: refreshResult.status,
+              urlTried: `${apiBase}/v3/merchants/${merchantId}`,
+              region,
+              merchantId,
+              tokenTail: accessToken.substring(accessToken.length - 6),
+              hint: getHint(refreshResult.status, refreshResult.error)
+            });
           }
         } catch (refreshError) {
           console.log('Token refresh failed:', refreshError);
