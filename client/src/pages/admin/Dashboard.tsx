@@ -295,7 +295,7 @@ export default function AdminDashboard() {
                       nameKey="serviceLevel.name"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {(usersByServiceLevel || []).map((entry, index) => (
+                      {(usersByServiceLevel || []).map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={`hsl(${index * 50}, 70%, 50%)`} />
                       ))}
                     </Pie>
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="flex justify-center gap-4 mt-4">
-                {(usersByServiceLevel || []).map((entry, index) => (
+                {(usersByServiceLevel || []).map((entry: any, index: number) => (
                   <div key={index} className="flex items-center">
                     <div 
                       className="w-3 h-3 rounded-full mr-1" 
@@ -556,7 +556,7 @@ function UserManagementTable() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries();
       toast({
         title: "Role Updated",
         description: "User role has been updated successfully.",
@@ -564,7 +564,7 @@ function UserManagementTable() {
       setIsRoleChangeDialogOpen(false);
       setPendingRoleChange(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: "Failed to update user role. Please try again.",
@@ -589,7 +589,7 @@ function UserManagementTable() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries();
       toast({
         title: "User Updated",
         description: "User details have been updated successfully.",
@@ -670,13 +670,13 @@ function UserManagementTable() {
   }
 
   if (error) {
-    return <div className="text-center py-8 bg-red-100 border border-red-300 rounded text-red-600">Error loading users: {error.message}</div>;
+    return <div className="text-center py-8 bg-red-100 border border-red-300 rounded text-red-600">Error loading users: {(error as any)?.message || 'Unknown error'}</div>;
   }
 
   return (
     <>
       <div className="mb-4 p-2 bg-blue-100 border border-blue-300 rounded text-sm">
-        <strong>DEBUG:</strong> UserManagementTable rendered successfully. Found {users.length} users.
+        <strong>DEBUG:</strong> UserManagementTable rendered successfully. Found {users?.length || 0} users.
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -691,7 +691,7 @@ function UserManagementTable() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user: any) => (
+            {(users || []).map((user: any) => (
               <tr key={user.id} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
