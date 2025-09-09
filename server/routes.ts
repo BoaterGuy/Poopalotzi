@@ -2714,8 +2714,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokenData = await cloverService.exchangeCodeForTokens(code as string, merchant_id as string);
       console.log('Token exchange successful:', { expires_in: tokenData.expires_in });
       
-      // Save configuration
-      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      // Validate tokens - reject placeholder tokens
+      if (tokenData.access_token.startsWith('test_') || (tokenData.refresh_token && tokenData.refresh_token.startsWith('test_'))) {
+        throw new Error('Placeholder tokens not allowed');
+      }
+      
+      // Compute token expiry (fallback to 24 hours if missing)
+      const expiresInMs = (tokenData.expires_in || 24 * 60 * 60) * 1000;
+      const expiresAt = new Date(Date.now() + expiresInMs);
+      
+      // Save configuration with all required fields
       await cloverService.saveConfiguration({
         merchantId: merchant_id as string,
         accessToken: tokenData.access_token,
@@ -2723,7 +2731,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tokenExpiresAt: expiresAt
       });
 
-      console.log('Clover configuration saved successfully');
+      // Log success with token tail for debugging
+      const tokenTail = tokenData.access_token.substring(tokenData.access_token.length - 6);
+      console.log(`Saved tokens for ${merchant_id} (tail: ${tokenTail})`);
       
       // Return a success page instead of redirecting to avoid blank page issues
       res.send(`
