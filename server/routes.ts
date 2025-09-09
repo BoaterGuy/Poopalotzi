@@ -2367,7 +2367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Production-only environment - no sandbox support
         const endpoints = [
-          { env: 'production', url: `https://api.clover.com/v3/merchants/${merchantId}` }
+          { env: 'production', url: `${require('../src/config/clover').cloverApiBase(process.env.CLOVER_REGION)}/v3/merchants/${merchantId}` }
         ];
         
         let testResponse = null;

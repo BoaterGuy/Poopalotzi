@@ -15,11 +15,12 @@
 
 import { storage } from './index';
 import type { CloverConfig, InsertCloverConfig, InsertPaymentTransaction } from '@shared/schema';
+import { cloverApiBase, cloverEcommerceBase, CLOVER_OAUTH_AUTHORIZE, CLOVER_OAUTH_TOKEN, type CloverRegion } from '../src/config/clover';
 
 // Production-only Clover API endpoints
 const CLOVER_ENDPOINTS = {
   oauth: 'https://www.clover.com/oauth',
-  api: 'https://api.clover.com'
+  api: cloverApiBase(process.env.CLOVER_REGION as CloverRegion)
 };
 
 export interface CloverPaymentRequest {
@@ -690,7 +691,7 @@ export class CloverService {
       // Approach 1: Try ecommerce API first
       try {
         console.log('Attempting ecommerce API payment...');
-        const ecommerceUrl = 'https://scl.clover.com/v1/charges';
+        const ecommerceUrl = `${cloverEcommerceBase(process.env.CLOVER_REGION as CloverRegion)}/v1/charges`;
 
         const ecomPaymentData = {
           amount: totalAmount,
