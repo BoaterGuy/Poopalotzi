@@ -134,6 +134,9 @@ function App() {
                 <Route path="/member/subscription">
                   <MemberRoute component={MemberServiceSubscription} path="/member/subscription" />
                 </Route>
+                <Route path="/member/service-subscription">
+                  <MemberRoute component={MemberServiceSubscription} path="/member/service-subscription" />
+                </Route>
                 <Route path="/member/service-plans">
                   <MemberRoute component={MemberServicePlans} path="/member/service-plans" />
                 </Route>
