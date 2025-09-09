@@ -1,4 +1,5 @@
 import { getTokens, upsertTokens } from '../store/token-store';
+import { CLOVER_OAUTH_TOKEN } from '../config/clover';
 
 interface CloverTokenResponse {
   access_token: string;
@@ -29,7 +30,7 @@ export async function refreshToken(merchantId: string): Promise<string> {
   console.log('🔄 Refreshing token for merchant:', merchantId);
   
   // POST to Clover OAuth token endpoint
-  const response = await fetch('https://www.clover.com/oauth/token', {
+  const response = await fetch(CLOVER_OAUTH_TOKEN, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
