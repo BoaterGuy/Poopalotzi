@@ -2553,7 +2553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasAppSecret: !!appSecret,
           testCode,
           testMerchant,
-          cloverOAuthUrl: 'https://www.clover.com/oauth/token',
+          cloverOAuthUrl: require('../src/config/clover').CLOVER_OAUTH_TOKEN,
           timestamp: new Date().toISOString()
         }
       });

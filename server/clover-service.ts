@@ -19,7 +19,6 @@ import { cloverApiBase, cloverEcommerceBase, CLOVER_OAUTH_AUTHORIZE, CLOVER_OAUT
 
 // Production-only Clover API endpoints
 const CLOVER_ENDPOINTS = {
-  oauth: 'https://www.clover.com/oauth',
   api: cloverApiBase(process.env.CLOVER_REGION as CloverRegion)
 };
 
@@ -126,7 +125,6 @@ export class CloverService {
     // Ensure redirect URI uses HTTPS for Clover compatibility
     const secureRedirectUri = redirectUri.replace(/^http:/, 'https:');
     
-    const baseUrl = CLOVER_ENDPOINTS.oauth;
     const params = new URLSearchParams({
       client_id: appId,
       merchant_id: merchantId,
@@ -134,7 +132,7 @@ export class CloverService {
       response_type: 'code'
     });
 
-    return `${baseUrl}/authorize?${params.toString()}`;
+    return `${CLOVER_OAUTH_AUTHORIZE}?${params.toString()}`;
   }
 
   /**
@@ -153,9 +151,7 @@ export class CloverService {
       throw new Error('CLOVER_APP_ID and CLOVER_APP_SECRET environment variables are required');
     }
 
-    const baseUrl = CLOVER_ENDPOINTS.oauth;
-    
-    const response = await fetch(`${baseUrl}/token`, {
+    const response = await fetch(CLOVER_OAUTH_TOKEN, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -278,9 +274,7 @@ export class CloverService {
       throw new Error('Cannot refresh token - missing refresh token or app credentials');
     }
 
-    const baseUrl = CLOVER_ENDPOINTS.oauth;
-
-    const response = await fetch(`${baseUrl}/token`, {
+    const response = await fetch(CLOVER_OAUTH_TOKEN, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
