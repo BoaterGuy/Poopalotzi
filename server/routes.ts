@@ -2089,7 +2089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🎯 Tokenizing card for payment processing...');
       
-      // Use Clover ecommerce tokenization endpoint with correct API
+      // Use Clover ecommerce tokenization endpoint with correct format - PRODUCTION
       const cloverTokenResponse = await fetch('https://scl.clover.com/v1/tokens', {
         method: 'POST',
         headers: {
@@ -2099,11 +2099,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           apikey: process.env.CLOVER_PUBLIC_KEY,
           card: {
             number: card.number,
-            exp_month: card.exp_month,
-            exp_year: card.exp_year,
+            exp_month: parseInt(card.exp_month),
+            exp_year: parseInt(card.exp_year),
             cvc: card.cvc,
             name: card.name,
             address_zip: card.address_zip,
+            brand: 'VISA' // Default to VISA for testing
           }
         })
       });
@@ -2111,16 +2112,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!cloverTokenResponse.ok) {
         const error = await cloverTokenResponse.text();
         console.error('❌ Clover tokenization failed:', error);
+        console.log('Response status:', cloverTokenResponse.status);
+        console.log('Response headers:', Object.fromEntries(cloverTokenResponse.headers.entries()));
         return res.status(400).json({ 
-          message: "Card tokenization failed. Please check your card details." 
+          message: "Card tokenization failed. Please check your card details.",
+          details: error
         });
       }
 
       const tokenData = await cloverTokenResponse.json();
-      console.log('✅ Card tokenization successful');
+      console.log('✅ Card tokenization successful:', { hasId: !!tokenData.id, tokenData });
       
       res.json({ 
-        token: tokenData.id,
+        token: tokenData.id || tokenData.token,
         message: "Card tokenized successfully" 
       });
       
