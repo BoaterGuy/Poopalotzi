@@ -165,6 +165,13 @@ async function startServer() {
       res.sendFile(path.resolve('session-debug.html'));
     });
 
+    // Content Security Policy - set for all requests
+    app.use((req, res, next) => {
+      res.setHeader('Content-Security-Policy',
+        "default-src 'self'; connect-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
+      next();
+    });
+
     // Set up authentication
     console.log("🔧 About to call setupAuth...");
     setupAuth(app);
@@ -178,6 +185,7 @@ async function startServer() {
     
     if (process.env.NODE_ENV === "production") {
       app.use(express.static(path.resolve("dist/public")));
+      
       
       app.get("*", (req, res) => {
         if (!req.path.startsWith("/api")) {
@@ -210,6 +218,7 @@ async function startServer() {
           lastModified: false,
           maxAge: 0
         }));
+        
         
         // SPA fallback
         app.get("*", (req, res) => {
