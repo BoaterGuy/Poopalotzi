@@ -2089,22 +2089,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🎯 Tokenizing card for payment processing...');
       
-      // Use Clover ecommerce tokenization endpoint with correct format - PRODUCTION
-      const cloverTokenResponse = await fetch('https://scl.clover.com/v1/tokens', {
+      // Use Clover ecommerce tokenization endpoint - PRODUCTION (correct format)
+      const cloverTokenResponse = await fetch('https://token.clover.com/v1/tokens', {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'apikey': process.env.CLOVER_PUBLIC_KEY
         },
         body: JSON.stringify({
-          apikey: process.env.CLOVER_PUBLIC_KEY,
           card: {
             number: card.number,
-            exp_month: parseInt(card.exp_month),
-            exp_year: parseInt(card.exp_year),
-            cvc: card.cvc,
+            exp_month: card.exp_month,
+            exp_year: card.exp_year,
+            cvv: card.cvc, // Clover uses 'cvv' not 'cvc'
             name: card.name,
-            address_zip: card.address_zip,
-            brand: 'VISA' // Default to VISA for testing
+            address_zip: card.address_zip
           }
         })
       });
