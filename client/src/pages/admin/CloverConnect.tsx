@@ -12,12 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExternalLink, AlertTriangle, CheckCircle } from 'lucide-react';
+import { cloverApi } from '@/services/clover-service';
 
 export default function CloverConnect() {
   const [merchantId, setMerchantId] = useState('PFHDQ8MSX5F81');
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (!merchantId.trim()) {
       alert('Please enter your Clover Merchant ID');
       return;
@@ -25,18 +26,27 @@ export default function CloverConnect() {
 
     setIsConnecting(true);
     
-    // Clear everything that could interfere
-    sessionStorage.clear();
-    localStorage.clear();
-    
-    // Use production Clover configuration
-    const redirectUri = window.location.origin.replace('http:', 'https:') + '/api/admin/clover/oauth/callback';
-    const cloverUrl = `https://www.clover.com/oauth/authorize?client_id=8QSDCRTWSBPWT&merchant_id=${merchantId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${Date.now()}`;
-    
-    console.log('Redirecting to Clover OAuth:', cloverUrl);
-    
-    // Force immediate redirect
-    window.location.replace(cloverUrl);
+    try {
+      // Clear everything that could interfere
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Use our backend to initiate OAuth flow
+      console.log('Initiating OAuth through backend...');
+      const response = await cloverApi.initiateOAuth(merchantId);
+      
+      if (response.authUrl) {
+        console.log('Redirecting to Clover OAuth:', response.authUrl);
+        // Force immediate redirect to Clover
+        window.location.replace(response.authUrl);
+      } else {
+        throw new Error('No auth URL received from backend');
+      }
+    } catch (error) {
+      console.error('OAuth initiation failed:', error);
+      alert(`Failed to start OAuth: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsConnecting(false);
+    }
   };
 
   return (
