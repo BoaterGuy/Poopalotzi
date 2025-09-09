@@ -2133,10 +2133,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced Clover health endpoint - comprehensive token and region testing
+  // Enhanced Clover health endpoint - token testing with refresh
   app.get("/health/clover", async (req: Request, res: Response) => {
     try {
-      // Load stored merchantId and accessToken
+      // 1) Load tokens for the active merchantId
       const config = await cloverService.getConfigurationStatus();
       
       if (!config.isConfigured || !config.merchantId) {
@@ -2145,38 +2145,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           step: 'initial',
           status: 0,
           urlTried: 'N/A',
-          region: process.env.CLOVER_REGION || 'NA',
-          merchantId: config.merchantId || 'none',
+          merchantId: 'none',
           tokenTail: 'none',
-          hint: 'invalid_token'
+          region: process.env.CLOVER_REGION || 'NA',
+          hint: 'no_tokens'
         });
       }
 
-      // Get the stored configuration details  
-      const cloverConfig = await storage.getCloverConfig();
-      
-      if (!cloverConfig?.accessToken) {
+      const merchantId = config.merchantId;
+      const { getTokens } = await import('../src/store/token-store');
+      const storedTokens = await getTokens(merchantId);
+
+      // 2) If missing -> return { ok:false, hint:'no_tokens' }
+      if (!storedTokens || !storedTokens.access_token) {
         return res.json({
           ok: false,
           step: 'initial',
           status: 0,
           urlTried: 'N/A',
-          region: process.env.CLOVER_REGION || 'NA',
-          merchantId: config.merchantId,
+          merchantId,
           tokenTail: 'none',
-          hint: 'invalid_token'
+          region: process.env.CLOVER_REGION || 'NA',
+          hint: 'no_tokens'
         });
       }
 
-      const merchantId = config.merchantId;
-      let accessToken = cloverConfig.accessToken;
-      const tokenTail = accessToken.substring(accessToken.length - 6);
+      let accessToken = storedTokens.access_token;
+      const tokenTail = accessToken.slice(-6);
       const region = process.env.CLOVER_REGION || 'NA';
+      const apiBase = cloverApiBase(region as CloverRegion);
+      const testUrl = `${apiBase}/v3/merchants/${merchantId}`;
+
+      // Helper function to get hint from error
+      const getHint = (status: number): string => {
+        if (status === 401) return 'expired';
+        if (status === 403) return 'insufficient_scopes';
+        if (status === 404) return 'region_mismatch';
+        return 'unknown';
+      };
 
       // Helper function to test merchant endpoint
-      const testMerchantEndpoint = async (apiBase: string, token: string): Promise<{ success: boolean; status: number; error?: string }> => {
-        const testUrl = `${apiBase}/v3/merchants/${merchantId}`;
-        
+      const testMerchantEndpoint = async (token: string): Promise<{ success: boolean; status: number }> => {
         try {
           const response = await fetch(testUrl, {
             method: 'GET',
@@ -2187,138 +2196,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
 
-          if (response.ok) {
-            return { success: true, status: response.status };
-          } else {
-            const errorText = await response.text();
-            return { 
-              success: false, 
-              status: response.status, 
-              error: errorText.substring(0, 400) 
-            };
-          }
+          return { success: response.ok, status: response.status };
         } catch (error) {
-          return { 
-            success: false, 
-            status: 0, 
-            error: error instanceof Error ? error.message : 'Network error' 
-          };
+          return { success: false, status: 0 };
         }
       };
 
-      // Helper function to get hint from error
-      const getHint = (status: number, errorText?: string): string => {
-        if (status === 401) {
-          if (errorText?.includes('expired')) return 'expired_token';
-          if (errorText?.includes('invalid')) return 'invalid_token';
-          return 'expired_token';
-        }
-        if (status === 403) return 'insufficient_scopes';
-        if (status === 404) return 'wrong_merchant';
-        return 'unknown';
-      };
-
-      // Step 1: Try initial request
-      const apiBase = cloverApiBase(region as CloverRegion);
-      const initialResult = await testMerchantEndpoint(apiBase, accessToken);
+      // 3) Try GET {apiBase}/v3/merchants/{merchantId} with Authorization: Bearer access_token
+      const initialResult = await testMerchantEndpoint(accessToken);
       
       if (initialResult.success) {
         return res.json({
           ok: true,
           step: 'initial',
           status: initialResult.status,
-          urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-          region,
+          urlTried: testUrl,
           merchantId,
           tokenTail,
+          region,
           hint: 'success'
         });
       }
 
-      // Step 2: If 401, try token refresh
-      if (initialResult.status === 401 && cloverConfig.refreshToken) {
+      // 4) On 401 -> call refreshToken(merchantId), retry once
+      if (initialResult.status === 401) {
         try {
-          console.log('🔄 Attempting token refresh...');
-          
-          // Call the standalone refresh function
-          const { CloverService } = await import('./clover-service');
-          const newTokens = await CloverService.refreshToken(merchantId);
-          accessToken = newTokens.access_token;
+          const { refreshToken } = await import('../src/services/clover-service');
+          const newAccessToken = await refreshToken(merchantId);
+          accessToken = newAccessToken;
           
           // Retry with new token
-          const refreshResult = await testMerchantEndpoint(apiBase, accessToken);
+          const refreshResult = await testMerchantEndpoint(accessToken);
           
-          if (refreshResult.success) {
-            return res.json({
-              ok: true,
-              step: 'afterRefresh',
-              status: refreshResult.status,
-              urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-              region,
-              merchantId,
-              tokenTail: accessToken.substring(accessToken.length - 6),
-              hint: 'success'
-            });
-          }
-          
-          // Still failed after refresh, continue to EU probe
-          if (refreshResult.status !== 401) {
-            return res.json({
-              ok: false,
-              step: 'afterRefresh',
-              status: refreshResult.status,
-              urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-              region,
-              merchantId,
-              tokenTail: accessToken.substring(accessToken.length - 6),
-              hint: getHint(refreshResult.status, refreshResult.error)
-            });
-          }
+          return res.json({
+            ok: refreshResult.success,
+            step: 'afterRefresh',
+            status: refreshResult.status,
+            urlTried: testUrl,
+            merchantId,
+            tokenTail: accessToken.slice(-6),
+            region,
+            hint: refreshResult.success ? 'success' : getHint(refreshResult.status)
+          });
         } catch (refreshError) {
           console.log('Token refresh failed:', refreshError);
-        }
-      }
-
-      // Step 3: If still 401, try EU region probe (only if not already EU)
-      if (initialResult.status === 401 && region !== 'EU') {
-        const euApiBase = cloverApiBase('EU');
-        const euResult = await testMerchantEndpoint(euApiBase, accessToken);
-        
-        if (euResult.success) {
           return res.json({
-            ok: true,
-            step: 'euProbe',
-            status: euResult.status,
-            urlTried: `${euApiBase}/v3/merchants/${merchantId}`,
-            region,
+            ok: false,
+            step: 'initial',
+            status: 401,
+            urlTried: testUrl,
             merchantId,
             tokenTail,
-            hint: 'region_mismatch'
+            region,
+            hint: 'invalid'
           });
         }
-        
-        return res.json({
-          ok: false,
-          step: 'euProbe',
-          status: euResult.status,
-          urlTried: `${euApiBase}/v3/merchants/${merchantId}`,
-          region,
-          merchantId,
-          tokenTail,
-          hint: euResult.status === 401 ? 'invalid_token' : getHint(euResult.status, euResult.error)
-        });
       }
 
-      // Final result - failed all attempts
+      // 5) Respond 200 with error details
       return res.json({
         ok: false,
         step: 'initial',
         status: initialResult.status,
-        urlTried: `${apiBase}/v3/merchants/${merchantId}`,
-        region,
+        urlTried: testUrl,
         merchantId,
         tokenTail,
-        hint: getHint(initialResult.status, initialResult.error)
+        region,
+        hint: getHint(initialResult.status)
       });
       
     } catch (error) {
@@ -2328,9 +2272,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         step: 'initial',
         status: 0,
         urlTried: 'N/A',
-        region: process.env.CLOVER_REGION || 'NA',
         merchantId: 'error',
         tokenTail: 'error',
+        region: process.env.CLOVER_REGION || 'NA',
         hint: 'unknown'
       });
     }
