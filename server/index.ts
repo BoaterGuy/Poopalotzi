@@ -184,14 +184,8 @@ async function startServer() {
     const path = await import("path");
     
     if (process.env.NODE_ENV === "production") {
-      app.use(express.static(path.resolve("dist/public")));
-      
-      
-      app.get("*", (req, res) => {
-        if (!req.path.startsWith("/api")) {
-          res.sendFile(path.resolve("dist/public/index.html"));
-        }
-      });
+      app.use(express.static(path.join(__dirname, '../dist')));
+      app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../dist/index.html')));
     } else {
       // Development: Force rebuild and serve fresh
       try {
@@ -213,7 +207,7 @@ async function startServer() {
         }
         
         // Serve built files with strong cache headers for development
-        app.use(express.static(distPath, {
+        app.use(express.static(path.join(__dirname, '../dist'), {
           etag: false,
           lastModified: false,
           maxAge: 0
@@ -221,9 +215,9 @@ async function startServer() {
         
         
         // SPA fallback
-        app.get("*", (req, res) => {
-          if (!req.path.startsWith("/api")) {
-            res.sendFile(path.resolve(distPath, "index.html"));
+        app.get("*", (_req, res) => {
+          if (!_req.path.startsWith("/api")) {
+            res.sendFile(path.join(__dirname, '../dist/index.html'));
           }
         });
         
