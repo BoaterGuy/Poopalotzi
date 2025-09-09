@@ -235,8 +235,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
+      
+      // Force a page refresh to clear any cached session data
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000); // Give toast time to show
+      
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if logout fails, clear the frontend state and redirect
+      setUser(null);
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
     } finally {
       setIsLoading(false);
     }
