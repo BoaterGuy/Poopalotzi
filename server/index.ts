@@ -103,7 +103,11 @@ async function startServer() {
       });
       console.log('✅ Vite middleware server created');
 
-      // Add explicit HTML handler BEFORE vite.middlewares
+      // Mount Vite middleware FIRST to handle assets
+      app.use(vite.middlewares);
+      console.log('✅ Vite middleware registered');
+
+      // Add HTML fallback handler AFTER vite.middlewares for SPA routing
       app.get(/^(?!\/api|\/healthz).*/, async (req, res, next) => {
         try {
           const { readFile } = await import("fs/promises");
@@ -115,10 +119,7 @@ async function startServer() {
           return next(error);
         }
       });
-      console.log('✅ Vite HTML handler registered');
-
-      app.use(vite.middlewares);
-      console.log('✅ Vite middleware registered');
+      console.log('✅ Vite HTML fallback handler registered');
     } else {
       // Production static file serving
       app.use(express.default.static("dist/client"));
