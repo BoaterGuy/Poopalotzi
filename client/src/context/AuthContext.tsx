@@ -177,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({})
       });
       
-      // Also logout from Supabase if we're using it
+      // Direct API logout - no external auth needed
       // No Supabase signout needed for direct API approach
       
       setUser(null);

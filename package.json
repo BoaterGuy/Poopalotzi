@@ -47,7 +47,6 @@
     "@sendgrid/mail": "^8.1.5",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.0",
-    "@supabase/supabase-js": "^2.49.4",
     "@types/cors": "^2.8.19",
     "@types/memoizee": "^0.4.12",
     "@types/multer": "^1.4.12",
