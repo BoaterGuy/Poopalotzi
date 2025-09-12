@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Router } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import { promisify } from "util";
@@ -22,7 +22,7 @@ export async function comparePasswords(supplied: string, stored: string) {
   return bcrypt.compare(supplied, stored);
 }
 
-export function setupAuth(app: Express) {
+export function setupAuth(app: Express | Router) {
   console.log("🔧 === STARTING AUTH SETUP ===");
   // Express middleware already set up in index.ts
   
