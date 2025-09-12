@@ -91,7 +91,10 @@ async function startServer() {
       const vite = await createViteServer({
         configFile: false,
         root: resolve(process.cwd(), 'client'),
-        server: { middlewareMode: true },
+        server: { 
+          middlewareMode: true,
+          allowedHosts: 'all'
+        },
         appType: "custom",
         resolve: {
           alias: {
