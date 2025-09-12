@@ -91,7 +91,7 @@ async function startServer() {
       const vite = await createViteServer({
         root: resolve(process.cwd(), 'client'),
         server: { middlewareMode: true },
-        appType: "spa",
+        appType: "custom",
         resolve: {
           alias: {
             "@": resolve(process.cwd(), "client", "src"),
@@ -102,6 +102,26 @@ async function startServer() {
       });
       console.log('✅ Vite middleware server created');
       app.use(vite.ssrFixStacktrace);
+
+      // Add explicit HTML handler BEFORE vite.middlewares
+      app.get(/^(?!\/api|\/healthz).*/, async (req, res, next) => {
+        try {
+          // Only handle HTML requests, let assets fall through to Vite
+          if (!req.headers.accept?.includes('text/html')) {
+            return next();
+          }
+          const { readFile } = await import("fs/promises");
+          const url = req.originalUrl;
+          const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
+          const html = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+        } catch (error) {
+          vite.ssrFixStacktrace(error as Error);
+          next(error);
+        }
+      });
+      console.log('✅ Vite HTML handler registered');
+
       app.use(vite.middlewares);
       console.log('✅ Vite middleware registered');
     } else {
