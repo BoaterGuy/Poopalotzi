@@ -1,5 +1,6 @@
 // Removed React Query to fix vendor module TypeScript errors
-import { Router, Route, Switch } from "wouter";
+import { Router, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -41,7 +42,13 @@ import CloverConnect from "@/pages/admin/CloverConnect";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
-import { Redirect } from "wouter";
+
+// Custom redirect component to replace wouter's Redirect
+const Redirect = ({ to }: { to: string }) => {
+  const [, setLocation] = useLocation();
+  useEffect(() => setLocation(to), [to, setLocation]);
+  return null;
+};
 
 // Role-based route guards
 const MemberRoute = ({ component: Component, ...rest }: { component: React.FC<any>, path: string }) => {
@@ -100,7 +107,7 @@ function App() {
       <TooltipProvider>
           <AuthProvider>
             <PageLayout>
-              <Switch>
+              <Router>
                 {/* Public Routes */}
                 <Route path="/" component={Home} />
                 <Route path="/services" component={Services} />
@@ -192,7 +199,7 @@ function App() {
                 
                 {/* 404 Route */}
                 <Route component={NotFound} />
-              </Switch>
+              </Router>
             </PageLayout>
           </AuthProvider>
         </TooltipProvider>
