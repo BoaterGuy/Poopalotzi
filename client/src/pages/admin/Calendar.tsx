@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@/lib/queryClient";
 import { Calendar as CalendarIcon, Clock, MapPin, User, Filter } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface PumpOutRequest {
   id: number;
@@ -152,7 +152,7 @@ export default function Calendar() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Calendar
+              <CalendarComponent
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}

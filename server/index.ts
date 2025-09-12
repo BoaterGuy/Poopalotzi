@@ -91,6 +91,9 @@ async function startServer() {
       const vite = await createViteServer({
         configFile: false,
         root: resolve(process.cwd(), 'client'),
+        plugins: [
+          (await import("@vitejs/plugin-react")).default()
+        ],
         server: { 
           middlewareMode: true,
           host: true,
