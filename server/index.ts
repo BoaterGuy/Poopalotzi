@@ -121,8 +121,10 @@ async function startServer() {
       // Add HTML fallback handler AFTER vite.middlewares for SPA routing
       // Exclude Vite/module/asset paths to prevent intercepting React JS files
       app.get(/^(?!\/(api|healthz|src\/|assets\/|@vite|@id\/|node_modules\/)).*/, async (req, res, next) => {
-        const accept = req.headers.accept || '';
-        if (!accept.includes('text/html')) return next();
+        // Handle GET/HEAD requests and treat */* as HTML for consistent React loading
+        if (!['GET','HEAD'].includes(req.method)) return next();
+        const accept = (req.headers.accept || '').toLowerCase();
+        if (accept && !accept.includes('text/html') && accept !== '*/*') return next();
         try {
           const { readFile } = await import("fs/promises");
           const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
