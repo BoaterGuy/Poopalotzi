@@ -20,10 +20,10 @@ async function startServer() {
     const { setupAuth } = await import("./auth");
 
     // Initialize storage after successful imports
-    storage = new (DatabaseStorage.default || DatabaseStorage)();
+    storage = new DatabaseStorage();
 
     // Function to create hardcoded Clover configuration
-    async function setupHardcodedClover() {
+    const setupHardcodedClover = async () => {
       if (process.env.ENABLE_HARDCODED_CLOVER === "true" && 
           process.env.CLOVER_MERCHANT_ID && 
           process.env.CLOVER_ACCESS_TOKEN) {
@@ -51,7 +51,7 @@ async function startServer() {
           console.error('❌ Failed to create hardcoded Clover configuration:', error);
         }
       }
-    }
+    };
 
     // Simple logging function
     const log = console.log;
@@ -73,6 +73,9 @@ async function startServer() {
     // Create Express app
     const app = express.default();
 
+    // Trust proxy for correct secure cookie handling in Replit
+    app.set('trust proxy', 1);
+
     // Middleware
     app.use(cors.default({
       origin: true,
@@ -83,14 +86,13 @@ async function startServer() {
     app.use(express.default.urlencoded({ extended: true, limit: '50mb' }));
 
     // Setup authentication
-    (setupAuth.default || setupAuth)(app);
+    setupAuth(app);
 
-    // Setup database and register routes
-    await (setupFullDatabase.default || setupFullDatabase)();
+    // Setup database
+    await setupFullDatabase();
     await setupHardcodedClover();
-    (registerRoutes.default || registerRoutes)(app);
 
-    // Vite dev server integration
+    // Vite dev server integration - MUST come before registerRoutes
     if (process.env.NODE_ENV === "development") {
       const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
@@ -106,6 +108,9 @@ async function startServer() {
         res.sendFile(process.cwd() + "/dist/client/index.html");
       });
     }
+
+    // Register API routes AFTER Vite middleware
+    registerRoutes(app);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
