@@ -93,7 +93,7 @@ async function startServer() {
         root: resolve(process.cwd(), 'client'),
         server: { 
           middlewareMode: true,
-          allowedHosts: 'all'
+          host: true
         },
         appType: "custom",
         resolve: {
@@ -150,7 +150,7 @@ async function startServer() {
     registerRoutes(apiRouter);
 
     // Mount API router at root (routes already have /api prefix)
-    app.use('/', apiRouter);
+    app.use(apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
