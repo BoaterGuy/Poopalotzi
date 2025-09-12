@@ -93,7 +93,12 @@ async function startServer() {
         root: resolve(process.cwd(), 'client'),
         server: { 
           middlewareMode: true,
-          host: true
+          host: true,
+          allowedHosts: [
+            'localhost',
+            '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
+            '.replit.dev'
+          ]
         },
         appType: "custom",
         resolve: {
