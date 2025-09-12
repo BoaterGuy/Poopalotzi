@@ -3,11 +3,18 @@ import App from "./App";
 import "./index.css";
 import { Toaster } from "@/components/ui/toaster";
 
-document.title = 'Poopalotzi - Marina Management';
+console.log('🚀 React mounting with full Poopalotzi app...');
 
-createRoot(document.getElementById("root")!).render(
-  <>
-    <App />
-    <Toaster />
-  </>
-);
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  console.log('✅ Root found, mounting full React app...');
+  createRoot(rootElement).render(
+    <>
+      <App />
+      <Toaster />
+    </>
+  );
+  console.log('✅ Full React app mounted!');
+} else {
+  console.error('❌ Root element not found!');
+}
