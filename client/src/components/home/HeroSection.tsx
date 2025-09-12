@@ -24,13 +24,12 @@ export default function HeroSection() {
             
           </div>
           <div className="md:w-1/2 flex flex-col items-center">
-            <img 
-              src="/logo.png" 
-              alt="Poopalotzi Logo - Captain Poop Character" 
-              className="w-80 h-auto mb-4"
-            />
+            <div className="bg-[#0B1F3A] text-white p-8 rounded-lg text-center mb-4 w-80">
+              <h3 className="text-3xl font-bold mb-2">POOPALOTZI</h3>
+              <p className="text-lg">Professional Marine Services</p>
+            </div>
             <div className="bg-white rounded-lg shadow-md p-4 text-center">
-              <p className="text-lg text-[#0B1F3A] font-semibold">We are #1 in the #2 business</p>
+              <p className="text-lg text-[#0B1F3A] font-semibold">Professional Pump-Out Services</p>
             </div>
           </div>
         </div>
