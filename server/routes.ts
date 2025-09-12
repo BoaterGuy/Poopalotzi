@@ -14,7 +14,7 @@ import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { format, addDays } from "date-fns";
-import { setupAuth } from "./auth";
+// setupAuth is now handled in index.ts - removed to prevent duplicate
 import multer, { type Multer } from "multer";
 import path from "path";
 import { db } from "./db";
@@ -101,8 +101,7 @@ const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up authentication (session, passport, etc)
-  setupAuth(app);
+  // Authentication setup is now handled in index.ts
   
   
   // We'll keep using the existing authentication in auth.ts

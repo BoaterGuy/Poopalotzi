@@ -76,31 +76,34 @@ async function startServer() {
     // Trust proxy for correct secure cookie handling in Replit
     app.set('trust proxy', 1);
 
-    // Middleware
-    app.use(cors.default({
-      origin: true,
-      credentials: true,
-    }));
+    // Health check endpoint - NO SESSION MIDDLEWARE
+    app.get('/healthz', (_req, res) => res.status(200).send('ok'));
 
-    app.use(express.default.json({ limit: '50mb' }));
-    app.use(express.default.urlencoded({ extended: true, limit: '50mb' }));
-
-    // Setup authentication
-    setupAuth(app);
-
-    // Setup database
+    // Setup database first
     await setupFullDatabase();
     await setupHardcodedClover();
 
-    // Vite dev server integration - MUST come before registerRoutes
+    // Vite dev server integration - FIRST, before any session middleware
     if (process.env.NODE_ENV === "development") {
+      console.log('🔧 Creating Vite dev server...');
       const { createServer: createViteServer } = await import("vite");
+      const { resolve } = await import("path");
       const vite = await createViteServer({
+        root: resolve(process.cwd(), 'client'),
         server: { middlewareMode: true },
         appType: "spa",
+        resolve: {
+          alias: {
+            "@": resolve(process.cwd(), "client", "src"),
+            "@shared": resolve(process.cwd(), "shared"),
+            "@assets": resolve(process.cwd(), "attached_assets"),
+          },
+        },
       });
+      console.log('✅ Vite middleware server created');
       app.use(vite.ssrFixStacktrace);
       app.use(vite.middlewares);
+      console.log('✅ Vite middleware registered');
     } else {
       // Production static file serving
       app.use(express.default.static("dist/client"));
@@ -109,8 +112,26 @@ async function startServer() {
       });
     }
 
-    // Register API routes AFTER Vite middleware
-    registerRoutes(app);
+    // Create API router with session/auth middleware scoped to API only
+    const apiRouter = express.default.Router();
+
+    // Apply middleware only to API routes
+    apiRouter.use(cors.default({
+      origin: true,
+      credentials: true,
+    }));
+
+    apiRouter.use(express.default.json({ limit: '50mb' }));
+    apiRouter.use(express.default.urlencoded({ extended: true, limit: '50mb' }));
+
+    // Setup authentication only for API routes
+    setupAuth(apiRouter);
+
+    // Register API routes
+    registerRoutes(apiRouter);
+
+    // Mount API router at root (routes already have /api prefix)
+    app.use('/', apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
