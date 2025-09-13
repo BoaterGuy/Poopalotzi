@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["imagemagick", "jq", "vite", "nano", "git", "zulu11"]
+packages = ["imagemagick", "jq", "nano", "git", "zulu11", "vite"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -58,10 +58,6 @@ externalPort = 3000
 [[ports]]
 localPort = 33435
 externalPort = 4200
-
-[[ports]]
-localPort = 41521
-externalPort = 5000
 
 [[ports]]
 localPort = 43729
