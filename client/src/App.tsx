@@ -1,9 +1,10 @@
-// Removed React Query to fix vendor module TypeScript errors
 import { Router, Route, useLocation } from "wouter";
 import { useEffect } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeProvider";
+import { queryClient } from "./lib/queryClient";
 
 // Public Pages
 import Home from "@/pages/Home";
@@ -103,11 +104,12 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
 
 function App() {
   return (
-    <ThemeProvider>
-      <TooltipProvider>
-          <AuthProvider>
-            <PageLayout>
-              <Router>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+            <AuthProvider>
+              <PageLayout>
+                <Router>
                 {/* Public Routes */}
                 <Route path="/" component={Home} />
                 <Route path="/services" component={Services} />
@@ -199,11 +201,12 @@ function App() {
                 
                 {/* 404 Route */}
                 <Route component={NotFound} />
-              </Router>
-            </PageLayout>
-          </AuthProvider>
-        </TooltipProvider>
-    </ThemeProvider>
+                </Router>
+              </PageLayout>
+            </AuthProvider>
+          </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

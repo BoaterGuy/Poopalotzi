@@ -10,7 +10,7 @@ export default function HeroSection() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   return (
-    <section className="relative wave-pattern bg-[#F4EBD0] py-16 md:py-24">
+    <section className="relative wave-pattern py-16 md:py-24" style={{backgroundColor: '#F4EBD0'}}>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center md:space-x-12">
           <div className="md:w-1/2 mb-10 md:mb-0">
