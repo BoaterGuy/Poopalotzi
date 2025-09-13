@@ -93,7 +93,13 @@ async function startServer() {
         server: { 
           middlewareMode: true,
           hmr: false,  // Disable HMR WebSocket for Replit compatibility
-          allowedHosts: 'all'
+          host: true,
+          allowedHosts: [
+            '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0'
+          ]
         },
         appType: "custom",
         resolve: {
