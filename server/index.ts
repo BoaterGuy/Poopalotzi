@@ -102,13 +102,12 @@ async function startServer() {
       });
       console.log('✅ Vite middleware server created');
       
-      // Add explicit HTML handler BEFORE vite.middlewares
-      app.get(/^(?!\/api|\/healthz).*/, async (req, res, next) => {
+      app.use(vite.middlewares);
+      console.log('✅ Vite middleware registered');
+
+      // HTML fallback after Vite middleware - serves React app for any non-API, non-asset requests
+      app.get(/^(?!\/api|\/healthz)(?!.*\.(?:js|css|ico|png|jpg|svg|json|map)$).*/, async (req, res, next) => {
         try {
-          // Only handle HTML requests, let assets fall through to Vite
-          if (!req.headers.accept?.includes('text/html')) {
-            return next();
-          }
           const { readFile } = await import("fs/promises");
           const url = req.originalUrl;
           const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
@@ -119,10 +118,7 @@ async function startServer() {
           next(error);
         }
       });
-      console.log('✅ Vite HTML handler registered');
-
-      app.use(vite.middlewares);
-      console.log('✅ Vite middleware registered');
+      console.log('✅ React app HTML fallback registered');
     } else {
       // Production static file serving
       app.use(express.default.static("dist/client"));
@@ -149,8 +145,9 @@ async function startServer() {
     // Register API routes
     registerRoutes(apiRouter);
 
-    // Mount API router at root (routes already have /api prefix)
-    app.use('/', apiRouter);
+    // Mount API router at /api (since routes in registerRoutes already have /api prefix, this creates /api/api/... - need to fix)
+    // Actually, let's check if routes have /api prefix and mount accordingly
+    app.use('/api', apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {

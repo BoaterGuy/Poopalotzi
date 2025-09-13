@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Service Levels routes
-  app.get("/api/service-levels", async (req, res, next) => {
+  app.get("/service-levels", async (req, res, next) => {
     try {
       const serviceLevels = await storage.getAllServiceLevels();
       res.json(serviceLevels);
@@ -123,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Marina routes
-  app.get("/api/marinas/:id", async (req, res, next) => {
+  app.get("/marinas/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get boat counts for all marinas
-  app.get("/api/marinas/boat-counts", async (req, res, next) => {
+  app.get("/marinas/boat-counts", async (req, res, next) => {
     try {
       // Since database is empty, return empty object for now
       // This will be populated as boats are added to marinas
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Boat routes
-  app.post("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       console.log("Boat creation request received:", req.body);
       console.log("User ID:", req.user.id, "Role:", req.user.role);
@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/boats", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const { userId } = req.query;
       
@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/boats/:id", isAuthenticated, upload.single('image'), async (req: AuthRequest, res, next) => {
+  app.put("/boats/:id", isAuthenticated, upload.single('image'), async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.id);
       const boat = await storage.getBoat(boatId);
@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/boats/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.delete("/boats/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.id);
       const boat = await storage.getBoat(boatId);
@@ -316,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Main marina route - this is the single source of truth for marina data
-  app.get("/api/marinas", async (req, res, next) => {
+  app.get("/marinas", async (req, res, next) => {
     try {
       console.log("--- /api/marinas REQUEST RECEIVED ---");
       console.log(`DATABASE_URL used by server: ${process.env.DATABASE_URL || "DATABASE_URL not set or empty!"}`);
@@ -349,7 +349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/marinas", isAdmin, async (req, res, next) => {
+  app.post("/marinas", isAdmin, async (req, res, next) => {
     try {
       const marinaData = insertMarinaSchema.parse(req.body);
       const marina = await storage.createMarina(marinaData);
@@ -359,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/marinas/:id", isAdmin, async (req, res, next) => {
+  app.put("/marinas/:id", isAdmin, async (req, res, next) => {
     try {
       const marinaId = parseInt(req.params.id);
       const marina = await storage.getMarina(marinaId);
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/marinas/:id", isAdmin, async (req, res, next) => {
+  app.delete("/marinas/:id", isAdmin, async (req, res, next) => {
     try {
       const marinaId = parseInt(req.params.id);
       const marina = await storage.getMarina(marinaId);
@@ -406,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dock Assignment routes
-  app.post("/api/dock-assignments", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/dock-assignments", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const dockData = insertDockAssignmentSchema.parse(req.body);
       
@@ -444,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // PUT route to update dock assignment
-  app.put("/api/dock-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.put("/dock-assignments/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const dockId = parseInt(req.params.id);
       
@@ -494,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dock-assignments/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/dock-assignments/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.boatId);
       
@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Pump-Out Request routes
-  app.post("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       let requestData = req.body;
       let isManualEntry = false;
@@ -786,7 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/pump-out-requests/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/pump-out-requests/boat/:boatId", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const boatId = parseInt(req.params.boatId);
       
@@ -810,7 +810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/pump-out-requests/week/:date", isEmployee, async (req, res, next) => {
+  app.get("/pump-out-requests/week/:date", isEmployee, async (req, res, next) => {
     try {
       const weekStartDate = new Date(req.params.date);
       const requests = await storage.getPumpOutRequestsByWeek(weekStartDate);
@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all pump-out requests (for admin view)
-  app.get("/api/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/pump-out-requests", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       // Log that this is being called
       console.log("Fetching all pump-out requests for admin view - DATABASE ONLY");
@@ -936,7 +936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/pump-out-requests/status/:status", isEmployee, async (req, res, next) => {
+  app.get("/pump-out-requests/status/:status", isEmployee, async (req, res, next) => {
     try {
       const status = req.params.status;
       const requests = await storage.getPumpOutRequestsByStatus(status);
@@ -1165,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get pump-out data grouped by week for dashboard
-  app.get("/api/analytics/pump-out-weekly", isAuthenticated, async (req, res, next) => {
+  app.get("/analytics/pump-out-weekly", isAuthenticated, async (req, res, next) => {
     try {
       const weeklyData = await storage.getPumpOutRequestsByWeek(new Date());
       
@@ -1204,7 +1204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer management routes
-  app.get("/api/users/members", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/users/members", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       // Get all users with role 'member'
       const members = await storage.getAllMembers();
@@ -1215,7 +1215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/customers", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const { firstName, lastName, email, phone, serviceLevelId, password } = req.body;
       
@@ -1254,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/customers/:id", isAdmin, async (req: AuthRequest, res, next) => {
+  app.put("/customers/:id", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const customerId = parseInt(req.params.id);
       const { firstName, lastName, email, phone, serviceLevelId } = req.body;
@@ -1298,7 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoint to get credit information for any customer
-  app.get("/api/admin/users/:userId/credits", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/users/:userId/credits", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
       
@@ -1415,7 +1415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin credit adjustment endpoint
-  app.post("/api/admin/users/:userId/credits/adjust", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/admin/users/:userId/credits/adjust", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
       const { amount, reason, type } = req.body;
@@ -1477,7 +1477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get("/api/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
+  app.get("/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {
       const data = await storage.countActiveUsersByServiceLevel();
       
@@ -1501,7 +1501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/analytics/service-counts", isAdmin, async (req, res, next) => {
+  app.get("/analytics/service-counts", isAdmin, async (req, res, next) => {
     try {
       const completedCount = await storage.countCompletedServicesThisWeek();
       const upcomingCount = await storage.countUpcomingServices();
@@ -1515,7 +1515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/analytics/arpu", isAdmin, async (req, res, next) => {
+  app.get("/analytics/arpu", isAdmin, async (req, res, next) => {
     try {
       const arpu = await storage.calculateAverageRevenuePerUser();
       res.json({ arpu });
@@ -1527,7 +1527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Service Level Management Routes
   
   // Get a single service level by ID
-  app.get("/api/service-levels/:id", async (req, res, next) => {
+  app.get("/service-levels/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -1546,7 +1546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a new service level (admin only)
-  app.post("/api/service-levels", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/service-levels", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const result = insertServiceLevelSchema.safeParse(req.body);
       if (!result.success) {
@@ -1564,7 +1564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update a service level (admin only)
-  app.put("/api/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
+  app.put("/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -1595,7 +1595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete (deactivate) a service level (admin only)
-  app.delete("/api/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
+  app.delete("/service-levels/:id", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -1616,7 +1616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get user's current subscription
-  app.get("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       if (!req.user || !req.user.id) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -1648,7 +1648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Update user subscription
   // Get available credits for users (unified system)
-  app.get("/api/users/me/credits", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/users/me/credits", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       // Get user and their total credits
       const user = await storage.getUser(req.user.id);
@@ -1695,7 +1695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/users/me/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       if (!req.user || !req.user.id) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -1807,7 +1807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dedicated endpoint for manual service entries
-  app.post("/api/admin/manual-service", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/admin/manual-service", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       // Ensure user is an admin
       if (req.user.role !== "admin") {
@@ -1906,7 +1906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Handle payment for pump-out requests
-  app.post("/api/pump-out-requests/:id/payment", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/pump-out-requests/:id/payment", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const { paymentDetails } = req.body;
@@ -2016,7 +2016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New endpoint for subscription payments through Clover
-  app.post("/api/payments/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/payments/subscription", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const { amount, taxAmount, source, description, customer, paymentDetails } = req.body;
       
@@ -2076,7 +2076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Card tokenization endpoint
-  app.post("/api/payments/tokenize-card", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/payments/tokenize-card", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const { card } = req.body;
       
@@ -2177,7 +2177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =====================================
 
   // Get Clover configuration status (admin only)
-  app.get("/api/admin/clover/status", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/clover/status", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       // Prevent caching of status responses
       res.set({
@@ -2371,7 +2371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NEW: Clover redirect URI test endpoint 
-  app.get("/api/admin/clover/test-redirect", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/clover/test-redirect", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const currentDomain = `${req.protocol}://${req.get('host')}`;
       const hardcodedRedirect = 'https://1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev/api/admin/clover/oauth/callback';
@@ -2406,7 +2406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test Clover API connection with detailed diagnostics (admin only)
-  app.get("/api/admin/clover/test-connection", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/clover/test-connection", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       console.log('🧪 Running comprehensive Clover API test...');
       
@@ -2470,7 +2470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initiate Clover OAuth flow (admin only)
-  app.post("/api/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/admin/clover/oauth/initiate", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       // Additional admin check for safety
       if (req.user?.role !== "admin") {
@@ -2525,7 +2525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test Clover API connection
-  app.get("/api/admin/clover/test", isAdmin, async (req, res) => {
+  app.get("/admin/clover/test", isAdmin, async (req, res) => {
     try {
       const status = await cloverService.getConfigurationStatus();
       if (!status.isConfigured) {
@@ -2553,7 +2553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manual OAuth completion endpoint for stuck loading scenarios
-  app.post("/api/admin/clover/oauth/manual-complete", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/admin/clover/oauth/manual-complete", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       console.log('=== MANUAL CLOVER OAUTH COMPLETION ===');
       const { code, merchantId } = req.body;
@@ -2582,7 +2582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Direct token setup (bypasses OAuth entirely)
-  app.post("/api/admin/clover/token-setup", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/admin/clover/token-setup", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const { merchantId, apiToken } = req.body;
       
@@ -2693,7 +2693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Handle Clover OAuth callback (admin only)
-  app.get("/api/admin/clover/oauth/callback", async (req, res, next) => {
+  app.get("/admin/clover/oauth/callback", async (req, res, next) => {
     // Set CORS headers for cross-origin requests
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -2784,7 +2784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // 🔧 STEP 4A: Simple token exchange setup test (no auth required)  
-  app.get("/api/clover/test-token-setup", async (req, res, next) => {
+  app.get("/clover/test-token-setup", async (req, res, next) => {
     try {
       console.log('🔧 === TOKEN SETUP TEST ===');
       
@@ -2816,7 +2816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 🔧 STEP 4B: Token exchange with timeout (no auth required)
-  app.get("/api/clover/test-token-exchange", async (req, res, next) => {
+  app.get("/clover/test-token-exchange", async (req, res, next) => {
     try {
       console.log('🔧 === TOKEN EXCHANGE TEST ===');
       
@@ -2870,7 +2870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 🧪 TEST ENDPOINT: Simulate OAuth callback for testing without real merchant
-  app.get("/api/admin/clover/oauth/test-callback", async (req, res, next) => {
+  app.get("/admin/clover/oauth/test-callback", async (req, res, next) => {
     try {
       console.log('🧪 === TESTING OAUTH CALLBACK SIMULATION ===');
       console.log('🧪 This simulates what Clover would send during real OAuth');
@@ -2962,7 +2962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create or update Clover configuration (admin only)
-  app.put("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
+  app.put("/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       console.log('=== CLOVER CONFIG REQUEST ===');
       console.log('Request body:', req.body);
@@ -3012,7 +3012,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Disconnect Clover integration (admin only)
-  app.delete("/api/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
+  app.delete("/admin/clover/config", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const config = await storage.getCloverConfig();
       if (!config) {
@@ -3034,7 +3034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Clover payment diagnostics endpoint
-  app.get("/api/clover/diagnostics", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/clover/diagnostics", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const config = await storage.getCloverConfig();
       if (!config) {
@@ -3053,7 +3053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Process payment using Clover
-  app.post("/api/payments/clover", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.post("/payments/clover", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const { amount, currency, source, orderId, description, requestId, taxAmount, tipAmount, customer } = req.body;
       
@@ -3131,7 +3131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Refund payment (admin only)
-  app.post("/api/admin/payments/:paymentId/refund", isAdmin, async (req: AuthRequest, res, next) => {
+  app.post("/admin/payments/:paymentId/refund", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const { paymentId } = req.params;
       const { amount } = req.body;
@@ -3159,7 +3159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get payment transactions (admin only)
-  app.get("/api/admin/payments", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/payments", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const { status, userId } = req.query;
       
@@ -3179,7 +3179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's payment history
-  app.get("/api/payments/history", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.get("/payments/history", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -3208,7 +3208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Clover webhook endpoint
-  app.post("/api/webhooks/clover", async (req, res, next) => {
+  app.post("/webhooks/clover", async (req, res, next) => {
     try {
       console.log('=== CLOVER WEBHOOK RECEIVED ===');
       console.log('Headers:', JSON.stringify(req.headers, null, 2));
@@ -3273,7 +3273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Handle GET requests to webhook endpoint for verification
-  app.get("/api/webhooks/clover", async (req, res) => {
+  app.get("/webhooks/clover", async (req, res) => {
     console.log('GET request to webhook endpoint for verification');
     return res.status(200).json({ 
       message: "Webhook endpoint is active",
@@ -3360,7 +3360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     `);
   });
 
-  app.get("/api/admin/payments/:id", isAdmin, async (req: AuthRequest, res, next) => {
+  app.get("/admin/payments/:id", isAdmin, async (req: AuthRequest, res, next) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
