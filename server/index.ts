@@ -90,7 +90,14 @@ async function startServer() {
       const { resolve } = await import("path");
       const vite = await createViteServer({
         root: resolve(process.cwd(), 'client'),
-        server: { middlewareMode: true },
+        server: { 
+          middlewareMode: true,
+          host: true,
+          allowedHosts: [
+            '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
+            'localhost'
+          ]
+        },
         appType: "custom",
         resolve: {
           alias: {
