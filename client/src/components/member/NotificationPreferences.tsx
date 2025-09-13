@@ -107,7 +107,6 @@ export default function NotificationPreferences() {
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [history, setHistory] = useState<NotificationHistoryResponse | null>(null);
   const [preferencesLoading, setPreferencesLoading] = useState(true);
-  const [preferencesError, setPreferencesError] = useState<Error | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch notification preferences
@@ -116,10 +115,8 @@ export default function NotificationPreferences() {
       const response = await apiRequest('/api/notifications/preferences');
       const data = await response.json();
       setPreferences(data);
-      setPreferencesError(null);
     } catch (error) {
       console.error('Error fetching preferences:', error);
-      setPreferencesError(error as Error);
     } finally {
       setPreferencesLoading(false);
     }

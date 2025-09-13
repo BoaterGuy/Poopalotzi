@@ -1,4 +1,4 @@
-import type { Express, Router, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./index";
@@ -100,7 +100,7 @@ const isEmployee = (req: AuthRequest, res: Response, next: NextFunction) => {
   res.status(403).json({ message: "Forbidden" });
 };
 
-export async function registerRoutes(app: Express | Router): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication setup is now handled in index.ts
   
   

@@ -1,10 +1,8 @@
-import { Router, Route, useLocation } from "wouter";
-import { useEffect } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+// Removed React Query to fix vendor module TypeScript errors
+import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeProvider";
-import { queryClient } from "./lib/queryClient";
 
 // Public Pages
 import Home from "@/pages/Home";
@@ -43,13 +41,7 @@ import CloverConnect from "@/pages/admin/CloverConnect";
 
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/use-auth";
-
-// Custom redirect component to replace wouter's Redirect
-const Redirect = ({ to }: { to: string }) => {
-  const [, setLocation] = useLocation();
-  useEffect(() => setLocation(to), [to, setLocation]);
-  return null;
-};
+import { Redirect } from "wouter";
 
 // Role-based route guards
 const MemberRoute = ({ component: Component, ...rest }: { component: React.FC<any>, path: string }) => {
@@ -104,12 +96,11 @@ const AdminRoute = ({ component: Component, ...rest }: { component: React.FC<any
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-            <AuthProvider>
-              <PageLayout>
-                <Router>
+    <ThemeProvider>
+      <TooltipProvider>
+          <AuthProvider>
+            <PageLayout>
+              <Switch>
                 {/* Public Routes */}
                 <Route path="/" component={Home} />
                 <Route path="/services" component={Services} />
@@ -201,12 +192,11 @@ function App() {
                 
                 {/* 404 Route */}
                 <Route component={NotFound} />
-                </Router>
-              </PageLayout>
-            </AuthProvider>
-          </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+              </Switch>
+            </PageLayout>
+          </AuthProvider>
+        </TooltipProvider>
+    </ThemeProvider>
   );
 }
 

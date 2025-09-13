@@ -1,4 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
+import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, signInWithOAuth } from '../lib/supabase';
+import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 
 export interface User {
@@ -42,7 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Simple auth check without extensive logging to prevent blocking
+        console.log('AuthContext: Checking authentication status...');
+        console.log('AuthContext: Document cookies:', document.cookie);
+        
+        // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
           credentials: 'include',
           headers: {
@@ -51,14 +56,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         });
 
+        console.log('AuthContext: /api/auth/me response status:', response.status);
+        console.log('AuthContext: Response headers:', Array.from(response.headers.entries()));
+
         if (response.ok) {
           const userData = await response.json();
+          console.log('AuthContext: User authenticated:', userData.email, userData.role);
           setUser(userData);
         } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.log('AuthContext: No valid session found, error:', errorData);
           setUser(null);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('AuthContext: Error fetching user:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -66,6 +77,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     fetchUser();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // When a user signs in with Supabase, we need to create/verify them in our system
+        if (event === 'SIGNED_IN' && session) {
+          try {
+            const supaUser = session.user;
+            
+            // Check if the user exists in our system
+            const response = await fetch('/api/auth/me', {
+              credentials: 'include',
+            });
+
+            if (!response.ok) {
+              // User doesn't exist in our system, create them
+              const registerResponse = await apiRequest('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                  email: supaUser.email,
+                  firstName: supaUser.user_metadata?.full_name?.split(' ')[0] || 'User',
+                  lastName: supaUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+                  role: 'member',
+                  oauthProvider: supaUser.app_metadata.provider,
+                  oauthId: supaUser.id,
+                  password: Math.random().toString(36).slice(2, 10), // Generate random password for OAuth users
+                })
+              });
+
+              if (registerResponse.ok) {
+                const userData = await registerResponse.json();
+                setUser(userData);
+              }
+            } else {
+              // User exists, get their data
+              const userData = await response.json();
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Error syncing user after auth state change:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -165,8 +226,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({})
       });
       
-      // Direct API logout - no external auth needed
-      // No Supabase signout needed for direct API approach
+      // Also logout from Supabase if we're using it
+      await signOut();
       
       setUser(null);
       
@@ -194,8 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async () => {
     try {
-      // OAuth with Google will be handled by redirect to server endpoint
-      window.location.href = '/api/auth/google';
+      await signInWithOAuth('google');
     } catch (error) {
       console.error('Google login error:', error);
       toast({
@@ -208,8 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithFacebook = async () => {
     try {
-      // OAuth with Facebook will be handled by redirect to server endpoint
-      window.location.href = '/api/auth/facebook';
+      await signInWithOAuth('facebook');
     } catch (error) {
       console.error('Facebook login error:', error);
       toast({
@@ -222,8 +281,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithApple = async () => {
     try {
-      // OAuth with Apple will be handled by redirect to server endpoint
-      window.location.href = '/api/auth/apple';
+      await signInWithOAuth('apple');
     } catch (error) {
       console.error('Apple login error:', error);
       toast({

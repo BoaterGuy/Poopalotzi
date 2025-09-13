@@ -89,20 +89,8 @@ async function startServer() {
       const { createServer: createViteServer } = await import("vite");
       const { resolve } = await import("path");
       const vite = await createViteServer({
-        configFile: false,
         root: resolve(process.cwd(), 'client'),
-        plugins: [
-          (await import("@vitejs/plugin-react")).default()
-        ],
-        server: { 
-          middlewareMode: true,
-          host: true,
-          allowedHosts: [
-            'localhost',
-            '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
-            '.replit.dev'
-          ]
-        },
+        server: { middlewareMode: true },
         appType: "custom",
         resolve: {
           alias: {
@@ -113,29 +101,29 @@ async function startServer() {
         },
       });
       console.log('✅ Vite middleware server created');
+      app.use(vite.ssrFixStacktrace);
 
-      // Mount Vite middleware FIRST to handle assets
-      app.use(vite.middlewares);
-      console.log('✅ Vite middleware registered');
-
-      // Add HTML fallback handler AFTER vite.middlewares for SPA routing
-      // Exclude Vite/module/asset paths to prevent intercepting React JS files
-      app.get(/^(?!\/(api|healthz|src\/|assets\/|@vite|@id\/|node_modules\/)).*/, async (req, res, next) => {
-        // Handle GET/HEAD requests and treat */* as HTML for consistent React loading
-        if (!['GET','HEAD'].includes(req.method)) return next();
-        const accept = (req.headers.accept || '').toLowerCase();
-        if (accept && !accept.includes('text/html') && accept !== '*/*') return next();
+      // Add explicit HTML handler BEFORE vite.middlewares
+      app.get(/^(?!\/api|\/healthz).*/, async (req, res, next) => {
         try {
+          // Only handle HTML requests, let assets fall through to Vite
+          if (!req.headers.accept?.includes('text/html')) {
+            return next();
+          }
           const { readFile } = await import("fs/promises");
+          const url = req.originalUrl;
           const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
-          const html = await vite.transformIndexHtml(req.originalUrl, template);
-          return res.status(200).type('html').send(html);
+          const html = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
         } catch (error) {
           vite.ssrFixStacktrace(error as Error);
-          return next(error);
+          next(error);
         }
       });
-      console.log('✅ Vite HTML fallback handler registered');
+      console.log('✅ Vite HTML handler registered');
+
+      app.use(vite.middlewares);
+      console.log('✅ Vite middleware registered');
     } else {
       // Production static file serving
       app.use(express.default.static("dist/client"));
@@ -163,7 +151,7 @@ async function startServer() {
     registerRoutes(apiRouter);
 
     // Mount API router at root (routes already have /api prefix)
-    app.use(apiRouter);
+    app.use('/', apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {

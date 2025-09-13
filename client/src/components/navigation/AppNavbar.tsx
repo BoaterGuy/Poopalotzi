@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthModal } from "../auth/AuthModal";
-// Use direct path to logo instead of import
-const logoImage = "/logo.png";
+import logoImage from "../../assets/logo.png";
 
 export default function AppNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,7 +48,7 @@ export default function AppNavbar() {
   ];
 
   return (
-    <header className="poopalotzi-header text-white shadow-md sticky top-0 z-50" style={{backgroundColor: '#0B1F3A'}}>
+    <header className="bg-[#0B1F3A] text-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
