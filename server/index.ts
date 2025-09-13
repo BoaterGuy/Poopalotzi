@@ -92,7 +92,10 @@ async function startServer() {
         root: resolve(process.cwd(), 'client'),
         server: { 
           middlewareMode: true,
-          hmr: false,  // Disable HMR WebSocket for Replit compatibility
+          hmr: {
+            port: 24678,  // Use a different port for HMR
+            clientPort: 24678  // Specify client port explicitly
+          },
           host: true,
           allowedHosts: [
             '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
