@@ -101,8 +101,7 @@ async function startServer() {
         },
       });
       console.log('✅ Vite middleware server created');
-      app.use(vite.ssrFixStacktrace);
-
+      
       // Add explicit HTML handler BEFORE vite.middlewares
       app.get(/^(?!\/api|\/healthz).*/, async (req, res, next) => {
         try {
