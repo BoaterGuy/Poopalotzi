@@ -121,9 +121,9 @@ async function startServer() {
       console.log('✅ React app HTML fallback registered');
     } else {
       // Production static file serving
-      app.use(express.default.static("dist/client"));
+      app.use(express.default.static("dist/public"));
       app.get("*", (_req, res) => {
-        res.sendFile(process.cwd() + "/dist/client/index.html");
+        res.sendFile(process.cwd() + "/dist/public/index.html");
       });
     }
 
