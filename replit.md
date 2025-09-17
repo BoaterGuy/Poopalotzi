@@ -3,6 +3,10 @@
 ## Overview
 Poopalotzi is a professional boat pump-out service application designed to streamline operations for marina services. It features an admin dashboard, a customer portal, and employee workflow tools. The system facilitates pump-out service requests, manages boat information, handles customer accounts, and integrates real-time payment processing. The project aims to provide a comprehensive solution for managing boat pump-out services, from scheduling to payment, with a vision to become a leading solution in the marine service industry by providing efficient and reliable service management.
 
+## Admin Login Credentials
+- **Email:** admin@poopalotzi.com
+- **Password:** admin123
+
 ## User Preferences
 - Focus on fixing core functionality over extensive explanations
 - Prioritize working payment processing for marina services
