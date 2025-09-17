@@ -946,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/pump-out-requests/:id/status", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.patch("/pump-out-requests/:id/status", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const requestId = parseInt(req.params.id);
       const { status } = req.body;
@@ -1097,7 +1097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update pump-out request details
-  app.patch("/api/pump-out-requests/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
+  app.patch("/pump-out-requests/:id", isAuthenticated, async (req: AuthRequest, res, next) => {
     try {
       const requestId = parseInt(req.params.id);
       const { weekStartDate, ownerNotes } = req.body;
@@ -3379,7 +3379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Payment history endpoint for members
-  app.get('/api/users/me/payments', isAuthenticated, async (req: AuthRequest, res) => {
+  app.get('/users/me/payments', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       const userId = req.user.id;
       const payments = await storage.getPaymentTransactionsByUserId(userId);
@@ -3399,7 +3399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     message: z.string().min(10, "Message must be at least 10 characters"),
   });
 
-  app.post('/api/contact', async (req, res) => {
+  app.post('/contact', async (req, res) => {
     try {
       const validatedData = contactFormSchema.parse(req.body);
       
@@ -3442,7 +3442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all users (admin only)
-  app.get('/api/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
+  app.get('/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
@@ -3457,7 +3457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new user (admin only)
-  app.post('/api/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
+  app.post('/admin/users', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });

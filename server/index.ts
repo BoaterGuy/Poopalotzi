@@ -153,8 +153,8 @@ async function startServer() {
     // Register API routes
     registerRoutes(apiRouter as any);
 
-    // Mount API router at root since routes in registerRoutes already have /api prefix
-    app.use(apiRouter);
+    // Mount API router at /api since most routes don't have the /api prefix
+    app.use('/api', apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
