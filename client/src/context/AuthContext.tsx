@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 // Removed Supabase import - now using backend API authentication
 import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
+import { useLocation } from 'wouter';
 
 export interface User {
   id: number;
@@ -39,14 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Check for existing session on mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        console.log('AuthContext: Checking authentication status...');
-        console.log('AuthContext: Document cookies:', document.cookie);
-        
         // First check if we have a valid session with our API
         const response = await fetch('/api/auth/me', {
           credentials: 'include',
@@ -56,16 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         });
 
-        console.log('AuthContext: /api/auth/me response status:', response.status);
-        console.log('AuthContext: Response headers:', Array.from(response.headers.entries()));
-
         if (response.ok) {
           const userData = await response.json();
-          console.log('AuthContext: User authenticated:', userData.email, userData.role);
           setUser(userData);
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.log('AuthContext: No valid session found, error:', errorData);
           setUser(null);
         }
       } catch (error) {
@@ -86,7 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Login to our API using direct fetch to avoid apiRequest issues
-      console.log('AuthContext: Attempting login with email:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -101,12 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
-        console.error('AuthContext: Login failed with status:', response.status, 'Error:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const userData = await response.json();
-      console.log('AuthContext: Login successful, user data:', userData);
       setUser(userData);
       
       toast({
@@ -114,16 +104,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome back, ${userData.firstName}!`,
       });
       
-      // Use setTimeout to ensure state is set before redirect
-      setTimeout(() => {
-        if (userData.role === 'admin') {
-          window.location.href = '/admin/dashboard';
-        } else if (userData.role === 'employee') {
-          window.location.href = '/employee/schedule';
-        } else {
-          window.location.href = '/member/dashboard';
-        }
-      }, 100);
+      // Navigate using React Router after state is updated
+      if (userData.role === 'admin') {
+        setLocation('/admin/dashboard');
+      } else if (userData.role === 'employee') {
+        setLocation('/employee/schedule');
+      } else {
+        setLocation('/member/dashboard');
+      }
       
     } catch (error) {
       console.error('Login error:', error);
@@ -187,18 +175,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "You have been successfully logged out.",
       });
       
-      // Force a page refresh to clear any cached session data
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1000); // Give toast time to show
+      // Navigate to auth page using React Router
+      setLocation('/auth');
       
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout fails, clear the frontend state and redirect
       setUser(null);
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1000);
+      setLocation('/auth');
     } finally {
       setIsLoading(false);
     }
