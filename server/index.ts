@@ -56,18 +56,10 @@ async function startServer() {
     // Simple logging function
     const log = console.log;
 
-    // Set Clover environment variables if not already set - Production configuration
-    if (!process.env.CLOVER_APP_ID) {
-      process.env.CLOVER_APP_ID = "8QSDCRTWSBPWT";
-    }
-    if (!process.env.CLOVER_APP_SECRET) {
-      process.env.CLOVER_APP_SECRET = "e64d0c27-88fa-5b21-08de-976ea7801421";
-    }
+    // Clover environment variables must be set via environment/secrets
+    // Do not hardcode production secrets in source code
     if (!process.env.CLOVER_ENVIRONMENT) {
       process.env.CLOVER_ENVIRONMENT = "production";
-    }
-    if (!process.env.CLOVER_PUBLIC_KEY) {
-      process.env.CLOVER_PUBLIC_KEY = "e5d70e8fdd9e53e18b8c46ebc91fa79a";
     }
 
     // Create Express app
