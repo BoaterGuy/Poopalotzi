@@ -154,33 +154,26 @@ export function setupAuth(app: Express) {
       { usernameField: "email" },
       async (email, password, done) => {
         try {
-          console.log(`--- LOGIN ATTEMPT ---`);
-          console.log(`Email: ${email}`);
-          console.log(`Password provided: ${password ? 'YES' : 'NO'}`);
-          
-          const user = await storage.getUserByEmail(email);
-          console.log(`User found in database: ${user ? 'YES' : 'NO'}`);
-          
-          if (user) {
-            console.log(`User ID: ${user.id}`);
-            console.log(`User role: ${user.role}`);
-            console.log(`Password hash exists: ${user.passwordHash ? 'YES' : 'NO'}`);
+          // Only log in development mode to avoid sensitive data exposure
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Login attempt for email: ${email}`);
           }
           
+          const user = await storage.getUserByEmail(email);
+          
           if (!user || !user.passwordHash) {
-            console.log(`Login failed: User not found or no password hash`);
             return done(null, false, { message: "Incorrect email or password" });
           }
 
           const isMatch = await comparePasswords(password, user.passwordHash);
-          console.log(`Password comparison result: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
           
           if (!isMatch) {
-            console.log(`Login failed: Password mismatch`);
             return done(null, false, { message: "Incorrect email or password" });
           }
 
-          console.log(`Login successful for user: ${user.email}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Login successful for user: ${user.email}`);
+          }
           return done(null, user);
         } catch (err) {
           console.error(`Login error:`, err);
@@ -191,15 +184,12 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user: any, done) => {
-    console.log("SERIALIZING USER:", user.id, user.email);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log("DESERIALIZING USER ID:", id);
       const user = await storage.getUser(id);
-      console.log("USER RETRIEVED FROM DB:", user ? `${user.id} - ${user.email}` : 'NOT FOUND');
       done(null, user);
     } catch (err) {
       console.error("DESERIALIZATION ERROR:", err);
@@ -279,37 +269,17 @@ export function setupAuth(app: Express) {
           return res.status(500).json({ message: "Failed to create session" });
         }
         
-        console.log("✅ USER LOGGED IN:", user.id, user.email);
-        console.log("🆔 SESSION AFTER LOGIN:", req.sessionID, !!req.user);
-        console.log("📋 SESSION DATA:", JSON.stringify(req.session, null, 2));
-        
-        // Force session save and confirm cookie is sent for external browsers
-        console.log("🍪 FORCING SESSION SAVE for external browser compatibility");
-        
-        console.log("🌐 REQUEST FROM:", {
-          userAgent: req.headers['user-agent']?.substring(0, 100),
-          origin: req.headers.origin,
-          host: req.headers.host,
-          isReplit: isReplitProduction,
-          isExternalBrowser: !req.headers['user-agent']?.includes('replit')
-        });
-        
-        // Force save session and add explicit cookie headers for external browsers
-        console.log("🔄 About to save session...");
-        console.log("🔄 Session ID before save:", req.sessionID);
-        console.log("🔄 Session data before save:", JSON.stringify(req.session, null, 2));
+        // Only log in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.log("User logged in:", user.email);
+        }
         
         req.session.save((saveErr) => {
           if (saveErr) {
-            console.error("❌ SESSION SAVE ERROR:", saveErr);
-          } else {
-            console.log("✅ SESSION SAVED SUCCESSFULLY");
-            console.log("🔄 Session ID after save:", req.sessionID);
-            console.log("🔄 Session data after save:", JSON.stringify(req.session, null, 2));
+            console.error("SESSION SAVE ERROR:", saveErr);
           }
           
           // Set explicit cookie headers for external browser compatibility
-          console.log("🍪 SETTING EXPLICIT COOKIE HEADERS");
           res.set({
             'Access-Control-Allow-Credentials': 'true'
           });
@@ -330,37 +300,12 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/auth/me", (req, res) => {
-    console.log("--- /api/auth/me REQUEST ---");
-    console.log("Session ID:", req.sessionID);
-    console.log("req.session:", req.session); // Print req.session as requested
-    console.log("Session data:", JSON.stringify(req.session, null, 2));
-    console.log("User from session:", req.user ? `ID: ${req.user.id}, Email: ${req.user.email}` : 'No user');
-    console.log("isAuthenticated():", req.isAuthenticated());
-    console.log("Request headers:", {
-      cookie: req.headers.cookie,
-      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...',
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-      host: req.headers.host
-    });
-    console.log("Cookie analysis:", {
-      hasCookie: !!req.headers.cookie,
-      cookieContainsSession: req.headers.cookie?.includes('poopalotzi_session'),
-      cookieContainsDash: req.headers.cookie?.includes('poopalotzi-session'),
-      rawCookieHeader: req.headers.cookie,
-      expectedCookieName: 'poopalotzi_session',
-      actualCookieNames: req.headers.cookie?.match(/[^=;,\s]+=/)?.map(s => s.slice(0, -1))
-    });
-    
     if (!req.isAuthenticated()) {
-      console.log("❌ Authentication failed - returning 401");
-      console.log("❌ Session appears to be invalid or missing user data");
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     // Remove sensitive data
     const { passwordHash: _, ...safeUser } = req.user as any;
-    console.log("✅ Returning authenticated user:", safeUser.email);
     res.json(safeUser);
   });
 }
