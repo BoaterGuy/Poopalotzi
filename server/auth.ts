@@ -208,7 +208,7 @@ export function setupAuth(app: Express) {
   });
 
   // Auth routes
-  app.post("/api/auth/register", async (req, res, next) => {
+  app.post("/auth/register", async (req, res, next) => {
     try {
       console.log("Registration request received:", req.body);
       
@@ -259,7 +259,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/auth/login", (req, res, next) => {
     if (!req.body.email || !req.body.password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -322,14 +322,14 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/auth/logout", (req, res, next) => {
+  app.post("/auth/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/auth/me", (req, res) => {
+  app.get("/auth/me", (req, res) => {
     console.log("--- /api/auth/me REQUEST ---");
     console.log("Session ID:", req.sessionID);
     console.log("req.session:", req.session); // Print req.session as requested
