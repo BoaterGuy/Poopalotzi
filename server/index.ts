@@ -75,12 +75,16 @@ async function startServer() {
     await setupFullDatabase();
     await setupHardcodedClover();
 
+    // Import path module at the top level
+    const { resolve } = await import("path");
+    let vite: any;
+    const isDev = process.env.NODE_ENV === "development";
+    
     // Vite dev server integration - FIRST, before any session middleware
-    if (process.env.NODE_ENV === "development") {
+    if (isDev) {
       console.log('🔧 Creating Vite dev server...');
       const { createServer: createViteServer } = await import("vite");
-      const { resolve } = await import("path");
-      const vite = await createViteServer({
+      vite = await createViteServer({
         root: resolve(process.cwd(), 'client'),
         server: { 
           middlewareMode: true,
@@ -104,27 +108,6 @@ async function startServer() {
       
       app.use(vite.middlewares);
       console.log('✅ Vite middleware registered');
-
-      // HTML fallback after Vite middleware - serves React app for any non-API, non-asset requests
-      app.get(/^(?!\/api|\/healthz)(?!.*\.(?:js|css|ico|png|jpg|svg|json|map)$).*/, async (req, res, next) => {
-        try {
-          const { readFile } = await import("fs/promises");
-          const url = req.originalUrl;
-          const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
-          const html = await vite.transformIndexHtml(url, template);
-          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-        } catch (error) {
-          vite.ssrFixStacktrace(error as Error);
-          next(error);
-        }
-      });
-      console.log('✅ React app HTML fallback registered');
-    } else {
-      // Production static file serving
-      app.use(express.default.static("dist/public"));
-      app.get("*", (_req, res) => {
-        res.sendFile(process.cwd() + "/dist/public/index.html");
-      });
     }
 
     // Create API router with session/auth middleware scoped to API only
@@ -145,8 +128,32 @@ async function startServer() {
     // Register API routes
     registerRoutes(apiRouter as any);
 
-    // Mount API router at /api since most routes don't have the /api prefix
+    // Mount API router at /api BEFORE the HTML fallback
     app.use('/api', apiRouter);
+
+    // Setup HTML fallback AFTER API routes
+    if (isDev) {
+      // HTML fallback after API routes - serves React app for any non-API, non-asset requests
+      app.get(/^(?!\/api|\/healthz)(?!.*\.(?:js|css|ico|png|jpg|svg|json|map)$).*/, async (req, res, next) => {
+        try {
+          const { readFile } = await import("fs/promises");
+          const url = req.originalUrl;
+          const template = await readFile(resolve(process.cwd(), 'client/index.html'), 'utf-8');
+          const html = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+        } catch (error) {
+          vite.ssrFixStacktrace(error as Error);
+          next(error);
+        }
+      });
+      console.log('✅ React app HTML fallback registered');
+    } else {
+      // Production static file serving
+      app.use(express.default.static("dist/public"));
+      app.get("*", (_req, res) => {
+        res.sendFile(process.cwd() + "/dist/public/index.html");
+      });
+    }
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
