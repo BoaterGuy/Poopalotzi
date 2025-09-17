@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@/lib/queryClient";
 
 export default function Services() {
   const { isLoggedIn } = useAuth();
