@@ -92,17 +92,9 @@ async function startServer() {
         root: resolve(process.cwd(), 'client'),
         server: { 
           middlewareMode: true,
-          hmr: {
-            port: 24678,  // Use a different port for HMR
-            clientPort: 24678  // Specify client port explicitly
-          },
+          hmr: false,  // Disable HMR completely for Replit compatibility
           host: true,
-          allowedHosts: [
-            '1b423122-988c-4041-913f-504458c4eb91-00-b968ik9ict5p.janeway.replit.dev',
-            'localhost',
-            '127.0.0.1',
-            '0.0.0.0'
-          ]
+          allowedHosts: true as any  // Allow all hosts for Replit compatibility
         },
         appType: "custom",
         resolve: {
@@ -111,6 +103,9 @@ async function startServer() {
             "@shared": resolve(process.cwd(), "shared"),
             "@assets": resolve(process.cwd(), "attached_assets"),
           },
+        },
+        esbuild: {
+          jsx: 'automatic',  // Use automatic JSX runtime to avoid React import issues
         },
       });
       console.log('✅ Vite middleware server created');
@@ -153,14 +148,13 @@ async function startServer() {
     apiRouter.use(express.default.urlencoded({ extended: true, limit: '50mb' }));
 
     // Setup authentication only for API routes
-    setupAuth(apiRouter);
+    setupAuth(apiRouter as any);
 
     // Register API routes
-    registerRoutes(apiRouter);
+    registerRoutes(apiRouter as any);
 
-    // Mount API router at /api (since routes in registerRoutes already have /api prefix, this creates /api/api/... - need to fix)
-    // Actually, let's check if routes have /api prefix and mount accordingly
-    app.use('/api', apiRouter);
+    // Mount API router at root since routes in registerRoutes already have /api prefix
+    app.use(apiRouter);
 
     // Start server
     const server = app.listen(PORT, "0.0.0.0", () => {
