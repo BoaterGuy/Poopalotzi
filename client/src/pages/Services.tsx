@@ -85,7 +85,7 @@ export default function Services() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {serviceLevels?.map((plan) => {
+                {serviceLevels?.filter((plan) => plan.isActive).map((plan) => {
                   const isPopular = plan.name === "Standard";
                   return (
                     <Card 
