@@ -198,21 +198,19 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           savedBoat = await response.json();
         } else {
           // No image upload needed
-          const response = await apiRequest(`/api/boats/${boat.id}`, {
+          savedBoat = await apiRequest(`/api/boats/${boat.id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
             headers: { 'Content-Type': 'application/json' }
           });
-          savedBoat = await response.json();
         }
       } else {
         // Create new boat
-        const response = await apiRequest('/api/boats', {
+        savedBoat = await apiRequest('/api/boats', {
           method: 'POST',
           body: JSON.stringify(data),
           headers: { 'Content-Type': 'application/json' }
         });
-        savedBoat = await response.json();
       }
       
       // Handle marina assignment
@@ -275,13 +273,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       });
       
       // Invalidate any caches related to boats or dock assignments 
-      queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
-      if (boat?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${boat.id}`] });
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['/api/boats'] });
+        if (boat?.id) {
+          queryClient.invalidateQueries({ queryKey: [`/api/dock-assignments/boat/${boat.id}`] });
+        }
+        queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
+        // Also invalidate marinas query to make sure everything is fresh
+        queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
       }
-      queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
-      // Also invalidate marinas query to make sure everything is fresh
-      queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
       
       onSuccess();
     } catch (error) {
