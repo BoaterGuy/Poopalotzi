@@ -85,8 +85,8 @@ export const useMutation = ({ mutationFn, onSuccess, onError }: any) => {
 // Add useQueryClient stub
 export const useQueryClient = () => {
   return {
-    invalidateQueries: () => {},
-    setQueryData: () => {},
-    getQueryData: () => null,
+    invalidateQueries: (options?: any) => {},
+    setQueryData: (queryKey?: any, data?: any) => {},
+    getQueryData: (queryKey?: any) => null,
   };
 };

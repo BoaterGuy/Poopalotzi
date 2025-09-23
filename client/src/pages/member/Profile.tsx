@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, useQuery, useMutation } from "@/lib/queryClient";
+import { apiRequest, useQuery, useMutation, useQueryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -108,10 +108,10 @@ export default function Profile() {
   });
 
   // Get all service levels
-  const { data: serviceLevels } = useQuery<ServiceLevel[]>({
+  const { data: serviceLevels } = useQuery({
     queryKey: ['/api/service-levels'],
     queryFn: undefined,
-  });
+  }) as { data: ServiceLevel[] | null };
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -147,7 +147,7 @@ export default function Profile() {
       });
       
       // Update the cached user data
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      queryClient?.invalidateQueries({ queryKey: ['/api/auth/me'] });
     } catch (error) {
       console.error('Profile update error:', error);
       toast({
@@ -207,7 +207,7 @@ export default function Profile() {
       });
       
       // Update the cached user data
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      queryClient?.invalidateQueries({ queryKey: ['/api/auth/me'] });
     } catch (error) {
       console.error('Service level update error:', error);
       toast({
