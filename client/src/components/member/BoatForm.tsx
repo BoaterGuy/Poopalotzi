@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { insertBoatSchema, Marina } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -100,7 +100,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
   useEffect(() => {
     const fetchMarinas = async () => {
       try {
-        const response = await fetch('/api/marinas/all', {
+        const response = await fetch('/api/marinas', {
           credentials: 'include'
         });
         
@@ -281,7 +281,7 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       }
       queryClient.invalidateQueries({ queryKey: ['/api/dock-assignments'] });
       // Also invalidate marinas query to make sure everything is fresh
-      queryClient.invalidateQueries({ queryKey: ['/api/marinas/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/marinas'] });
       
       onSuccess();
     } catch (error) {
