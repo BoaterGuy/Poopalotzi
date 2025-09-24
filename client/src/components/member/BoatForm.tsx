@@ -166,41 +166,18 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
       // First save the boat information
       let savedBoat;
       if (boat) {
-        // Update existing boat - use FormData if there's an image
-        if (data.photoUrl && data.photoUrl.startsWith('data:')) {
-          // Convert base64 to file for upload
-          const formData = new FormData();
-          
-          // Convert base64 to blob
-          const base64Data = data.photoUrl.split(',')[1];
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'image/jpeg' });
-          
-          formData.append('image', blob, 'boat-image.jpg');
-          
-          // Append other form fields
-          Object.keys(data).forEach(key => {
-            if (key !== 'photoUrl' && data[key as keyof BoatFormValues] !== undefined && data[key as keyof BoatFormValues] !== null) {
-              formData.append(key, String(data[key as keyof BoatFormValues]));
-            }
-          });
-          
-          const response = await fetch(`/api/boats/${boat.id}`, {
+        // Update existing boat
+        savedBoat = await apiRequest(`/api/boats/${boat.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        // If image URL was uploaded (from object storage), update the boat image
+        if (data.photoUrl && data.photoUrl.startsWith('https://storage.googleapis.com')) {
+          await apiRequest(`/api/boats/${boat.id}/image`, {
             method: 'PUT',
-            body: formData,
-            credentials: 'include'
-          });
-          savedBoat = await response.json();
-        } else {
-          // No image upload needed
-          savedBoat = await apiRequest(`/api/boats/${boat.id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
+            body: JSON.stringify({ imageURL: data.photoUrl }),
             headers: { 'Content-Type': 'application/json' }
           });
         }
@@ -211,6 +188,15 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
           body: JSON.stringify(data),
           headers: { 'Content-Type': 'application/json' }
         });
+
+        // If image URL was uploaded (from object storage), update the boat image
+        if (savedBoat.id && data.photoUrl && data.photoUrl.startsWith('https://storage.googleapis.com')) {
+          await apiRequest(`/api/boats/${savedBoat.id}/image`, {
+            method: 'PUT',
+            body: JSON.stringify({ imageURL: data.photoUrl }),
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
       }
       
       // Handle marina assignment
