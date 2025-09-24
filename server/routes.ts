@@ -128,18 +128,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
   // Endpoint for getting upload URL for images
-  app.post("/api/objects/upload", isAuthenticated, async (req: AuthRequest, res) => {
+  app.post("/objects/upload", isAuthenticated, async (req: AuthRequest, res) => {
+    console.log("=== UPLOAD ENDPOINT REACHED ===");
+    console.log("User:", req.user?.email);
     try {
+      console.log("Getting upload URL from objectStorageService...");
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      console.log("Upload URL generated:", uploadURL ? "Success" : "Failed");
       res.json({ uploadURL });
     } catch (error) {
       console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
+      res.status(500).json({ error: "Failed to get upload URL", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
   // Endpoint for updating boat image after upload
-  app.put("/api/boats/:id/image", isAuthenticated, async (req: AuthRequest, res) => {
+  app.put("/boats/:id/image", isAuthenticated, async (req: AuthRequest, res) => {
     if (!req.body.imageURL) {
       return res.status(400).json({ error: "imageURL is required" });
     }
@@ -218,6 +222,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(500);
     }
   });
+  // Endpoint for updating pump-out request images
+  app.put("/pump-out/:id/images", isAuthenticated, async (req: AuthRequest, res) => {
+    const requestId = parseInt(req.params.id);
+    const { beforeImageURL, duringImageURL, afterImageURL } = req.body;
+    
+    try {
+      const pumpOutRequest = await storage.getPumpOutRequestById(requestId);
+      if (!pumpOutRequest) {
+        return res.status(404).json({ error: "Pump-out request not found" });
+      }
+      
+      // Check authorization - admin or employee only
+      if (req.user?.role !== 'admin' && req.user?.role !== 'employee') {
+        return res.status(403).json({ error: "Not authorized to update pump-out images" });
+      }
+      
+      const updates: any = {};
+      
+      if (beforeImageURL) {
+        const beforePath = await objectStorageService.trySetObjectEntityAclPolicy(
+          beforeImageURL,
+          {
+            owner: req.user?.id?.toString() || '',
+            visibility: "public",
+            aclRules: []
+          }
+        );
+        updates.beforeImageUrl = beforePath;
+      }
+      
+      if (duringImageURL) {
+        const duringPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          duringImageURL,
+          {
+            owner: req.user?.id?.toString() || '',
+            visibility: "public",
+            aclRules: []
+          }
+        );
+        updates.duringImageUrl = duringPath;
+      }
+      
+      if (afterImageURL) {
+        const afterPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          afterImageURL,
+          {
+            owner: req.user?.id?.toString() || '',
+            visibility: "public",
+            aclRules: []
+          }
+        );
+        updates.afterImageUrl = afterPath;
+      }
+      
+      // Update the pump-out request with image URLs
+      await storage.updatePumpOutRequest(requestId, updates);
+      
+      res.status(200).json({
+        message: "Pump-out documentation images updated successfully",
+        updates
+      });
+    } catch (error) {
+      console.error("Error updating pump-out images:", error);
+      res.status(500).json({ error: "Failed to update pump-out images" });
+    }
+  });
+  
   // ===== END OBJECT STORAGE ENDPOINTS =====
   
   // Marina routes
