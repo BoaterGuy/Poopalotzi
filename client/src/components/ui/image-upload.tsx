@@ -2,6 +2,7 @@ import { useState, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { resolveObjectUrl } from "@/lib/objectStorage";
 
 interface ImageUploadProps {
   value?: string;
@@ -115,8 +116,9 @@ export function ImageUpload({ value, onChange, className, onUploadComplete }: Im
     }
   };
 
-  // If value is provided and it's an object storage URL, show it
-  const displayImage = preview || (value && value.startsWith('/objects/') ? value : null) || value;
+  // If value is provided and it's an object storage URL, resolve it for display
+  const resolvedValue = resolveObjectUrl(value);
+  const displayImage = preview || resolvedValue;
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
