@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import BoatForm from "@/components/member/BoatForm";
 import { apiRequest, useQuery, useQueryClient } from "@/lib/queryClient";
+import { resolveObjectUrl } from "@/lib/objectStorage";
 
 export default function BoatManagement() {
   const { toast } = useToast();
@@ -217,7 +218,7 @@ export default function BoatManagement() {
                     <div className="w-20 h-20 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
                       {boat.photoUrl ? (
                         <img 
-                          src={boat.photoUrl} 
+                          src={resolveObjectUrl(boat.photoUrl) || ''} 
                           alt={boat.name} 
                           className="w-full h-full object-cover rounded-md"
                         />
