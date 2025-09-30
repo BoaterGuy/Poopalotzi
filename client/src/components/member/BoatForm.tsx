@@ -163,40 +163,22 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         return;
       }
       
-      // First save the boat information
+      // First save the boat information (including the photoUrl)
       let savedBoat;
       if (boat) {
-        // Update existing boat
+        // Update existing boat - photoUrl is included in data
         savedBoat = await apiRequest(`/api/boats/${boat.id}`, {
           method: 'PUT',
           body: JSON.stringify(data),
           headers: { 'Content-Type': 'application/json' }
         });
-
-        // If image URL was uploaded (from object storage), update the boat image
-        if (data.photoUrl && data.photoUrl.startsWith('https://storage.googleapis.com')) {
-          await apiRequest(`/api/boats/${boat.id}/image`, {
-            method: 'PUT',
-            body: JSON.stringify({ imageURL: data.photoUrl }),
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
       } else {
-        // Create new boat
+        // Create new boat - photoUrl is included in data
         savedBoat = await apiRequest('/api/boats', {
           method: 'POST',
           body: JSON.stringify(data),
           headers: { 'Content-Type': 'application/json' }
         });
-
-        // If image URL was uploaded (from object storage), update the boat image
-        if (savedBoat.id && data.photoUrl && data.photoUrl.startsWith('https://storage.googleapis.com')) {
-          await apiRequest(`/api/boats/${savedBoat.id}/image`, {
-            method: 'PUT',
-            body: JSON.stringify({ imageURL: data.photoUrl }),
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
       }
       
       // Handle marina assignment
