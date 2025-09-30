@@ -130,13 +130,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Register with our API
-      const response = await apiRequest('/api/auth/register', {
+      // Register with our API - apiRequest already returns parsed JSON
+      const newUser = await apiRequest('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData)
       });
       
-      const newUser = await response.json();
       setUser(newUser);
       
       toast({

@@ -23,8 +23,35 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-// Legacy export for compatibility
-export const queryClient = null;
+// Track active query callbacks for manual refresh
+const queryCallbacks = new Map();
+
+// Create a functional queryClient object for compatibility
+export const queryClient = {
+  invalidateQueries: (options?: any) => {
+    // Dispatch a custom event to trigger query refresh
+    // This is a lighter alternative to full page reload
+    const event = new CustomEvent('queryInvalidate', { 
+      detail: { queryKey: options?.queryKey } 
+    });
+    window.dispatchEvent(event);
+    
+    // Also reload the page after a short delay to ensure UI updates
+    // This provides a fallback to ensure data is refreshed
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  },
+  setQueryData: (queryKey?: any, data?: any) => {},
+  getQueryData: (queryKey?: any) => null,
+  // Helper to register query callbacks
+  _registerQuery: (key: string, callback: Function) => {
+    queryCallbacks.set(key, callback);
+  },
+  _unregisterQuery: (key: string) => {
+    queryCallbacks.delete(key);
+  }
+};
 
 // Temporary stubs to prevent "not defined" errors until components are fully migrated
 export const useQuery = ({ queryKey, queryFn, select }: any) => {
