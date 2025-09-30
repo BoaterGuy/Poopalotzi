@@ -3670,7 +3670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user role (admin only)
-  app.patch('/api/admin/users/:id/role', isAuthenticated, async (req: AuthRequest, res) => {
+  app.patch('/admin/users/:id/role', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
@@ -3696,14 +3696,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user details (admin only)
-  app.patch('/api/admin/users/:id', isAuthenticated, async (req: AuthRequest, res) => {
+  app.patch('/admin/users/:id', isAuthenticated, async (req: AuthRequest, res) => {
     try {
+      console.log('PATCH /api/admin/users/:id - Request received');
+      console.log('User ID:', req.params.id);
+      console.log('Request body:', req.body);
+      console.log('Authenticated user:', req.user);
+      
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
       }
       
       const userId = parseInt(req.params.id);
       const { firstName, lastName, email, phone, password } = req.body;
+      console.log('Parsed user ID:', userId);
+      console.log('Password field present:', password !== undefined);
       
       // Validate input
       const updateData: any = {};
@@ -3760,11 +3767,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, updateData);
       
       if (!updatedUser) {
+        console.log('User not found after update attempt');
         return res.status(404).json({ message: 'User not found' });
       }
       
+      console.log('User updated successfully:', updatedUser.id);
+      
       // Remove passwordHash from response
       const { passwordHash: _, ...userResponse } = updatedUser;
+      console.log('Sending response:', userResponse);
       res.json(userResponse);
     } catch (error) {
       console.error('Error updating user:', error);
