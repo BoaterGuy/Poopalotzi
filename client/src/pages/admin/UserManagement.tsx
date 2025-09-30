@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, apiRequest } from "@/lib/queryClient";
-import { Users, UserPlus, Shield, User, Settings } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, apiRequest } from "@/lib/queryClient";
+import { Users, UserPlus, Shield, User, Settings, KeyRound } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,13 @@ export default function UserManagement() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
+  const [isPasswordResetDialogOpen, setIsPasswordResetDialogOpen] = useState(false);
+  const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState<{
+    id: number;
+    name: string;
+    email: string;
+  } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState<{
     userId: number;
     userName: string;
@@ -158,6 +165,43 @@ export default function UserManagement() {
     },
   });
 
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: number; password: string }) => {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ password }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to reset password");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Reset",
+        description: "User password has been reset successfully.",
+      });
+      setIsPasswordResetDialogOpen(false);
+      setSelectedUserForPasswordReset(null);
+      setNewPassword("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: CreateUserValues) => {
     createUserMutation.mutate(values);
   };
@@ -196,6 +240,25 @@ export default function UserManagement() {
   const cancelRoleChange = () => {
     setIsRoleChangeDialogOpen(false);
     setPendingRoleChange(null);
+  };
+
+  const handlePasswordReset = (user: User) => {
+    setSelectedUserForPasswordReset({
+      id: user.id,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email
+    });
+    setNewPassword("");
+    setIsPasswordResetDialogOpen(true);
+  };
+
+  const confirmPasswordReset = () => {
+    if (selectedUserForPasswordReset && newPassword.length >= 6) {
+      resetPasswordMutation.mutate({
+        userId: selectedUserForPasswordReset.id,
+        password: newPassword
+      });
+    }
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -398,6 +461,16 @@ export default function UserManagement() {
                         {user.role}
                       </Badge>
                       
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePasswordReset(user)}
+                        disabled={resetPasswordMutation.isPending}
+                        title="Reset Password"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                      
                       <Select
                         defaultValue={user.role}
                         onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
@@ -475,6 +548,70 @@ export default function UserManagement() {
                 className="bg-[#FF6B6B] hover:bg-opacity-90"
               >
                 {updateRoleMutation.isPending ? "Updating..." : "Confirm Change"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Reset Dialog */}
+        <Dialog open={isPasswordResetDialogOpen} onOpenChange={setIsPasswordResetDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-blue-600" />
+                Reset Password
+              </DialogTitle>
+              <DialogDescription>
+                {selectedUserForPasswordReset && (
+                  <div className="space-y-2">
+                    <p>Reset password for <strong>{selectedUserForPasswordReset.name}</strong></p>
+                    <p className="text-sm text-gray-500">{selectedUserForPasswordReset.email}</p>
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="Enter new password (min 6 characters)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newPassword.length >= 6) {
+                      confirmPasswordReset();
+                    }
+                  }}
+                />
+                {newPassword.length > 0 && newPassword.length < 6 && (
+                  <p className="text-sm text-red-500">Password must be at least 6 characters</p>
+                )}
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                <p className="text-sm text-amber-800">
+                  <strong>Note:</strong> The user will need to use this new password to log in.
+                </p>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsPasswordResetDialogOpen(false);
+                  setSelectedUserForPasswordReset(null);
+                  setNewPassword("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmPasswordReset}
+                disabled={resetPasswordMutation.isPending || newPassword.length < 6}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
               </Button>
             </DialogFooter>
           </DialogContent>

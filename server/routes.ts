@@ -3740,7 +3740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (typeof password !== 'string' || password.length < 6) {
           return res.status(400).json({ message: 'Password must be at least 6 characters' });
         }
-        updateData.password = await bcrypt.hash(password, 10);
+        updateData.passwordHash = await bcrypt.hash(password, 10);
       }
       
       // Check if user exists
