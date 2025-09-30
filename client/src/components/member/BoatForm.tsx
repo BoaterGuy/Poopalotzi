@@ -198,13 +198,13 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
             existingDockFound = true;
             const existingDock = await dockResponse.json();
             
-            // Ensure pier is sent as a string and dock as a number
+            // Ensure both pier and dock are sent as strings (per schema definition)
             await apiRequest(`/api/dock-assignments/${existingDock.id}`, {
               method: 'PUT',
               body: JSON.stringify({
                 marinaId: Number(data.marinaId),
                 pier: String(data.pier || existingDock.pier),
-                dock: Number(data.dock || existingDock.dock)
+                dock: String(data.dock || existingDock.dock)
               }),
               headers: { 'Content-Type': 'application/json' }
             });
@@ -215,9 +215,9 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         if (!existingDockFound) {
           const dockData = {
             boatId,
-            marinaId: data.marinaId,
-            pier: data.pier || "A",
-            dock: data.dock || 1
+            marinaId: Number(data.marinaId),
+            pier: String(data.pier || "A"),
+            dock: String(data.dock || "1")  // Convert to string per schema
           };
           
           await apiRequest('/api/dock-assignments', {
