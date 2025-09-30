@@ -181,55 +181,50 @@ export default function BoatForm({ boat, onSuccess }: BoatFormProps) {
         });
       }
       
-      // Handle marina assignment
+      // Handle marina assignment - MUST succeed for the save to be complete
       if (data.marinaId) {
-        try {
-          // First check if there's an existing dock assignment
-          const boatId = boat?.id || savedBoat.id;
-          let existingDockFound = false;
+        // First check if there's an existing dock assignment
+        const boatId = boat?.id || savedBoat.id;
+        let existingDockFound = false;
+        
+        if (boat?.id) {
+          // Try to get existing dock assignment for update
+          const dockResponse = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
+            credentials: 'include'
+          });
           
-          if (boat?.id) {
-            // Try to get existing dock assignment for update
-            const dockResponse = await fetch(`/api/dock-assignments/boat/${boat.id}`, {
-              credentials: 'include'
-            });
+          if (dockResponse.ok) {
+            // Found existing assignment, update it
+            existingDockFound = true;
+            const existingDock = await dockResponse.json();
             
-            if (dockResponse.ok) {
-              // Found existing assignment, update it
-              existingDockFound = true;
-              const existingDock = await dockResponse.json();
-              
-              // Ensure pier is sent as a string and dock as a number
-              await apiRequest(`/api/dock-assignments/${existingDock.id}`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                  marinaId: Number(data.marinaId),
-                  pier: String(data.pier || existingDock.pier),
-                  dock: Number(data.dock || existingDock.dock)
-                }),
-                headers: { 'Content-Type': 'application/json' }
-              });
-            }
-          }
-          
-          // If no existing assignment was found, create a new one
-          if (!existingDockFound) {
-            const dockData = {
-              boatId,
-              marinaId: data.marinaId,
-              pier: data.pier || "A",
-              dock: data.dock || 1
-            };
-            
-            await apiRequest('/api/dock-assignments', {
-              method: 'POST',
-              body: JSON.stringify(dockData),
+            // Ensure pier is sent as a string and dock as a number
+            await apiRequest(`/api/dock-assignments/${existingDock.id}`, {
+              method: 'PUT',
+              body: JSON.stringify({
+                marinaId: Number(data.marinaId),
+                pier: String(data.pier || existingDock.pier),
+                dock: Number(data.dock || existingDock.dock)
+              }),
               headers: { 'Content-Type': 'application/json' }
             });
           }
-        } catch (dockError) {
-          console.error("Error updating dock assignment:", dockError);
-          // Continue with success message - the boat info was saved even if dock assignment failed
+        }
+        
+        // If no existing assignment was found, create a new one
+        if (!existingDockFound) {
+          const dockData = {
+            boatId,
+            marinaId: data.marinaId,
+            pier: data.pier || "A",
+            dock: data.dock || 1
+          };
+          
+          await apiRequest('/api/dock-assignments', {
+            method: 'POST',
+            body: JSON.stringify(dockData),
+            headers: { 'Content-Type': 'application/json' }
+          });
         }
       }
       
