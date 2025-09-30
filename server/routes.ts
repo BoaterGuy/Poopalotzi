@@ -488,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update the dock assignment
       const updatedDock = await storage.updateDockAssignment(dockId, dockData);
       
-      res.status(200).send(); // Send a simple success response
+      res.json({ message: 'Dock assignment updated successfully', dock: updatedDock })
     } catch (err) {
       next(err);
     }
@@ -1477,6 +1477,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
+  app.get("/analytics/metrics", isAdmin, async (req, res, next) => {
+    try {
+      // Get total customers (members only, not admins/employees)
+      const allUsers = await storage.getUsers();
+      const totalCustomers = allUsers.filter(u => u.role === 'member').length;
+      
+      // Get active boats
+      const allBoats = await storage.getBoats();
+      const activeBoats = allBoats.filter(b => b.active).length;
+      
+      // Calculate monthly revenue (from subscriptions)
+      const serviceLevels = await storage.getServiceLevels();
+      let monthlyRevenue = 0;
+      
+      for (const level of serviceLevels) {
+        const usersAtLevel = allUsers.filter(u => u.serviceLevelId === level.id).length;
+        monthlyRevenue += (level.price || 0) * usersAtLevel;
+      }
+      
+      // Calculate ARPU (Average Revenue Per User)
+      const arpu = totalCustomers > 0 ? monthlyRevenue / totalCustomers : 0;
+      
+      // Mock data for churn rate and satisfaction (can be calculated from real data later)
+      const churnRate = 2.5; // Mock 2.5% churn rate
+      const customerSatisfaction = 4.7; // Mock 4.7/5 satisfaction
+      
+      res.json({
+        totalCustomers,
+        activeBoats,
+        monthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
+        arpu: Math.round(arpu * 100) / 100,
+        churnRate,
+        customerSatisfaction
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.get("/analytics/users-by-service-level", isAdmin, async (req, res, next) => {
     try {
       const data = await storage.countActiveUsersByServiceLevel();
