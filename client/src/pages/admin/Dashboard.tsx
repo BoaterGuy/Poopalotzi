@@ -24,7 +24,7 @@ import {
   Edit
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useQuery, useMutation, useQueryClient } from "@/lib/queryClient";
+import { useQuery, useMutation, queryClient } from "@/lib/queryClient";
 import { format, subMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -509,7 +509,6 @@ type EditUserFormData = z.infer<typeof editUserSchema>;
 // User Management Table Component
 function UserManagementTable() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);

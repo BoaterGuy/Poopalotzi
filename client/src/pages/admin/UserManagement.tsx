@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, apiRequest, queryClient } from "@/lib/queryClient";
 import { Users, UserPlus, Shield, User, Settings } from "lucide-react";
 import {
   Dialog,
@@ -55,7 +55,6 @@ interface User {
 
 export default function UserManagement() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isRoleChangeDialogOpen, setIsRoleChangeDialogOpen] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<{

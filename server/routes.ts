@@ -3540,7 +3540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user role (admin only)
-  app.patch('/api/admin/users/:id/role', isAuthenticated, async (req: AuthRequest, res) => {
+  app.patch('/admin/users/:id/role', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
@@ -3566,7 +3566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user details (admin only)
-  app.patch('/api/admin/users/:id', isAuthenticated, async (req: AuthRequest, res) => {
+  app.patch('/admin/users/:id', isAuthenticated, async (req: AuthRequest, res) => {
     try {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });

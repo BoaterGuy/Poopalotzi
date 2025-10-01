@@ -109,11 +109,7 @@ export const useMutation = ({ mutationFn, onSuccess, onError }: any) => {
   return { mutate, isPending };
 };
 
-// Add useQueryClient stub
+// Add useQueryClient hook that returns the actual queryClient
 export const useQueryClient = () => {
-  return {
-    invalidateQueries: (options?: any) => {},
-    setQueryData: (queryKey?: any, data?: any) => {},
-    getQueryData: (queryKey?: any) => null,
-  };
+  return queryClient;
 };
