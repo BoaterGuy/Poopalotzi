@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -205,9 +206,9 @@ export default function Contact() {
                   <Button 
                     type="submit" 
                     className="bg-[#FF6B6B] hover:bg-opacity-90 w-full"
-                    disabled={contactMutation.isPending}
+                    disabled={isSubmitting}
                   >
-                    {contactMutation.isPending ? "Sending..." : "Send Message"}
+                    {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </Form>
