@@ -11,6 +11,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import BoatPumpOutService from "@/pages/BoatPumpOutService";
 
 // Member Pages
 import MemberDashboard from "@/pages/member/Dashboard";
@@ -104,6 +105,7 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/" component={Home} />
                 <Route path="/services" component={Services} />
+                <Route path="/boat-pump-out-service" component={BoatPumpOutService} />
                 <Route path="/about" component={About} />
                 <Route path="/contact" component={Contact} />
                 <Route path="/auth" component={AuthPage} />

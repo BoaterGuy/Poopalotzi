@@ -38,11 +38,70 @@ export default function Services() {
   return (
     <>
       <Helmet>
-        <title>Our Services - Poopalotzi</title>
+        <title>Boat Pump Out Service Plans & Pricing - Poopalotzi | Marina Sanitation</title>
         <meta 
           name="description" 
-          content="Explore our boat pump-out service plans. From single services to seasonal packages for all your boating needs." 
+          content="Professional boat pump out service plans and pricing. Choose from single service, monthly, or seasonal pump-out packages. Fast, reliable marina sanitation services for all boat types." 
         />
+        <meta name="keywords" content="boat pump out service, boat pump out pricing, marina pump out plans, boat waste removal service, marine sanitation services, pump out subscription, boat maintenance plans" />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://poopalotzi.com/services" />
+        <meta property="og:title" content="Boat Pump Out Service Plans - Poopalotzi" />
+        <meta property="og:description" content="Professional boat pump out service plans. Fast, reliable marina sanitation services. Single service, monthly & seasonal packages available." />
+        <meta property="og:image" content="https://poopalotzi.com/logo.png" />
+        
+        <link rel="canonical" href="https://poopalotzi.com/services" />
+        
+        {/* Service Schema Markup */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Boat Pump Out Services",
+            "provider": {
+              "@type": "LocalBusiness",
+              "name": "Poopalotzi",
+              "url": "https://poopalotzi.com"
+            },
+            "description": "Professional boat pump out and marina sanitation services",
+            "areaServed": {
+              "@type": "Country",
+              "name": "United States"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Pump Out Service Plans",
+              "itemListElement": [
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Single Service Pump-Out",
+                    "description": "One-time boat pump out service"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Monthly Subscription",
+                    "description": "Monthly boat pump out subscription with multiple services"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Seasonal Package",
+                    "description": "Full season boat pump out coverage"
+                  }
+                }
+              ]
+            }
+          })}
+        </script>
       </Helmet>
 
       <div className="bg-[#F4EBD0] py-16">
