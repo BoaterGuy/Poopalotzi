@@ -13,8 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
 const signInSchema = z.object({
@@ -29,7 +27,7 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onSuccess }: SignInFormProps) {
-  const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -59,24 +57,6 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
     }
   };
 
-  const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
-    try {
-      switch (provider) {
-        case "google":
-          await loginWithGoogle();
-          break;
-        case "facebook":
-          await loginWithFacebook();
-          break;
-        case "apple":
-          await loginWithApple();
-          break;
-      }
-      // Success will be handled by auth state change in AuthContext
-    } catch (error) {
-      console.error(`${provider} login error:`, error);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -130,40 +110,6 @@ export default function SignInForm({ onSuccess }: SignInFormProps) {
           </Button>
         </form>
       </Form>
-
-      <div className="relative flex items-center justify-center">
-        <Separator className="absolute w-full" />
-        <span className="relative bg-white px-2 text-xs text-gray-500">
-          or continue with
-        </span>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("google")}
-        >
-          <FaGoogle className="mr-2 text-red-500" /> Google
-        </Button>
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("facebook")}
-        >
-          <FaFacebook className="mr-2 text-blue-600" /> Facebook
-        </Button>
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("apple")}
-        >
-          <FaApple className="mr-2" /> Apple
-        </Button>
-      </div>
     </div>
   );
 }

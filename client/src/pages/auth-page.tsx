@@ -14,7 +14,7 @@ const AuthPage = () => {
   const [activeTab, setActiveTab] = useState('login');
   const [isLoading, setIsLoading] = useState(false);
   const [, navigate] = useLocation();
-  const { user, login, register, loginWithGoogle } = useContext(AuthContext);
+  const { user, login, register } = useContext(AuthContext);
   const { toast } = useToast();
 
   // For login
@@ -151,29 +151,6 @@ const AuthPage = () => {
                     )}
                   </Button>
                 </form>
-                
-                <div className="mt-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-gray-500">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => loginWithGoogle()}
-                      disabled={isLoading}
-                    >
-                      Google
-                    </Button>
-                  </div>
-                </div>
               </TabsContent>
               
               <TabsContent value="register">

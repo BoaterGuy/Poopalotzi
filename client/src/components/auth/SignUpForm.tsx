@@ -13,8 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
-import { Separator } from "@/components/ui/separator";
 
 const signUpSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -34,7 +32,7 @@ interface SignUpFormProps {
 }
 
 export default function SignUpForm({ onSuccess }: SignUpFormProps) {
-  const { register, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
+  const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignUpFormValues>({
@@ -68,24 +66,6 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     }
   };
 
-  const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
-    try {
-      switch (provider) {
-        case "google":
-          await loginWithGoogle();
-          break;
-        case "facebook":
-          await loginWithFacebook();
-          break;
-        case "apple":
-          await loginWithApple();
-          break;
-      }
-      // Success will be handled by auth state change in AuthContext
-    } catch (error) {
-      console.error(`${provider} login error:`, error);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -185,40 +165,6 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
           </div>
         </form>
       </Form>
-
-      <div className="relative flex items-center justify-center">
-        <Separator className="absolute w-full" />
-        <span className="relative bg-white px-2 text-xs text-gray-500">
-          or sign up with
-        </span>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("google")}
-        >
-          <FaGoogle className="mr-2 text-red-500" /> Google
-        </Button>
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("facebook")}
-        >
-          <FaFacebook className="mr-2 text-blue-600" /> Facebook
-        </Button>
-        <Button
-          variant="outline"
-          className="border-gray-300"
-          type="button"
-          onClick={() => handleSocialLogin("apple")}
-        >
-          <FaApple className="mr-2" /> Apple
-        </Button>
-      </div>
     </div>
   );
 }
