@@ -131,7 +131,30 @@ async function startServer() {
     // Mount API router at /api BEFORE the HTML fallback
     app.use('/api', apiRouter);
 
-    // Setup HTML fallback AFTER API routes
+    // Serve SEO files (sitemap.xml and robots.txt) before HTML fallback
+    app.get('/sitemap.xml', async (req, res) => {
+      try {
+        const { readFile } = await import("fs/promises");
+        const sitemap = await readFile(resolve(process.cwd(), 'public/sitemap.xml'), 'utf-8');
+        res.header('Content-Type', 'application/xml');
+        res.send(sitemap);
+      } catch (error) {
+        res.status(404).send('Sitemap not found');
+      }
+    });
+
+    app.get('/robots.txt', async (req, res) => {
+      try {
+        const { readFile } = await import("fs/promises");
+        const robots = await readFile(resolve(process.cwd(), 'public/robots.txt'), 'utf-8');
+        res.header('Content-Type', 'text/plain');
+        res.send(robots);
+      } catch (error) {
+        res.status(404).send('Robots.txt not found');
+      }
+    });
+
+    // Setup HTML fallback AFTER API routes and SEO files
     if (isDev) {
       // HTML fallback after API routes - serves React app for any non-API, non-asset requests
       app.get(/^(?!\/api|\/healthz)(?!.*\.(?:js|css|ico|png|jpg|svg|json|map)$).*/, async (req, res, next) => {
