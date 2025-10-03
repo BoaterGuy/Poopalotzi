@@ -154,6 +154,19 @@ async function startServer() {
       }
     });
 
+    // Serve Google verification files
+    app.get('/google*.html', async (req, res) => {
+      try {
+        const { readFile } = await import("fs/promises");
+        const filename = req.path.substring(1); // Remove leading slash
+        const content = await readFile(resolve(process.cwd(), 'public', filename), 'utf-8');
+        res.header('Content-Type', 'text/html');
+        res.send(content);
+      } catch (error) {
+        res.status(404).send('Verification file not found');
+      }
+    });
+
     // Setup HTML fallback AFTER API routes and SEO files
     if (isDev) {
       // HTML fallback after API routes - serves React app for any non-API, non-asset requests
